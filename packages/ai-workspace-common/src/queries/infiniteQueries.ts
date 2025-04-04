@@ -8,6 +8,7 @@ import {
   listDocuments,
   listLabelClasses,
   listLabelInstances,
+  listPages,
   listResources,
   listSkillInstances,
   listSkillTriggers,
@@ -23,6 +24,8 @@ import {
   ListLabelClassesError,
   ListLabelInstancesData,
   ListLabelInstancesError,
+  ListPagesData,
+  ListPagesError,
   ListResourcesData,
   ListResourcesError,
   ListSkillInstancesData,
@@ -31,6 +34,31 @@ import {
   ListSkillTriggersError,
 } from '../requests/types.gen';
 import * as Common from './common';
+export const useListPagesInfinite = <
+  TData = InfiniteData<Common.ListPagesDefaultResponse>,
+  TError = ListPagesError,
+  TQueryKey extends Array<unknown> = unknown[],
+>(
+  clientOptions: Options<ListPagesData, true> = {},
+  queryKey?: TQueryKey,
+  options?: Omit<UseInfiniteQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
+) =>
+  useInfiniteQuery({
+    queryKey: Common.UseListPagesKeyFn(clientOptions, queryKey),
+    queryFn: ({ pageParam }) =>
+      listPages({
+        ...clientOptions,
+        query: { ...clientOptions.query, page: pageParam as number },
+      }).then((response) => response.data as TData) as TData,
+    initialPageParam: '1',
+    getNextPageParam: (response) =>
+      (
+        response as {
+          nextPage: number;
+        }
+      ).nextPage,
+    ...options,
+  });
 export const useListCanvasesInfinite = <
   TData = InfiniteData<Common.ListCanvasesDefaultResponse>,
   TError = ListCanvasesError,

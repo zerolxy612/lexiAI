@@ -17,6 +17,7 @@ import {
   createDocument,
   createLabelClass,
   createLabelInstance,
+  createPage,
   createPortalSession,
   createResource,
   createResourceWithFile,
@@ -28,6 +29,7 @@ import {
   deleteDocument,
   deleteLabelClass,
   deleteLabelInstance,
+  deletePage,
   deleteReferences,
   deleteResource,
   deleteShare,
@@ -45,6 +47,9 @@ import {
   getCodeArtifactDetail,
   getCollabToken,
   getDocumentDetail,
+  getPageDetail,
+  getPageVersion,
+  getPageVersions,
   getResourceDetail,
   getSettings,
   getSubscriptionPlans,
@@ -59,6 +64,7 @@ import {
   listLabelClasses,
   listLabelInstances,
   listModels,
+  listPages,
   listResources,
   listShares,
   listSkillInstances,
@@ -67,6 +73,7 @@ import {
   logout,
   multiLingualWebSearch,
   pinSkillInstance,
+  publishPage,
   queryReferences,
   refreshToken,
   reindexResource,
@@ -74,6 +81,7 @@ import {
   scrape,
   search,
   serveStatic,
+  sharePage,
   streamInvokeSkill,
   unpinSkillInstance,
   updateCanvas,
@@ -82,12 +90,53 @@ import {
   updateDocument,
   updateLabelClass,
   updateLabelInstance,
+  updatePage,
   updateResource,
   updateSettings,
   updateSkillInstance,
   updateSkillTrigger,
   upload,
 } from '../requests/services.gen';
+export type ListPagesDefaultResponse = Awaited<ReturnType<typeof listPages>>['data'];
+export type ListPagesQueryResult<
+  TData = ListPagesDefaultResponse,
+  TError = unknown,
+> = UseQueryResult<TData, TError>;
+export const useListPagesKey = 'ListPages';
+export const UseListPagesKeyFn = (
+  clientOptions: Options<unknown, true> = {},
+  queryKey?: Array<unknown>,
+) => [useListPagesKey, ...(queryKey ?? [clientOptions])];
+export type GetPageDetailDefaultResponse = Awaited<ReturnType<typeof getPageDetail>>['data'];
+export type GetPageDetailQueryResult<
+  TData = GetPageDetailDefaultResponse,
+  TError = unknown,
+> = UseQueryResult<TData, TError>;
+export const useGetPageDetailKey = 'GetPageDetail';
+export const UseGetPageDetailKeyFn = (
+  clientOptions: Options<unknown, true>,
+  queryKey?: Array<unknown>,
+) => [useGetPageDetailKey, ...(queryKey ?? [clientOptions])];
+export type GetPageVersionsDefaultResponse = Awaited<ReturnType<typeof getPageVersions>>['data'];
+export type GetPageVersionsQueryResult<
+  TData = GetPageVersionsDefaultResponse,
+  TError = unknown,
+> = UseQueryResult<TData, TError>;
+export const useGetPageVersionsKey = 'GetPageVersions';
+export const UseGetPageVersionsKeyFn = (
+  clientOptions: Options<unknown, true>,
+  queryKey?: Array<unknown>,
+) => [useGetPageVersionsKey, ...(queryKey ?? [clientOptions])];
+export type GetPageVersionDefaultResponse = Awaited<ReturnType<typeof getPageVersion>>['data'];
+export type GetPageVersionQueryResult<
+  TData = GetPageVersionDefaultResponse,
+  TError = unknown,
+> = UseQueryResult<TData, TError>;
+export const useGetPageVersionKey = 'GetPageVersion';
+export const UseGetPageVersionKeyFn = (
+  clientOptions: Options<unknown, true>,
+  queryKey?: Array<unknown>,
+) => [useGetPageVersionKey, ...(queryKey ?? [clientOptions])];
 export type GetAuthConfigDefaultResponse = Awaited<ReturnType<typeof getAuthConfig>>['data'];
 export type GetAuthConfigQueryResult<
   TData = GetAuthConfigDefaultResponse,
@@ -380,6 +429,24 @@ export const UseServeStaticKeyFn = (
   clientOptions: Options<unknown, true> = {},
   queryKey?: Array<unknown>,
 ) => [useServeStaticKey, ...(queryKey ?? [clientOptions])];
+export type CreatePageMutationResult = Awaited<ReturnType<typeof createPage>>;
+export const useCreatePageKey = 'CreatePage';
+export const UseCreatePageKeyFn = (mutationKey?: Array<unknown>) => [
+  useCreatePageKey,
+  ...(mutationKey ?? []),
+];
+export type PublishPageMutationResult = Awaited<ReturnType<typeof publishPage>>;
+export const usePublishPageKey = 'PublishPage';
+export const UsePublishPageKeyFn = (mutationKey?: Array<unknown>) => [
+  usePublishPageKey,
+  ...(mutationKey ?? []),
+];
+export type SharePageMutationResult = Awaited<ReturnType<typeof sharePage>>;
+export const useSharePageKey = 'SharePage';
+export const UseSharePageKeyFn = (mutationKey?: Array<unknown>) => [
+  useSharePageKey,
+  ...(mutationKey ?? []),
+];
 export type RefreshTokenMutationResult = Awaited<ReturnType<typeof refreshToken>>;
 export const useRefreshTokenKey = 'RefreshToken';
 export const UseRefreshTokenKeyFn = (mutationKey?: Array<unknown>) => [
@@ -718,9 +785,21 @@ export const UseConvertKeyFn = (mutationKey?: Array<unknown>) => [
   useConvertKey,
   ...(mutationKey ?? []),
 ];
+export type UpdatePageMutationResult = Awaited<ReturnType<typeof updatePage>>;
+export const useUpdatePageKey = 'UpdatePage';
+export const UseUpdatePageKeyFn = (mutationKey?: Array<unknown>) => [
+  useUpdatePageKey,
+  ...(mutationKey ?? []),
+];
 export type UpdateSettingsMutationResult = Awaited<ReturnType<typeof updateSettings>>;
 export const useUpdateSettingsKey = 'UpdateSettings';
 export const UseUpdateSettingsKeyFn = (mutationKey?: Array<unknown>) => [
   useUpdateSettingsKey,
+  ...(mutationKey ?? []),
+];
+export type DeletePageMutationResult = Awaited<ReturnType<typeof deletePage>>;
+export const useDeletePageKey = 'DeletePage';
+export const UseDeletePageKeyFn = (mutationKey?: Array<unknown>) => [
+  useDeletePageKey,
   ...(mutationKey ?? []),
 ];

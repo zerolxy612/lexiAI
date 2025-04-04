@@ -12,6 +12,9 @@ import {
   getCodeArtifactDetail,
   getCollabToken,
   getDocumentDetail,
+  getPageDetail,
+  getPageVersion,
+  getPageVersions,
   getResourceDetail,
   getSettings,
   getSubscriptionPlans,
@@ -24,6 +27,7 @@ import {
   listLabelClasses,
   listLabelInstances,
   listModels,
+  listPages,
   listResources,
   listShares,
   listSkillInstances,
@@ -39,18 +43,54 @@ import {
   GetCanvasDetailData,
   GetCodeArtifactDetailData,
   GetDocumentDetailData,
+  GetPageDetailData,
+  GetPageVersionData,
+  GetPageVersionsData,
   GetResourceDetailData,
   ListCanvasesData,
   ListCanvasTemplatesData,
   ListDocumentsData,
   ListLabelClassesData,
   ListLabelInstancesData,
+  ListPagesData,
   ListResourcesData,
   ListSharesData,
   ListSkillInstancesData,
   ListSkillTriggersData,
 } from '../requests/types.gen';
 import * as Common from './common';
+export const prefetchUseListPages = (
+  queryClient: QueryClient,
+  clientOptions: Options<ListPagesData, true> = {},
+) =>
+  queryClient.prefetchQuery({
+    queryKey: Common.UseListPagesKeyFn(clientOptions),
+    queryFn: () => listPages({ ...clientOptions }).then((response) => response.data),
+  });
+export const prefetchUseGetPageDetail = (
+  queryClient: QueryClient,
+  clientOptions: Options<GetPageDetailData, true>,
+) =>
+  queryClient.prefetchQuery({
+    queryKey: Common.UseGetPageDetailKeyFn(clientOptions),
+    queryFn: () => getPageDetail({ ...clientOptions }).then((response) => response.data),
+  });
+export const prefetchUseGetPageVersions = (
+  queryClient: QueryClient,
+  clientOptions: Options<GetPageVersionsData, true>,
+) =>
+  queryClient.prefetchQuery({
+    queryKey: Common.UseGetPageVersionsKeyFn(clientOptions),
+    queryFn: () => getPageVersions({ ...clientOptions }).then((response) => response.data),
+  });
+export const prefetchUseGetPageVersion = (
+  queryClient: QueryClient,
+  clientOptions: Options<GetPageVersionData, true>,
+) =>
+  queryClient.prefetchQuery({
+    queryKey: Common.UseGetPageVersionKeyFn(clientOptions),
+    queryFn: () => getPageVersion({ ...clientOptions }).then((response) => response.data),
+  });
 export const prefetchUseGetAuthConfig = (
   queryClient: QueryClient,
   clientOptions: Options<unknown, true> = {},

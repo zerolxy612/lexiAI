@@ -17,6 +17,7 @@ import {
   createDocument,
   createLabelClass,
   createLabelInstance,
+  createPage,
   createPortalSession,
   createResource,
   createResourceWithFile,
@@ -28,6 +29,7 @@ import {
   deleteDocument,
   deleteLabelClass,
   deleteLabelInstance,
+  deletePage,
   deleteReferences,
   deleteResource,
   deleteShare,
@@ -45,6 +47,9 @@ import {
   getCodeArtifactDetail,
   getCollabToken,
   getDocumentDetail,
+  getPageDetail,
+  getPageVersion,
+  getPageVersions,
   getResourceDetail,
   getSettings,
   getSubscriptionPlans,
@@ -59,6 +64,7 @@ import {
   listLabelClasses,
   listLabelInstances,
   listModels,
+  listPages,
   listResources,
   listShares,
   listSkillInstances,
@@ -67,6 +73,7 @@ import {
   logout,
   multiLingualWebSearch,
   pinSkillInstance,
+  publishPage,
   queryReferences,
   refreshToken,
   reindexResource,
@@ -74,6 +81,7 @@ import {
   scrape,
   search,
   serveStatic,
+  sharePage,
   streamInvokeSkill,
   unpinSkillInstance,
   updateCanvas,
@@ -82,6 +90,7 @@ import {
   updateDocument,
   updateLabelClass,
   updateLabelInstance,
+  updatePage,
   updateResource,
   updateSettings,
   updateSkillInstance,
@@ -117,6 +126,8 @@ import {
   CreateLabelClassError,
   CreateLabelInstanceData,
   CreateLabelInstanceError,
+  CreatePageData,
+  CreatePageError,
   CreatePortalSessionError,
   CreateResourceData,
   CreateResourceError,
@@ -138,6 +149,8 @@ import {
   DeleteLabelClassError,
   DeleteLabelInstanceData,
   DeleteLabelInstanceError,
+  DeletePageData,
+  DeletePageError,
   DeleteReferencesData,
   DeleteReferencesError,
   DeleteResourceData,
@@ -170,6 +183,12 @@ import {
   GetCollabTokenError,
   GetDocumentDetailData,
   GetDocumentDetailError,
+  GetPageDetailData,
+  GetPageDetailError,
+  GetPageVersionData,
+  GetPageVersionError,
+  GetPageVersionsData,
+  GetPageVersionsError,
   GetResourceDetailData,
   GetResourceDetailError,
   GetSettingsError,
@@ -192,6 +211,8 @@ import {
   ListLabelInstancesData,
   ListLabelInstancesError,
   ListModelsError,
+  ListPagesData,
+  ListPagesError,
   ListResourcesData,
   ListResourcesError,
   ListSharesData,
@@ -206,6 +227,8 @@ import {
   MultiLingualWebSearchError,
   PinSkillInstanceData,
   PinSkillInstanceError,
+  PublishPageData,
+  PublishPageError,
   QueryReferencesData,
   QueryReferencesError,
   RefreshTokenError,
@@ -218,6 +241,8 @@ import {
   SearchData,
   SearchError,
   ServeStaticError,
+  SharePageData,
+  SharePageError,
   StreamInvokeSkillData,
   StreamInvokeSkillError,
   UnpinSkillInstanceData,
@@ -234,6 +259,8 @@ import {
   UpdateLabelClassError,
   UpdateLabelInstanceData,
   UpdateLabelInstanceError,
+  UpdatePageData,
+  UpdatePageError,
   UpdateResourceData,
   UpdateResourceError,
   UpdateSettingsData,
@@ -246,6 +273,66 @@ import {
   UploadError,
 } from '../requests/types.gen';
 import * as Common from './common';
+export const useListPages = <
+  TData = Common.ListPagesDefaultResponse,
+  TError = ListPagesError,
+  TQueryKey extends Array<unknown> = unknown[],
+>(
+  clientOptions: Options<ListPagesData, true> = {},
+  queryKey?: TQueryKey,
+  options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
+) =>
+  useQuery<TData, TError>({
+    queryKey: Common.UseListPagesKeyFn(clientOptions, queryKey),
+    queryFn: () =>
+      listPages({ ...clientOptions }).then((response) => response.data as TData) as TData,
+    ...options,
+  });
+export const useGetPageDetail = <
+  TData = Common.GetPageDetailDefaultResponse,
+  TError = GetPageDetailError,
+  TQueryKey extends Array<unknown> = unknown[],
+>(
+  clientOptions: Options<GetPageDetailData, true>,
+  queryKey?: TQueryKey,
+  options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
+) =>
+  useQuery<TData, TError>({
+    queryKey: Common.UseGetPageDetailKeyFn(clientOptions, queryKey),
+    queryFn: () =>
+      getPageDetail({ ...clientOptions }).then((response) => response.data as TData) as TData,
+    ...options,
+  });
+export const useGetPageVersions = <
+  TData = Common.GetPageVersionsDefaultResponse,
+  TError = GetPageVersionsError,
+  TQueryKey extends Array<unknown> = unknown[],
+>(
+  clientOptions: Options<GetPageVersionsData, true>,
+  queryKey?: TQueryKey,
+  options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
+) =>
+  useQuery<TData, TError>({
+    queryKey: Common.UseGetPageVersionsKeyFn(clientOptions, queryKey),
+    queryFn: () =>
+      getPageVersions({ ...clientOptions }).then((response) => response.data as TData) as TData,
+    ...options,
+  });
+export const useGetPageVersion = <
+  TData = Common.GetPageVersionDefaultResponse,
+  TError = GetPageVersionError,
+  TQueryKey extends Array<unknown> = unknown[],
+>(
+  clientOptions: Options<GetPageVersionData, true>,
+  queryKey?: TQueryKey,
+  options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
+) =>
+  useQuery<TData, TError>({
+    queryKey: Common.UseGetPageVersionKeyFn(clientOptions, queryKey),
+    queryFn: () =>
+      getPageVersion({ ...clientOptions }).then((response) => response.data as TData) as TData,
+    ...options,
+  });
 export const useGetAuthConfig = <
   TData = Common.GetAuthConfigDefaultResponse,
   TError = GetAuthConfigError,
@@ -657,6 +744,57 @@ export const useServeStatic = <
     queryKey: Common.UseServeStaticKeyFn(clientOptions, queryKey),
     queryFn: () =>
       serveStatic({ ...clientOptions }).then((response) => response.data as TData) as TData,
+    ...options,
+  });
+export const useCreatePage = <
+  TData = Common.CreatePageMutationResult,
+  TError = CreatePageError,
+  TQueryKey extends Array<unknown> = unknown[],
+  TContext = unknown,
+>(
+  mutationKey?: TQueryKey,
+  options?: Omit<
+    UseMutationOptions<TData, TError, Options<CreatePageData, true>, TContext>,
+    'mutationKey' | 'mutationFn'
+  >,
+) =>
+  useMutation<TData, TError, Options<CreatePageData, true>, TContext>({
+    mutationKey: Common.UseCreatePageKeyFn(mutationKey),
+    mutationFn: (clientOptions) => createPage(clientOptions) as unknown as Promise<TData>,
+    ...options,
+  });
+export const usePublishPage = <
+  TData = Common.PublishPageMutationResult,
+  TError = PublishPageError,
+  TQueryKey extends Array<unknown> = unknown[],
+  TContext = unknown,
+>(
+  mutationKey?: TQueryKey,
+  options?: Omit<
+    UseMutationOptions<TData, TError, Options<PublishPageData, true>, TContext>,
+    'mutationKey' | 'mutationFn'
+  >,
+) =>
+  useMutation<TData, TError, Options<PublishPageData, true>, TContext>({
+    mutationKey: Common.UsePublishPageKeyFn(mutationKey),
+    mutationFn: (clientOptions) => publishPage(clientOptions) as unknown as Promise<TData>,
+    ...options,
+  });
+export const useSharePage = <
+  TData = Common.SharePageMutationResult,
+  TError = SharePageError,
+  TQueryKey extends Array<unknown> = unknown[],
+  TContext = unknown,
+>(
+  mutationKey?: TQueryKey,
+  options?: Omit<
+    UseMutationOptions<TData, TError, Options<SharePageData, true>, TContext>,
+    'mutationKey' | 'mutationFn'
+  >,
+) =>
+  useMutation<TData, TError, Options<SharePageData, true>, TContext>({
+    mutationKey: Common.UseSharePageKeyFn(mutationKey),
+    mutationFn: (clientOptions) => sharePage(clientOptions) as unknown as Promise<TData>,
     ...options,
   });
 export const useRefreshToken = <
@@ -1614,6 +1752,23 @@ export const useConvert = <
     mutationFn: (clientOptions) => convert(clientOptions) as unknown as Promise<TData>,
     ...options,
   });
+export const useUpdatePage = <
+  TData = Common.UpdatePageMutationResult,
+  TError = UpdatePageError,
+  TQueryKey extends Array<unknown> = unknown[],
+  TContext = unknown,
+>(
+  mutationKey?: TQueryKey,
+  options?: Omit<
+    UseMutationOptions<TData, TError, Options<UpdatePageData, true>, TContext>,
+    'mutationKey' | 'mutationFn'
+  >,
+) =>
+  useMutation<TData, TError, Options<UpdatePageData, true>, TContext>({
+    mutationKey: Common.UseUpdatePageKeyFn(mutationKey),
+    mutationFn: (clientOptions) => updatePage(clientOptions) as unknown as Promise<TData>,
+    ...options,
+  });
 export const useUpdateSettings = <
   TData = Common.UpdateSettingsMutationResult,
   TError = UpdateSettingsError,
@@ -1629,5 +1784,22 @@ export const useUpdateSettings = <
   useMutation<TData, TError, Options<UpdateSettingsData, true>, TContext>({
     mutationKey: Common.UseUpdateSettingsKeyFn(mutationKey),
     mutationFn: (clientOptions) => updateSettings(clientOptions) as unknown as Promise<TData>,
+    ...options,
+  });
+export const useDeletePage = <
+  TData = Common.DeletePageMutationResult,
+  TError = DeletePageError,
+  TQueryKey extends Array<unknown> = unknown[],
+  TContext = unknown,
+>(
+  mutationKey?: TQueryKey,
+  options?: Omit<
+    UseMutationOptions<TData, TError, Options<DeletePageData, true>, TContext>,
+    'mutationKey' | 'mutationFn'
+  >,
+) =>
+  useMutation<TData, TError, Options<DeletePageData, true>, TContext>({
+    mutationKey: Common.UseDeletePageKeyFn(mutationKey),
+    mutationFn: (clientOptions) => deletePage(clientOptions) as unknown as Promise<TData>,
     ...options,
   });

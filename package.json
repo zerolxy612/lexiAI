@@ -49,7 +49,15 @@
     }
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": ["biome check --write"],
-    "*.json": ["biome format --write"]
+    "*.{js,jsx,ts,tsx}": [
+      "biome check --write"
+    ],
+    "*.json": [
+      "biome format --write"
+    ]
+  },
+  "dependencies": {
+    "@types/react-beautiful-dnd": "^13.1.8",
+    "react-beautiful-dnd": "^13.1.1"
   }
 }

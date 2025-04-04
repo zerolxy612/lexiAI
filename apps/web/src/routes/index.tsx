@@ -26,12 +26,19 @@ const SkillResponseSharePage = lazy(() => import('@/pages/skill-response-share')
 const DocumentSharePage = lazy(() => import('@/pages/document-share'));
 const ArtifactGalleryPage = lazy(() => import('@/pages/artifact-gallery'));
 const UseCasesGalleryPage = lazy(() => import('@/pages/use-cases-gallery'));
+const PagesListPage = lazy(() => import('@/pages/pages'));
+const PageEditPage = lazy(() => import('@/pages/pages/edit/[pageId]'));
+const PagePreviewPage = lazy(() => import('@/pages/pages/preview/[pageId]'));
 
 const prefetchRoutes = () => {
   // Prefetch common routes
   import('@refly-packages/ai-workspace-common/components/request-access');
   import('@/pages/artifact-gallery');
   import('@/pages/use-cases-gallery');
+  // 预加载Pages相关组件
+  import('@/pages/pages');
+  import('@/pages/pages/edit/[pageId]');
+  import('@/pages/pages/preview/[pageId]');
 };
 
 export const AppRouter = (props: { layout?: any }) => {
@@ -107,6 +114,22 @@ export const AppRouter = (props: { layout?: any }) => {
           <Route
             path="/request-access"
             element={<RequestAccessRoute hasBetaAccess={hasBetaAccess} />}
+          />
+          <Route
+            path="/pages"
+            element={<BetaProtectedRoute component={PagesListPage} hasBetaAccess={true} />}
+          />
+          <Route
+            path="/pages/edit/:pageId"
+            element={<BetaProtectedRoute component={PageEditPage} hasBetaAccess={true} />}
+          />
+          <Route
+            path="/pages/preview/:pageId"
+            element={<BetaProtectedRoute component={PagePreviewPage} hasBetaAccess={true} />}
+          />
+          <Route
+            path="/pages/new"
+            element={<BetaProtectedRoute component={lazy(() => import('../pages/pages/new'))} hasBetaAccess={true} />}
           />
         </Routes>
       </Layout>

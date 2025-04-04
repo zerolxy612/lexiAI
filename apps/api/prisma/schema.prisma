@@ -938,3 +938,87 @@ model RefreshToken {
   @@index([uid])
   @@map("refresh_tokens")
 }
+
+model Page {
+  /// Primary key
+  pk              BigInt    @id @default(autoincrement())
+  /// Page ID
+  pageId          String    @unique @map("page_id")
+  /// Owner UID
+  uid             String    @map("uid")
+  /// Page title
+  title           String    @default("Untitled Page") @map("title")
+  /// Page description
+  description     String?   @map("description")
+  /// Page state storage key (保存编辑状态)
+  stateStorageKey String    @map("state_storage_key")
+  /// Cover storage key 
+  coverStorageKey String?   @map("cover_storage_key")
+  /// Page status
+  status          String    @default("draft") @map("status") // draft, publishing, published
+  /// Create timestamp
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  /// Update timestamp
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+  /// Soft delete timestamp
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz()
+
+  /// 关联的版本记录
+  versions PageVersion[]
+
+  @@index([uid, updatedAt])
+  @@map("pages")
+}
+
+model PageNodeRelation {
+  /// Primary key
+  pk         BigInt    @id @default(autoincrement())
+  /// Relation ID
+  relationId String    @unique @map("relation_id")
+  /// Page ID
+  pageId     String    @map("page_id")
+  /// Source node ID
+  nodeId     String    @map("node_id")
+  /// Node type (document, resource, skillResponse等)
+  nodeType   String    @map("node_type")
+  /// Entity ID (关联的实体ID)
+  entityId   String    @map("entity_id")
+  /// Order in page (排序位置)
+  orderIndex Int       @map("order_index")
+  /// Node data (存储节点的元数据)
+  nodeData   String    @default("{}") @map("node_data")
+  /// Create timestamp
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  /// Update timestamp
+  updatedAt  DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+  /// Soft delete timestamp
+  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz()
+
+  @@index([pageId, deletedAt])
+  @@map("page_node_relations")
+}
+
+model PageVersion {
+  /// Primary key
+  pk                BigInt   @id @default(autoincrement())
+  /// Version ID
+  versionId         String   @unique @map("version_id")
+  /// Page ID
+  pageId            String   @map("page_id")
+  /// Version number
+  version           Int      @map("version")
+  /// Page title at this version
+  title             String   @map("title")
+  /// Content storage key (保存特定版本的完整内容)
+  contentStorageKey String   @map("content_storage_key")
+  /// Cover storage key
+  coverStorageKey   String?  @map("cover_storage_key")
+  /// Create timestamp
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  /// Page 关联
+  page Page @relation(fields: [pageId], references: [pageId])
+
+  @@index([pageId, version])
+  @@map("page_versions")
+}

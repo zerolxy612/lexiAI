@@ -12,6 +12,9 @@ import {
   getCodeArtifactDetail,
   getCollabToken,
   getDocumentDetail,
+  getPageDetail,
+  getPageVersion,
+  getPageVersions,
   getResourceDetail,
   getSettings,
   getSubscriptionPlans,
@@ -24,6 +27,7 @@ import {
   listLabelClasses,
   listLabelInstances,
   listModels,
+  listPages,
   listResources,
   listShares,
   listSkillInstances,
@@ -39,18 +43,54 @@ import {
   GetCanvasDetailData,
   GetCodeArtifactDetailData,
   GetDocumentDetailData,
+  GetPageDetailData,
+  GetPageVersionData,
+  GetPageVersionsData,
   GetResourceDetailData,
   ListCanvasesData,
   ListCanvasTemplatesData,
   ListDocumentsData,
   ListLabelClassesData,
   ListLabelInstancesData,
+  ListPagesData,
   ListResourcesData,
   ListSharesData,
   ListSkillInstancesData,
   ListSkillTriggersData,
 } from '../requests/types.gen';
 import * as Common from './common';
+export const ensureUseListPagesData = (
+  queryClient: QueryClient,
+  clientOptions: Options<ListPagesData, true> = {},
+) =>
+  queryClient.ensureQueryData({
+    queryKey: Common.UseListPagesKeyFn(clientOptions),
+    queryFn: () => listPages({ ...clientOptions }).then((response) => response.data),
+  });
+export const ensureUseGetPageDetailData = (
+  queryClient: QueryClient,
+  clientOptions: Options<GetPageDetailData, true>,
+) =>
+  queryClient.ensureQueryData({
+    queryKey: Common.UseGetPageDetailKeyFn(clientOptions),
+    queryFn: () => getPageDetail({ ...clientOptions }).then((response) => response.data),
+  });
+export const ensureUseGetPageVersionsData = (
+  queryClient: QueryClient,
+  clientOptions: Options<GetPageVersionsData, true>,
+) =>
+  queryClient.ensureQueryData({
+    queryKey: Common.UseGetPageVersionsKeyFn(clientOptions),
+    queryFn: () => getPageVersions({ ...clientOptions }).then((response) => response.data),
+  });
+export const ensureUseGetPageVersionData = (
+  queryClient: QueryClient,
+  clientOptions: Options<GetPageVersionData, true>,
+) =>
+  queryClient.ensureQueryData({
+    queryKey: Common.UseGetPageVersionKeyFn(clientOptions),
+    queryFn: () => getPageVersion({ ...clientOptions }).then((response) => response.data),
+  });
 export const ensureUseGetAuthConfigData = (
   queryClient: QueryClient,
   clientOptions: Options<unknown, true> = {},
