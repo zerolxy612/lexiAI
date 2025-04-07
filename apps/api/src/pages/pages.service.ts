@@ -222,7 +222,7 @@ export class PagesService {
   // 更新页面 - 保存编辑状态
   async updatePage(user: User | ResolveUserResponse, pageId: string, param: UpdatePageDto): Promise<UpdatePageResult> {
     const { uid } = user as User;
-    const { title, nodeRelations, pageConfig } = param;
+    const { title, nodeRelations, nodeRelationOrders, pageConfig } = param;
     
     // 检查页面是否存在
     const [page] = await this.prisma.$queryRaw<Page[]>`
@@ -236,123 +236,166 @@ export class PagesService {
       throw new PageNotFoundError();
     }
 
-    // 开始更新操作
-    let updatePage = page;
-
-    // 如果有标题更新
-    if (title !== undefined) {
-      const [updated] = await this.prisma.$queryRaw<Page[]>`
-        UPDATE "pages"
-        SET "title" = ${title}, "updated_at" = NOW()
-        WHERE "page_id" = ${pageId}
-        RETURNING *
-      `;
-      updatePage = updated;
-    }
-
-    // 如果有节点关联更新
-    let updatedRelations = undefined;
-    if (nodeRelations && nodeRelations.length > 0) {
-      // 获取当前页面的节点关联
-      const existingRelations = await this.prisma.$queryRaw<PageNodeRelation[]>`
-        SELECT * FROM "page_node_relations"
-        WHERE "page_id" = ${pageId}
-        AND "deleted_at" IS NULL
-      `;
-
-      // 按节点ID分组现有关系，方便查找
-      const relationsByNodeId = existingRelations.reduce((acc: Record<string, PageNodeRelation>, relation) => {
-        acc[relation.node_id] = relation;
-        return acc;
-      }, {});
-
-      // 更新现有关系或创建新关系
-      const updatedRelationsPromises = nodeRelations.map(async (relation, index) => {
-        const { nodeId, nodeType, entityId, nodeData, orderIndex = index } = relation;
-
-        // 检查是否已有此节点关联
-        if (relationsByNodeId[nodeId]) {
-          // 更新现有关联
-          const [updated] = await this.prisma.$queryRaw<PageNodeRelation[]>`
-            UPDATE "page_node_relations"
-            SET 
-              "node_type" = ${nodeType},
-              "entity_id" = ${entityId},
-              "order_index" = ${orderIndex},
-              "node_data" = ${JSON.stringify(nodeData) || '{}'},
-              "updated_at" = NOW()
-            WHERE "relation_id" = ${relationsByNodeId[nodeId].relation_id}
-            RETURNING *
-          `;
-          return updated;
-        } else {
-          // 创建新关联
-          const relationId = genPageNodeRelationId();
-          const nodeDataStr = typeof nodeData === 'string' 
-            ? nodeData 
-            : JSON.stringify(nodeData || {});
-          
-          const [created] = await this.prisma.$queryRaw<PageNodeRelation[]>`
-            INSERT INTO "page_node_relations" (
-              "relation_id", "page_id", "node_id", "node_type", "entity_id", 
-              "order_index", "node_data", "created_at", "updated_at"
-            )
-            VALUES (
-              ${relationId}, ${pageId}, ${nodeId}, ${nodeType}, ${entityId}, 
-              ${orderIndex}, ${nodeDataStr}, NOW(), NOW()
-            )
-            RETURNING *
-          `;
-          return created;
-        }
-      });
-      
-      updatedRelations = await Promise.all(updatedRelationsPromises);
-    }
-
-    // 更新页面状态
-    if (pageConfig) {
-      try {
-        // 读取现有状态文件
-        let ydoc = new Y.Doc();
+    // 使用事务处理所有数据库操作
+    return await this.prisma.$transaction(async (tx) => {
+      // 开始更新操作
+      let updatePage = page;
+  
+      // 如果有标题更新
+      if (title !== undefined) {
+        const [updated] = await tx.$queryRaw<Page[]>`
+          UPDATE "pages"
+          SET "title" = ${title}, "updated_at" = NOW()
+          WHERE "page_id" = ${pageId}
+          RETURNING *
+        `;
+        updatePage = updated;
+      }
+  
+      // 如果仅是更新节点顺序
+      let updatedRelations = undefined;
+      if (nodeRelationOrders && nodeRelationOrders.length > 0) {
+        this.logger.log('Updating node relation orders', nodeRelationOrders);
         
-        if (page.state_storage_key) {
-          try {
-            const stateStream = await this.minio.client.getObject(page.state_storage_key);
-            const stateBuffer = await streamToBuffer(stateStream);
-            
-            if (stateBuffer) {
-              const update = new Uint8Array(stateBuffer);
-              Y.applyUpdate(ydoc, update);
-            }
-          } catch (error) {
-            // 如果文件不存在，使用新的Y.Doc()
-            this.logger.error('Error reading state file, creating new:', error);
-            ydoc = new Y.Doc();
+        // 获取当前页面的节点关联
+        const existingRelations = await tx.$queryRaw<PageNodeRelation[]>`
+          SELECT * FROM "page_node_relations"
+          WHERE "page_id" = ${pageId}
+          AND "deleted_at" IS NULL
+        `;
+  
+        // 按relationId分组现有关系，方便查找
+        const relationsByRelationId = existingRelations.reduce((acc: Record<string, PageNodeRelation>, relation) => {
+          acc[relation.relation_id] = relation;
+          return acc;
+        }, {});
+  
+        // 只更新节点顺序
+        const updatedRelationsPromises = nodeRelationOrders.map(async (relation) => {
+          const { relationId, orderIndex } = relation;
+  
+          // 检查是否存在此关联ID
+          if (relationsByRelationId[relationId]) {
+            // 仅更新顺序
+            const [updated] = await tx.$queryRaw<PageNodeRelation[]>`
+              UPDATE "page_node_relations"
+              SET "order_index" = ${orderIndex}, "updated_at" = NOW()
+              WHERE "relation_id" = ${relationId}
+              RETURNING *
+            `;
+            return updated;
           }
-        }
-        
-        // 更新pageConfig
-        const pageConfigMap = ydoc.getMap('pageConfig');
-        Object.entries(pageConfig).forEach(([key, value]) => {
-          pageConfigMap.set(key, value);
+          // 如果找不到关联ID，返回null
+          return null;
         });
         
-        // 保存更新后的状态
-        const update = Y.encodeStateAsUpdate(ydoc);
-        await this.minio.client.putObject(
-          page.state_storage_key,
-          Buffer.from(update)
-        );
-      } catch (error) {
-        this.logger.error('Error saving page state:', error);
+        // 过滤掉null值
+        const results = await Promise.all(updatedRelationsPromises);
+        updatedRelations = results.filter(Boolean);
       }
-    }
-
-    return {
-      page: updatePage,
-      nodeRelations: updatedRelations,
-    };
+      // 如果是完整的节点关联更新
+      else if (nodeRelations && nodeRelations.length > 0) {
+        // 获取当前页面的节点关联
+        const existingRelations = await tx.$queryRaw<PageNodeRelation[]>`
+          SELECT * FROM "page_node_relations"
+          WHERE "page_id" = ${pageId}
+          AND "deleted_at" IS NULL
+        `;
+  
+        // 按节点ID分组现有关系，方便查找
+        const relationsByNodeId = existingRelations.reduce((acc: Record<string, PageNodeRelation>, relation) => {
+          acc[relation.node_id] = relation;
+          return acc;
+        }, {});
+  
+        // 更新现有关系或创建新关系
+        const updatedRelationsPromises = nodeRelations.map(async (relation, index) => {
+          const { nodeId, nodeType, entityId, nodeData, orderIndex = index } = relation;
+  
+          // 检查是否已有此节点关联
+          if (relationsByNodeId[nodeId]) {
+            // 更新现有关联
+            const [updated] = await tx.$queryRaw<PageNodeRelation[]>`
+              UPDATE "page_node_relations"
+              SET 
+                "node_type" = ${nodeType},
+                "entity_id" = ${entityId},
+                "order_index" = ${orderIndex},
+                "node_data" = ${JSON.stringify(nodeData) || '{}'},
+                "updated_at" = NOW()
+              WHERE "relation_id" = ${relationsByNodeId[nodeId].relation_id}
+              RETURNING *
+            `;
+            return updated;
+          } else {
+            // 创建新关联
+            const relationId = genPageNodeRelationId();
+            const nodeDataStr = typeof nodeData === 'string' 
+              ? nodeData 
+              : JSON.stringify(nodeData || {});
+            
+            const [created] = await tx.$queryRaw<PageNodeRelation[]>`
+              INSERT INTO "page_node_relations" (
+                "relation_id", "page_id", "node_id", "node_type", "entity_id", 
+                "order_index", "node_data", "created_at", "updated_at"
+              )
+              VALUES (
+                ${relationId}, ${pageId}, ${nodeId}, ${nodeType}, ${entityId}, 
+                ${orderIndex}, ${nodeDataStr}, NOW(), NOW()
+              )
+              RETURNING *
+            `;
+            return created;
+          }
+        });
+        
+        updatedRelations = await Promise.all(updatedRelationsPromises);
+      }
+  
+      // 在事务完成后处理非数据库操作（如更新页面状态文件）
+      if (pageConfig) {
+        try {
+          // 读取现有状态文件
+          let ydoc = new Y.Doc();
+          
+          if (page.state_storage_key) {
+            try {
+              const stateStream = await this.minio.client.getObject(page.state_storage_key);
+              const stateBuffer = await streamToBuffer(stateStream);
+              
+              if (stateBuffer) {
+                const update = new Uint8Array(stateBuffer);
+                Y.applyUpdate(ydoc, update);
+              }
+            } catch (error) {
+              // 如果文件不存在，使用新的Y.Doc()
+              this.logger.error('Error reading state file, creating new:', error);
+              ydoc = new Y.Doc();
+            }
+          }
+          
+          // 更新pageConfig
+          const pageConfigMap = ydoc.getMap('pageConfig');
+          Object.entries(pageConfig).forEach(([key, value]) => {
+            pageConfigMap.set(key, value);
+          });
+          
+          // 保存更新后的状态
+          const update = Y.encodeStateAsUpdate(ydoc);
+          await this.minio.client.putObject(
+            page.state_storage_key,
+            Buffer.from(update)
+          );
+        } catch (error) {
+          this.logger.error('Error saving page state:', error);
+        }
+      }
+  
+      return {
+        page: updatePage,
+        nodeRelations: updatedRelations,
+      };
+    });
   }
   
   // 发布页面 - 生成可分享的版本
@@ -625,7 +668,7 @@ export class PagesService {
 
     // 检查是否已有分享记录
     const [existingShare] = await this.prisma.$queryRaw<{share_id: string}[]>`
-      SELECT * FROM "PageShare"
+      SELECT * FROM "page_shares"
       WHERE "page_id" = ${pageId}
       AND "deleted_at" IS NULL
     `;
@@ -635,7 +678,7 @@ export class PagesService {
       return {
         pageId,
         shareId: existingShare.share_id,
-        shareUrl: `${process.env.API_ENDPOINT || ''}/api/v1/pages/share/${existingShare.share_id}`,
+        shareUrl: `${process.env.FRONTEND_URL || 'https://refly.ai'}/share/pages/${existingShare.share_id}`,
       };
     }
 
@@ -644,18 +687,76 @@ export class PagesService {
     
     // 创建分享记录
     await this.prisma.$queryRaw`
-      INSERT INTO "PageShare" (
-        "share_id", "page_id", "created_at", "updated_at"
-      )
-      VALUES (
-        ${shareId}, ${pageId}, NOW(), NOW()
+      INSERT INTO "page_shares" (
+        "share_id",
+        "page_id"
+      ) VALUES (
+        ${shareId},
+        ${pageId}
       )
     `;
 
     return {
       pageId,
       shareId,
-      shareUrl: `${process.env.API_ENDPOINT || ''}/api/v1/pages/share/${shareId}`,
+      shareUrl: `${process.env.FRONTEND_URL || 'https://refly.ai'}/share/pages/${shareId}`,
+    };
+  }
+  
+  // 获取分享页面内容
+  async getSharedPage(shareId: string) {
+    // 通过分享ID查找对应的页面ID
+    const [shareRecord] = await this.prisma.$queryRaw<{page_id: string}[]>`
+      SELECT * FROM "page_shares"
+      WHERE "share_id" = ${shareId}
+      AND "deleted_at" IS NULL
+    `;
+    
+    if (!shareRecord) {
+      throw new ShareNotFoundError();
+    }
+    
+    const pageId = shareRecord.page_id;
+    
+    // 获取页面基本信息
+    const [page] = await this.prisma.$queryRaw<Page[]>`
+      SELECT * FROM "pages"
+      WHERE "page_id" = ${pageId}
+      AND "deleted_at" IS NULL
+    `;
+    
+    if (!page) {
+      throw new PageNotFoundError();
+    }
+    
+    // 获取最新版本
+    const [latestVersion] = await this.prisma.$queryRaw<PageVersion[]>`
+      SELECT * FROM "page_versions"
+      WHERE "page_id" = ${pageId}
+      ORDER BY "version" DESC
+      LIMIT 1
+    `;
+    
+    if (!latestVersion) {
+      throw new Error('页面版本不存在');
+    }
+    
+    // 获取版本内容
+    const contentStream = await this.minio.client.getObject(
+      latestVersion.content_storage_key
+    );
+    
+    const contentBuffer = await streamToBuffer(contentStream);
+    const content = JSON.parse(contentBuffer.toString());
+    
+    // 返回页面内容及元数据
+    return {
+      pageId,
+      title: page.title,
+      description: page.description,
+      version: latestVersion.version,
+      createdAt: latestVersion.created_at,
+      content
     };
   }
   

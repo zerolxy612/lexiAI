@@ -95,6 +95,7 @@ export interface CreatePageDto {
 export interface UpdatePageDto {
   title?: string;
   nodeRelations?: NodeRelationDto[];
+  nodeRelationOrders?: NodeRelationOrderDto[];
   pageConfig?: Record<string, any>;
 }
 
@@ -104,6 +105,12 @@ export interface NodeRelationDto {
   entityId: string;
   nodeData?: any;
   orderIndex?: number;
+}
+
+// 专门用于更新节点顺序的DTO
+export interface NodeRelationOrderDto {
+  relationId: string;
+  orderIndex: number;
 }
 
 export interface PageVersionParamDto {

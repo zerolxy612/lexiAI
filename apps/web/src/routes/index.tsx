@@ -21,6 +21,7 @@ const Canvas = lazy(() => import('@/pages/canvas'));
 const Pricing = lazy(() => import('@/pages/pricing'));
 const ShareCanvasPage = lazy(() => import('@/pages/share'));
 const ShareCodePage = lazy(() => import('@/pages/code-share'));
+const SharePagePage = lazy(() => import('@/pages/share/pages/[shareId]'));
 const TemplatePreviewPage = lazy(() => import('@/pages/template-preview'));
 const SkillResponseSharePage = lazy(() => import('@/pages/skill-response-share'));
 const DocumentSharePage = lazy(() => import('@/pages/document-share'));
@@ -39,6 +40,7 @@ const prefetchRoutes = () => {
   import('@/pages/pages');
   import('@/pages/pages/edit/[pageId]');
   import('@/pages/pages/preview/[pageId]');
+  import('@/pages/share/pages/[shareId]');
 };
 
 export const AppRouter = (props: { layout?: any }) => {
@@ -104,6 +106,7 @@ export const AppRouter = (props: { layout?: any }) => {
           <Route path="/share/code/:shareId" element={<ShareCodePage />} />
           <Route path="/share/answer/:shareId" element={<SkillResponseSharePage />} />
           <Route path="/share/doc/:shareId" element={<DocumentSharePage />} />
+          <Route path="/share/pages/:shareId" element={<SharePagePage />} />
           <Route path="/artifact-gallery" element={<ArtifactGalleryPage />} />
           <Route path="/use-cases-gallery" element={<UseCasesGalleryPage />} />
           <Route path="/preview/canvas/:shareId" element={<TemplatePreviewPage />} />

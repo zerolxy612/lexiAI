@@ -78,6 +78,25 @@ export class PagesController {
     });
   }
 
+  @ApiOperation({ summary: '更新页面(PUT)' })
+  @ApiResponse({ status: 200, description: '更新成功' })
+  @UseGuards(JwtAuthGuard)
+  @Put(':pageId')
+  async updatePagePut(
+    @LoginedUser() user: User,
+    @Param('pageId') pageId: string,
+    @Body() updatePageDto: UpdatePageDto,
+  ) {
+    const result = await this.pagesService.updatePage(user, pageId, updatePageDto);
+    
+    return buildSuccessResponse({
+      ...pagePO2DTO(result.page),
+      nodeRelations: result.nodeRelations 
+        ? result.nodeRelations.map(pageNodeRelationPO2DTO) 
+        : undefined,
+    });
+  }
+
   @ApiOperation({ summary: '发布页面' })
   @ApiResponse({ status: 200, description: '发布成功' })
   @UseGuards(JwtAuthGuard)
@@ -130,6 +149,16 @@ export class PagesController {
       shareId: result.shareId,
       shareUrl: result.shareUrl,
     });
+  }
+
+  @ApiOperation({ summary: '获取分享页面内容' })
+  @ApiResponse({ status: 200, description: '获取分享内容成功' })
+  @ApiParam({ name: 'shareId', description: '分享ID' })
+  @Get('share/:shareId')
+  async getSharedPage(@Param('shareId') shareId: string) {
+    const result = await this.pagesService.getSharedPage(shareId);
+    
+    return buildSuccessResponse(result);
   }
 
   @ApiOperation({ summary: '删除页面' })
