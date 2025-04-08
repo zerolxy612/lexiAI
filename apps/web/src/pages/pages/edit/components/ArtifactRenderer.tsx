@@ -36,9 +36,13 @@ const ArtifactRenderer = memo(
   ({
     node,
     type: rendererType,
+    isFullscreen = false,
+    isMinimap = false,
   }: {
     node: NodeRelation;
     type: "document" | "code";
+    isFullscreen?: boolean;
+    isMinimap?: boolean;
   }) => {
     const artifactId = node.nodeData?.entityId || "";
 
@@ -153,36 +157,69 @@ const ArtifactRenderer = memo(
     }
 
     return (
-      <div className="h-full bg-white rounded px-4 pb-4">
+      <div
+        className={`h-full bg-white ${!isFullscreen ? "rounded px-4 pb-4" : "w-full"} ${isMinimap ? "p-1" : ""}`}
+      >
         <div className="h-full w-full overflow-hidden flex flex-col">
-          <div className="flex items-center justify-between py-2 border-b">
-            <div className="font-medium text-gray-800">{title}</div>
-            <div className="text-xs text-gray-500">
-              {getTypeDisplayName(currentType)}
-            </div>
-          </div>
           <div
-            className={`flex-1 overflow-${rendererType === "document" ? "auto" : "hidden"}`}
+            className={`flex items-center justify-between py-2 ${!isFullscreen ? "border-b" : "border-b bg-gray-100 px-4"} ${isMinimap ? "py-1 px-2 border-b-0 bg-gray-50" : ""}`}
           >
-            {status === "generating" ? (
-              <div className="flex h-full w-full items-center justify-center">
-                <div className="text-gray-500">
-                  {rendererType === "document" ? "文档" : "代码"}生成中...
-                </div>
+            <div
+              className={`font-medium text-gray-800 ${isMinimap ? "text-xs truncate" : ""}`}
+            >
+              {title}
+            </div>
+            {!isMinimap && (
+              <div className="text-xs text-gray-500">
+                {getTypeDisplayName(currentType)}
               </div>
-            ) : (
-              <Renderer
-                content={content}
-                type={currentType}
-                title={title}
-                language={artifactData?.language || language}
-                readonly
-                onRequestFix={handleRequestFix}
-                width="100%"
-                height="100%"
-              />
             )}
           </div>
+          {isMinimap ? (
+            <div className="flex-1 bg-white overflow-hidden">
+              {status === "generating" ? (
+                <div className="flex h-full w-full items-center justify-center">
+                  <div className="text-xs text-gray-500">生成中...</div>
+                </div>
+              ) : (
+                <div className="transform scale-[0.5] origin-top-left w-[200%] h-[200%] overflow-hidden bg-white rounded shadow-sm">
+                  <Renderer
+                    content={content}
+                    type={currentType}
+                    title={title}
+                    language={artifactData?.language || language}
+                    readonly
+                    onRequestFix={handleRequestFix}
+                    width="100%"
+                    height="100%"
+                  />
+                </div>
+              )}
+            </div>
+          ) : (
+            <div
+              className={`flex-1 ${isFullscreen ? "h-[calc(100vh-100px)]" : ""} overflow-${rendererType === "document" ? "auto" : "hidden"}`}
+            >
+              {status === "generating" ? (
+                <div className="flex h-full w-full items-center justify-center">
+                  <div className="text-gray-500">
+                    {rendererType === "document" ? "文档" : "代码"}生成中...
+                  </div>
+                </div>
+              ) : (
+                <Renderer
+                  content={content}
+                  type={currentType}
+                  title={title}
+                  language={artifactData?.language || language}
+                  readonly
+                  onRequestFix={handleRequestFix}
+                  width="100%"
+                  height="100%"
+                />
+              )}
+            </div>
+          )}
         </div>
       </div>
     );

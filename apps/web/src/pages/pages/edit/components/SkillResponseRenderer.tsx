@@ -22,72 +22,82 @@ interface SkillResponseProps {
       };
     };
   };
+  isFullscreen?: boolean;
+  isMinimap?: boolean;
 }
 
-export const SkillResponseRenderer = memo(({ node }: SkillResponseProps) => {
-  const entityId = node.nodeData?.entityId || "";
-  const shareId = node.nodeData?.metadata?.shareId;
-  const status = node.nodeData?.metadata?.status;
+export const SkillResponseRenderer = memo(
+  ({ node, isFullscreen = false, isMinimap = false }: SkillResponseProps) => {
+    const entityId = node.nodeData?.entityId || "";
+    const shareId = node.nodeData?.metadata?.shareId;
+    const status = node.nodeData?.metadata?.status;
 
-  // 使用共享数据或直接获取 Action 结果
-  const { data: shareData, loading: isShareLoading } =
-    useFetchShareData<GetActionResultResponse["data"]>(shareId);
+    // 使用共享数据或直接获取 Action 结果
+    const { data: shareData, loading: isShareLoading } =
+      useFetchShareData<GetActionResultResponse["data"]>(shareId);
 
-  const { data: actionResultData, isLoading: isActionLoading } =
-    useGetActionResult(
-      {
-        query: { resultId: entityId },
-      },
-      [entityId],
-      {
-        enabled: Boolean(!shareId && entityId),
-      }
+    const { data: actionResultData, isLoading: isActionLoading } =
+      useGetActionResult(
+        {
+          query: { resultId: entityId },
+        },
+        [entityId],
+        {
+          enabled: Boolean(!shareId && entityId),
+        }
+      );
+
+    const isLoading = isShareLoading || isActionLoading;
+
+    // 合并数据源
+    const resultData = useMemo(
+      () => shareData || actionResultData?.data || null,
+      [shareData, actionResultData]
     );
 
-  const isLoading = isShareLoading || isActionLoading;
+    // 如果没有 entityId
+    if (!resultData) {
+      return (
+        <div className="h-full flex items-center justify-center bg-white rounded p-3">
+          <span className="text-gray-500">未选择技能响应组件</span>
+        </div>
+      );
+    }
 
-  // 合并数据源
-  const resultData = useMemo(
-    () => shareData || actionResultData?.data || null,
-    [shareData, actionResultData]
-  );
+    const { title, steps = [], actionMeta } = resultData;
 
-  // 如果没有 entityId
-  if (!resultData) {
     return (
-      <div className="h-full flex items-center justify-center bg-white rounded p-3">
-        <span className="text-gray-500">未选择技能响应组件</span>
-      </div>
-    );
-  }
+      <div
+        className={`flex h-full w-full grow relative ${isFullscreen ? "overflow-hidden" : ""}`}
+      >
+        {/* Main content */}
+        <div
+          className={`flex h-full w-full grow bg-white overflow-auto ${isFullscreen ? "h-[calc(100vh-100px)]" : ""}`}
+        >
+          <div
+            className={`flex flex-col space-y-4 p-4 h-full ${isFullscreen ? "w-full max-w-none" : "max-w-[1024px] mx-auto w-full"}`}
+          >
+            {title && (
+              <PreviewChatInput
+                enabled={true}
+                readonly={true}
+                contextItems={[]}
+                query={title}
+                actionMeta={actionMeta}
+                setEditMode={() => {}}
+              />
+            )}
 
-  const { title, steps = [], actionMeta } = resultData;
-
-  return (
-    <div className="flex h-full w-full grow relative">
-      {/* Main content */}
-      <div className="flex h-full w-full grow bg-white overflow-auto">
-        <div className="flex flex-col space-y-4 p-4 h-full max-w-[1024px] mx-auto w-full">
-          {title && (
-            <PreviewChatInput
-              enabled={true}
-              readonly={true}
-              contextItems={[]}
-              query={title}
-              actionMeta={actionMeta}
-              setEditMode={() => {}}
-            />
-          )}
-
-          <div className="flex-grow">
-            {steps.map((step: ActionStep, index: number) => (
-              <SimpleStepCard key={step.name} step={step} index={index + 1} />
-            ))}
+            <div className="flex-grow">
+              {steps.map((step: ActionStep, index: number) => (
+                <SimpleStepCard key={step.name} step={step} index={index + 1} />
+              ))}
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
-});
+    );
+  }
+);
 
 SkillResponseRenderer.displayName = "SkillResponseRenderer";
