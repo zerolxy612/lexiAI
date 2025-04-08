@@ -11,10 +11,11 @@ import {
 } from '@refly/errors';
 import { sendToBackground } from '@refly-packages/ai-workspace-common/utils/extension/messaging';
 import { MessageName } from '@refly/common-types';
-import { safeStringifyJSON } from '@refly-packages/utils/parse';
+import { safeStringifyJSON } from '@refly/utils/parse';
 import { responseInterceptorWithTokenRefresh } from '@refly-packages/ai-workspace-common/utils/auth';
 import { getLocale } from '@refly-packages/ai-workspace-common/utils/locale';
 import { showErrorNotification } from '@refly-packages/ai-workspace-common/utils/notification';
+import { customFetch } from '@refly-packages/ai-workspace-common/utils/custom-fetch';
 
 // Create a WeakMap to store cloned requests
 const requestCache = new WeakMap<Request, Request>();
@@ -33,7 +34,11 @@ export const getAndClearCachedRequest = (originalRequest: Request): Request | un
   return cachedRequest;
 };
 
-client.setConfig({ baseUrl: `${serverOrigin}/v1`, credentials: 'include' });
+client.setConfig({
+  baseUrl: `${serverOrigin}/v1`,
+  credentials: 'include',
+  fetch: customFetch,
+});
 
 export interface CheckResponseResult {
   isError: boolean;

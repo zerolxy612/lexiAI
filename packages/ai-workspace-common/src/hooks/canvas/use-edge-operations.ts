@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { Connection, Edge, applyEdgeChanges, EdgeChange, useReactFlow } from '@xyflow/react';
-import { genUniqueId } from '@refly-packages/utils/id';
+import { genUniqueId } from '@refly/utils/id';
 import { useEdgeStyles, getEdgeStyles } from '../../components/canvas/constants';
 import { useCanvasSync } from './use-canvas-sync';
 

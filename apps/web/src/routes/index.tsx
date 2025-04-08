@@ -86,7 +86,7 @@ export const AppRouter = (props: { layout?: any }) => {
     }
   }
 
-  const hasBetaAccess = userStore?.isLogin ? userStore?.userProfile?.hasBetaAccess || false : true;
+  const hasBetaAccess = true;
 
   return (
     <Suspense fallback={<SuspenseLoading />}>
