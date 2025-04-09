@@ -61,15 +61,18 @@ function PageEdit() {
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [showPreviewMinimap, setShowPreviewMinimap] = useState(false);
-  const [isWideMode, setIsWideMode] = useState(false);
-  const [wideNodeId, setWideNodeId] = useState<string | null>(null);
-  const previewMinimapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [wideMode, setWideMode] = useState<{ isActive: boolean; nodeId: string | null }>({ isActive: false, nodeId: null });
   const previewContentRef = useRef<HTMLDivElement>(null);
   const [isDeletingNode, setIsDeletingNode] = useState(false);
-  const [isIdle, setIsIdle] = useState(false);
-  const [showNav, setShowNav] = useState(false);
-  const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const navTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [uiState, setUiState] = useState({
+    isIdle: false,
+    showNav: false
+  });
+  const timersRef = useRef<{
+    idle: NodeJS.Timeout | null;
+    nav: NodeJS.Timeout | null;
+    minimap: NodeJS.Timeout | null;
+  }>({ idle: null, nav: null, minimap: null });
 
   // 获取侧边栏状态
   const { collapse, setCollapse } = useSiderStoreShallow((state) => ({
@@ -227,71 +230,65 @@ function PageEdit() {
     setFormChanged(true);
   };
 
-  // 重置闲置计时器
-  const resetIdleTimer = useCallback(() => {
-    setIsIdle(false);
+  // 统一的UI状态管理函数
+  const updateUiState = useCallback((updates: Partial<typeof uiState>) => {
+    setUiState(prev => ({ ...prev, ...updates }));
+  }, []);
 
-    if (idleTimerRef.current) {
-      clearTimeout(idleTimerRef.current);
+  // 重置定时器
+  const resetTimer = useCallback((timerKey: keyof typeof timersRef.current, callback: () => void, delay: number) => {
+    if (timersRef.current[timerKey]) {
+      clearTimeout(timersRef.current[timerKey]!);
     }
+    timersRef.current[timerKey] = setTimeout(callback, delay);
+  }, []);
 
-    idleTimerRef.current = setTimeout(() => {
-      if (isPreviewMode) {
-        setIsIdle(true);
-        setShowNav(false);
-      }
-    }, 2000); // 2秒无操作后隐藏导航栏
-  }, [isPreviewMode]);
-
-  // 处理header和footer的鼠标事件，确保同时显示
-  const handleNavHover = useCallback(() => {
-    // 重置闲置计时器
-    resetIdleTimer();
-
-    // 显示导航栏
-    setShowNav(true);
-
-    // 清除之前的导航栏隐藏计时器
-    if (navTimerRef.current) {
-      clearTimeout(navTimerRef.current);
+  // 重置闲置状态
+  const resetIdleState = useCallback(() => {
+    updateUiState({ isIdle: false });
+    
+    if (isPreviewMode) {
+      resetTimer('idle', () => {
+        updateUiState({ isIdle: true, showNav: false });
+      }, 2000); // 2秒无操作后隐藏导航栏
     }
+  }, [isPreviewMode, updateUiState, resetTimer]);
 
-    // 设置新的导航栏隐藏计时器
-    navTimerRef.current = setTimeout(() => {
-      if (isIdle) {
-        setShowNav(false);
+  // 统一的UI交互处理函数
+  const handleUiInteraction = useCallback(() => {
+    resetIdleState();
+    updateUiState({ showNav: true });
+
+    resetTimer('nav', () => {
+      if (uiState.isIdle) {
+        updateUiState({ showNav: false });
       }
     }, 3000); // 悬停3秒后，如果处于闲置状态则隐藏
-  }, [resetIdleTimer, isIdle]);
+  }, [resetIdleState, updateUiState, resetTimer, uiState.isIdle]);
 
-  // 当预览模式改变时重置计时器
+  // 预览模式状态变化处理
   useEffect(() => {
     if (isPreviewMode) {
-      resetIdleTimer();
-      setShowNav(true);
+      resetIdleState();
+      updateUiState({ showNav: true });
     } else {
-      setIsIdle(false);
-      setShowNav(false);
-      if (idleTimerRef.current) {
-        clearTimeout(idleTimerRef.current);
-        idleTimerRef.current = null;
-      }
-      if (navTimerRef.current) {
-        clearTimeout(navTimerRef.current);
-        navTimerRef.current = null;
-      }
+      updateUiState({ isIdle: false, showNav: false });
+      Object.keys(timersRef.current).forEach(key => {
+        const timerKey = key as keyof typeof timersRef.current;
+        if (timersRef.current[timerKey]) {
+          clearTimeout(timersRef.current[timerKey]!);
+          timersRef.current[timerKey] = null;
+        }
+      });
     }
-  }, [isPreviewMode, resetIdleTimer]);
+  }, [isPreviewMode, resetIdleState, updateUiState]);
 
-  // 清理闲置计时器
+  // 清理所有定时器
   useEffect(() => {
     return () => {
-      if (idleTimerRef.current) {
-        clearTimeout(idleTimerRef.current);
-      }
-      if (navTimerRef.current) {
-        clearTimeout(navTimerRef.current);
-      }
+      Object.values(timersRef.current).forEach(timer => {
+        if (timer) clearTimeout(timer);
+      });
     };
   }, []);
 
@@ -304,8 +301,8 @@ function PageEdit() {
 
     const handleTouchStart = (e: TouchEvent) => {
       touchStartX = e.changedTouches[0].screenX;
-      // 触摸时重置闲置计时器
-      resetIdleTimer();
+      // 触摸时重置闲置状态
+      handleUiInteraction();
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
@@ -314,8 +311,8 @@ function PageEdit() {
     };
 
     const handleTouchMove = () => {
-      // 触摸移动时重置闲置计时器
-      resetIdleTimer();
+      // 触摸移动时重置闲置状态
+      handleUiInteraction();
     };
 
     const handleSwipe = () => {
@@ -338,49 +335,34 @@ function PageEdit() {
       element.removeEventListener("touchend", handleTouchEnd);
       element.removeEventListener("touchmove", handleTouchMove);
     };
-  }, [isPreviewMode, nextSlide, prevSlide, resetIdleTimer]);
+  }, [isPreviewMode, nextSlide, prevSlide, handleUiInteraction]);
 
   // 预览模式交互处理
   const handlePreviewMouseMove = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       if (!isPreviewMode) return;
 
-      // 重置闲置计时器
-      resetIdleTimer();
+      handleUiInteraction();
 
       // 当鼠标移动到屏幕左侧边缘时显示小地图
       if (e.clientX < 20) {
         setShowPreviewMinimap(true);
-        if (previewMinimapTimeoutRef.current) {
-          clearTimeout(previewMinimapTimeoutRef.current);
-          previewMinimapTimeoutRef.current = null;
-        }
+        resetTimer('minimap', () => {}, 0);
       }
-
-      // 自动隐藏小地图功能保持不变
     },
-    [isPreviewMode, resetIdleTimer]
+    [isPreviewMode, handleUiInteraction, resetTimer]
   );
 
   // 小地图交互处理
   const handleMinimapMouseEnter = useCallback(() => {
-    if (previewMinimapTimeoutRef.current) {
-      clearTimeout(previewMinimapTimeoutRef.current);
-      previewMinimapTimeoutRef.current = null;
+    if (timersRef.current.minimap) {
+      clearTimeout(timersRef.current.minimap);
+      timersRef.current.minimap = null;
     }
   }, []);
 
   const handleMinimapMouseLeave = useCallback(() => {
     setShowPreviewMinimap(false);
-  }, []);
-
-  // 清理定时器
-  useEffect(() => {
-    return () => {
-      if (previewMinimapTimeoutRef.current) {
-        clearTimeout(previewMinimapTimeoutRef.current);
-      }
-    };
   }, []);
 
   const handlePreviewSlideSelect = useCallback((index: number) => {
@@ -462,27 +444,25 @@ function PageEdit() {
     [nodes]
   );
 
-  // 处理宽屏模式
+  // 宽屏模式处理
   const handleWideMode = useCallback(
     (nodeId: string) => {
       const node = nodes.find((n) => n.nodeId === nodeId);
       if (node) {
-        setWideNodeId(nodeId);
-        setIsWideMode(true);
+        setWideMode({ isActive: true, nodeId });
       }
     },
-    [nodes, getNodeTitle]
+    [nodes]
   );
 
   // 关闭宽屏模式
   const handleCloseWideMode = useCallback(() => {
-    setIsWideMode(false);
-    setWideNodeId(null);
+    setWideMode({ isActive: false, nodeId: null });
   }, []);
 
   // 宽屏模式键盘快捷键
   useEffect(() => {
-    if (!isWideMode) return;
+    if (!wideMode.isActive) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -492,7 +472,7 @@ function PageEdit() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isWideMode, handleCloseWideMode]);
+  }, [wideMode.isActive, handleCloseWideMode]);
 
   // 加载状态
   if (isLoadingPage) {
@@ -740,11 +720,11 @@ function PageEdit() {
             {/* 预览内容区域 */}
             <div
               ref={previewContentRef}
-              className={`preview-content-container relative ${isIdle ? "idle" : ""} ${showNav ? "show-nav" : ""}`}
+              className={`preview-content-container relative ${uiState.isIdle ? "idle" : ""} ${uiState.showNav ? "show-nav" : ""}`}
               onMouseMove={handlePreviewMouseMove}
             >
               {/* 预览导航栏 - 默认隐藏 */}
-              <div className="preview-header" onMouseEnter={handleNavHover}>
+              <div className="preview-header" onMouseEnter={handleUiInteraction}>
                 <div className="preview-header-title">
                   {form.getFieldValue("title")}
                   <span className="page-indicator">
@@ -861,7 +841,7 @@ function PageEdit() {
 
               {/* 预览模式底部进度指示器 - 默认隐藏 */}
               {nodes.length > 0 && (
-                <div className="preview-footer" onMouseEnter={handleNavHover}>
+                <div className="preview-footer" onMouseEnter={handleUiInteraction}>
                   <div className="dots-container">
                     {nodes.map((_, index) => (
                       <div
@@ -881,7 +861,7 @@ function PageEdit() {
 
         {/* 宽屏模式弹窗 */}
         <Modal
-          open={isWideMode}
+          open={wideMode.isActive}
           footer={null}
           onCancel={handleCloseWideMode}
           width="85%"
@@ -900,10 +880,10 @@ function PageEdit() {
           <div className="bg-white h-full w-full flex flex-col rounded-lg overflow-hidden">
             {/* 宽屏模式内容 */}
             <div className="flex-1 overflow-auto">
-              {wideNodeId && nodes.find((n) => n.nodeId === wideNodeId) ? (
+              {wideMode.nodeId && nodes.find((n) => n.nodeId === wideMode.nodeId) ? (
                 <div className="h-[calc(100vh-160px)]">
                   <NodeRenderer
-                    node={nodes.find((n) => n.nodeId === wideNodeId)!}
+                    node={nodes.find((n) => n.nodeId === wideMode.nodeId)!}
                     isActive={true}
                     isFullscreen={false}
                     isModal={true}

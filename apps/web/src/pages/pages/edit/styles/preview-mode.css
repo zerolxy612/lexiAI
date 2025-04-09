@@ -590,20 +590,23 @@
   background-color: #000;
 }
 
-/* 当鼠标悬停在容器上，或者用JavaScript控制显示状态时的样式 */
+/* 当鼠标悬停在容器上时显示头部和底部 */
 .preview-content-container:hover .preview-header,
-.preview-content-container:hover .preview-footer,
-.preview-content-container.show-nav .preview-header,
-.preview-content-container.show-nav .preview-footer {
+.preview-header:hover {
   transform: translateY(0);
 }
 
-/* 鼠标不动时自动隐藏导航栏，确保header向上隐藏，footer向下隐藏 */
-.preview-content-container.idle .preview-header {
+.preview-content-container:hover .preview-footer,
+.preview-footer:hover {
+  transform: translateY(0);
+}
+
+/* 鼠标不动时自动隐藏导航栏 */
+.preview-content-container.idle .preview-header:not(:hover) {
   transform: translateY(-100%);
 }
 
-.preview-content-container.idle .preview-footer {
+.preview-content-container.idle .preview-footer:not(:hover) {
   transform: translateY(100%);
 }
 
