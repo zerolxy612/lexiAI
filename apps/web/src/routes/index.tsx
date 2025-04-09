@@ -30,6 +30,7 @@ const UseCasesGalleryPage = lazy(() => import('@/pages/use-cases-gallery'));
 const PagesListPage = lazy(() => import('@/pages/pages'));
 const PageEditPage = lazy(() => import('@/pages/pages/edit/[pageId]'));
 const PagePreviewPage = lazy(() => import('@/pages/pages/preview/[pageId]'));
+const ProjectPage = lazy(() => import('@/pages/project'));
 
 const prefetchRoutes = () => {
   // Prefetch common routes
@@ -114,6 +115,7 @@ export const AppRouter = (props: { layout?: any }) => {
             path="/canvas/:canvasId"
             element={<BetaProtectedRoute component={Canvas} hasBetaAccess={hasBetaAccess} />}
           />
+          <Route path="/project/:projectId" element={<ProjectPage />} />
           <Route
             path="/request-access"
             element={<RequestAccessRoute hasBetaAccess={hasBetaAccess} />}
@@ -132,7 +134,12 @@ export const AppRouter = (props: { layout?: any }) => {
           />
           <Route
             path="/pages/new"
-            element={<BetaProtectedRoute component={lazy(() => import('../pages/pages/new'))} hasBetaAccess={true} />}
+            element={
+              <BetaProtectedRoute
+                component={lazy(() => import('../pages/pages/new'))}
+                hasBetaAccess={true}
+              />
+            }
           />
         </Routes>
       </Layout>

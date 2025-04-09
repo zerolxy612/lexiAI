@@ -9,6 +9,7 @@ import {
   listLabelClasses,
   listLabelInstances,
   listPages,
+  listProjects,
   listResources,
   listSkillInstances,
   listSkillTriggers,
@@ -26,6 +27,8 @@ import {
   ListLabelInstancesError,
   ListPagesData,
   ListPagesError,
+  ListProjectsData,
+  ListProjectsError,
   ListResourcesData,
   ListResourcesError,
   ListSkillInstancesData,
@@ -147,6 +150,31 @@ export const useListDocumentsInfinite = <
     queryKey: Common.UseListDocumentsKeyFn(clientOptions, queryKey),
     queryFn: ({ pageParam }) =>
       listDocuments({
+        ...clientOptions,
+        query: { ...clientOptions.query, page: pageParam as number },
+      }).then((response) => response.data as TData) as TData,
+    initialPageParam: '1',
+    getNextPageParam: (response) =>
+      (
+        response as {
+          nextPage: number;
+        }
+      ).nextPage,
+    ...options,
+  });
+export const useListProjectsInfinite = <
+  TData = InfiniteData<Common.ListProjectsDefaultResponse>,
+  TError = ListProjectsError,
+  TQueryKey extends Array<unknown> = unknown[],
+>(
+  clientOptions: Options<ListProjectsData, true> = {},
+  queryKey?: TQueryKey,
+  options?: Omit<UseInfiniteQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
+) =>
+  useInfiniteQuery({
+    queryKey: Common.UseListProjectsKeyFn(clientOptions, queryKey),
+    queryFn: ({ pageParam }) =>
+      listProjects({
         ...clientOptions,
         query: { ...clientOptions.query, page: pageParam as number },
       }).then((response) => response.data as TData) as TData,

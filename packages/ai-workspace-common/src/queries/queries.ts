@@ -19,6 +19,7 @@ import {
   createLabelInstance,
   createPage,
   createPortalSession,
+  createProject,
   createResource,
   createResourceWithFile,
   createShare,
@@ -31,6 +32,8 @@ import {
   deleteLabelInstance,
   deletePage,
   deletePageNode,
+  deleteProject,
+  deleteProjectItems,
   deleteReferences,
   deleteResource,
   deleteShare,
@@ -51,6 +54,7 @@ import {
   getPageDetail,
   getPageVersion,
   getPageVersions,
+  getProjectDetail,
   getResourceDetail,
   getSettings,
   getSubscriptionPlans,
@@ -66,6 +70,7 @@ import {
   listLabelInstances,
   listModels,
   listPages,
+  listProjects,
   listResources,
   listShares,
   listSkillInstances,
@@ -92,6 +97,8 @@ import {
   updateLabelClass,
   updateLabelInstance,
   updatePage,
+  updateProject,
+  updateProjectItems,
   updateResource,
   updateSettings,
   updateSkillInstance,
@@ -130,6 +137,8 @@ import {
   CreatePageData,
   CreatePageError,
   CreatePortalSessionError,
+  CreateProjectData,
+  CreateProjectError,
   CreateResourceData,
   CreateResourceError,
   CreateResourceWithFileData,
@@ -154,6 +163,10 @@ import {
   DeletePageError,
   DeletePageNodeData,
   DeletePageNodeError,
+  DeleteProjectData,
+  DeleteProjectError,
+  DeleteProjectItemsData,
+  DeleteProjectItemsError,
   DeleteReferencesData,
   DeleteReferencesError,
   DeleteResourceData,
@@ -192,6 +205,8 @@ import {
   GetPageVersionError,
   GetPageVersionsData,
   GetPageVersionsError,
+  GetProjectDetailData,
+  GetProjectDetailError,
   GetResourceDetailData,
   GetResourceDetailError,
   GetSettingsError,
@@ -216,6 +231,8 @@ import {
   ListModelsError,
   ListPagesData,
   ListPagesError,
+  ListProjectsData,
+  ListProjectsError,
   ListResourcesData,
   ListResourcesError,
   ListSharesData,
@@ -264,6 +281,10 @@ import {
   UpdateLabelInstanceError,
   UpdatePageData,
   UpdatePageError,
+  UpdateProjectData,
+  UpdateProjectError,
+  UpdateProjectItemsData,
+  UpdateProjectItemsError,
   UpdateResourceData,
   UpdateResourceError,
   UpdateSettingsData,
@@ -516,6 +537,36 @@ export const useGetDocumentDetail = <
     queryKey: Common.UseGetDocumentDetailKeyFn(clientOptions, queryKey),
     queryFn: () =>
       getDocumentDetail({ ...clientOptions }).then((response) => response.data as TData) as TData,
+    ...options,
+  });
+export const useListProjects = <
+  TData = Common.ListProjectsDefaultResponse,
+  TError = ListProjectsError,
+  TQueryKey extends Array<unknown> = unknown[],
+>(
+  clientOptions: Options<ListProjectsData, true> = {},
+  queryKey?: TQueryKey,
+  options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
+) =>
+  useQuery<TData, TError>({
+    queryKey: Common.UseListProjectsKeyFn(clientOptions, queryKey),
+    queryFn: () =>
+      listProjects({ ...clientOptions }).then((response) => response.data as TData) as TData,
+    ...options,
+  });
+export const useGetProjectDetail = <
+  TData = Common.GetProjectDetailDefaultResponse,
+  TError = GetProjectDetailError,
+  TQueryKey extends Array<unknown> = unknown[],
+>(
+  clientOptions: Options<GetProjectDetailData, true>,
+  queryKey?: TQueryKey,
+  options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
+) =>
+  useQuery<TData, TError>({
+    queryKey: Common.UseGetProjectDetailKeyFn(clientOptions, queryKey),
+    queryFn: () =>
+      getProjectDetail({ ...clientOptions }).then((response) => response.data as TData) as TData,
     ...options,
   });
 export const useGetCodeArtifactDetail = <
@@ -1275,6 +1326,91 @@ export const useDeleteReferences = <
   useMutation<TData, TError, Options<DeleteReferencesData, true>, TContext>({
     mutationKey: Common.UseDeleteReferencesKeyFn(mutationKey),
     mutationFn: (clientOptions) => deleteReferences(clientOptions) as unknown as Promise<TData>,
+    ...options,
+  });
+export const useCreateProject = <
+  TData = Common.CreateProjectMutationResult,
+  TError = CreateProjectError,
+  TQueryKey extends Array<unknown> = unknown[],
+  TContext = unknown,
+>(
+  mutationKey?: TQueryKey,
+  options?: Omit<
+    UseMutationOptions<TData, TError, Options<CreateProjectData, true>, TContext>,
+    'mutationKey' | 'mutationFn'
+  >,
+) =>
+  useMutation<TData, TError, Options<CreateProjectData, true>, TContext>({
+    mutationKey: Common.UseCreateProjectKeyFn(mutationKey),
+    mutationFn: (clientOptions) => createProject(clientOptions) as unknown as Promise<TData>,
+    ...options,
+  });
+export const useUpdateProject = <
+  TData = Common.UpdateProjectMutationResult,
+  TError = UpdateProjectError,
+  TQueryKey extends Array<unknown> = unknown[],
+  TContext = unknown,
+>(
+  mutationKey?: TQueryKey,
+  options?: Omit<
+    UseMutationOptions<TData, TError, Options<UpdateProjectData, true>, TContext>,
+    'mutationKey' | 'mutationFn'
+  >,
+) =>
+  useMutation<TData, TError, Options<UpdateProjectData, true>, TContext>({
+    mutationKey: Common.UseUpdateProjectKeyFn(mutationKey),
+    mutationFn: (clientOptions) => updateProject(clientOptions) as unknown as Promise<TData>,
+    ...options,
+  });
+export const useUpdateProjectItems = <
+  TData = Common.UpdateProjectItemsMutationResult,
+  TError = UpdateProjectItemsError,
+  TQueryKey extends Array<unknown> = unknown[],
+  TContext = unknown,
+>(
+  mutationKey?: TQueryKey,
+  options?: Omit<
+    UseMutationOptions<TData, TError, Options<UpdateProjectItemsData, true>, TContext>,
+    'mutationKey' | 'mutationFn'
+  >,
+) =>
+  useMutation<TData, TError, Options<UpdateProjectItemsData, true>, TContext>({
+    mutationKey: Common.UseUpdateProjectItemsKeyFn(mutationKey),
+    mutationFn: (clientOptions) => updateProjectItems(clientOptions) as unknown as Promise<TData>,
+    ...options,
+  });
+export const useDeleteProject = <
+  TData = Common.DeleteProjectMutationResult,
+  TError = DeleteProjectError,
+  TQueryKey extends Array<unknown> = unknown[],
+  TContext = unknown,
+>(
+  mutationKey?: TQueryKey,
+  options?: Omit<
+    UseMutationOptions<TData, TError, Options<DeleteProjectData, true>, TContext>,
+    'mutationKey' | 'mutationFn'
+  >,
+) =>
+  useMutation<TData, TError, Options<DeleteProjectData, true>, TContext>({
+    mutationKey: Common.UseDeleteProjectKeyFn(mutationKey),
+    mutationFn: (clientOptions) => deleteProject(clientOptions) as unknown as Promise<TData>,
+    ...options,
+  });
+export const useDeleteProjectItems = <
+  TData = Common.DeleteProjectItemsMutationResult,
+  TError = DeleteProjectItemsError,
+  TQueryKey extends Array<unknown> = unknown[],
+  TContext = unknown,
+>(
+  mutationKey?: TQueryKey,
+  options?: Omit<
+    UseMutationOptions<TData, TError, Options<DeleteProjectItemsData, true>, TContext>,
+    'mutationKey' | 'mutationFn'
+  >,
+) =>
+  useMutation<TData, TError, Options<DeleteProjectItemsData, true>, TContext>({
+    mutationKey: Common.UseDeleteProjectItemsKeyFn(mutationKey),
+    mutationFn: (clientOptions) => deleteProjectItems(clientOptions) as unknown as Promise<TData>,
     ...options,
   });
 export const useCreateCodeArtifact = <

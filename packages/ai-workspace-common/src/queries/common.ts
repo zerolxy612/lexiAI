@@ -19,6 +19,7 @@ import {
   createLabelInstance,
   createPage,
   createPortalSession,
+  createProject,
   createResource,
   createResourceWithFile,
   createShare,
@@ -31,6 +32,8 @@ import {
   deleteLabelInstance,
   deletePage,
   deletePageNode,
+  deleteProject,
+  deleteProjectItems,
   deleteReferences,
   deleteResource,
   deleteShare,
@@ -51,6 +54,7 @@ import {
   getPageDetail,
   getPageVersion,
   getPageVersions,
+  getProjectDetail,
   getResourceDetail,
   getSettings,
   getSubscriptionPlans,
@@ -66,6 +70,7 @@ import {
   listLabelInstances,
   listModels,
   listPages,
+  listProjects,
   listResources,
   listShares,
   listSkillInstances,
@@ -92,6 +97,8 @@ import {
   updateLabelClass,
   updateLabelInstance,
   updatePage,
+  updateProject,
+  updateProjectItems,
   updateResource,
   updateSettings,
   updateSkillInstance,
@@ -266,6 +273,26 @@ export const UseGetDocumentDetailKeyFn = (
   clientOptions: Options<unknown, true>,
   queryKey?: Array<unknown>,
 ) => [useGetDocumentDetailKey, ...(queryKey ?? [clientOptions])];
+export type ListProjectsDefaultResponse = Awaited<ReturnType<typeof listProjects>>['data'];
+export type ListProjectsQueryResult<
+  TData = ListProjectsDefaultResponse,
+  TError = unknown,
+> = UseQueryResult<TData, TError>;
+export const useListProjectsKey = 'ListProjects';
+export const UseListProjectsKeyFn = (
+  clientOptions: Options<unknown, true> = {},
+  queryKey?: Array<unknown>,
+) => [useListProjectsKey, ...(queryKey ?? [clientOptions])];
+export type GetProjectDetailDefaultResponse = Awaited<ReturnType<typeof getProjectDetail>>['data'];
+export type GetProjectDetailQueryResult<
+  TData = GetProjectDetailDefaultResponse,
+  TError = unknown,
+> = UseQueryResult<TData, TError>;
+export const useGetProjectDetailKey = 'GetProjectDetail';
+export const UseGetProjectDetailKeyFn = (
+  clientOptions: Options<unknown, true>,
+  queryKey?: Array<unknown>,
+) => [useGetProjectDetailKey, ...(queryKey ?? [clientOptions])];
 export type GetCodeArtifactDetailDefaultResponse = Awaited<
   ReturnType<typeof getCodeArtifactDetail>
 >['data'];
@@ -616,6 +643,36 @@ export type DeleteReferencesMutationResult = Awaited<ReturnType<typeof deleteRef
 export const useDeleteReferencesKey = 'DeleteReferences';
 export const UseDeleteReferencesKeyFn = (mutationKey?: Array<unknown>) => [
   useDeleteReferencesKey,
+  ...(mutationKey ?? []),
+];
+export type CreateProjectMutationResult = Awaited<ReturnType<typeof createProject>>;
+export const useCreateProjectKey = 'CreateProject';
+export const UseCreateProjectKeyFn = (mutationKey?: Array<unknown>) => [
+  useCreateProjectKey,
+  ...(mutationKey ?? []),
+];
+export type UpdateProjectMutationResult = Awaited<ReturnType<typeof updateProject>>;
+export const useUpdateProjectKey = 'UpdateProject';
+export const UseUpdateProjectKeyFn = (mutationKey?: Array<unknown>) => [
+  useUpdateProjectKey,
+  ...(mutationKey ?? []),
+];
+export type UpdateProjectItemsMutationResult = Awaited<ReturnType<typeof updateProjectItems>>;
+export const useUpdateProjectItemsKey = 'UpdateProjectItems';
+export const UseUpdateProjectItemsKeyFn = (mutationKey?: Array<unknown>) => [
+  useUpdateProjectItemsKey,
+  ...(mutationKey ?? []),
+];
+export type DeleteProjectMutationResult = Awaited<ReturnType<typeof deleteProject>>;
+export const useDeleteProjectKey = 'DeleteProject';
+export const UseDeleteProjectKeyFn = (mutationKey?: Array<unknown>) => [
+  useDeleteProjectKey,
+  ...(mutationKey ?? []),
+];
+export type DeleteProjectItemsMutationResult = Awaited<ReturnType<typeof deleteProjectItems>>;
+export const useDeleteProjectItemsKey = 'DeleteProjectItems';
+export const UseDeleteProjectItemsKeyFn = (mutationKey?: Array<unknown>) => [
+  useDeleteProjectItemsKey,
   ...(mutationKey ?? []),
 ];
 export type CreateCodeArtifactMutationResult = Awaited<ReturnType<typeof createCodeArtifact>>;

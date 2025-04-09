@@ -30,6 +30,7 @@ import { ShareModule } from './share/share.module';
 import { TemplateModule } from './template/template.module';
 import { CodeArtifactModule } from './code-artifact/code-artifact.module';
 import { PagesModule } from './pages/pages.module';
+import { ProjectModule } from './project/project.module';
 
 class CustomThrottlerGuard extends ThrottlerGuard {
   protected async shouldSkip(context: ExecutionContext): Promise<boolean> {
@@ -129,6 +130,7 @@ class CustomThrottlerGuard extends ThrottlerGuard {
     TemplateModule,
     CodeArtifactModule,
     PagesModule,
+    ProjectModule,
   ],
   controllers: [AppController],
   providers: [

@@ -15,6 +15,7 @@ import {
   getPageDetail,
   getPageVersion,
   getPageVersions,
+  getProjectDetail,
   getResourceDetail,
   getSettings,
   getSubscriptionPlans,
@@ -28,6 +29,7 @@ import {
   listLabelInstances,
   listModels,
   listPages,
+  listProjects,
   listResources,
   listShares,
   listSkillInstances,
@@ -46,6 +48,7 @@ import {
   GetPageDetailData,
   GetPageVersionData,
   GetPageVersionsData,
+  GetProjectDetailData,
   GetResourceDetailData,
   ListCanvasesData,
   ListCanvasTemplatesData,
@@ -53,6 +56,7 @@ import {
   ListLabelClassesData,
   ListLabelInstancesData,
   ListPagesData,
+  ListProjectsData,
   ListResourcesData,
   ListSharesData,
   ListSkillInstancesData,
@@ -187,6 +191,22 @@ export const prefetchUseGetDocumentDetail = (
   queryClient.prefetchQuery({
     queryKey: Common.UseGetDocumentDetailKeyFn(clientOptions),
     queryFn: () => getDocumentDetail({ ...clientOptions }).then((response) => response.data),
+  });
+export const prefetchUseListProjects = (
+  queryClient: QueryClient,
+  clientOptions: Options<ListProjectsData, true> = {},
+) =>
+  queryClient.prefetchQuery({
+    queryKey: Common.UseListProjectsKeyFn(clientOptions),
+    queryFn: () => listProjects({ ...clientOptions }).then((response) => response.data),
+  });
+export const prefetchUseGetProjectDetail = (
+  queryClient: QueryClient,
+  clientOptions: Options<GetProjectDetailData, true>,
+) =>
+  queryClient.prefetchQuery({
+    queryKey: Common.UseGetProjectDetailKeyFn(clientOptions),
+    queryFn: () => getProjectDetail({ ...clientOptions }).then((response) => response.data),
   });
 export const prefetchUseGetCodeArtifactDetail = (
   queryClient: QueryClient,

@@ -58,9 +58,10 @@ export class CommonQnA extends BaseSkill {
     state: GraphState,
     config: SkillRunnableConfig,
     module: SkillPromptModule,
+    customInstructions?: string,
   ) => {
     const { messages = [], images = [] } = state;
-    const { locale = 'en', modelInfo } = config.configurable;
+    const { locale = 'en', modelInfo, project } = config.configurable;
 
     config.metadata.step = { name: 'analyzeQuery' };
 
@@ -79,6 +80,10 @@ export class CommonQnA extends BaseSkill {
       state,
       shouldSkipAnalysis: true, // For common QnA, we can skip analysis when there's no context and chat history
     });
+
+    // process projectId based knowledge base search
+    const projectId = project?.projectId;
+    const enableKnowledgeBaseSearch = !!projectId;
 
     // Process URLs from context first (frontend)
     const contextUrls = config.configurable?.urls || [];
@@ -116,7 +121,8 @@ export class CommonQnA extends BaseSkill {
 
     // Consider URL sources for context preparation
     const hasUrlSources = urlSources.length > 0;
-    const needPrepareContext = (hasContext || hasUrlSources) && remainingTokens > 0;
+    const needPrepareContext =
+      (hasContext || hasUrlSources || enableKnowledgeBaseSearch) && remainingTokens > 0;
     const isModelContextLenSupport = checkModelContextLenSupport(modelInfo);
 
     this.engine.logger.log(`optimizedQuery: ${optimizedQuery}`);
@@ -138,7 +144,14 @@ export class CommonQnA extends BaseSkill {
           config,
           ctxThis: this,
           state,
-          tplConfig: config?.configurable?.tplConfig || {},
+          tplConfig: {
+            ...(config?.configurable?.tplConfig || {}),
+            enableKnowledgeBaseSearch: {
+              value: enableKnowledgeBaseSearch,
+              label: 'Knowledge Base Search',
+              displayValue: enableKnowledgeBaseSearch ? 'true' : 'false',
+            },
+          },
         },
       );
 
@@ -160,6 +173,7 @@ export class CommonQnA extends BaseSkill {
       optimizedQuery,
       rewrittenQueries,
       modelInfo: config?.configurable?.modelInfo,
+      customInstructions,
     });
 
     return { requestMessages, sources };
@@ -171,6 +185,12 @@ export class CommonQnA extends BaseSkill {
   ): Promise<Partial<GraphState>> => {
     const { currentSkill } = config.configurable;
 
+    // Extract customInstructions from project if available
+    const project = config.configurable?.project as
+      | { projectId: string; customInstructions?: string }
+      | undefined;
+    const customInstructions = project?.customInstructions;
+
     // common preprocess
     const module = {
       buildSystemPrompt: commonQnA.buildCommonQnASystemPrompt,
@@ -178,7 +198,12 @@ export class CommonQnA extends BaseSkill {
       buildUserPrompt: commonQnA.buildCommonQnAUserPrompt,
     };
 
-    const { requestMessages, sources } = await this.commonPreprocess(state, config, module);
+    const { requestMessages, sources } = await this.commonPreprocess(
+      state,
+      config,
+      module,
+      customInstructions,
+    );
 
     // set current step
     config.metadata.step = { name: 'answerQuestion' };

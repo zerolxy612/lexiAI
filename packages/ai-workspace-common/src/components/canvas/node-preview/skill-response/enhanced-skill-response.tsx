@@ -28,6 +28,7 @@ import { useAddNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use
 import { useContextUpdateByResultId } from '@refly-packages/ai-workspace-common/hooks/canvas/use-debounced-context-update';
 import { useReactFlow } from '@xyflow/react';
 import { contextEmitter } from '@refly-packages/ai-workspace-common/utils/event-emitter/context';
+import { useAskProject } from '@refly-packages/ai-workspace-common/hooks/canvas/use-ask-project';
 
 interface EnhancedSkillResponseProps {
   node: CanvasNode<ResponseNodeMeta>;
@@ -49,6 +50,8 @@ export const EnhancedSkillResponse = memo(
     const [contextItems, setContextItems] = useState<IContextItem[]>([]);
     const [runtimeConfig, setRuntimeConfig] = useState<SkillRuntimeConfig>({});
     const [tplConfig, setTplConfig] = useState<SkillTemplateConfig | undefined>();
+
+    const { projectId, handleProjectChange, getFinalProjectId } = useAskProject();
 
     // Extract the last message resultId for context updates
     const lastMessageResultId = useMemo(() => {
@@ -253,6 +256,8 @@ export const EnhancedSkillResponse = memo(
       const newResultId = genActionResultID();
       const newNodeId = genUniqueId();
 
+      const finalProjectId = getFinalProjectId();
+
       // Create message object for the thread
       const newMessage: LinearThreadMessage = {
         id: `message-${newNodeId}`,
@@ -272,6 +277,7 @@ export const EnhancedSkillResponse = memo(
             structuredData: {
               query: currentQuery,
             },
+            projectId: finalProjectId,
           } as ResponseNodeMeta,
         },
       };
@@ -289,6 +295,7 @@ export const EnhancedSkillResponse = memo(
           contextItems,
           tplConfig,
           runtimeConfig,
+          projectId: finalProjectId,
         },
         {
           entityId: canvasId,
@@ -313,6 +320,7 @@ export const EnhancedSkillResponse = memo(
               structuredData: {
                 query: currentQuery,
               },
+              projectId: finalProjectId,
             } as ResponseNodeMeta,
           },
         },
@@ -393,6 +401,8 @@ export const EnhancedSkillResponse = memo(
           }}
           className="w-full max-w-[1024px] mx-auto"
           resultId={resultId}
+          projectId={projectId}
+          handleProjectChange={handleProjectChange}
         />
       ),
       [

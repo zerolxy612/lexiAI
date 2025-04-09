@@ -27,7 +27,7 @@ import { processContextUrls } from '../utils/url-processing';
 import {
   buildArtifactsUserPrompt,
   buildArtifactsContextUserPrompt,
-  buildArtifactsFullSystemPrompt,
+  buildArtifactsSystemPrompt,
 } from '../scheduler/module/artifacts';
 
 // Helper function to get artifact type options
@@ -105,7 +105,14 @@ export class CodeArtifacts extends BaseSkill {
 
   commonPreprocess = async (state: GraphState, config: SkillRunnableConfig) => {
     const { messages = [], images = [] } = state;
-    const { locale = 'en', modelInfo, tplConfig } = config.configurable;
+    const { locale = 'en', modelInfo, tplConfig, project } = config.configurable;
+
+    // Get project-specific customInstructions if available
+    const customInstructions = project?.customInstructions;
+
+    // process projectId based knowledge base search
+    const projectId = project?.projectId;
+    const enableKnowledgeBaseSearch = !!projectId;
 
     // Get configuration values
     const artifactType = tplConfig?.artifactType?.value ?? 'auto';
@@ -154,7 +161,8 @@ export class CodeArtifacts extends BaseSkill {
 
     // Consider URL sources for context preparation
     const hasUrlSources = urlSources.length > 0;
-    const needPrepareContext = (hasContext || hasUrlSources) && remainingTokens > 0;
+    const needPrepareContext =
+      (hasContext || hasUrlSources || enableKnowledgeBaseSearch) && remainingTokens > 0;
     const isModelContextLenSupport = checkModelContextLenSupport(modelInfo);
 
     this.engine.logger.log(`optimizedQuery: ${optimizedQuery}`);
@@ -176,7 +184,14 @@ export class CodeArtifacts extends BaseSkill {
           config,
           ctxThis: this,
           state,
-          tplConfig: config?.configurable?.tplConfig || {},
+          tplConfig: {
+            ...config.configurable.tplConfig,
+            enableKnowledgeBaseSearch: {
+              value: enableKnowledgeBaseSearch,
+              label: 'Knowledge Base Search',
+              displayValue: enableKnowledgeBaseSearch ? 'true' : 'false',
+            },
+          },
         },
       );
 
@@ -197,10 +212,18 @@ export class CodeArtifacts extends BaseSkill {
     const module = {
       // Custom system prompt that includes examples
       buildSystemPrompt: () => {
-        return buildArtifactsFullSystemPrompt();
+        return buildArtifactsSystemPrompt();
       },
       buildContextUserPrompt: buildArtifactsContextUserPrompt,
-      buildUserPrompt: buildArtifactsUserPrompt,
+      buildUserPrompt: ({ originalQuery, optimizedQuery, rewrittenQueries, locale }) => {
+        return buildArtifactsUserPrompt({
+          originalQuery,
+          optimizedQuery,
+          rewrittenQueries,
+          customInstructions,
+          locale,
+        });
+      },
     };
 
     // Modify query to include instructions if provided
@@ -221,6 +244,7 @@ export class CodeArtifacts extends BaseSkill {
       optimizedQuery: enhancedQuery, // Use enhanced query with instructions
       rewrittenQueries,
       modelInfo: config.configurable.modelInfo,
+      customInstructions,
     });
 
     return { requestMessages, sources, context, query };

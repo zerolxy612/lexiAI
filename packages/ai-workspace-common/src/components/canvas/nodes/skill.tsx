@@ -35,6 +35,7 @@ import { useSetNodeDataByEntity } from '@refly-packages/ai-workspace-common/hook
 import { useFindSkill } from '@refly-packages/ai-workspace-common/hooks/use-find-skill';
 import { useNodeData } from '@refly-packages/ai-workspace-common/hooks/canvas';
 import { useDebouncedCallback } from 'use-debounce';
+import { useAskProject } from '@refly-packages/ai-workspace-common/hooks/canvas/use-ask-project';
 
 type SkillNode = Node<CanvasNodeData<SkillNodeMeta>, 'skill'>;
 
@@ -59,6 +60,8 @@ export const SkillNode = memo(
     const isDragging = draggingNodeId === id;
     const node = useMemo(() => getNode(id), [id, getNode]);
     const { canvasId, readonly } = useCanvasContext();
+
+    const { projectId, handleProjectChange, getFinalProjectId } = useAskProject();
 
     const { containerStyle, handleResize, updateSize } = useNodeSize({
       id,
@@ -251,7 +254,9 @@ export const SkillNode = memo(
         modelInfo,
         runtimeConfig,
         tplConfig,
+        projectId,
       } = data?.metadata ?? {};
+      const finalProjectId = getFinalProjectId(projectId);
 
       deleteElements({ nodes: [node] });
 
@@ -263,6 +268,7 @@ export const SkillNode = memo(
             ...data?.metadata,
             tplConfig,
             runtimeConfig,
+            projectId: finalProjectId,
           },
           {
             entityId: canvasId,
@@ -286,6 +292,7 @@ export const SkillNode = memo(
                 structuredData: {
                   query,
                 },
+                projectId: finalProjectId,
               },
             },
             position: node.position,
@@ -406,6 +413,11 @@ export const SkillNode = memo(
               handleAbortAction={abortAction}
               handleUploadImage={handleImageUpload}
               onInputHeightChange={() => updateSize({ height: 'auto' })}
+              projectId={projectId}
+              handleProjectChange={(projectId) => {
+                handleProjectChange(projectId);
+                updateNodeData({ metadata: { projectId } });
+              }}
             />
           </div>
         </div>

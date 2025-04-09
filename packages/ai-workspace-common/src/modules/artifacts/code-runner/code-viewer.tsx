@@ -409,7 +409,7 @@ export default memo(
                   onChange={handleEditorChange}
                 />
               </div>
-              <div className="w-1/2 h-full">
+              <div className="w-1/2 h-full overflow-auto">
                 {language && (
                   <div className="w-full h-full">
                     <Renderer
