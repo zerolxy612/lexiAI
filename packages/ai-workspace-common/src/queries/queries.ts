@@ -30,6 +30,7 @@ import {
   deleteLabelClass,
   deleteLabelInstance,
   deletePage,
+  deletePageNode,
   deleteReferences,
   deleteResource,
   deleteShare,
@@ -151,6 +152,8 @@ import {
   DeleteLabelInstanceError,
   DeletePageData,
   DeletePageError,
+  DeletePageNodeData,
+  DeletePageNodeError,
   DeleteReferencesData,
   DeleteReferencesError,
   DeleteResourceData,
@@ -1784,6 +1787,23 @@ export const useUpdateSettings = <
   useMutation<TData, TError, Options<UpdateSettingsData, true>, TContext>({
     mutationKey: Common.UseUpdateSettingsKeyFn(mutationKey),
     mutationFn: (clientOptions) => updateSettings(clientOptions) as unknown as Promise<TData>,
+    ...options,
+  });
+export const useDeletePageNode = <
+  TData = Common.DeletePageNodeMutationResult,
+  TError = DeletePageNodeError,
+  TQueryKey extends Array<unknown> = unknown[],
+  TContext = unknown,
+>(
+  mutationKey?: TQueryKey,
+  options?: Omit<
+    UseMutationOptions<TData, TError, Options<DeletePageNodeData, true>, TContext>,
+    'mutationKey' | 'mutationFn'
+  >,
+) =>
+  useMutation<TData, TError, Options<DeletePageNodeData, true>, TContext>({
+    mutationKey: Common.UseDeletePageNodeKeyFn(mutationKey),
+    mutationFn: (clientOptions) => deletePageNode(clientOptions) as unknown as Promise<TData>,
     ...options,
   });
 export const useDeletePage = <

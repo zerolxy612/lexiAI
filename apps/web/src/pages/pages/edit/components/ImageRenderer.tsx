@@ -34,51 +34,35 @@ const ImageRenderer = memo(
 
     return (
       <div
-        className={`h-full bg-white ${!isFullscreen ? "rounded px-4 pb-4" : "w-full"} ${
+        className={`h-full bg-white ${!isFullscreen ? "rounded" : "w-full"} ${
           isMinimap ? "p-1" : ""
         }`}
       >
         <div className="h-full w-full overflow-hidden flex flex-col">
-          <div
-            className={`flex items-center justify-between py-2 ${
-              !isFullscreen ? "border-b" : "border-b bg-gray-100 px-4"
-            } ${isMinimap ? "py-1 px-2 border-b-0 bg-gray-50" : ""}`}
-          >
+          {/* 图片内容区域 */}
+          <div className="flex-1 overflow-auto p-4">
             <div
-              className={`font-medium text-gray-800 ${isMinimap ? "text-xs truncate" : ""}`}
+              className="cursor-pointer hover:opacity-90 transition-opacity"
+              onClick={handleOpenPreview}
             >
-              {title}
+              <img
+                src={imageUrl}
+                alt={title}
+                className="max-w-full max-h-full object-contain mx-auto"
+              />
             </div>
-            {!isMinimap && <div className="text-xs text-gray-500">图片</div>}
           </div>
 
-          <div
-            className={`flex-1 flex items-center justify-center overflow-auto p-2 ${
-              isMinimap ? "p-0" : ""
-            }`}
-          >
-            <img
-              src={imageUrl}
-              alt={title}
-              onClick={!isMinimap ? handleOpenPreview : undefined}
-              className={`max-w-full max-h-full object-contain cursor-pointer ${
-                isMinimap
-                  ? "transform scale-[0.5] origin-top-left w-[200%] h-[200%]"
-                  : ""
-              }`}
+          {/* 预览模态框 */}
+          {isPreviewModalVisible && (
+            <ImagePreview
+              isPreviewModalVisible={isPreviewModalVisible}
+              setIsPreviewModalVisible={setIsPreviewModalVisible}
+              imageUrl={imageUrl}
+              imageTitle={title}
             />
-          </div>
+          )}
         </div>
-
-        {/* 图片预览模态框 */}
-        {isPreviewModalVisible && (
-          <ImagePreview
-            isPreviewModalVisible={isPreviewModalVisible}
-            setIsPreviewModalVisible={setIsPreviewModalVisible}
-            imageUrl={imageUrl}
-            imageTitle={title}
-          />
-        )}
       </div>
     );
   }

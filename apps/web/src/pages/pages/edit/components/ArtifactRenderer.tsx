@@ -45,7 +45,6 @@ const ArtifactRenderer = memo(
     isMinimap?: boolean;
   }) => {
     const artifactId = node.nodeData?.entityId || "";
-
     const {
       title = rendererType === "document" ? "文档组件" : "代码组件",
       status,
@@ -111,29 +110,17 @@ const ArtifactRenderer = memo(
 
     // 根据类型获取显示名称
     const getTypeDisplayName = (typeStr: string) => {
-      if (typeStr === "text/html") return "网页渲染";
-      if (typeStr === "application/refly.artifacts.react") return "React组件";
-      if (typeStr === "application/refly.artifacts.mermaid") return "流程图";
-      if (typeStr === "application/refly.artifacts.mindmap") return "思维导图";
-      if (typeStr === "text/markdown") return "Markdown";
-      if (typeStr === "application/refly.artifacts.code") return "代码";
-      if (typeStr === "image/svg+xml") return "SVG图像";
+      const typeMap: Record<string, string> = {
+        "text/html": "网页渲染",
+        "application/refly.artifacts.react": "React组件",
+        "application/refly.artifacts.mermaid": "流程图",
+        "application/refly.artifacts.mindmap": "思维导图",
+        "text/markdown": "Markdown",
+        "application/refly.artifacts.code": "代码",
+        "image/svg+xml": "SVG图像",
+      };
 
-      // 检查是否为已知类型
-      if (
-        ![
-          "text/html",
-          "application/refly.artifacts.react",
-          "application/refly.artifacts.mermaid",
-          "application/refly.artifacts.mindmap",
-          "text/markdown",
-          "application/refly.artifacts.code",
-          "image/svg+xml",
-        ].includes(typeStr)
-      ) {
-        return typeStr;
-      }
-      return "";
+      return typeMap[typeStr] || typeStr;
     };
 
     if (!artifactId) {
@@ -161,20 +148,6 @@ const ArtifactRenderer = memo(
         className={`h-full bg-white ${!isFullscreen ? "rounded px-4 pb-4" : "w-full"} ${isMinimap ? "p-1" : ""}`}
       >
         <div className="h-full w-full overflow-hidden flex flex-col">
-          <div
-            className={`flex items-center justify-between py-2 ${!isFullscreen ? "border-b" : "border-b bg-gray-100 px-4"} ${isMinimap ? "py-1 px-2 border-b-0 bg-gray-50" : ""}`}
-          >
-            <div
-              className={`font-medium text-gray-800 ${isMinimap ? "text-xs truncate" : ""}`}
-            >
-              {title}
-            </div>
-            {!isMinimap && (
-              <div className="text-xs text-gray-500">
-                {getTypeDisplayName(currentType)}
-              </div>
-            )}
-          </div>
           {isMinimap ? (
             <div className="flex-1 bg-white overflow-hidden">
               {status === "generating" ? (

@@ -34,6 +34,33 @@ tags:
   - name: misc
     description: Miscellaneous endpoints
 paths:
+  /pages/{pageId}/nodes/{nodeId}:
+    delete:
+      summary: Delete a node from a page
+      description: Removes a node from the specified page
+      operationId: deletePageNode
+      tags:
+        - Pages
+      parameters:
+        - name: pageId
+          in: path
+          description: ID of the page
+          required: true
+          schema:
+            type: string
+        - name: nodeId
+          in: path
+          description: ID of the node to delete
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Node successfully deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletePageResponse'
   /pages:
     get:
       tags:

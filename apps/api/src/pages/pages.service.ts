@@ -793,4 +793,48 @@ export class PagesService {
       pageId,
     };
   }
+
+  // 删除页面节点
+  async deletePageNode(user: User | ResolveUserResponse, pageId: string, nodeId: string): Promise<{ pageId: string; nodeId: string }> {
+    const { uid } = user as User;
+    
+    // 检查页面是否存在
+    const page = await this.prisma.$queryRaw<Page[]>`
+      SELECT * FROM "pages"
+      WHERE "page_id" = ${pageId} AND "uid" = ${uid} AND "deleted_at" IS NULL
+    `;
+    
+    if (!page || page.length === 0) {
+      throw new PageNotFoundError();
+    }
+    
+    // 检查节点关系是否存在
+    const nodeRelation = await this.prisma.$queryRaw<PageNodeRelation[]>`
+      SELECT * FROM "page_node_relations"
+      WHERE "page_id" = ${pageId} AND "node_id" = ${nodeId} AND "deleted_at" IS NULL
+    `;
+    
+    if (!nodeRelation || nodeRelation.length === 0) {
+      throw new Error('Node relation not found');
+    }
+    
+    // 软删除节点关系
+    await this.prisma.$executeRaw`
+      UPDATE "page_node_relations"
+      SET "deleted_at" = NOW()
+      WHERE "page_id" = ${pageId} AND "node_id" = ${nodeId} AND "deleted_at" IS NULL
+    `;
+    
+    // 更新页面更新时间
+    await this.prisma.$executeRaw`
+      UPDATE "pages"
+      SET "updated_at" = NOW()
+      WHERE "page_id" = ${pageId}
+    `;
+    
+    return {
+      pageId,
+      nodeId,
+    };
+  }
 }

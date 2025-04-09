@@ -172,4 +172,21 @@ export class PagesController {
       pageId: result.pageId,
     });
   }
+
+  @ApiOperation({ summary: '删除页面节点' })
+  @ApiResponse({ status: 200, description: '删除成功' })
+  @UseGuards(JwtAuthGuard)
+  @Delete(':pageId/nodes/:nodeId')
+  async deletePageNode(
+    @LoginedUser() user: User, 
+    @Param('pageId') pageId: string,
+    @Param('nodeId') nodeId: string
+  ) {
+    const result = await this.pagesService.deletePageNode(user, pageId, nodeId);
+    
+    return buildSuccessResponse({
+      pageId: result.pageId,
+      nodeId: result.nodeId,
+    });
+  }
 } 

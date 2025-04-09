@@ -30,6 +30,7 @@ import {
   deleteLabelClass,
   deleteLabelInstance,
   deletePage,
+  deletePageNode,
   deleteReferences,
   deleteResource,
   deleteShare,
@@ -795,6 +796,12 @@ export type UpdateSettingsMutationResult = Awaited<ReturnType<typeof updateSetti
 export const useUpdateSettingsKey = 'UpdateSettings';
 export const UseUpdateSettingsKeyFn = (mutationKey?: Array<unknown>) => [
   useUpdateSettingsKey,
+  ...(mutationKey ?? []),
+];
+export type DeletePageNodeMutationResult = Awaited<ReturnType<typeof deletePageNode>>;
+export const useDeletePageNodeKey = 'DeletePageNode';
+export const UseDeletePageNodeKeyFn = (mutationKey?: Array<unknown>) => [
+  useDeletePageNodeKey,
   ...(mutationKey ?? []),
 ];
 export type DeletePageMutationResult = Awaited<ReturnType<typeof deletePage>>;

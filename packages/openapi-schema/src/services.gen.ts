@@ -7,6 +7,9 @@ import {
   formDataBodySerializer,
 } from '@hey-api/client-fetch';
 import type {
+  DeletePageNodeData,
+  DeletePageNodeError,
+  DeletePageNodeResponse,
   ListPagesData,
   ListPagesError,
   ListPagesResponse2,
@@ -276,6 +279,23 @@ import type {
 } from './types.gen';
 
 export const client = createClient(createConfig());
+
+/**
+ * Delete a node from a page
+ * Removes a node from the specified page
+ */
+export const deletePageNode = <ThrowOnError extends boolean = false>(
+  options: Options<DeletePageNodeData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).delete<
+    DeletePageNodeResponse,
+    DeletePageNodeError,
+    ThrowOnError
+  >({
+    ...options,
+    url: '/pages/{pageId}/nodes/{nodeId}',
+  });
+};
 
 /**
  * List user pages

@@ -3621,6 +3621,23 @@ export type CanvasNode = {
   data: CanvasNodeData;
 };
 
+export type DeletePageNodeData = {
+  path: {
+    /**
+     * ID of the node to delete
+     */
+    nodeId: string;
+    /**
+     * ID of the page
+     */
+    pageId: string;
+  };
+};
+
+export type DeletePageNodeResponse = DeletePageResponse;
+
+export type DeletePageNodeError = unknown;
+
 export type ListPagesData = {
   query?: {
     /**

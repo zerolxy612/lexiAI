@@ -19,6 +19,7 @@ import {
 import {
   useGetPageDetail,
   useUpdatePage,
+  useDeletePageNode,
 } from "@refly-packages/ai-workspace-common/queries/queries";
 import {
   ArrowLeftOutlined,
@@ -29,20 +30,19 @@ import {
   PlusOutlined,
   FileTextOutlined,
   PlayCircleOutlined,
-  FullscreenOutlined,
   LeftCircleOutlined,
   RightCircleOutlined,
   CloseCircleOutlined,
 } from "@ant-design/icons";
 import { useSiderStoreShallow } from "@refly-packages/ai-workspace-common/stores/sider";
 import { NodeRenderer } from "./components/NodeRenderer";
-import { MiniNodeRenderer } from "./components/MiniNodeRenderer";
 import { SidebarMinimap } from "./components/SidebarMinimap";
 import {
   type NodeRelation,
   type NodeData,
 } from "./components/ArtifactRenderer";
 import "./styles/preview-mode.css";
+import axios from "axios";
 
 interface PageDetailType {
   title: string;
@@ -50,7 +50,6 @@ interface PageDetailType {
   nodeRelations?: NodeRelation[];
 }
 
-// 页面编辑组件
 function PageEdit() {
   const { pageId } = useParams<{ pageId: string }>();
   const navigate = useNavigate();
@@ -62,7 +61,15 @@ function PageEdit() {
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [showPreviewMinimap, setShowPreviewMinimap] = useState(false);
+  const [isWideMode, setIsWideMode] = useState(false);
+  const [wideNodeId, setWideNodeId] = useState<string | null>(null);
   const previewMinimapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const previewContentRef = useRef<HTMLDivElement>(null);
+  const [isDeletingNode, setIsDeletingNode] = useState(false);
+  const [isIdle, setIsIdle] = useState(false);
+  const [showNav, setShowNav] = useState(false);
+  const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const navTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // 获取侧边栏状态
   const { collapse, setCollapse } = useSiderStoreShallow((state) => ({
@@ -75,32 +82,27 @@ function PageEdit() {
     setCollapse(true);
   }, [setCollapse]);
 
-  // 切换侧边栏显示隐藏
-  const toggleSidebar = useCallback(() => {
-    setCollapse(!collapse);
-  }, [collapse, setCollapse]);
-
-  // 切换小地图显示隐藏
-  const toggleMinimap = useCallback(() => {
-    setShowMinimap(!showMinimap);
-  }, [showMinimap]);
-
-  // 切换预览模式
+  // UI 交互处理方法
+  const toggleSidebar = useCallback(
+    () => setCollapse(!collapse),
+    [collapse, setCollapse]
+  );
+  const toggleMinimap = useCallback(
+    () => setShowMinimap(!showMinimap),
+    [showMinimap]
+  );
   const togglePreviewMode = useCallback(() => {
     setIsPreviewMode(!isPreviewMode);
-    if (!isPreviewMode) {
-      setCurrentSlideIndex(0);
-    }
+    if (!isPreviewMode) setCurrentSlideIndex(0);
   }, [isPreviewMode]);
 
-  // 下一张幻灯片
+  // 幻灯片导航方法
   const nextSlide = useCallback(() => {
     if (currentSlideIndex < nodes.length - 1) {
       setCurrentSlideIndex(currentSlideIndex + 1);
     }
   }, [currentSlideIndex, nodes.length]);
 
-  // 上一张幻灯片
   const prevSlide = useCallback(() => {
     if (currentSlideIndex > 0) {
       setCurrentSlideIndex(currentSlideIndex - 1);
@@ -109,9 +111,9 @@ function PageEdit() {
 
   // 键盘导航控制
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isPreviewMode) return;
+    if (!isPreviewMode) return;
 
+    const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.key) {
         case "ArrowRight":
         case "Space":
@@ -123,15 +125,11 @@ function PageEdit() {
         case "Escape":
           setIsPreviewMode(false);
           break;
-        default:
-          break;
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isPreviewMode, nextSlide, prevSlide]);
 
   // 获取页面详情
@@ -149,23 +147,13 @@ function PageEdit() {
   // 从响应中提取页面数据
   const pageDetail = pageDetailResponse?.data as PageDetailType | undefined;
 
-  // 获取节点数据并过滤出 codeArtifact 类型
+  // 获取节点数据
   const nodeRelations = useMemo<NodeRelation[]>(() => {
-    if (!pageDetail?.nodeRelations) {
-      return [];
-    }
+    if (!pageDetail?.nodeRelations) return [];
 
-    // 过滤出 codeArtifact 类型的节点
-    const filteredNodes = pageDetail.nodeRelations.filter(
-      (node) =>
-        node.nodeType === "codeArtifact" ||
-        // 不过滤
-        1
-    );
-
-    // 更新全局状态
+    // 注: 原本有过滤逻辑，但实际上不过滤任何内容 (node.nodeType === "codeArtifact" || 1)
+    const filteredNodes = pageDetail.nodeRelations;
     setNodes(filteredNodes);
-
     return filteredNodes;
   }, [pageDetail?.nodeRelations]);
 
@@ -213,15 +201,9 @@ function PageEdit() {
     });
   };
 
-  // 返回列表页
-  const handleBack = () => {
-    navigate("/pages");
-  };
-
-  // 表单变化处理
-  const handleFormChange = () => {
-    setFormChanged(true);
-  };
+  // 表单与导航处理
+  const handleBack = () => navigate("/pages");
+  const handleFormChange = () => setFormChanged(true);
 
   // 处理节点选择
   const handleNodeSelect = (index: number) => {
@@ -236,7 +218,6 @@ function PageEdit() {
 
   // 处理节点重新排序
   const handleReorderNodes = (newOrder: NodeRelation[]) => {
-    // 更新节点顺序
     setNodes(
       newOrder.map((node, index) => ({
         ...node,
@@ -246,8 +227,73 @@ function PageEdit() {
     setFormChanged(true);
   };
 
-  // 预览模式内容
-  const previewContentRef = useRef<HTMLDivElement>(null);
+  // 重置闲置计时器
+  const resetIdleTimer = useCallback(() => {
+    setIsIdle(false);
+
+    if (idleTimerRef.current) {
+      clearTimeout(idleTimerRef.current);
+    }
+
+    idleTimerRef.current = setTimeout(() => {
+      if (isPreviewMode) {
+        setIsIdle(true);
+        setShowNav(false);
+      }
+    }, 2000); // 2秒无操作后隐藏导航栏
+  }, [isPreviewMode]);
+
+  // 处理header和footer的鼠标事件，确保同时显示
+  const handleNavHover = useCallback(() => {
+    // 重置闲置计时器
+    resetIdleTimer();
+
+    // 显示导航栏
+    setShowNav(true);
+
+    // 清除之前的导航栏隐藏计时器
+    if (navTimerRef.current) {
+      clearTimeout(navTimerRef.current);
+    }
+
+    // 设置新的导航栏隐藏计时器
+    navTimerRef.current = setTimeout(() => {
+      if (isIdle) {
+        setShowNav(false);
+      }
+    }, 3000); // 悬停3秒后，如果处于闲置状态则隐藏
+  }, [resetIdleTimer, isIdle]);
+
+  // 当预览模式改变时重置计时器
+  useEffect(() => {
+    if (isPreviewMode) {
+      resetIdleTimer();
+      setShowNav(true);
+    } else {
+      setIsIdle(false);
+      setShowNav(false);
+      if (idleTimerRef.current) {
+        clearTimeout(idleTimerRef.current);
+        idleTimerRef.current = null;
+      }
+      if (navTimerRef.current) {
+        clearTimeout(navTimerRef.current);
+        navTimerRef.current = null;
+      }
+    }
+  }, [isPreviewMode, resetIdleTimer]);
+
+  // 清理闲置计时器
+  useEffect(() => {
+    return () => {
+      if (idleTimerRef.current) {
+        clearTimeout(idleTimerRef.current);
+      }
+      if (navTimerRef.current) {
+        clearTimeout(navTimerRef.current);
+      }
+    };
+  }, []);
 
   // 添加触摸手势支持
   useEffect(() => {
@@ -258,6 +304,8 @@ function PageEdit() {
 
     const handleTouchStart = (e: TouchEvent) => {
       touchStartX = e.changedTouches[0].screenX;
+      // 触摸时重置闲置计时器
+      resetIdleTimer();
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
@@ -265,47 +313,56 @@ function PageEdit() {
       handleSwipe();
     };
 
+    const handleTouchMove = () => {
+      // 触摸移动时重置闲置计时器
+      resetIdleTimer();
+    };
+
     const handleSwipe = () => {
       const swipeThreshold = 50;
-      // 向左滑动，显示下一页
       if (touchEndX < touchStartX - swipeThreshold) {
         nextSlide();
       }
-      // 向右滑动，显示上一页
       if (touchEndX > touchStartX + swipeThreshold) {
         prevSlide();
       }
     };
 
     const element = previewContentRef.current;
-    element.addEventListener("touchstart", handleTouchStart);
-    element.addEventListener("touchend", handleTouchEnd);
+    element.addEventListener("touchstart", handleTouchStart, { passive: true });
+    element.addEventListener("touchend", handleTouchEnd, { passive: true });
+    element.addEventListener("touchmove", handleTouchMove, { passive: true });
 
     return () => {
       element.removeEventListener("touchstart", handleTouchStart);
       element.removeEventListener("touchend", handleTouchEnd);
+      element.removeEventListener("touchmove", handleTouchMove);
     };
-  }, [isPreviewMode, nextSlide, prevSlide]);
+  }, [isPreviewMode, nextSlide, prevSlide, resetIdleTimer]);
 
-  // 处理预览模式下的小地图显示与隐藏
+  // 预览模式交互处理
   const handlePreviewMouseMove = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       if (!isPreviewMode) return;
 
+      // 重置闲置计时器
+      resetIdleTimer();
+
       // 当鼠标移动到屏幕左侧边缘时显示小地图
       if (e.clientX < 20) {
         setShowPreviewMinimap(true);
-        // 清除之前的定时器
         if (previewMinimapTimeoutRef.current) {
           clearTimeout(previewMinimapTimeoutRef.current);
           previewMinimapTimeoutRef.current = null;
         }
       }
+
+      // 自动隐藏小地图功能保持不变
     },
-    [isPreviewMode]
+    [isPreviewMode, resetIdleTimer]
   );
 
-  // 处理小地图区域的鼠标进入事件，保持小地图显示
+  // 小地图交互处理
   const handleMinimapMouseEnter = useCallback(() => {
     if (previewMinimapTimeoutRef.current) {
       clearTimeout(previewMinimapTimeoutRef.current);
@@ -313,7 +370,6 @@ function PageEdit() {
     }
   }, []);
 
-  // 处理小地图区域的鼠标离开事件，立即隐藏小地图
   const handleMinimapMouseLeave = useCallback(() => {
     setShowPreviewMinimap(false);
   }, []);
@@ -327,12 +383,10 @@ function PageEdit() {
     };
   }, []);
 
-  // 选择幻灯片并更新当前索引
   const handlePreviewSlideSelect = useCallback((index: number) => {
     setCurrentSlideIndex(index);
   }, []);
 
-  // 点击左侧提示处理函数
   const handleSideHintClick = useCallback(() => {
     setShowPreviewMinimap(true);
   }, []);
@@ -340,27 +394,107 @@ function PageEdit() {
   // 获取节点标题
   const getNodeTitle = useCallback((node: NodeRelation) => {
     // 尝试从nodeData.title获取标题
-    if (node.nodeData?.title) {
-      return node.nodeData.title;
-    }
+    if (node.nodeData?.title) return node.nodeData.title;
 
     // 尝试从nodeData.metadata.title获取标题
-    if (node.nodeData?.metadata?.title) {
-      return node.nodeData.metadata.title;
-    }
+    if (node.nodeData?.metadata?.title) return node.nodeData.metadata.title;
 
     // 根据节点类型返回默认标题
-    if (node.nodeType === "codeArtifact") {
-      return "代码组件";
-    } else if (node.nodeType === "document") {
-      return "文档组件";
-    } else if (node.nodeType === "skillResponse") {
-      return "技能响应";
-    }
+    if (node.nodeType === "codeArtifact") return "代码组件";
+    if (node.nodeType === "document") return "文档组件";
+    if (node.nodeType === "skillResponse") return "技能响应";
 
     return `幻灯片 ${node.orderIndex + 1}`;
   }, []);
 
+  // 处理删除节点
+  const deletePageNodeMutation = useDeletePageNode();
+
+  const handleDeleteNode = useCallback(
+    async (nodeId: string) => {
+      if (!pageId) return;
+
+      try {
+        setIsDeletingNode(true);
+
+        // 使用 useDeletePageNode 删除节点
+        await deletePageNodeMutation.mutateAsync({
+          path: {
+            pageId,
+            nodeId,
+          },
+        });
+
+        // 从本地状态中移除节点
+        setNodes((prevNodes) =>
+          prevNodes.filter((node) => node.nodeId !== nodeId)
+        );
+
+        // 如果删除的是当前选中的节点，选择第一个节点
+        if (nodes[activeNodeIndex]?.nodeId === nodeId) {
+          setActiveNodeIndex(0);
+        }
+
+        message.success("节点删除成功");
+        setFormChanged(true);
+      } catch (error) {
+        console.error("删除节点失败:", error);
+        message.error("删除节点失败，请重试");
+      } finally {
+        setIsDeletingNode(false);
+      }
+    },
+    [pageId, activeNodeIndex, nodes, deletePageNodeMutation]
+  );
+
+  // 处理从指定节点开始幻灯片预览
+  const handleStartSlideshow = useCallback(
+    (nodeId: string) => {
+      // 查找点击的节点索引
+      const nodeIndex = nodes.findIndex((node) => node.nodeId === nodeId);
+      if (nodeIndex !== -1) {
+        // 设置当前幻灯片索引为找到的节点索引
+        setCurrentSlideIndex(nodeIndex);
+        // 打开预览模式
+        setIsPreviewMode(true);
+      }
+    },
+    [nodes]
+  );
+
+  // 处理宽屏模式
+  const handleWideMode = useCallback(
+    (nodeId: string) => {
+      const node = nodes.find((n) => n.nodeId === nodeId);
+      if (node) {
+        setWideNodeId(nodeId);
+        setIsWideMode(true);
+      }
+    },
+    [nodes, getNodeTitle]
+  );
+
+  // 关闭宽屏模式
+  const handleCloseWideMode = useCallback(() => {
+    setIsWideMode(false);
+    setWideNodeId(null);
+  }, []);
+
+  // 宽屏模式键盘快捷键
+  useEffect(() => {
+    if (!isWideMode) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleCloseWideMode();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isWideMode, handleCloseWideMode]);
+
+  // 加载状态
   if (isLoadingPage) {
     return (
       <div className="flex justify-center items-center h-[70vh]">
@@ -369,6 +503,7 @@ function PageEdit() {
     );
   }
 
+  // 错误状态
   if (pageLoadError || !pageDetail) {
     return (
       <div className="p-6">
@@ -448,7 +583,7 @@ function PageEdit() {
 
       {/* 主体内容区 */}
       <Layout className="flex-1 overflow-hidden">
-        {/* 左侧缩略图面板 - 根据showMinimap状态控制显示/隐藏 */}
+        {/* 左侧缩略图面板 */}
         {showMinimap && (
           <Layout.Sider
             width={180}
@@ -475,9 +610,7 @@ function PageEdit() {
         {/* 中间内容区域 */}
         <Layout.Content
           className="relative overflow-y-auto overflow-x-hidden"
-          style={{
-            backgroundColor: "#f7f9fc",
-          }}
+          style={{ backgroundColor: "#f7f9fc" }}
         >
           {/* 显示小地图的按钮 */}
           {!showMinimap && (
@@ -545,6 +678,9 @@ function PageEdit() {
                     <NodeRenderer
                       node={node}
                       isActive={activeNodeIndex === index}
+                      onDelete={handleDeleteNode}
+                      onStartSlideshow={handleStartSlideshow}
+                      onWideMode={handleWideMode}
                     />
                   </div>
                 ))}
@@ -583,7 +719,6 @@ function PageEdit() {
               </div>
             )}
 
-            {/* 底部留白区域 */}
             <div className="h-24"></div>
           </div>
         </Layout.Content>
@@ -602,42 +737,44 @@ function PageEdit() {
           wrapClassName="preview-modal-wrap"
         >
           <div className="bg-black h-full w-full flex flex-col">
-            {/* 预览导航栏 */}
-            <div className="flex justify-between items-center px-4 py-3 bg-black text-white">
-              <div className="text-lg font-medium truncate max-w-[calc(100%-180px)]">
-                {form.getFieldValue("title")} - 幻灯片 {currentSlideIndex + 1}/
-                {nodes.length}
-              </div>
-              <div className="flex items-center space-x-4">
-                <Button
-                  type="text"
-                  icon={<LeftCircleOutlined />}
-                  onClick={prevSlide}
-                  disabled={currentSlideIndex <= 0}
-                  className="text-white hover:text-blue-300"
-                />
-                <Button
-                  type="text"
-                  icon={<RightCircleOutlined />}
-                  onClick={nextSlide}
-                  disabled={currentSlideIndex >= nodes.length - 1}
-                  className="text-white hover:text-blue-300"
-                />
-                <Button
-                  type="text"
-                  icon={<CloseCircleOutlined />}
-                  onClick={togglePreviewMode}
-                  className="text-white hover:text-red-300"
-                />
-              </div>
-            </div>
-
-            {/* 预览内容区域 - 完全全屏 */}
+            {/* 预览内容区域 */}
             <div
               ref={previewContentRef}
-              className="flex-1 flex items-stretch justify-center bg-black relative"
+              className={`preview-content-container relative ${isIdle ? "idle" : ""} ${showNav ? "show-nav" : ""}`}
               onMouseMove={handlePreviewMouseMove}
             >
+              {/* 预览导航栏 - 默认隐藏 */}
+              <div className="preview-header" onMouseEnter={handleNavHover}>
+                <div className="preview-header-title">
+                  {form.getFieldValue("title")}
+                  <span className="page-indicator">
+                    {currentSlideIndex + 1}/{nodes.length}
+                  </span>
+                </div>
+                <div className="preview-header-controls">
+                  <Button
+                    type="text"
+                    icon={<LeftCircleOutlined />}
+                    onClick={prevSlide}
+                    disabled={currentSlideIndex <= 0}
+                    className={`preview-control-button ${currentSlideIndex <= 0 ? "disabled" : ""}`}
+                  />
+                  <Button
+                    type="text"
+                    icon={<RightCircleOutlined />}
+                    onClick={nextSlide}
+                    disabled={currentSlideIndex >= nodes.length - 1}
+                    className={`preview-control-button ${currentSlideIndex >= nodes.length - 1 ? "disabled" : ""}`}
+                  />
+                  <Button
+                    type="text"
+                    icon={<CloseCircleOutlined />}
+                    onClick={togglePreviewMode}
+                    className="preview-control-button close-button"
+                  />
+                </div>
+              </div>
+
               {/* 小地图提示 - 当小地图隐藏时显示 */}
               {!showPreviewMinimap && nodes.length > 1 && (
                 <div className="side-hint" onClick={handleSideHintClick}>
@@ -678,7 +815,7 @@ function PageEdit() {
                             isMinimap={true}
                           />
                         </div>
-                        {/* 透明遮罩层，确保用户只能点击整个卡片 */}
+                        {/* 透明遮罩层 */}
                         <div className="absolute inset-0 bg-transparent" />
                       </div>
                       <div className="preview-minimap-title">
@@ -689,27 +826,31 @@ function PageEdit() {
                 </div>
               </div>
 
-              {nodes.length > 0 ? (
-                <div
-                  className="w-full h-full preview-slide"
-                  style={{
-                    animationName: "slideIn",
-                    animationDuration: "0.5s",
-                    animationTimingFunction: "ease-out",
-                    animationFillMode: "forwards",
-                  }}
-                >
-                  <NodeRenderer
-                    node={nodes[currentSlideIndex]}
-                    isActive={true}
-                    isFullscreen={true}
-                  />
-                </div>
-              ) : (
-                <div className="text-center text-white">
-                  <p>没有可用的内容来预览</p>
-                </div>
-              )}
+              {/* 主要预览内容 */}
+              <div className="preview-content">
+                {nodes.length > 0 ? (
+                  <div
+                    className="w-full h-full preview-slide"
+                    style={{
+                      animationName: "slideIn",
+                      animationDuration: "0.5s",
+                      animationTimingFunction: "ease-out",
+                      animationFillMode: "forwards",
+                    }}
+                  >
+                    <NodeRenderer
+                      node={nodes[currentSlideIndex]}
+                      isActive={true}
+                      isFullscreen={true}
+                      isModal={true}
+                    />
+                  </div>
+                ) : (
+                  <div className="text-center text-white">
+                    <p>没有可用的内容来预览</p>
+                  </div>
+                )}
+              </div>
 
               {/* 滑动提示 - 只在移动设备上显示 */}
               {nodes.length > 1 && (
@@ -717,26 +858,67 @@ function PageEdit() {
                   左右滑动切换幻灯片 ({currentSlideIndex + 1}/{nodes.length})
                 </div>
               )}
-            </div>
 
-            {/* 预览模式底部进度指示器 */}
-            {nodes.length > 0 && (
-              <div className="bg-black px-4 py-2 flex justify-center">
-                <div className="flex space-x-2">
-                  {nodes.map((_, index) => (
-                    <div
-                      key={`preview-dot-${index}`}
-                      className={`h-2 w-2 rounded-full cursor-pointer ${
-                        index === currentSlideIndex
-                          ? "bg-blue-500"
-                          : "bg-gray-500 hover:bg-gray-400"
-                      }`}
-                      onClick={() => setCurrentSlideIndex(index)}
-                    />
-                  ))}
+              {/* 预览模式底部进度指示器 - 默认隐藏 */}
+              {nodes.length > 0 && (
+                <div className="preview-footer" onMouseEnter={handleNavHover}>
+                  <div className="dots-container">
+                    {nodes.map((_, index) => (
+                      <div
+                        key={`preview-dot-${index}`}
+                        className={`preview-dot ${
+                          index === currentSlideIndex ? "active" : ""
+                        }`}
+                        onClick={() => setCurrentSlideIndex(index)}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+          </div>
+        </Modal>
+
+        {/* 宽屏模式弹窗 */}
+        <Modal
+          open={isWideMode}
+          footer={null}
+          onCancel={handleCloseWideMode}
+          width="85%"
+          style={{ top: 20 }}
+          bodyStyle={{
+            maxHeight: "calc(100vh - 100px)",
+            padding: 0,
+            overflow: "hidden",
+          }}
+          className="wide-mode-modal"
+          closeIcon={
+            <CloseCircleOutlined className="text-gray-500 hover:text-red-500" />
+          }
+          maskStyle={{ background: "rgba(0, 0, 0, 0.65)" }}
+        >
+          <div className="bg-white h-full w-full flex flex-col rounded-lg overflow-hidden">
+            {/* 宽屏模式内容 */}
+            <div className="flex-1 overflow-auto">
+              {wideNodeId && nodes.find((n) => n.nodeId === wideNodeId) ? (
+                <div className="h-[calc(100vh-160px)]">
+                  <NodeRenderer
+                    node={nodes.find((n) => n.nodeId === wideNodeId)!}
+                    isActive={true}
+                    isFullscreen={false}
+                    isModal={true}
+                    isMinimap={false}
+                    onDelete={handleDeleteNode}
+                    onStartSlideshow={handleStartSlideshow}
+                    onWideMode={handleWideMode}
+                  />
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-gray-500">无法加载内容</p>
+                </div>
+              )}
+            </div>
           </div>
         </Modal>
       </Layout>

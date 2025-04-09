@@ -16,7 +16,7 @@
   opacity: 0;
   transform: scale(1);
   width: 100%;
-  height: calc(100vh - 100px); /* 减去导航栏和底部指示器的高度 */
+  height: 100vh; /* 修改为全屏高度 */
 }
 
 /* 预览模式小地图 */
@@ -250,9 +250,69 @@
     padding: 4px 8px;
   }
   
+  /* 在小屏幕上优化导航栏 */
+  .preview-header {
+    padding: 10px 16px;
+  }
+
+  .preview-header-title {
+    font-size: 14px;
+  }
+
+  .preview-header-title .page-indicator {
+    font-size: 12px;
+    padding: 2px 8px;
+    margin-left: 4px;
+  }
+
+  .preview-control-button {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .preview-header-controls {
+    gap: 8px;
+  }
+  
+  /* 底部导航点点点在移动设备上更大，更易点击 */
+  .preview-dot {
+    width: 10px;
+    height: 10px;
+  }
+  
+  .preview-dot.active {
+    width: 12px;
+    height: 12px;
+  }
+  
+  .dots-container {
+    gap: 10px;
+    padding: 8px 16px;
+  }
+  
+  /* 在移动设备上，轻触显示头部和底部 */
+  .preview-content-container:active .preview-header:not(:hover),
+  .preview-content-container:active .preview-footer:not(:hover) {
+    transform: translateY(0);
+  }
+  
+  /* 在移动设备上加长显示时间 */
+  .preview-header,
+  .preview-footer {
+    transition: transform 0.3s ease 0.1s;
+  }
+  
+  /* 滑动提示更加明显 */
+  .swipe-hint {
+    padding: 8px 16px;
+    font-size: 14px;
+    background-color: rgba(0, 0, 0, 0.4);
+    bottom: 60px;
+  }
+  
   /* 确保在小屏幕上内容全屏 */
   .preview-slide {
-    height: calc(100vh - 90px); /* 移动设备上导航栏和底部指示器更小 */
+    height: 100vh;
   }
 
   /* 小屏幕上小地图样式调整 */
@@ -270,18 +330,23 @@
   }
 }
 
-/* 添加滑动提示 */
+/* 滑动提示在默认状态下呈现淡出效果 */
 .swipe-hint {
   position: absolute;
-  bottom: 20px;
+  bottom: 70px;
   left: 50%;
   transform: translateX(-50%);
-  color: rgba(255, 255, 255, 0.5);
+  color: white;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 6px 12px;
+  border-radius: 20px;
   font-size: 12px;
-  text-align: center;
-  animation: fadeInOut 2s infinite;
+  animation: fadeInOut 3s ease-in-out infinite;
+  z-index: 5;
   pointer-events: none;
-  z-index: 100;
+  backdrop-filter: blur(4px);
+  text-align: center;
+  white-space: nowrap;
 }
 
 @keyframes fadeInOut {
@@ -342,4 +407,212 @@
   user-select: none !important;
   touch-action: none !important;
   cursor: default !important;
+}
+
+/* 宽屏模式样式 */
+.wide-mode-modal .ant-modal-content {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.wide-mode-modal .ant-modal-close {
+  top: 12px;
+  right: 12px;
+  z-index: 100;
+}
+
+.wide-mode-modal .ant-modal-close-x {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.wide-mode-modal .ant-modal-close-x:hover {
+  background-color: rgba(255, 255, 255, 1);
+  transform: scale(1.05);
+}
+
+/* 添加进入动画 */
+.wide-mode-modal .ant-modal-content {
+  animation: wideModalEnter 0.3s ease forwards;
+}
+
+@keyframes wideModalEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 新增: 幻灯片预览头部和底部导航栏 */
+.preview-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  transform: translateY(-100%); /* 初始状态隐藏在屏幕外 */
+  transition: transform 0.3s ease;
+  background: rgba(0, 0, 0, 0.4); /* 更透明的背景 */
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.15);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.preview-header-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #fff;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.preview-header-title .page-indicator {
+  opacity: 0.7;
+  font-size: 14px;
+  font-weight: normal;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 3px 10px;
+  border-radius: 12px;
+  margin-left: 8px;
+}
+
+.preview-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.preview-control-button {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: none !important;
+  color: white !important;
+  border-radius: 50% !important;
+  width: 36px !important;
+  height: 36px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.2s ease !important;
+}
+
+.preview-control-button:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  transform: scale(1.05) !important;
+}
+
+.preview-control-button:active {
+  transform: scale(0.95) !important;
+}
+
+.preview-control-button.close-button {
+  background: rgba(220, 38, 38, 0.1) !important;
+}
+
+.preview-control-button.close-button:hover {
+  background: rgba(220, 38, 38, 0.3) !important;
+}
+
+.preview-control-button.disabled {
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
+.preview-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  transform: translateY(100%); /* 初始状态隐藏在屏幕外 */
+  transition: transform 0.3s ease;
+  background: transparent; /* 完全透明的背景 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 0;
+}
+
+.dots-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(5px);
+}
+
+.preview-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.4);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.preview-dot:hover {
+  background-color: rgba(255, 255, 255, 0.7);
+  transform: scale(1.2);
+}
+
+.preview-dot.active {
+  background-color: white;
+  width: 10px;
+  height: 10px;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.preview-content-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden; /* 确保溢出内容被裁剪 */
+  background-color: #000;
+}
+
+/* 当鼠标悬停在容器上，或者用JavaScript控制显示状态时的样式 */
+.preview-content-container:hover .preview-header,
+.preview-content-container:hover .preview-footer,
+.preview-content-container.show-nav .preview-header,
+.preview-content-container.show-nav .preview-footer {
+  transform: translateY(0);
+}
+
+/* 鼠标不动时自动隐藏导航栏，确保header向上隐藏，footer向下隐藏 */
+.preview-content-container.idle .preview-header {
+  transform: translateY(-100%);
+}
+
+.preview-content-container.idle .preview-footer {
+  transform: translateY(100%);
+}
+
+/* 幻灯片内容区域 - 全屏显示 */
+.preview-content {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
 } 

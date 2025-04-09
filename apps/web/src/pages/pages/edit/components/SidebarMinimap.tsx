@@ -1,11 +1,6 @@
 import React, { useMemo, CSSProperties } from "react";
 import { Button, message, Tooltip } from "antd";
-import {
-  PlusOutlined,
-  CodeOutlined,
-  FileTextOutlined,
-  RobotOutlined,
-} from "@ant-design/icons";
+import { PlusOutlined } from "@ant-design/icons";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { type NodeRelation } from "./ArtifactRenderer";
 import { NodeRenderer } from "./NodeRenderer";
@@ -42,9 +37,6 @@ function SidebarMinimap({
     onNodeSelect(destinationIndex);
   };
 
-  // 过滤出所有节点类型
-  const filteredNodes = nodes.filter(() => true);
-
   const addNewSlide = () => {
     message.info("添加新代码组件功能开发中");
   };
@@ -52,7 +44,7 @@ function SidebarMinimap({
   // 缓存缩略卡片样式
   const cardStyle = useMemo(
     (): CSSProperties => ({
-      pointerEvents: "none" as const,
+      pointerEvents: "none",
       transform: "scale(0.4)",
       transformOrigin: "top left",
       width: "250%",
@@ -75,7 +67,7 @@ function SidebarMinimap({
       </div>
 
       <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-        {filteredNodes.length === 0 ? (
+        {nodes.length === 0 ? (
           <div className="text-center p-6 text-gray-400">
             <div className="text-xs">暂无代码组件</div>
           </div>
@@ -88,7 +80,7 @@ function SidebarMinimap({
                   ref={provided.innerRef}
                   className="space-y-3"
                 >
-                  {filteredNodes.map((node, index) => (
+                  {nodes.map((node, index) => (
                     <Draggable
                       key={node.relationId || `node-${index}`}
                       draggableId={node.relationId || `node-${index}`}
@@ -110,7 +102,7 @@ function SidebarMinimap({
                           <div className="py-1.5 px-2 bg-white border-b border-gray-100 z-10 relative flex items-center justify-between">
                             <div className="flex items-center gap-1.5 truncate">
                               <span className="text-xs text-gray-500">
-                                {node.orderIndex + 1}.
+                                {index + 1}.
                               </span>
                               <Tooltip
                                 title={
@@ -124,13 +116,17 @@ function SidebarMinimap({
                             </div>
                           </div>
 
-                          {/* 内容预览区 - 使用NodeRenderer但缩小比例展示 */}
+                          {/* 内容预览区 */}
                           <div className="h-20 overflow-hidden relative bg-gray-50">
                             <div style={cardStyle}>
-                              <NodeRenderer node={node} isActive={false} />
+                              <NodeRenderer
+                                node={node}
+                                isActive={false}
+                                isMinimap={true}
+                              />
                             </div>
 
-                            {/* 添加渐变遮罩，防止内容过长 */}
+                            {/* 渐变遮罩 */}
                             <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent"></div>
                           </div>
                         </div>
