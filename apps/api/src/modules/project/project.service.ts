@@ -9,8 +9,8 @@ import {
   User,
   ListProjectsData,
 } from '@refly-packages/openapi-schema';
-import { ParamsError, ProjectNotFoundError } from '@refly-packages/errors';
-import { genProjectID } from '@refly-packages/utils';
+import { ParamsError, ProjectNotFoundError } from '@refly/errors';
+import { genProjectID } from '@refly/utils';
 import { MiscService } from '../misc/misc.service';
 import { KnowledgeService } from '../knowledge/knowledge.service';
 import { RAGService } from '../rag/rag.service';

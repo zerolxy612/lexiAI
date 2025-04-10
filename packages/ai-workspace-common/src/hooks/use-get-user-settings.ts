@@ -18,7 +18,7 @@ import { LOCALE } from '@refly/common-types';
 import { UserSettings } from '@refly/openapi-schema';
 import { UID_COOKIE } from '@refly/utils/cookie';
 import { usePublicAccessPage } from '@refly-packages/ai-workspace-common/hooks/use-is-share-page';
-import { runtime } from '@refly-packages/ai-workspace-common/utils/env';
+import { isDesktop } from '@refly-packages/ai-workspace-common/utils/env';
 
 export const useGetUserSettings = () => {
   const userStore = useUserStoreShallow((state) => ({
@@ -37,7 +37,7 @@ export const useGetUserSettings = () => {
 
   const [uid] = useCookie(UID_COOKIE);
 
-  const hasLoginCredentials = !!uid || runtime === 'desktop';
+  const hasLoginCredentials = !!uid || isDesktop();
 
   const { i18n } = useTranslation();
 
@@ -50,9 +50,14 @@ export const useGetUserSettings = () => {
 
     userStore.setIsCheckingLoginStatus(true);
     if (hasLoginCredentials) {
-      const resp = await getClient().getSettings();
-      error = resp.error;
-      settings = resp.data?.data;
+      if (isDesktop()) {
+        settings = await window.ipcRenderer?.invoke('getStore', 'user');
+        console.log('get Store', settings);
+      } else {
+        const resp = await getClient().getSettings();
+        error = resp.error;
+        settings = resp.data?.data;
+      }
     }
     let { localSettings } = userStore;
 

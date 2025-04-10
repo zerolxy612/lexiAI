@@ -57,6 +57,11 @@ declare global {
     ipcRenderer?: {
       invoke: (channel: string, args: any) => Promise<any>;
     };
+
+    electronEnv?: {
+      getApiBaseUrl: () => string;
+      getCollabUrl: () => string;
+    };
   }
 }
 

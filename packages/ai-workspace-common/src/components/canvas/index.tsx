@@ -64,6 +64,7 @@ import { useReflyPilotReset } from '@refly-packages/ai-workspace-common/hooks/ca
 import HelperLines from './common/helper-line/index';
 import { useListenNodeOperationEvents } from '@refly-packages/ai-workspace-common/hooks/canvas/use-listen-node-events';
 import { LibraryModal } from '@refly-packages/ai-workspace-common/components/workspace/library-modal';
+import { runtime } from '@refly-packages/ai-workspace-common/utils/env';
 
 const GRID_SIZE = 10;
 
@@ -399,8 +400,8 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
   const unhealthyStartTimeRef = useRef<number | null>(null);
 
   useEffect(() => {
-    // Skip if no provider
-    if (!provider) return;
+    // Skip if no provider or in desktop mode
+    if (!provider || runtime === 'desktop') return;
 
     // Clear timeout state if provider becomes connected
     if (provider.status === 'connected') {

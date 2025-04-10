@@ -1,7 +1,7 @@
 import { client, BaseResponse } from '@refly/openapi-schema';
 import * as requestModule from '@refly/openapi-schema';
 
-import { serverOrigin } from '@refly-packages/ai-workspace-common/utils/env';
+import { isDesktop, serverOrigin } from '@refly-packages/ai-workspace-common/utils/env';
 import { getRuntime } from '@refly/utils/env';
 import {
   AuthenticationExpiredError,
@@ -15,7 +15,6 @@ import { safeStringifyJSON } from '@refly/utils/parse';
 import { responseInterceptorWithTokenRefresh } from '@refly-packages/ai-workspace-common/utils/auth';
 import { getLocale } from '@refly-packages/ai-workspace-common/utils/locale';
 import { showErrorNotification } from '@refly-packages/ai-workspace-common/utils/notification';
-import { customFetch } from '@refly-packages/ai-workspace-common/utils/custom-fetch';
 
 // Create a WeakMap to store cloned requests
 const requestCache = new WeakMap<Request, Request>();
@@ -36,8 +35,7 @@ export const getAndClearCachedRequest = (originalRequest: Request): Request | un
 
 client.setConfig({
   baseUrl: `${serverOrigin}/v1`,
-  credentials: 'include',
-  fetch: customFetch,
+  credentials: isDesktop() ? undefined : 'include',
 });
 
 export interface CheckResponseResult {

@@ -14,7 +14,6 @@ import { Logger } from 'nestjs-pino';
 import { GlobalExceptionFilter } from '@/utils/filters/global-exception.filter';
 import { setTraceID } from '@/utils/middleware/set-trace-id';
 import { CustomWsAdapter } from '@/utils/adapters/ws-adapter';
-import { buildSuccessResponse } from '@/utils/response';
 
 // The built directory structure
 //
@@ -38,7 +37,6 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
 
 let win: BrowserWindow | null;
 let nestApp: NestExpressApplication;
-let apiBaseUrl = 'http://localhost:5800';
 
 const store = new Store();
 
@@ -63,24 +61,21 @@ async function startNestServer() {
 
   nestApp.use(setTraceID);
   nestApp.use(helmet());
-  nestApp.enableCors({
-    origin: '*', // Allow Electron renderer to access
-    credentials: true,
-  });
+  nestApp.enableCors();
   nestApp.use(cookieParser());
-  nestApp.useWebSocketAdapter(new CustomWsAdapter(app, configService.get<number>('wsPort')));
   nestApp.useGlobalFilters(new GlobalExceptionFilter(configService));
 
-  // Set global prefix to match server implementation
-  // This ensures routes like /v1/auth are properly handled
-  // nestApp.setGlobalPrefix('');
+  const wsPort = await getPort();
+  nestApp.useWebSocketAdapter(new CustomWsAdapter(app, wsPort));
+  process.env.RF_COLLAB_URL = `ws://localhost:${wsPort}`;
+  console.log(`Collab server running at ${process.env.RF_COLLAB_URL}`);
 
   // Use a free port for internal API server
   const port = await getPort();
   nestApp.listen(port);
-  apiBaseUrl = `http://localhost:${port}`;
+  process.env.RF_API_BASE_URL = `http://localhost:${port}`;
 
-  console.log(`NestJS API server running at ${apiBaseUrl}`);
+  console.log(`API server running at ${process.env.RF_API_BASE_URL}`);
 
   return nestApp;
 }
@@ -96,6 +91,8 @@ function initializeStore() {
 }
 
 async function createWindow() {
+  console.log('appPath', app.getPath('userData'));
+
   await startNestServer();
 
   initializeStore();
@@ -106,7 +103,32 @@ async function createWindow() {
     icon: path.join(process.env.VITE_PUBLIC, 'logo.svg'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
+      webSecurity: true,
+      allowRunningInsecureContent: false,
+      nodeIntegration: false,
+      contextIsolation: true,
     },
+  });
+
+  win.webContents.session.setPermissionRequestHandler((webContents, _permission, callback) => {
+    const url = webContents.getURL();
+    if (url.startsWith('http://localhost:') || url.startsWith('https://localhost:')) {
+      callback(true);
+      return;
+    }
+
+    callback(false);
+  });
+
+  win.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [
+          `connect-src 'self' ${process.env.RF_API_BASE_URL} ws: wss: http://localhost:* https://localhost:*`,
+        ],
+      },
+    });
   });
 
   ipcMain.handle('getStore', (_, key: string) => {
@@ -115,58 +137,6 @@ async function createWindow() {
 
   ipcMain.handle('setStore', (_, key: string, value: any) => {
     store.set(key, value);
-  });
-
-  // Setup HTTP request proxy
-  ipcMain.handle('apiRequest', async (_event, { method, path, headers = {}, body }) => {
-    console.log('apiRequest', method, path, headers, body);
-
-    // Handle user settings query and update via electron store
-    if (path === '/v1/user/settings') {
-      switch (method) {
-        case 'GET':
-          return buildSuccessResponse(store.get('user'));
-        case 'PUT':
-          store.set('user', body);
-          return buildSuccessResponse();
-        default:
-          return {};
-      }
-    }
-
-    try {
-      // Ensure path starts with /v1 if not already present
-      const url = `${apiBaseUrl}${path}`;
-      const options: RequestInit = {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      };
-
-      if (body && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
-        options.body = JSON.stringify(body);
-      }
-
-      console.log('fetch url', url, options);
-      const response = await fetch(url, options);
-      const contentType = response.headers.get('content-type');
-
-      let data: any;
-      if (contentType?.includes('application/json')) {
-        data = await response.json();
-      } else {
-        data = await response.text();
-      }
-
-      console.log('apiRequest data', data);
-
-      return data;
-    } catch (error) {
-      console.error('HTTP Request Error:', error);
-      return { message: 'Internal Server Error' };
-    }
   });
 
   // Test active push message to Renderer-process.

@@ -22,3 +22,8 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
   // You can expose other APTs you need here.
   // ...
 });
+
+contextBridge.exposeInMainWorld('electronEnv', {
+  getApiBaseUrl: () => process.env.RF_API_BASE_URL,
+  getCollabUrl: () => process.env.RF_COLLAB_URL,
+});
