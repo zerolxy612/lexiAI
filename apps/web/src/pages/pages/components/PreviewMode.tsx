@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Button } from 'antd';
 import { CloseCircleOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import { NodeRenderer } from './NodeRenderer';
@@ -42,12 +42,35 @@ const PreviewMode: React.FC<PreviewModeProps> = ({
   getNodeTitle,
   previewContentRef,
 }) => {
+  // 计算当前进度百分比
+  const progressPercentage = useMemo(() => {
+    if (nodes.length <= 1) return 100;
+    return (currentSlideIndex / (nodes.length - 1)) * 100;
+  }, [currentSlideIndex, nodes.length]);
+
   return (
     <div
       ref={previewContentRef}
       className={`preview-content-container relative ${uiState.isIdle ? 'idle' : ''} ${uiState.showNav ? 'show-nav' : ''}`}
       onMouseMove={onMouseMove}
     >
+      {/* 顶部进度条 */}
+      <div
+        className="preview-progress-bar"
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: `${progressPercentage}%`,
+          height: '4px',
+          background: 'linear-gradient(to right, #108ee9, #1890ff)',
+          borderRadius: '0 2px 2px 0',
+          boxShadow: '0 0 6px rgba(24, 144, 255, 0.5)',
+          transition: 'width 0.4s cubic-bezier(0.23, 1, 0.32, 1)',
+          zIndex: 100,
+        }}
+      />
+
       {/* 预览导航栏 - 只保留右上角关闭按钮 */}
       <div
         className={`preview-close-button ${uiState.isIdle ? 'opacity-0' : 'opacity-100'}`}
