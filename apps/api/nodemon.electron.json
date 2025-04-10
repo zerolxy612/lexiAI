@@ -1,6 +1,7 @@
 {
   "watch": [
-    "src",
+    "src/modules",
+    "src/electron",
     "../../packages/openapi-schema",
     "../../packages/common-types",
     "../../packages/skill-template",
@@ -8,5 +9,5 @@
   ],
   "ext": "ts",
   "ignore": ["src/**/*.spec.ts"],
-  "exec": "ts-node -r tsconfig-paths/register --project tsconfig.electron.json src/electron/main.ts"
+  "exec": "prisma generate && tsc --build tsconfig.electron.json && MODE=desktop electron ."
 }
