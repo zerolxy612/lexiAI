@@ -77,6 +77,15 @@ async function startNestServer() {
 
   console.log(`API server running at ${process.env.RF_API_BASE_URL}`);
 
+  // Set the static endpoints for the desktop app
+  const publicStaticEndpoint = `http://localhost:${port}/v1/misc/public`;
+  const privateStaticEndpoint = `http://localhost:${port}/v1/misc`;
+  process.env.RF_PUBLIC_STATIC_ENDPOINT = publicStaticEndpoint;
+  process.env.RF_PRIVATE_STATIC_ENDPOINT = privateStaticEndpoint;
+
+  configService.set('static.public.endpoint', publicStaticEndpoint);
+  configService.set('static.private.endpoint', privateStaticEndpoint);
+
   return nestApp;
 }
 

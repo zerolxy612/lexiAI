@@ -340,9 +340,13 @@ export class MiscService implements OnModuleInit {
         },
       });
     }
-    if (existingFile && existingFile.uid !== user.uid) {
-      this.logger.warn(`User ${user.uid} is not allowed to upload file with ${param.storageKey}`);
-      throw new ForbiddenException();
+
+    // Check for file permission if not in desktop mode
+    if (this.config.get('mode') !== 'desktop') {
+      if (existingFile && existingFile.uid !== user.uid) {
+        this.logger.warn(`User ${user.uid} is not allowed to upload file with ${param.storageKey}`);
+        throw new ForbiddenException();
+      }
     }
 
     const objectKey = randomUUID();
@@ -540,9 +544,14 @@ export class MiscService implements OnModuleInit {
   ): Promise<{ data: Buffer; contentType: string }> {
     const file = await this.prisma.staticFile.findFirst({
       select: { uid: true, visibility: true, entityId: true, entityType: true, contentType: true },
-      where: { storageKey, uid: user.uid, deletedAt: null },
+      where: { storageKey, deletedAt: null },
     });
+
     if (!file) {
+      throw new NotFoundException();
+    }
+
+    if (this.config.get('mode') !== 'desktop' && file.uid !== user.uid) {
       throw new NotFoundException();
     }
 

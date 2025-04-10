@@ -15,9 +15,16 @@ export const wsServerOrigin =
 console.log('wsServerOrigin', wsServerOrigin);
 
 export const staticPublicEndpoint =
-  window?.ENV?.STATIC_PUBLIC_ENDPOINT || import.meta.env.VITE_STATIC_PUBLIC_ENDPOINT || '';
+  window?.electronEnv?.getPublicStaticEndpoint() ||
+  window?.ENV?.STATIC_PUBLIC_ENDPOINT ||
+  import.meta.env.VITE_STATIC_PUBLIC_ENDPOINT ||
+  '';
+
 export const staticPrivateEndpoint =
-  window?.ENV?.STATIC_PRIVATE_ENDPOINT || import.meta.env.VITE_STATIC_PRIVATE_ENDPOINT || '';
+  window?.electronEnv?.getPrivateStaticEndpoint() ||
+  window?.ENV?.STATIC_PRIVATE_ENDPOINT ||
+  import.meta.env.VITE_STATIC_PRIVATE_ENDPOINT ||
+  '';
 
 export const subscriptionEnabled =
   Boolean(window.ENV?.SUBSCRIPTION_ENABLED) || Boolean(import.meta.env.VITE_SUBSCRIPTION_ENABLED);

@@ -61,6 +61,8 @@ declare global {
     electronEnv?: {
       getApiBaseUrl: () => string;
       getCollabUrl: () => string;
+      getPublicStaticEndpoint: () => string;
+      getPrivateStaticEndpoint: () => string;
     };
   }
 }
