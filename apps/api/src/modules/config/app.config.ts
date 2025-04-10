@@ -25,6 +25,9 @@ export default () => ({
       endpoint: process.env.STATIC_PRIVATE_ENDPOINT || 'http://localhost:5800/v1/misc',
     },
   },
+  local: {
+    uid: process.env.LOCAL_UID || 'u-local',
+  },
   image: {
     maxArea: Number.parseInt(process.env.IMAGE_MAX_AREA) || 600 * 600,
     payloadMode: process.env.IMAGE_PAYLOAD_MODE || 'base64', // 'url' or 'base64'

@@ -29,6 +29,7 @@ import { Redis } from '@hocuspocus/extension-redis';
 import { QUEUE_SYNC_CANVAS_ENTITY } from '../../utils/const';
 import ms from 'ms';
 import pLimit from 'p-limit';
+import { AppMode } from '@/modules/config/app.config';
 
 @Injectable()
 export class CollabService {
@@ -79,14 +80,21 @@ export class CollabService {
   }
 
   async authenticate({ token, documentName }: { token: string; documentName: string }) {
-    // First validate the token from Redis
-    const uid = await this.validateCollabToken(token);
+    // First validate the UID
+    let uid: string | null = null;
+    if (this.config.get('mode') === AppMode.Desktop) {
+      uid = this.config.get('local.uid');
+    } else {
+      // Validate the token from Redis
+      uid = await this.validateCollabToken(token);
+    }
+
     if (!uid) {
-      // throw new Error('Invalid or expired collab token');
+      throw new Error('Invalid or expired collab token');
     }
 
     const user = await this.prisma.user.findFirst({
-      // where: { uid },
+      where: { uid },
     });
     if (!user) {
       throw new Error('user not found');
@@ -133,7 +141,7 @@ export class CollabService {
     }
 
     if (context.entity.uid !== user.uid) {
-      // throw new Error(`user not authorized: ${documentName}`);
+      throw new Error(`user not authorized: ${documentName}`);
     }
 
     this.logger.log(`document connected: ${documentName}`);

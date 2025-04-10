@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import os from 'node:os';
 import { PrismaService } from '../common/prisma.service';
 import {
   CheckSettingsFieldData,
@@ -12,17 +13,43 @@ import { SubscriptionService } from '../subscription/subscription.service';
 import { RedisService } from '../common/redis.service';
 import { OperationTooFrequent, ParamsError } from '@refly/errors';
 import { MiscService } from '../misc/misc.service';
+import { ConfigService } from '@nestjs/config';
+import { AppMode } from '@/modules/config/app.config';
 
 @Injectable()
-export class UserService {
+export class UserService implements OnModuleInit {
   private logger = new Logger(UserService.name);
 
   constructor(
+    private config: ConfigService,
     private prisma: PrismaService,
     private redis: RedisService,
     private miscService: MiscService,
     private subscriptionService: SubscriptionService,
   ) {}
+
+  async onModuleInit() {
+    if (this.config.get('mode') === AppMode.Desktop) {
+      const localUid = this.config.get('local.uid');
+      const localUser = await this.prisma.user.findUnique({
+        where: { uid: localUid },
+      });
+      if (!localUser) {
+        const username = os.userInfo().username;
+        await this.prisma.user.upsert({
+          where: { name: username },
+          create: {
+            uid: localUid,
+            name: username,
+            nickname: username,
+          },
+          update: {
+            uid: localUid,
+          },
+        });
+      }
+    }
+  }
 
   async getUserSettings(user: User) {
     const userPo = await this.prisma.user.findUnique({

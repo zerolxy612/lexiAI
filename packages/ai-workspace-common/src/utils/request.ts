@@ -5,7 +5,7 @@ import { isDesktop, serverOrigin } from '@refly-packages/ai-workspace-common/uti
 
 client.setConfig({
   baseUrl: `${serverOrigin}/v1`,
-  credentials: isDesktop() ? undefined : 'include',
+  credentials: isDesktop() ? 'omit' : 'include',
   throwOnError: false, // If you want to handle errors on `onError` callback of `useQuery` and `useMutation`, set this to `true`
 });
 

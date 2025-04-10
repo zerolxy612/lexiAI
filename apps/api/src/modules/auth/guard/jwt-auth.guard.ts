@@ -24,8 +24,8 @@ export class JwtAuthGuard implements CanActivate {
     const request: Request = context.switchToHttp().getRequest();
 
     // If we are in desktop mode, we don't need to check the JWT token
-    if (this.configService.get('app.mode') === AppMode.Desktop) {
-      request.user = { uid: undefined };
+    if (this.configService.get('mode') === AppMode.Desktop) {
+      request.user = { uid: this.configService.get('local.uid') };
       return true;
     }
 

@@ -35,7 +35,7 @@ export const getAndClearCachedRequest = (originalRequest: Request): Request | un
 
 client.setConfig({
   baseUrl: `${serverOrigin}/v1`,
-  credentials: isDesktop() ? undefined : 'include',
+  credentials: isDesktop() ? 'omit' : 'include',
 });
 
 export interface CheckResponseResult {

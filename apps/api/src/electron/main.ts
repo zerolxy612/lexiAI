@@ -3,6 +3,7 @@ import '../register-aliases';
 import { app, BrowserWindow, ipcMain } from 'electron';
 import Store from 'electron-store';
 import path from 'node:path';
+import os from 'node:os';
 import getPort from 'get-port';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -48,8 +49,7 @@ async function startNestServer() {
 
   nestApp.useLogger(nestApp.get(Logger));
   const configService = nestApp.get(ConfigService);
-  configService.set('app.mode', 'desktop');
-  console.log('configService.get(app.mode)', configService.get('app.mode'));
+  configService.set('mode', 'desktop');
 
   nestApp.useBodyParser('json', { limit: '10mb' });
   nestApp.useBodyParser('urlencoded', { limit: '10mb', extended: true });
@@ -91,20 +91,26 @@ async function startNestServer() {
 
 function initializeStore() {
   const user = store.get('user');
+
   if (!user) {
+    const systemUser = os.userInfo().username;
     store.set('user', {
-      uid: 'u-local',
-      name: 'Refly',
+      uid: systemUser,
+      name: systemUser,
+      nickname: systemUser,
+      uiLocale: app.getSystemLocale(),
+      outputLocale: 'auto',
     });
   }
 }
 
 async function createWindow() {
   console.log('appPath', app.getPath('userData'));
-
-  await startNestServer();
+  console.log('systemLocale', app.getSystemLocale());
 
   initializeStore();
+
+  await startNestServer();
 
   win = new BrowserWindow({
     height: 1080,

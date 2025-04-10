@@ -50,14 +50,9 @@ export const useGetUserSettings = () => {
 
     userStore.setIsCheckingLoginStatus(true);
     if (hasLoginCredentials) {
-      if (isDesktop()) {
-        settings = await window.ipcRenderer?.invoke('getStore', 'user');
-        console.log('get Store', settings);
-      } else {
-        const resp = await getClient().getSettings();
-        error = resp.error;
-        settings = resp.data?.data;
-      }
+      const resp = await getClient().getSettings();
+      error = resp.error;
+      settings = resp.data?.data;
     }
     let { localSettings } = userStore;
 
