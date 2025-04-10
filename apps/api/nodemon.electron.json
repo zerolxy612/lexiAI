@@ -9,5 +9,5 @@
   ],
   "ext": "ts",
   "ignore": ["src/**/*.spec.ts"],
-  "exec": "prisma generate && tsc --build tsconfig.electron.json && MODE=desktop electron ."
+  "exec": "prisma generate && cp -r src/generated dist-electron && tsc --build tsconfig.electron.json && MODE=desktop electron ."
 }
