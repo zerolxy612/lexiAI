@@ -1,6 +1,6 @@
-import React, { memo, useState } from "react";
-import { type NodeRelation } from "./ArtifactRenderer";
-import { ImagePreview } from "@refly-packages/ai-workspace-common/components/common/image-preview";
+import { memo, useState } from 'react';
+import { type NodeRelation } from './ArtifactRenderer';
+import { ImagePreview } from '@refly-packages/ai-workspace-common/components/common/image-preview';
 
 // 图片渲染组件
 const ImageRenderer = memo(
@@ -17,7 +17,7 @@ const ImageRenderer = memo(
 
     // 从节点数据中获取图片URL
     const imageUrl = node.nodeData?.metadata?.imageUrl;
-    const title = node.nodeData?.title || "图片";
+    const title = node.nodeData?.title || '图片';
 
     // 如果没有图片URL，显示提示
     if (!imageUrl) {
@@ -34,8 +34,8 @@ const ImageRenderer = memo(
 
     return (
       <div
-        className={`h-full bg-white ${!isFullscreen ? "rounded" : "w-full"} ${
-          isMinimap ? "p-1" : ""
+        className={`h-full bg-white ${!isFullscreen ? 'rounded' : 'w-full'} ${
+          isMinimap ? 'p-1' : ''
         }`}
       >
         <div className="h-full w-full overflow-hidden flex flex-col">
@@ -65,7 +65,7 @@ const ImageRenderer = memo(
         </div>
       </div>
     );
-  }
+  },
 );
 
 export { ImageRenderer };

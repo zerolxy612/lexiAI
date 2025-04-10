@@ -1,11 +1,11 @@
-import React, { memo, useMemo, useCallback } from "react";
-import { message } from "antd";
+import { memo, useMemo, useCallback } from 'react';
+import { message } from 'antd';
 import {
   useGetCodeArtifactDetail,
   useGetDocumentDetail,
-} from "@refly-packages/ai-workspace-common/queries/queries";
-import { useFetchShareData } from "@refly-packages/ai-workspace-common/hooks/use-fetch-share-data";
-import Renderer from "@refly-packages/ai-workspace-common/modules/artifacts/code-runner/render";
+} from '@refly-packages/ai-workspace-common/queries/queries';
+import { useFetchShareData } from '@refly-packages/ai-workspace-common/hooks/use-fetch-share-data';
+import Renderer from '@refly-packages/ai-workspace-common/modules/artifacts/code-runner/render';
 
 // 接口定义
 interface NodeData {
@@ -40,22 +40,22 @@ const ArtifactRenderer = memo(
     isMinimap = false,
   }: {
     node: NodeRelation;
-    type: "document" | "code";
+    type: 'document' | 'code';
     isFullscreen?: boolean;
     isMinimap?: boolean;
   }) => {
-    const artifactId = node.nodeData?.entityId || "";
+    const artifactId = node.nodeData?.entityId || '';
     const {
-      title = rendererType === "document" ? "文档组件" : "代码组件",
+      title = rendererType === 'document' ? '文档组件' : '代码组件',
       status,
       shareId,
-      type = "text/html", // 默认类型
+      type = 'text/html', // 默认类型
       language,
     } = node.nodeData?.metadata || {};
 
     // 根据类型选择不同的数据获取hook
     const { data: remoteData, isLoading: isRemoteLoading } =
-      rendererType === "document"
+      rendererType === 'document'
         ? useGetDocumentDetail(
             {
               query: {
@@ -64,10 +64,8 @@ const ArtifactRenderer = memo(
             },
             [artifactId],
             {
-              enabled: Boolean(
-                !shareId && artifactId && status?.startsWith("finish")
-              ),
-            }
+              enabled: Boolean(!shareId && artifactId && status?.startsWith('finish')),
+            },
           )
         : useGetCodeArtifactDetail(
             {
@@ -77,47 +75,40 @@ const ArtifactRenderer = memo(
             },
             [artifactId],
             {
-              enabled: Boolean(
-                !shareId && artifactId && status?.startsWith("finish")
-              ),
-            }
+              enabled: Boolean(!shareId && artifactId && status?.startsWith('finish')),
+            },
           );
 
-    const { data: shareData, loading: isShareLoading } =
-      useFetchShareData(shareId);
+    const { data: shareData, loading: isShareLoading } = useFetchShareData(shareId);
 
     const isLoading = isRemoteLoading || isShareLoading;
 
     // 合并数据源
     const artifactData = useMemo(
       () => shareData || remoteData?.data || null,
-      [shareData, remoteData]
+      [shareData, remoteData],
     );
 
     // 获取内容
-    const content =
-      artifactData?.content || node.nodeData?.metadata?.content || "";
+    const content = artifactData?.content || node.nodeData?.metadata?.content || '';
 
     // 确定当前使用的渲染类型
-    const currentType =
-      rendererType === "document"
-        ? "text/markdown"
-        : artifactData?.type || type;
+    const currentType = rendererType === 'document' ? 'text/markdown' : artifactData?.type || type;
 
     const handleRequestFix = useCallback((error: string) => {
       message.warning(`需要修复代码: ${error}`);
     }, []);
 
     // 根据类型获取显示名称
-    const getTypeDisplayName = (typeStr: string) => {
+    const _getTypeDisplayName = (typeStr: string) => {
       const typeMap: Record<string, string> = {
-        "text/html": "网页渲染",
-        "application/refly.artifacts.react": "React组件",
-        "application/refly.artifacts.mermaid": "流程图",
-        "application/refly.artifacts.mindmap": "思维导图",
-        "text/markdown": "Markdown",
-        "application/refly.artifacts.code": "代码",
-        "image/svg+xml": "SVG图像",
+        'text/html': '网页渲染',
+        'application/refly.artifacts.react': 'React组件',
+        'application/refly.artifacts.mermaid': '流程图',
+        'application/refly.artifacts.mindmap': '思维导图',
+        'text/markdown': 'Markdown',
+        'application/refly.artifacts.code': '代码',
+        'image/svg+xml': 'SVG图像',
       };
 
       return typeMap[typeStr] || typeStr;
@@ -127,7 +118,7 @@ const ArtifactRenderer = memo(
       return (
         <div className="h-full flex items-center justify-center bg-white rounded p-3">
           <span className="text-gray-500">
-            未选择{rendererType === "document" ? "文档" : "代码"}组件
+            未选择{rendererType === 'document' ? '文档' : '代码'}组件
           </span>
         </div>
       );
@@ -137,7 +128,7 @@ const ArtifactRenderer = memo(
       return (
         <div className="flex h-full w-full grow items-center justify-center">
           <div className="text-gray-500">
-            {rendererType === "document" ? "文档" : "代码"}加载中...
+            {rendererType === 'document' ? '文档' : '代码'}加载中...
           </div>
         </div>
       );
@@ -145,12 +136,12 @@ const ArtifactRenderer = memo(
 
     return (
       <div
-        className={`h-full bg-white ${!isFullscreen ? "rounded px-4 pb-4" : "w-full"} ${isMinimap ? "p-1" : ""}`}
+        className={`h-full bg-white ${!isFullscreen ? 'rounded px-4 pb-4' : 'w-full'} ${isMinimap ? 'p-1' : ''}`}
       >
         <div className="h-full w-full overflow-hidden flex flex-col">
           {isMinimap ? (
             <div className="flex-1 bg-white overflow-hidden">
-              {status === "generating" ? (
+              {status === 'generating' ? (
                 <div className="flex h-full w-full items-center justify-center">
                   <div className="text-xs text-gray-500">生成中...</div>
                 </div>
@@ -171,12 +162,12 @@ const ArtifactRenderer = memo(
             </div>
           ) : (
             <div
-              className={`flex-1 ${isFullscreen ? "h-[calc(100vh-100px)]" : ""} overflow-${rendererType === "document" ? "auto" : "hidden"}`}
+              className={`flex-1 ${isFullscreen ? 'h-[calc(100vh-100px)]' : ''} overflow-${rendererType === 'document' ? 'auto' : 'hidden'}`}
             >
-              {status === "generating" ? (
+              {status === 'generating' ? (
                 <div className="flex h-full w-full items-center justify-center">
                   <div className="text-gray-500">
-                    {rendererType === "document" ? "文档" : "代码"}生成中...
+                    {rendererType === 'document' ? '文档' : '代码'}生成中...
                   </div>
                 </div>
               ) : (
@@ -209,7 +200,7 @@ const ArtifactRenderer = memo(
       prevMetadata.status === nextMetadata.status &&
       prevMetadata.type === nextMetadata.type
     );
-  }
+  },
 );
 
 export { ArtifactRenderer, type NodeRelation, type NodeData };

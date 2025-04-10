@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect, useRef } from "react";
-import { type NodeRelation } from "../components/ArtifactRenderer";
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { type NodeRelation } from '../components/ArtifactRenderer';
 
 interface UseSlideshowOptions {
   nodes: NodeRelation[];
@@ -43,21 +43,21 @@ export const useSlideshow = ({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.key) {
-        case "ArrowRight":
-        case "Space":
+        case 'ArrowRight':
+        case 'Space':
           nextSlide();
           break;
-        case "ArrowLeft":
+        case 'ArrowLeft':
           prevSlide();
           break;
-        case "Escape":
+        case 'Escape':
           // 这里不直接设置 isPreviewMode，而是通过外部回调处理
           break;
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isPreviewMode, nextSlide, prevSlide]);
 
   // 添加触摸手势支持
@@ -94,14 +94,14 @@ export const useSlideshow = ({
     };
 
     const element = previewContentRef.current;
-    element.addEventListener("touchstart", handleTouchStart, { passive: true });
-    element.addEventListener("touchend", handleTouchEnd, { passive: true });
-    element.addEventListener("touchmove", handleTouchMove, { passive: true });
+    element.addEventListener('touchstart', handleTouchStart, { passive: true });
+    element.addEventListener('touchend', handleTouchEnd, { passive: true });
+    element.addEventListener('touchmove', handleTouchMove, { passive: true });
 
     return () => {
-      element.removeEventListener("touchstart", handleTouchStart);
-      element.removeEventListener("touchend", handleTouchEnd);
-      element.removeEventListener("touchmove", handleTouchMove);
+      element.removeEventListener('touchstart', handleTouchStart);
+      element.removeEventListener('touchend', handleTouchEnd);
+      element.removeEventListener('touchmove', handleTouchMove);
     };
   }, [isPreviewMode, nextSlide, prevSlide, handleUiInteraction]);
 

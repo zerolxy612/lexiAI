@@ -1,52 +1,47 @@
-import React, { memo, useCallback } from "react";
-import { Button, Dropdown, Modal } from "antd";
-import type { MenuProps } from "antd";
+import React, { memo, useCallback } from 'react';
+import { Button, Dropdown, Modal } from 'antd';
+import type { MenuProps } from 'antd';
 import {
   MoreHorizontal,
   X,
   Maximize2,
   Minimize2,
   FileText,
-  Cpu,
-  Code2,
-  Globe,
   Sparkles,
   Wrench,
   Trash2,
-} from "lucide-react";
-import { NODE_COLORS } from "@refly-packages/ai-workspace-common/components/canvas/nodes/shared/colors";
-import { NodeHeader } from "@refly-packages/ai-workspace-common/components/canvas/nodes/shared/node-header";
-import { type NodeRelation } from "./ArtifactRenderer";
+} from 'lucide-react';
+import { NODE_COLORS } from '@refly-packages/ai-workspace-common/components/canvas/nodes/shared/colors';
+import { NodeHeader } from '@refly-packages/ai-workspace-common/components/canvas/nodes/shared/node-header';
+import { type NodeRelation } from './ArtifactRenderer';
 import {
-  IconPin,
-  IconUnpin,
   IconWideMode,
   IconDocument,
   IconResource,
   IconResponse,
   IconCodeArtifact,
   IconWebsite,
-} from "@refly-packages/ai-workspace-common/components/common/icon";
+} from '@refly-packages/ai-workspace-common/components/common/icon';
 
 // 获取节点图标组件
 const getNodeIcon = (nodeType: string) => {
   switch (nodeType) {
-    case "document":
+    case 'document':
       return IconDocument;
-    case "resource":
+    case 'resource':
       return IconResource;
-    case "skillResponse":
+    case 'skillResponse':
       return IconResponse;
-    case "toolResponse":
+    case 'toolResponse':
       return IconResponse;
-    case "codeArtifact":
+    case 'codeArtifact':
       return IconCodeArtifact;
-    case "website":
+    case 'website':
       return IconWebsite;
-    case "skill":
+    case 'skill':
       // 这里可以根据skillType返回不同的图标，但目前我们简化处理
       return Sparkles;
-    case "tool":
+    case 'tool':
       return Wrench;
     default:
       return FileText;
@@ -55,7 +50,7 @@ const getNodeIcon = (nodeType: string) => {
 
 // 获取节点标题
 const getNodeTitle = (node: NodeRelation) => {
-  return node.nodeData?.title || "未命名节点";
+  return node.nodeData?.title || '未命名节点';
 };
 
 interface NodeBlockHeaderProps {
@@ -65,8 +60,6 @@ interface NodeBlockHeaderProps {
   onWideMode?: () => void;
   isMaximized?: boolean;
   isWideMode?: boolean;
-  isPinned?: boolean;
-  onPin?: () => void;
   isMinimap?: boolean;
   onDelete?: (nodeId: string) => void;
 }
@@ -79,20 +72,17 @@ export const NodeBlockHeader: React.FC<NodeBlockHeaderProps> = memo(
     onWideMode,
     isMaximized = false,
     isWideMode = false,
-    isPinned = false,
-    onPin,
     isMinimap = false,
     onDelete,
   }) => {
     const IconComponent = getNodeIcon(node.nodeType);
-    const nodeColor =
-      NODE_COLORS[node.nodeType as keyof typeof NODE_COLORS] || "#17B26A";
+    const nodeColor = NODE_COLORS[node.nodeType as keyof typeof NODE_COLORS] || '#17B26A';
     const title = getNodeTitle(node);
 
     // 处理标题更新
     const handleTitleUpdate = useCallback((newTitle: string) => {
       // 这里可以添加标题更新的逻辑
-      console.log("Title updated:", newTitle);
+      console.log('Title updated:', newTitle);
     }, []);
 
     // 处理删除节点
@@ -100,11 +90,11 @@ export const NodeBlockHeader: React.FC<NodeBlockHeaderProps> = memo(
       if (!onDelete) return;
 
       Modal.confirm({
-        title: "确认删除节点",
+        title: '确认删除节点',
         content: `确定要删除节点"${title}"吗？此操作不可恢复。`,
-        okText: "删除",
-        okType: "danger",
-        cancelText: "取消",
+        okText: '删除',
+        okType: 'danger',
+        cancelText: '取消',
         onOk: () => {
           onDelete(node.nodeId);
         },
@@ -112,23 +102,9 @@ export const NodeBlockHeader: React.FC<NodeBlockHeaderProps> = memo(
     }, [node.nodeId, onDelete, title]);
 
     // 定义下拉菜单项
-    const menuItems: MenuProps["items"] = [
-      // {
-      //   key: "pin",
-      //   label: (
-      //     <div className="flex items-center gap-2 whitespace-nowrap">
-      //       {isPinned ? (
-      //         <IconUnpin className="w-4 h-4 flex-shrink-0" />
-      //       ) : (
-      //         <IconPin className="w-4 h-4 flex-shrink-0" />
-      //       )}
-      //       {isPinned ? "取消固定" : "固定节点"}
-      //     </div>
-      //   ),
-      //   onClick: onPin,
-      // },
+    const menuItems: MenuProps['items'] = [
       {
-        key: "delete",
+        key: 'delete',
         label: (
           <div className="flex items-center gap-2 text-red-600 whitespace-nowrap">
             <Trash2 className="w-4 h-4 flex-shrink-0" />
@@ -165,7 +141,7 @@ export const NodeBlockHeader: React.FC<NodeBlockHeaderProps> = memo(
           {onWideMode && (
             <Button
               type="text"
-              className={`p-1.5 hover:bg-gray-100 ${isWideMode ? "text-primary-600" : "text-gray-500"}`}
+              className={`p-1.5 hover:bg-gray-100 ${isWideMode ? 'text-primary-600' : 'text-gray-500'}`}
               onClick={onWideMode}
               title="宽屏模式查看"
             >
@@ -175,64 +151,39 @@ export const NodeBlockHeader: React.FC<NodeBlockHeaderProps> = memo(
           {onMaximize && (
             <Button
               type="text"
-              className={`p-1.5 hover:bg-gray-100 ${isMaximized ? "text-primary-600" : "text-gray-500"}`}
+              className={`p-1.5 hover:bg-gray-100 ${isMaximized ? 'text-primary-600' : 'text-gray-500'}`}
               onClick={onMaximize}
               title="幻灯片预览"
             >
-              {isMaximized ? (
-                <Minimize2 className="w-4 h-4" />
-              ) : (
-                <Maximize2 className="w-4 h-4" />
-              )}
+              {isMaximized ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
             </Button>
           )}
-          {/* <Button
-            type="text"
-            className={`p-1.5 hover:bg-gray-100 ${isPinned ? "text-primary-600" : "text-gray-500"}`}
-            onClick={onPin}
-            title={isPinned ? "取消固定" : "固定节点"}
-          >
-            {isPinned ? (
-              <IconUnpin className="w-4 h-4" />
-            ) : (
-              <IconPin className="w-4 h-4" />
-            )}
-          </Button> */}
 
           <Dropdown
             menu={{ items: menuItems }}
-            trigger={["click"]}
+            trigger={['click']}
             placement="bottomRight"
             overlayClassName="min-w-[160px] w-max"
-            getPopupContainer={(triggerNode) =>
-              triggerNode.parentNode as HTMLElement
-            }
+            getPopupContainer={(triggerNode) => triggerNode.parentNode as HTMLElement}
             dropdownRender={(menu) => (
               <div className="min-w-[160px] bg-white rounded-lg border-[0.5px] border-[rgba(0,0,0,0.03)] shadow-lg">
                 {menu}
               </div>
             )}
           >
-            <Button
-              type="text"
-              className="p-1.5 hover:bg-gray-100 text-gray-500"
-            >
+            <Button type="text" className="p-1.5 hover:bg-gray-100 text-gray-500">
               <MoreHorizontal className="w-4 h-4" />
             </Button>
           </Dropdown>
           {onClose && (
-            <Button
-              type="text"
-              className="p-1.5 hover:bg-gray-100 text-gray-500"
-              onClick={onClose}
-            >
+            <Button type="text" className="p-1.5 hover:bg-gray-100 text-gray-500" onClick={onClose}>
               <X className="w-4 h-4" />
             </Button>
           )}
         </div>
       </div>
     );
-  }
+  },
 );
 
-NodeBlockHeader.displayName = "NodeBlockHeader";
+NodeBlockHeader.displayName = 'NodeBlockHeader';

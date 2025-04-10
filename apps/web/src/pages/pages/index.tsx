@@ -1,20 +1,12 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import {
-  Form,
-  Input,
-  Button,
-  Spin,
-  message,
-  Modal,
-  Select,
-} from "antd";
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Form, Input, Button, Spin, message, Modal, Select } from 'antd';
 import {
   useGetPageDetail,
   useUpdatePage,
   useDeletePageNode,
   useSharePage,
-} from "@refly-packages/ai-workspace-common/queries/queries";
+} from '@refly-packages/ai-workspace-common/queries/queries';
 import {
   ArrowLeftOutlined,
   SaveOutlined,
@@ -26,18 +18,18 @@ import {
   CloseCircleOutlined,
   FileTextOutlined,
   PlusOutlined,
-} from "@ant-design/icons";
-import { useSiderStoreShallow } from "@refly-packages/ai-workspace-common/stores/sider";
-import { NodeRenderer } from "./components/NodeRenderer";
-import { type NodeRelation } from "./components/ArtifactRenderer";
-import "./styles/preview-mode.css";
+} from '@ant-design/icons';
+import { useSiderStoreShallow } from '@refly-packages/ai-workspace-common/stores/sider';
+import { NodeRenderer } from './components/NodeRenderer';
+import { type NodeRelation } from './components/ArtifactRenderer';
+import './styles/preview-mode.css';
 
 // 导入抽象的组件和 hooks
-import PageLayout from "./components/PageLayout";
-import PreviewMode from "./components/PreviewMode";
-import { usePreviewUI } from "./hooks/usePreviewUI";
-import { useSlideshow } from "./hooks/useSlideshow";
-import { getNodeTitle } from "./utils/nodeUtils";
+import PageLayout from './components/PageLayout';
+import PreviewMode from './components/PreviewMode';
+import { usePreviewUI } from './hooks/usePreviewUI';
+import { useSlideshow } from './hooks/useSlideshow';
+import { getNodeTitle } from './utils/nodeUtils';
 
 interface PageDetailType {
   title: string;
@@ -51,16 +43,19 @@ function PageEdit() {
   const [form] = Form.useForm();
   const [formChanged, setFormChanged] = useState(false);
   const [activeNodeIndex, setActiveNodeIndex] = useState(0);
-  const [nodes, setNodes] = useState<NodeRelation[]>([]);
+  const [nodesList, setNodes] = useState<NodeRelation[]>([]);
   const [showMinimap, setShowMinimap] = useState(true);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
-  const [isDeletingNode, setIsDeletingNode] = useState(false);
-  const [wideMode, setWideMode] = useState<{ isActive: boolean; nodeId: string | null }>({ isActive: false, nodeId: null });
+  const [_isDeletingNode, setIsDeletingNode] = useState(false);
+  const [wideMode, setWideMode] = useState<{ isActive: boolean; nodeId: string | null }>({
+    isActive: false,
+    nodeId: null,
+  });
 
   // 分享相关状态
   const [shareModalVisible, setShareModalVisible] = useState(false);
-  const [shareOption, setShareOption] = useState<"internet" | "未开启">("internet");
-  const [shareUrl, setShareUrl] = useState<string>("");
+  const [shareOption, setShareOption] = useState<'internet' | '未开启'>('internet');
+  const [shareUrl, setShareUrl] = useState<string>('');
   const [isCopied, setIsCopied] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
 
@@ -96,22 +91,16 @@ function PageEdit() {
     resetSlideIndex,
     setCurrentSlideIndex, // Add this line
   } = useSlideshow({
-    nodes,
+    nodes: nodesList,
     isPreviewMode,
     handleUiInteraction,
   });
 
   // UI 交互处理方法
-  const toggleSidebar = useCallback(
-    () => setCollapse(!collapse),
-    [collapse, setCollapse]
-  );
-  
-  const toggleMinimap = useCallback(
-    () => setShowMinimap(!showMinimap),
-    [showMinimap]
-  );
-  
+  const toggleSidebar = useCallback(() => setCollapse(!collapse), [collapse, setCollapse]);
+
+  const toggleMinimap = useCallback(() => setShowMinimap(!showMinimap), [showMinimap]);
+
   const togglePreviewMode = useCallback(() => {
     setIsPreviewMode(!isPreviewMode);
     if (!isPreviewMode) {
@@ -124,7 +113,7 @@ function PageEdit() {
     data: pageDetailResponse,
     isLoading: isLoadingPage,
     error: pageLoadError,
-  } = useGetPageDetail({ path: { pageId: pageId || "" } }, undefined, {
+  } = useGetPageDetail({ path: { pageId: pageId || '' } }, undefined, {
     enabled: !!pageId,
   });
 
@@ -132,30 +121,32 @@ function PageEdit() {
   const { mutate: updatePage, isPending: isUpdating } = useUpdatePage();
 
   // 分享页面Hook
-  const { mutate: sharePage, isPending: isSharePending } = useSharePage();
+  const { mutate: sharePage } = useSharePage();
 
   // 从响应中提取页面数据
   const pageDetail = pageDetailResponse?.data as PageDetailType | undefined;
 
   // 获取节点数据
-  const nodeRelations = useMemo<NodeRelation[]>(() => {
+  const nodes = useMemo<NodeRelation[]>(() => {
     if (!pageDetail?.nodeRelations) return [];
 
     // 注: 原本有过滤逻辑，但实际上不过滤任何内容 (node.nodeType === "codeArtifact" || 1)
-    const filteredNodes = pageDetail.nodeRelations;
-    setNodes(filteredNodes);
-    return filteredNodes;
-  }, [pageDetail?.nodeRelations]);
+    return pageDetail.nodeRelations.map((node) => ({
+      ...node,
+    }));
+  }, [pageDetail]);
 
-  // 当页面数据加载后填充表单
+  // 当页面数据加载完成后，更新本地状态
   useEffect(() => {
     if (pageDetail) {
       form.setFieldsValue({
         title: pageDetail.title,
-        description: pageDetail.description || "",
+        description: pageDetail.description,
       });
+      setNodes(nodes);
+      setFormChanged(false);
     }
-  }, [pageDetail, form]);
+  }, [form, pageDetail, nodes]);
 
   // 提交表单处理函数
   const handleSubmit = (values: any) => {
@@ -170,29 +161,27 @@ function PageEdit() {
     };
 
     // 如果有节点数据，仅更新节点顺序
-    if (nodes.length > 0) {
-      updateData.body.nodeRelationOrders = nodes.map(
-        (node: NodeRelation, index: number) => ({
-          relationId: node.relationId,
-          orderIndex: index,
-        })
-      );
+    if (nodesList.length > 0) {
+      updateData.body.nodeRelationOrders = nodesList.map((node: NodeRelation, index: number) => ({
+        relationId: node.relationId,
+        orderIndex: index,
+      }));
     }
 
     updatePage(updateData, {
       onSuccess: () => {
-        message.success("页面更新成功");
+        message.success('页面更新成功');
         setFormChanged(false);
       },
       onError: (error) => {
-        console.error("更新页面失败:", error);
-        message.error("保存失败，请稍后重试");
+        console.error('更新页面失败:', error);
+        message.error('保存失败，请稍后重试');
       },
     });
   };
 
   // 表单与导航处理
-  const handleBack = () => navigate("/pages");
+  const handleBack = () => navigate('/pages');
   const handleFormChange = () => setFormChanged(true);
 
   // 处理节点选择
@@ -202,7 +191,7 @@ function PageEdit() {
     // 滚动到对应的内容块
     const element = document.getElementById(`content-block-${index}`);
     if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   };
 
@@ -212,7 +201,7 @@ function PageEdit() {
       newOrder.map((node, index) => ({
         ...node,
         orderIndex: index,
-      }))
+      })),
     );
     setFormChanged(true);
   };
@@ -236,32 +225,30 @@ function PageEdit() {
         });
 
         // 从本地状态中移除节点
-        setNodes((prevNodes) =>
-          prevNodes.filter((node) => node.nodeId !== nodeId)
-        );
+        setNodes((prevNodes) => prevNodes.filter((node) => node.nodeId !== nodeId));
 
         // 如果删除的是当前选中的节点，选择第一个节点
-        if (nodes[activeNodeIndex]?.nodeId === nodeId) {
+        if (nodesList[activeNodeIndex]?.nodeId === nodeId) {
           setActiveNodeIndex(0);
         }
 
-        message.success("节点删除成功");
+        message.success('节点删除成功');
         setFormChanged(true);
       } catch (error) {
-        console.error("删除节点失败:", error);
-        message.error("删除节点失败，请重试");
+        console.error('删除节点失败:', error);
+        message.error('删除节点失败，请重试');
       } finally {
         setIsDeletingNode(false);
       }
     },
-    [pageId, activeNodeIndex, nodes, deletePageNodeMutation]
+    [pageId, activeNodeIndex, nodesList, deletePageNodeMutation],
   );
 
   // 处理从指定节点开始幻灯片预览
   const handleStartSlideshow = useCallback(
     (nodeId: string) => {
       // 查找点击的节点索引
-      const nodeIndex = nodes.findIndex((node) => node.nodeId === nodeId);
+      const nodeIndex = nodesList.findIndex((node) => node.nodeId === nodeId);
       if (nodeIndex !== -1) {
         // 设置当前幻灯片索引为找到的节点索引
         setCurrentSlideIndex(nodeIndex); // Use setCurrentSlideIndex here
@@ -269,18 +256,18 @@ function PageEdit() {
         setIsPreviewMode(true);
       }
     },
-    [nodes, setCurrentSlideIndex]
+    [nodesList, setCurrentSlideIndex],
   );
 
   // 宽屏模式处理
   const handleWideMode = useCallback(
     (nodeId: string) => {
-      const node = nodes.find((n) => n.nodeId === nodeId);
+      const node = nodesList.find((n) => n.nodeId === nodeId);
       if (node) {
         setWideMode({ isActive: true, nodeId });
       }
     },
-    [nodes]
+    [nodesList],
   );
 
   // 关闭宽屏模式
@@ -293,13 +280,13 @@ function PageEdit() {
     if (!wideMode.isActive) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (e.key === 'Escape') {
         handleCloseWideMode();
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [wideMode.isActive, handleCloseWideMode]);
 
   // 处理分享页面
@@ -310,51 +297,53 @@ function PageEdit() {
   // 执行分享操作
   const handleShareSubmit = () => {
     if (!pageId) return;
-    
+
     setIsSharing(true);
-    
+
     sharePage(
       { path: { pageId } },
       {
         onSuccess: (response) => {
           if (!response?.data?.data?.shareUrl) {
-            console.error("分享链接获取失败", response);
-            message.error("分享失败，无法获取链接");
+            console.error('分享链接获取失败', response);
+            message.error('分享失败，无法获取链接');
             setIsSharing(false);
             return;
           }
-          
+
           const shareLink = response.data.data.shareUrl;
           setShareUrl(shareLink);
           setIsSharing(false);
-          
+
           // 自动复制分享链接到剪贴板
-          navigator.clipboard.writeText(shareLink)
+          navigator.clipboard
+            .writeText(shareLink)
             .then(() => {
               setIsCopied(true);
-              message.success("链接已复制到剪贴板");
+              message.success('链接已复制到剪贴板');
               setTimeout(() => setIsCopied(false), 3000);
             })
-            .catch(() => message.warning("分享成功，请手动复制链接"));
+            .catch(() => message.warning('分享成功，请手动复制链接'));
         },
         onError: () => {
           setIsSharing(false);
-          message.error("分享失败，请稍后重试");
+          message.error('分享失败，请稍后重试');
         },
-      }
+      },
     );
   };
 
   // 复制分享链接
   const handleCopyShareUrl = () => {
     if (shareUrl) {
-      navigator.clipboard.writeText(shareUrl)
+      navigator.clipboard
+        .writeText(shareUrl)
         .then(() => {
           setIsCopied(true);
-          message.success("链接已复制到剪贴板");
+          message.success('链接已复制到剪贴板');
           setTimeout(() => setIsCopied(false), 3000);
         })
-        .catch(() => message.warning("分享成功，请手动复制链接"));
+        .catch(() => message.warning('分享成功，请手动复制链接'));
     }
   };
 
@@ -395,20 +384,20 @@ function PageEdit() {
         closable={false}
         onCancel={togglePreviewMode}
         width="100%"
-        style={{ top: 0, padding: 0, maxWidth: "100vw" }}
-        bodyStyle={{ height: "100vh", padding: 0, overflow: "hidden" }}
+        style={{ top: 0, padding: 0, maxWidth: '100vw' }}
+        bodyStyle={{ height: '100vh', padding: 0, overflow: 'hidden' }}
         className="preview-modal"
-        maskStyle={{ background: "rgba(0, 0, 0, 0.85)" }}
+        maskStyle={{ background: 'rgba(0, 0, 0, 0.85)' }}
         wrapClassName="preview-modal-wrap"
       >
         <div className="bg-black h-full w-full flex flex-col">
           {/* 使用抽象的 PreviewMode 组件 */}
           <PreviewMode
-            nodes={nodes}
+            nodes={nodesList}
             currentSlideIndex={currentSlideIndex}
             showPreviewMinimap={showPreviewMinimap}
             uiState={uiState}
-            title={form.getFieldValue("title")}
+            title={form.getFieldValue('title')}
             onNext={nextSlide}
             onPrev={prevSlide}
             onClose={togglePreviewMode}
@@ -430,7 +419,7 @@ function PageEdit() {
     <PageLayout
       showMinimap={showMinimap}
       collapse={collapse}
-      nodes={nodes}
+      nodes={nodesList}
       activeNodeIndex={activeNodeIndex}
       onNodeSelect={handleNodeSelect}
       onReorderNodes={handleReorderNodes}
@@ -452,13 +441,13 @@ function PageEdit() {
               onValuesChange={handleFormChange}
               initialValues={{
                 title: pageDetail.title,
-                description: pageDetail.description || "",
+                description: pageDetail.description,
               }}
               className="flex items-center"
             >
               <Form.Item
                 name="title"
-                rules={[{ required: true, message: "请输入页面标题" }]}
+                rules={[{ required: true, message: '请输入页面标题' }]}
                 className="mb-0"
               >
                 <Input
@@ -471,7 +460,7 @@ function PageEdit() {
           </div>
 
           <div className="flex items-center">
-            {nodes.length > 0 && (
+            {nodesList.length > 0 && (
               <Button
                 type="text"
                 onClick={togglePreviewMode}
@@ -507,11 +496,7 @@ function PageEdit() {
     >
       {/* 页面描述区域 */}
       <div className="mb-6">
-        <Form
-          form={form}
-          onFinish={handleSubmit}
-          onValuesChange={handleFormChange}
-        >
+        <Form form={form} onFinish={handleSubmit} onValuesChange={handleFormChange}>
           <Form.Item name="description">
             <Input.TextArea
               placeholder="添加页面描述..."
@@ -524,22 +509,24 @@ function PageEdit() {
       </div>
 
       {/* 内容模块 */}
-      {nodes.length > 0 ? (
+      {nodesList.length > 0 ? (
         <div className="space-y-6">
-          {nodes.map((node, index) => (
+          {nodesList.map((node, index) => (
             <div
               key={node.relationId || `content-${index}`}
               id={`content-block-${index}`}
               onClick={() => setActiveNodeIndex(index)}
               className={`transition-all duration-300 h-[400px] rounded-lg bg-white ${
                 activeNodeIndex === index
-                  ? "shadow-[0_10px_30px_rgba(0,0,0,0.15)] transform -translate-y-1 border border-blue-400"
-                  : "shadow-md hover:shadow-lg"
+                  ? 'shadow-[0_10px_30px_rgba(0,0,0,0.15)] transform -translate-y-1 border border-blue-400'
+                  : 'shadow-md hover:shadow-lg'
               }`}
             >
               <NodeRenderer
                 node={node}
-                isActive={activeNodeIndex === index}
+                isFullscreen={isPreviewMode}
+                isModal={false}
+                isMinimap={false}
                 onDelete={handleDeleteNode}
                 onStartSlideshow={handleStartSlideshow}
                 onWideMode={handleWideMode}
@@ -552,13 +539,11 @@ function PageEdit() {
           <div className="text-6xl text-gray-300 mb-6">
             <FileTextOutlined />
           </div>
-          <h3 className="text-xl font-medium text-gray-500 mb-3">
-            暂无代码组件
-          </h3>
+          <h3 className="text-xl font-medium text-gray-500 mb-3">暂无代码组件</h3>
           <p className="text-gray-400 mb-6">
             {showMinimap
               ? '点击左侧"添加代码组件"按钮添加内容'
-              : "点击侧边按钮打开代码组件面板，然后添加内容"}
+              : '点击侧边按钮打开代码组件面板，然后添加内容'}
           </p>
           <Button
             type="primary"
@@ -568,10 +553,10 @@ function PageEdit() {
               if (!showMinimap) {
                 setShowMinimap(true);
                 setTimeout(() => {
-                  message.info("请使用左侧面板添加代码组件");
+                  message.info('请使用左侧面板添加代码组件');
                 }, 300);
               } else {
-                message.info("添加新代码组件功能开发中");
+                message.info('添加新代码组件功能开发中');
               }
             }}
             className="bg-blue-600 hover:bg-blue-700 border-none shadow"
@@ -589,24 +574,21 @@ function PageEdit() {
         width="85%"
         style={{ top: 20 }}
         bodyStyle={{
-          maxHeight: "calc(100vh - 100px)",
+          maxHeight: 'calc(100vh - 100px)',
           padding: 0,
-          overflow: "hidden",
+          overflow: 'hidden',
         }}
         className="wide-mode-modal"
-        closeIcon={
-          <CloseCircleOutlined className="text-gray-500 hover:text-red-500" />
-        }
-        maskStyle={{ background: "rgba(0, 0, 0, 0.65)" }}
+        closeIcon={<CloseCircleOutlined className="text-gray-500 hover:text-red-500" />}
+        maskStyle={{ background: 'rgba(0, 0, 0, 0.65)' }}
       >
         <div className="bg-white h-full w-full flex flex-col rounded-lg overflow-hidden">
           {/* 宽屏模式内容 */}
           <div className="flex-1 overflow-auto">
-            {wideMode.nodeId && nodes.find((n) => n.nodeId === wideMode.nodeId) ? (
+            {wideMode.nodeId && nodesList.find((n) => n.nodeId === wideMode.nodeId) ? (
               <div className="h-[calc(100vh-160px)]">
                 <NodeRenderer
-                  node={nodes.find((n) => n.nodeId === wideMode.nodeId)!}
-                  isActive={true}
+                  node={nodesList.find((n) => n.nodeId === wideMode.nodeId)!}
                   isFullscreen={false}
                   isModal={true}
                   isMinimap={false}
@@ -644,10 +626,10 @@ function PageEdit() {
             <Select
               value={shareOption}
               onChange={(value) => setShareOption(value)}
-              style={{ width: "100%" }}
+              style={{ width: '100%' }}
               options={[
                 {
-                  value: "internet",
+                  value: 'internet',
                   label: (
                     <div className="flex items-center">
                       <GlobalOutlined className="mr-2 text-green-500" />
@@ -656,7 +638,7 @@ function PageEdit() {
                   ),
                 },
                 {
-                  value: "未开启",
+                  value: '未开启',
                   label: (
                     <div className="flex items-center">
                       <UserOutlined className="mr-2 text-gray-500" />
@@ -684,27 +666,19 @@ function PageEdit() {
             <div className="mt-4">
               <div className="text-gray-700 mb-2">分享链接</div>
               <div className="flex items-center">
-                <Input
-                  value={shareUrl}
-                  readOnly
-                  className="flex-1 bg-gray-50"
-                />
+                <Input value={shareUrl} readOnly className="flex-1 bg-gray-50" />
                 <Button
                   type="primary"
                   icon={<CopyOutlined />}
                   onClick={handleCopyShareUrl}
                   className={`ml-2 flex items-center justify-center h-[32px] ${
-                    isCopied
-                      ? "bg-green-600 hover:bg-green-700"
-                      : "bg-blue-600 hover:bg-blue-700"
+                    isCopied ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'
                   } border-none`}
                 >
-                  {isCopied ? "已复制" : "复制"}
+                  {isCopied ? '已复制' : '复制'}
                 </Button>
               </div>
-              <div className="mt-4 text-gray-500 text-sm">
-                获得此链接的人均可查看此页面内容
-              </div>
+              <div className="mt-4 text-gray-500 text-sm">获得此链接的人均可查看此页面内容</div>
             </div>
           )}
         </div>

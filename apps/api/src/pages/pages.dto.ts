@@ -124,7 +124,9 @@ export const pagePO2DTO = (page: any) => {
     title: page.title,
     description: page.description,
     status: page.status,
-    coverUrl: page.cover_storage_key ? `/api/v1/misc/file?key=${page.cover_storage_key}` : undefined,
+    coverUrl: page.cover_storage_key
+      ? `/api/v1/misc/file?key=${page.cover_storage_key}`
+      : undefined,
     createdAt: page.created_at,
     updatedAt: page.updated_at,
   };
@@ -138,8 +140,10 @@ export const pageNodeRelationPO2DTO = (relation: any) => {
     nodeType: relation.node_type,
     entityId: relation.entity_id,
     orderIndex: relation.order_index,
-    nodeData: relation.node_data ? 
-      (typeof relation.node_data === 'string' ? JSON.parse(relation.node_data) : relation.node_data) 
+    nodeData: relation.node_data
+      ? typeof relation.node_data === 'string'
+        ? JSON.parse(relation.node_data)
+        : relation.node_data
       : {},
   };
 };
@@ -150,7 +154,9 @@ export const pageVersionPO2DTO = (version: any) => {
     pageId: version.page_id,
     version: version.version,
     title: version.title,
-    coverUrl: version.cover_storage_key ? `/api/v1/misc/file?key=${version.cover_storage_key}` : undefined,
+    coverUrl: version.cover_storage_key
+      ? `/api/v1/misc/file?key=${version.cover_storage_key}`
+      : undefined,
     createdAt: version.created_at,
   };
-}; 
+};

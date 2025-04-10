@@ -1,5 +1,5 @@
-import React, { memo } from "react";
-import { ArtifactRenderer, type NodeRelation } from "./ArtifactRenderer";
+import { memo } from 'react';
+import { ArtifactRenderer, type NodeRelation } from './ArtifactRenderer';
 
 // 为了向后兼容，保留原始组件名称但使用统一组件
 const CodeArtifactRenderer = memo(
@@ -16,7 +16,7 @@ const CodeArtifactRenderer = memo(
         isMinimap={props.isMinimap}
       />
     );
-  }
+  },
 );
 
 export { CodeArtifactRenderer };

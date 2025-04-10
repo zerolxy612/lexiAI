@@ -1,16 +1,15 @@
-import React, { memo } from "react";
-import { type NodeRelation } from "./ArtifactRenderer";
-import { CodeArtifactRenderer } from "./CodeArtifactRenderer";
-import { DocumentRenderer } from "./DocumentRenderer";
-import { SkillResponseRenderer } from "./SkillResponseRenderer";
-import { ImageRenderer } from "./ImageRenderer";
-import { NodeBlockHeader } from "./NodeBlockHeader";
+import { memo } from 'react';
+import { type NodeRelation } from './ArtifactRenderer';
+import { CodeArtifactRenderer } from './CodeArtifactRenderer';
+import { DocumentRenderer } from './DocumentRenderer';
+import { SkillResponseRenderer } from './SkillResponseRenderer';
+import { ImageRenderer } from './ImageRenderer';
+import { NodeBlockHeader } from './NodeBlockHeader';
 
 // 内容渲染组件
 const NodeRenderer = memo(
   ({
     node,
-    isActive = false,
     isFullscreen = false,
     isModal = false,
     isMinimap = false,
@@ -19,7 +18,6 @@ const NodeRenderer = memo(
     onWideMode,
   }: {
     node: NodeRelation;
-    isActive?: boolean;
     isFullscreen?: boolean;
     isModal?: boolean;
     isMinimap?: boolean;
@@ -29,7 +27,7 @@ const NodeRenderer = memo(
   }) => {
     // 根据不同节点类型返回对应的渲染器
     switch (node.nodeType) {
-      case "codeArtifact":
+      case 'codeArtifact':
         return (
           <div className="flex flex-col h-full">
             {/* 只在常规编辑模式（非全屏模式且非模态框模式）下显示header */}
@@ -39,23 +37,15 @@ const NodeRenderer = memo(
                 isMinimap={isMinimap}
                 onMaximize={() => onStartSlideshow?.(node.nodeId)}
                 onWideMode={() => onWideMode?.(node.nodeId)}
-                onPin={() => console.log("Pin codeArtifact")}
-                isPinned={false}
                 onDelete={onDelete}
               />
             )}
-            <div
-              className={`flex-1 overflow-auto ${!isFullscreen ? "" : "h-full"}`}
-            >
-              <CodeArtifactRenderer
-                node={node}
-                isFullscreen={isFullscreen}
-                isMinimap={isMinimap}
-              />
+            <div className={`flex-1 overflow-auto ${!isFullscreen ? '' : 'h-full'}`}>
+              <CodeArtifactRenderer node={node} isFullscreen={isFullscreen} isMinimap={isMinimap} />
             </div>
           </div>
         );
-      case "document":
+      case 'document':
         return (
           <div className="flex flex-col h-full">
             {/* 只在常规编辑模式（非全屏模式且非模态框模式）下显示header */}
@@ -65,23 +55,15 @@ const NodeRenderer = memo(
                 isMinimap={isMinimap}
                 onMaximize={() => onStartSlideshow?.(node.nodeId)}
                 onWideMode={() => onWideMode?.(node.nodeId)}
-                onPin={() => console.log("Pin document")}
-                isPinned={false}
                 onDelete={onDelete}
               />
             )}
-            <div
-              className={`flex-1 overflow-auto ${!isFullscreen ? "" : "h-full"}`}
-            >
-              <DocumentRenderer
-                node={node}
-                isFullscreen={isFullscreen}
-                isMinimap={isMinimap}
-              />
+            <div className={`flex-1 overflow-auto ${!isFullscreen ? '' : 'h-full'}`}>
+              <DocumentRenderer node={node} isFullscreen={isFullscreen} isMinimap={isMinimap} />
             </div>
           </div>
         );
-      case "skillResponse":
+      case 'skillResponse':
         return (
           <div className="flex flex-col h-full">
             {/* 只在常规编辑模式（非全屏模式且非模态框模式）下显示header */}
@@ -91,14 +73,10 @@ const NodeRenderer = memo(
                 isMinimap={isMinimap}
                 onMaximize={() => onStartSlideshow?.(node.nodeId)}
                 onWideMode={() => onWideMode?.(node.nodeId)}
-                onPin={() => console.log("Pin skillResponse")}
-                isPinned={false}
                 onDelete={onDelete}
               />
             )}
-            <div
-              className={`flex-1 overflow-auto ${!isFullscreen ? "" : "h-full"}`}
-            >
+            <div className={`flex-1 overflow-auto ${!isFullscreen ? '' : 'h-full'}`}>
               <SkillResponseRenderer
                 node={node}
                 isFullscreen={isFullscreen}
@@ -107,7 +85,7 @@ const NodeRenderer = memo(
             </div>
           </div>
         );
-      case "image":
+      case 'image':
         return (
           <div className="flex flex-col h-full">
             {/* 只在常规编辑模式（非全屏模式且非模态框模式）下显示header */}
@@ -117,19 +95,11 @@ const NodeRenderer = memo(
                 isMinimap={isMinimap}
                 onMaximize={() => onStartSlideshow?.(node.nodeId)}
                 onWideMode={() => onWideMode?.(node.nodeId)}
-                onPin={() => console.log("Pin image")}
-                isPinned={false}
                 onDelete={onDelete}
               />
             )}
-            <div
-              className={`flex-1 overflow-auto ${!isFullscreen ? "" : "h-full"}`}
-            >
-              <ImageRenderer
-                node={node}
-                isFullscreen={isFullscreen}
-                isMinimap={isMinimap}
-              />
+            <div className={`flex-1 overflow-auto ${!isFullscreen ? '' : 'h-full'}`}>
+              <ImageRenderer node={node} isFullscreen={isFullscreen} isMinimap={isMinimap} />
             </div>
           </div>
         );
@@ -138,19 +108,17 @@ const NodeRenderer = memo(
         return (
           <div
             className={`p-6 bg-white rounded-lg flex flex-col items-center justify-center text-gray-400 ${
-              !isFullscreen ? "h-[400px]" : "h-full"
-            } shadow-md ${isMinimap ? "p-2 h-full" : ""}`}
+              !isFullscreen ? 'h-[400px]' : 'h-full'
+            } shadow-md ${isMinimap ? 'p-2 h-full' : ''}`}
           >
-            <div className={`${isMinimap ? "text-xs" : "text-lg"}`}>
-              {isMinimap ? "不支持的组件" : "仅支持代码组件类型"}
+            <div className={`${isMinimap ? 'text-xs' : 'text-lg'}`}>
+              {isMinimap ? '不支持的组件' : '仅支持代码组件类型'}
             </div>
-            {!isMinimap && (
-              <div className="text-sm text-gray-400 mt-2">{node.nodeType}</div>
-            )}
+            {!isMinimap && <div className="text-sm text-gray-400 mt-2">{node.nodeType}</div>}
           </div>
         );
     }
-  }
+  },
 );
 
 export { NodeRenderer };

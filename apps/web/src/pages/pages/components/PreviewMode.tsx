@@ -1,14 +1,14 @@
-import React from "react";
-import { Button } from "antd";
+import React from 'react';
+import { Button } from 'antd';
 import {
   LeftCircleOutlined,
   RightCircleOutlined,
   CloseCircleOutlined,
   UnorderedListOutlined,
-} from "@ant-design/icons";
-import { NodeRenderer } from "./NodeRenderer";
-import { type NodeRelation } from "./ArtifactRenderer";
-import "../styles/preview-mode.css";
+} from '@ant-design/icons';
+import { NodeRenderer } from './NodeRenderer';
+import { type NodeRelation } from './ArtifactRenderer';
+import '../styles/preview-mode.css';
 
 interface PreviewModeProps {
   nodes: NodeRelation[];
@@ -53,7 +53,7 @@ const PreviewMode: React.FC<PreviewModeProps> = ({
   return (
     <div
       ref={previewContentRef}
-      className={`preview-content-container relative ${uiState.isIdle ? "idle" : ""} ${uiState.showNav ? "show-nav" : ""}`}
+      className={`preview-content-container relative ${uiState.isIdle ? 'idle' : ''} ${uiState.showNav ? 'show-nav' : ''}`}
       onMouseMove={onMouseMove}
     >
       {/* 预览导航栏 */}
@@ -70,14 +70,14 @@ const PreviewMode: React.FC<PreviewModeProps> = ({
             icon={<LeftCircleOutlined />}
             onClick={onPrev}
             disabled={currentSlideIndex <= 0}
-            className={`preview-control-button ${currentSlideIndex <= 0 ? "disabled" : ""}`}
+            className={`preview-control-button ${currentSlideIndex <= 0 ? 'disabled' : ''}`}
           />
           <Button
             type="text"
             icon={<RightCircleOutlined />}
             onClick={onNext}
             disabled={currentSlideIndex >= nodes.length - 1}
-            className={`preview-control-button ${currentSlideIndex >= nodes.length - 1 ? "disabled" : ""}`}
+            className={`preview-control-button ${currentSlideIndex >= nodes.length - 1 ? 'disabled' : ''}`}
           />
           <Button
             type="text"
@@ -97,7 +97,7 @@ const PreviewMode: React.FC<PreviewModeProps> = ({
 
       {/* 预览模式小地图 */}
       <div
-        className={`preview-minimap ${showPreviewMinimap ? "preview-minimap-show" : ""}`}
+        className={`preview-minimap ${showPreviewMinimap ? 'preview-minimap-show' : ''}`}
         onMouseEnter={onMinimapMouseEnter}
         onMouseLeave={onMinimapMouseLeave}
       >
@@ -106,19 +106,19 @@ const PreviewMode: React.FC<PreviewModeProps> = ({
           {nodes.map((node, index) => (
             <div
               key={`minimap-slide-${index}`}
-              className={`preview-minimap-slide ${currentSlideIndex === index ? "active" : ""}`}
+              className={`preview-minimap-slide ${currentSlideIndex === index ? 'active' : ''}`}
               onClick={() => onPreviewSlideSelect(index)}
             >
               <div className="preview-minimap-number">{index + 1}</div>
               <div className="preview-minimap-thumbnail">
                 <div
                   style={{
-                    height: "100%",
-                    overflow: "hidden",
-                    transform: "scale(0.95)",
-                    background: "#fff",
-                    pointerEvents: "none",
-                    userSelect: "none",
+                    height: '100%',
+                    overflow: 'hidden',
+                    transform: 'scale(0.95)',
+                    background: '#fff',
+                    pointerEvents: 'none',
+                    userSelect: 'none',
                   }}
                 >
                   <NodeRenderer
@@ -132,9 +132,7 @@ const PreviewMode: React.FC<PreviewModeProps> = ({
                 {/* 透明遮罩层 */}
                 <div className="absolute inset-0 bg-transparent" />
               </div>
-              <div className="preview-minimap-title">
-                {getNodeTitle(node)}
-              </div>
+              <div className="preview-minimap-title">{getNodeTitle(node)}</div>
             </div>
           ))}
         </div>
@@ -145,10 +143,10 @@ const PreviewMode: React.FC<PreviewModeProps> = ({
         <div
           className="w-full h-full preview-slide"
           style={{
-            animationName: "slideIn",
-            animationDuration: "0.5s",
-            animationTimingFunction: "ease-out",
-            animationFillMode: "forwards",
+            animationName: 'slideIn',
+            animationDuration: '0.5s',
+            animationTimingFunction: 'ease-out',
+            animationFillMode: 'forwards',
           }}
         >
           <NodeRenderer
@@ -174,9 +172,7 @@ const PreviewMode: React.FC<PreviewModeProps> = ({
             {nodes.map((_, index) => (
               <div
                 key={`preview-dot-${index}`}
-                className={`preview-dot ${
-                  index === currentSlideIndex ? "active" : ""
-                }`}
+                className={`preview-dot ${index === currentSlideIndex ? 'active' : ''}`}
                 onClick={() => onPreviewSlideSelect(index)}
               />
             ))}

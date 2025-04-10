@@ -1,12 +1,8 @@
-import React, { ReactNode } from "react";
-import { Layout, Button, Tooltip } from "antd";
-import {
-  UnorderedListOutlined,
-  MenuUnfoldOutlined,
-  LeftOutlined,
-} from "@ant-design/icons";
-import { SidebarMinimap } from "./SidebarMinimap";
-import { type NodeRelation } from "./ArtifactRenderer";
+import React, { ReactNode } from 'react';
+import { Layout, Button, Tooltip } from 'antd';
+import { UnorderedListOutlined, MenuUnfoldOutlined, LeftOutlined } from '@ant-design/icons';
+import { SidebarMinimap } from './SidebarMinimap';
+import { type NodeRelation } from './ArtifactRenderer';
 
 interface PageLayoutProps {
   children: ReactNode;
@@ -74,7 +70,7 @@ const PageLayout: React.FC<PageLayoutProps> = ({
         {/* 中间内容区域 */}
         <Layout.Content
           className="relative overflow-y-auto overflow-x-hidden"
-          style={{ backgroundColor: "#f7f9fc" }}
+          style={{ backgroundColor: '#f7f9fc' }}
         >
           {/* 显示小地图的按钮 */}
           {!showMinimap && (
@@ -101,10 +97,7 @@ const PageLayout: React.FC<PageLayoutProps> = ({
             />
           )}
 
-          <div
-            className="mx-auto py-4 px-8 mb-16"
-            style={{ maxWidth: "900px" }}
-          >
+          <div className="mx-auto py-4 px-8 mb-16" style={{ maxWidth: '900px' }}>
             {children}
           </div>
         </Layout.Content>

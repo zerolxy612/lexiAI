@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect } from 'react';
 
 interface UIState {
   isIdle: boolean;
@@ -22,22 +22,22 @@ export const usePreviewUI = ({ isPreviewMode }: UsePreviewUIOptions) => {
   // UI 状态
   const [uiState, setUiState] = useState<UIState>({
     isIdle: false,
-    showNav: false
+    showNav: false,
   });
-  
+
   // 预览模式小地图状态
   const [showPreviewMinimap, setShowPreviewMinimap] = useState(false);
-  
+
   // 定时器引用
-  const timersRef = useRef<Timers>({ 
-    idle: null, 
-    nav: null, 
-    minimap: null 
+  const timersRef = useRef<Timers>({
+    idle: null,
+    nav: null,
+    minimap: null,
   });
 
   // 统一的 UI 状态更新函数
   const updateUiState = useCallback((updates: Partial<UIState>) => {
-    setUiState(prev => ({ ...prev, ...updates }));
+    setUiState((prev) => ({ ...prev, ...updates }));
   }, []);
 
   // 重置定时器
@@ -51,11 +51,15 @@ export const usePreviewUI = ({ isPreviewMode }: UsePreviewUIOptions) => {
   // 重置闲置状态
   const resetIdleState = useCallback(() => {
     updateUiState({ isIdle: false });
-    
+
     if (isPreviewMode) {
-      resetTimer('idle', () => {
-        updateUiState({ isIdle: true, showNav: false });
-      }, 2000); // 2秒无操作后隐藏导航栏
+      resetTimer(
+        'idle',
+        () => {
+          updateUiState({ isIdle: true, showNav: false });
+        },
+        2000,
+      ); // 2秒无操作后隐藏导航栏
     }
   }, [isPreviewMode, updateUiState, resetTimer]);
 
@@ -64,11 +68,15 @@ export const usePreviewUI = ({ isPreviewMode }: UsePreviewUIOptions) => {
     resetIdleState();
     updateUiState({ showNav: true });
 
-    resetTimer('nav', () => {
-      if (uiState.isIdle) {
-        updateUiState({ showNav: false });
-      }
-    }, 3000); // 悬停3秒后，如果处于闲置状态则隐藏
+    resetTimer(
+      'nav',
+      () => {
+        if (uiState.isIdle) {
+          updateUiState({ showNav: false });
+        }
+      },
+      3000,
+    ); // 悬停3秒后，如果处于闲置状态则隐藏
   }, [resetIdleState, updateUiState, resetTimer, uiState.isIdle]);
 
   // 预览模式鼠标移动处理
@@ -84,7 +92,7 @@ export const usePreviewUI = ({ isPreviewMode }: UsePreviewUIOptions) => {
         resetTimer('minimap', () => {}, 0);
       }
     },
-    [isPreviewMode, handleUiInteraction, resetTimer]
+    [isPreviewMode, handleUiInteraction, resetTimer],
   );
 
   // 小地图交互处理
@@ -110,22 +118,22 @@ export const usePreviewUI = ({ isPreviewMode }: UsePreviewUIOptions) => {
       updateUiState({ showNav: true });
     } else {
       updateUiState({ isIdle: false, showNav: false });
-      Object.keys(timersRef.current).forEach(key => {
+      for (const key of Object.keys(timersRef.current)) {
         const timerKey = key as keyof Timers;
         if (timersRef.current[timerKey]) {
           clearTimeout(timersRef.current[timerKey]!);
           timersRef.current[timerKey] = null;
         }
-      });
+      }
     }
   }, [isPreviewMode, resetIdleState, updateUiState]);
 
   // 清理所有定时器
   useEffect(() => {
     return () => {
-      Object.values(timersRef.current).forEach(timer => {
+      for (const timer of Object.values(timersRef.current)) {
         if (timer) clearTimeout(timer);
-      });
+      }
     };
   }, []);
 

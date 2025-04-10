@@ -1,22 +1,22 @@
-import { useParams } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { useSiderStoreShallow } from "@refly-packages/ai-workspace-common/stores/sider";
-import { Button, Result } from "antd";
-import { useFetchShareData } from "@refly-packages/ai-workspace-common/hooks/use-fetch-share-data";
-import { PreviewChatInput } from "@refly-packages/ai-workspace-common/components/canvas/node-preview/skill-response/preview-chat-input";
-import { ActionStep, Source } from "@refly/openapi-schema";
-import { memo, useMemo, useEffect, useCallback } from "react";
-import { Markdown } from "@refly-packages/ai-workspace-common/components/markdown";
+import { useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useSiderStoreShallow } from '@refly-packages/ai-workspace-common/stores/sider';
+import { Button, Result } from 'antd';
+import { useFetchShareData } from '@refly-packages/ai-workspace-common/hooks/use-fetch-share-data';
+import { PreviewChatInput } from '@refly-packages/ai-workspace-common/components/canvas/node-preview/skill-response/preview-chat-input';
+import { ActionStep, Source } from '@refly/openapi-schema';
+import { memo, useMemo, useEffect, useCallback } from 'react';
+import { Markdown } from '@refly-packages/ai-workspace-common/components/markdown';
 import {
   IconThinking,
   IconCheck,
-} from "@refly-packages/ai-workspace-common/components/common/icon";
-import { cn } from "@refly-packages/ai-workspace-common/utils/cn";
-import { ChevronDown, ChevronUp } from "lucide-react";
-import { useState } from "react";
-import { getParsedReasoningContent } from "@refly/utils/content-parser";
-import { safeParseJSON } from "@refly-packages/ai-workspace-common/utils/parse";
-import PoweredByRefly from "@/components/common/PoweredByRefly";
+} from '@refly-packages/ai-workspace-common/components/common/icon';
+import { cn } from '@refly-packages/ai-workspace-common/utils/cn';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useState } from 'react';
+import { getParsedReasoningContent } from '@refly/utils/content-parser';
+import { safeParseJSON } from '@refly-packages/ai-workspace-common/utils/parse';
+import PoweredByRefly from '@/components/common/PoweredByRefly';
 
 // Simplified version of ReasoningContent
 const SimpleReasoningContent = memo(
@@ -36,12 +36,9 @@ const SimpleReasoningContent = memo(
     return (
       <div className="mb-4">
         <div
-          className={cn(
-            "p-3 bg-gray-50 rounded-lg border border-gray-200 transition-all",
-            {
-              "cursor-pointer hover:bg-gray-100": collapsed,
-            }
-          )}
+          className={cn('p-3 bg-gray-50 rounded-lg border border-gray-200 transition-all', {
+            'cursor-pointer hover:bg-gray-100': collapsed,
+          })}
         >
           {collapsed ? (
             <div
@@ -50,7 +47,7 @@ const SimpleReasoningContent = memo(
             >
               <div className="flex items-center gap-1">
                 <IconThinking className="w-4 h-4" />
-                {t("canvas.skillResponse.reasoningContent")}
+                {t('canvas.skillResponse.reasoningContent')}
               </div>
               <ChevronDown className="w-4 h-4" />
             </div>
@@ -59,7 +56,7 @@ const SimpleReasoningContent = memo(
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-1 text-sm font-medium">
                   <IconThinking className="w-4 h-4" />
-                  {t("canvas.skillResponse.reasoningContent")}
+                  {t('canvas.skillResponse.reasoningContent')}
                 </div>
                 <Button
                   type="text"
@@ -81,76 +78,66 @@ const SimpleReasoningContent = memo(
         </div>
       </div>
     );
-  }
+  },
 );
 
 // Simplified version of ActualContent
-const SimpleActualContent = memo(
-  ({ content, sources }: { content: string; sources: Source[] }) => {
-    if (!content) return null;
+const SimpleActualContent = memo(({ content, sources }: { content: string; sources: Source[] }) => {
+  if (!content) return null;
 
-    return (
-      <div className="my-3 text-gray-600 text-base">
-        <Markdown content={content} sources={sources} mode="readonly" />
-      </div>
-    );
-  }
-);
+  return (
+    <div className="my-3 text-gray-600 text-base">
+      <Markdown content={content} sources={sources} mode="readonly" />
+    </div>
+  );
+});
 
 // Parse structured data helper
 const parseStructuredData = (
   structuredData: Record<string, unknown> | undefined,
-  field: string
+  field: string,
 ): any => {
   if (!structuredData || !structuredData[field]) return [];
-  return typeof structuredData[field] === "string"
+  return typeof structuredData[field] === 'string'
     ? safeParseJSON(structuredData[field] as string)
     : structuredData[field];
 };
 
 // Simplified step card
-export const SimpleStepCard = memo(
-  ({ step, index }: { step: ActionStep; index: number }) => {
-    const { t } = useTranslation();
-    const sources = useMemo(
-      () => parseStructuredData(step?.structuredData, "sources") as Source[],
-      [step?.structuredData]
-    );
+export const SimpleStepCard = memo(({ step, index }: { step: ActionStep; index: number }) => {
+  const { t } = useTranslation();
+  const sources = useMemo(
+    () => parseStructuredData(step?.structuredData, 'sources') as Source[],
+    [step?.structuredData],
+  );
 
-    const skillName = "commonQnA"; // Default skill name
+  const skillName = 'commonQnA'; // Default skill name
 
-    return (
-      <div className="flex flex-col gap-3 mb-6">
-        <div className="text-gray-600 text-sm flex items-center gap-2 font-medium border-b pb-2">
-          <IconCheck className="h-4 w-4 text-green-500" />
-          {t("canvas.skillResponse.stepTitle", { index })}{" "}
-          {` · ${t(`${skillName}.steps.${step.name}.name`, { ns: "skill", defaultValue: step.name })}`}
-        </div>
-
-        {step.reasoningContent && (
-          <SimpleReasoningContent
-            reasoningContent={step.reasoningContent}
-            sources={sources}
-          />
-        )}
-
-        {step.content && (
-          <SimpleActualContent content={step.content} sources={sources} />
-        )}
+  return (
+    <div className="flex flex-col gap-3 mb-6">
+      <div className="text-gray-600 text-sm flex items-center gap-2 font-medium border-b pb-2">
+        <IconCheck className="h-4 w-4 text-green-500" />
+        {t('canvas.skillResponse.stepTitle', { index })}{' '}
+        {` · ${t(`${skillName}.steps.${step.name}.name`, { ns: 'skill', defaultValue: step.name })}`}
       </div>
-    );
-  }
-);
+
+      {step.reasoningContent && (
+        <SimpleReasoningContent reasoningContent={step.reasoningContent} sources={sources} />
+      )}
+
+      {step.content && <SimpleActualContent content={step.content} sources={sources} />}
+    </div>
+  );
+});
 
 const SkillResponseSharePage = () => {
-  const { shareId = "" } = useParams();
+  const { shareId = '' } = useParams();
   const { t } = useTranslation();
   const { collapse, setCollapse } = useSiderStoreShallow((state) => ({
     collapse: state.collapse,
     setCollapse: state.setCollapse,
   }));
-  const { data: skillResponseData, loading: isLoading } =
-    useFetchShareData(shareId);
+  const { data: skillResponseData, loading: isLoading } = useFetchShareData(shareId);
 
   // Force collapse by default
   useEffect(() => {
@@ -166,10 +153,7 @@ const SkillResponseSharePage = () => {
     return (
       <div className="flex h-full w-full grow items-center justify-center">
         <div className="text-gray-500">
-          {t(
-            "canvas.skillResponse.shareLoading",
-            "Loading shared skill response..."
-          )}
+          {t('canvas.skillResponse.shareLoading', 'Loading shared skill response...')}
         </div>
       </div>
     );
@@ -180,10 +164,10 @@ const SkillResponseSharePage = () => {
       <div className="h-full w-full flex items-center justify-center">
         <Result
           status="404"
-          title={t("canvas.skillResponse.notFound", "Skill Response Not Found")}
+          title={t('canvas.skillResponse.notFound', 'Skill Response Not Found')}
           subTitle={t(
-            "canvas.skillResponse.notFoundDesc",
-            "The skill response you are looking for does not exist or has been removed."
+            'canvas.skillResponse.notFoundDesc',
+            'The skill response you are looking for does not exist or has been removed.',
           )}
         />
       </div>
@@ -198,7 +182,7 @@ const SkillResponseSharePage = () => {
 
       <div
         className={`absolute h-16 bottom-0 left-0 right-0 box-border flex justify-between items-center py-2 px-4 pr-0 bg-transparent ${
-          collapse ? "w-[calc(100vw-12px)]" : "w-[calc(100vw-232px)]"
+          collapse ? 'w-[calc(100vw-12px)]' : 'w-[calc(100vw-232px)]'
         }`}
       >
         {/* Removed the collapse button since we now use PoweredByRefly for toggling */}

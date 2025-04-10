@@ -1,36 +1,38 @@
-import { useParams } from "react-router-dom";
-import { useMemo, useCallback, useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { Spin, Layout, Button, Modal } from "antd";
-import { FileTextOutlined, PlayCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
-import { useSiderStoreShallow } from "@refly-packages/ai-workspace-common/stores/sider";
-import { useFetchShareData } from "@refly-packages/ai-workspace-common/hooks/use-fetch-share-data";
-import PoweredByRefly from "@/components/common/PoweredByRefly";
-import "../pages/styles/preview-mode.css";
+import { useParams } from 'react-router-dom';
+import { useMemo, useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Spin, Button, Modal } from 'antd';
+import { FileTextOutlined, PlayCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
+import { useSiderStoreShallow } from '@refly-packages/ai-workspace-common/stores/sider';
+import { useFetchShareData } from '@refly-packages/ai-workspace-common/hooks/use-fetch-share-data';
+import '../pages/styles/preview-mode.css';
 
 // 导入抽象的组件和 hooks
-import { NodeRenderer } from "../pages/components/NodeRenderer";
-import { type NodeRelation } from "../pages/components/ArtifactRenderer";
-import PageLayout from "../pages/components/PageLayout";
-import PreviewMode from "../pages/components/PreviewMode";
-import { usePreviewUI } from "../pages/hooks/usePreviewUI";
-import { useSlideshow } from "../pages/hooks/useSlideshow";
-import { getNodeTitle } from "../pages/utils/nodeUtils";
+import { NodeRenderer } from '../pages/components/NodeRenderer';
+import { type NodeRelation } from '../pages/components/ArtifactRenderer';
+import PageLayout from '../pages/components/PageLayout';
+import PreviewMode from '../pages/components/PreviewMode';
+import { usePreviewUI } from '../pages/hooks/usePreviewUI';
+import { useSlideshow } from '../pages/hooks/useSlideshow';
+import { getNodeTitle } from '../pages/utils/nodeUtils';
 
 const SharePage = () => {
-  const { shareId = "" } = useParams();
+  const { shareId = '' } = useParams();
   const { t } = useTranslation();
   const { collapse, setCollapse } = useSiderStoreShallow((state) => ({
     collapse: state.collapse,
     setCollapse: state.setCollapse,
   }));
   const { data: shareData, loading: isLoading } = useFetchShareData(shareId);
-  
+
   // 常规模式和预览模式相关状态
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [showMinimap, setShowMinimap] = useState(true);
   const [activeNodeIndex, setActiveNodeIndex] = useState(0);
-  const [wideMode, setWideMode] = useState<{ isActive: boolean; nodeId: string | null }>({ isActive: false, nodeId: null });
+  const [wideMode, setWideMode] = useState<{ isActive: boolean; nodeId: string | null }>({
+    isActive: false,
+    nodeId: null,
+  });
 
   // 提取页面数据和节点关系
   const pageData = useMemo(() => {
@@ -41,7 +43,7 @@ const SharePage = () => {
       nodeRelations: shareData.nodeRelations || [],
       pageConfig: shareData.pageConfig,
       shareInfo: shareData.shareInfo,
-      isOwner: shareData.isOwner
+      isOwner: shareData.isOwner,
     };
   }, [shareData]);
 
@@ -101,10 +103,7 @@ const SharePage = () => {
   }, [collapse, setCollapse]);
 
   // 切换小地图
-  const toggleMinimap = useCallback(
-    () => setShowMinimap(!showMinimap),
-    [showMinimap]
-  );
+  const toggleMinimap = useCallback(() => setShowMinimap(!showMinimap), [showMinimap]);
 
   // 处理节点选择
   const handleNodeSelect = useCallback((index: number) => {
@@ -113,7 +112,7 @@ const SharePage = () => {
     // 滚动到对应的内容块
     const element = document.getElementById(`content-block-${index}`);
     if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }, []);
 
@@ -129,7 +128,7 @@ const SharePage = () => {
         setIsPreviewMode(true);
       }
     },
-    [nodes, setCurrentSlideIndex]
+    [nodes, setCurrentSlideIndex],
   );
 
   // 宽屏模式处理
@@ -140,7 +139,7 @@ const SharePage = () => {
         setWideMode({ isActive: true, nodeId });
       }
     },
-    [nodes]
+    [nodes],
   );
 
   // 关闭宽屏模式
@@ -153,13 +152,13 @@ const SharePage = () => {
     if (!wideMode.isActive) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (e.key === 'Escape') {
         handleCloseWideMode();
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [wideMode.isActive, handleCloseWideMode]);
 
   // 添加 Escape 键退出幻灯片预览模式
@@ -167,13 +166,13 @@ const SharePage = () => {
     if (!isPreviewMode) return;
 
     const handleEscapeKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (e.key === 'Escape') {
         togglePreviewMode();
       }
     };
 
-    window.addEventListener("keydown", handleEscapeKey);
-    return () => window.removeEventListener("keydown", handleEscapeKey);
+    window.addEventListener('keydown', handleEscapeKey);
+    return () => window.removeEventListener('keydown', handleEscapeKey);
   }, [isPreviewMode, togglePreviewMode]);
 
   // 加载状态
@@ -189,11 +188,9 @@ const SharePage = () => {
   if (!shareData || !pageData.page) {
     return (
       <div className="flex flex-col items-center justify-center h-screen">
-        <div className="text-2xl font-medium mb-4 text-gray-700">
-          {t("Invalid share link")}
-        </div>
+        <div className="text-2xl font-medium mb-4 text-gray-700">{t('Invalid share link')}</div>
         <div className="text-gray-500">
-          {t("This share link may have expired or does not exist")}
+          {t('This share link may have expired or does not exist')}
         </div>
       </div>
     );
@@ -208,7 +205,7 @@ const SharePage = () => {
           currentSlideIndex={currentSlideIndex}
           showPreviewMinimap={showPreviewMinimap}
           uiState={uiState}
-          title={pageData.page?.title || "分享页面"}
+          title={pageData.page?.title || '分享页面'}
           onNext={nextSlide}
           onPrev={prevSlide}
           onClose={togglePreviewMode}
@@ -240,9 +237,7 @@ const SharePage = () => {
         headerContent={
           <div className="flex justify-between items-center w-full">
             <div className="flex items-center">
-              <div className="text-lg font-medium px-2">
-                {pageData.page?.title || "分享页面"}
-              </div>
+              <div className="text-lg font-medium px-2">{pageData.page?.title || '分享页面'}</div>
               {pageData.shareInfo && (
                 <div className="text-sm text-gray-500 ml-2">
                   分享于: {new Date(pageData.shareInfo.sharedAt).toLocaleString()}
@@ -268,9 +263,7 @@ const SharePage = () => {
         {/* 页面描述区域 */}
         {pageData.page?.description && (
           <div className="mb-6 p-4 bg-white rounded-lg shadow-sm">
-            <div className="text-gray-700 text-base">
-              {pageData.page.description}
-            </div>
+            <div className="text-gray-700 text-base">{pageData.page.description}</div>
           </div>
         )}
 
@@ -284,8 +277,8 @@ const SharePage = () => {
                 onClick={() => setActiveNodeIndex(index)}
                 className={`transition-all duration-300 h-[400px] rounded-lg bg-white ${
                   activeNodeIndex === index
-                    ? "shadow-[0_10px_30px_rgba(0,0,0,0.15)] transform -translate-y-1 border border-blue-400"
-                    : "shadow-md hover:shadow-lg"
+                    ? 'shadow-[0_10px_30px_rgba(0,0,0,0.15)] transform -translate-y-1 border border-blue-400'
+                    : 'shadow-md hover:shadow-lg'
                 }`}
               >
                 <NodeRenderer
@@ -302,18 +295,14 @@ const SharePage = () => {
             <div className="text-6xl text-gray-300 mb-6">
               <FileTextOutlined />
             </div>
-            <h3 className="text-xl font-medium text-gray-500 mb-3">
-              暂无内容
-            </h3>
-            <p className="text-gray-400 mb-6">
-              该分享页面没有任何内容
-            </p>
+            <h3 className="text-xl font-medium text-gray-500 mb-3">暂无内容</h3>
+            <p className="text-gray-400 mb-6">该分享页面没有任何内容</p>
           </div>
         )}
 
-        <div className="h-24"></div>
+        <div className="h-24" />
       </PageLayout>
-      
+
       {/* 宽屏模式弹窗 */}
       {wideMode.isActive && (
         <Modal
@@ -323,15 +312,13 @@ const SharePage = () => {
           width="85%"
           style={{ top: 20 }}
           bodyStyle={{
-            maxHeight: "calc(100vh - 100px)",
+            maxHeight: 'calc(100vh - 100px)',
             padding: 0,
-            overflow: "hidden",
+            overflow: 'hidden',
           }}
           className="wide-mode-modal"
-          closeIcon={
-            <CloseCircleOutlined className="text-gray-500 hover:text-red-500" />
-          }
-          maskStyle={{ background: "rgba(0, 0, 0, 0.65)" }}
+          closeIcon={<CloseCircleOutlined className="text-gray-500 hover:text-red-500" />}
+          maskStyle={{ background: 'rgba(0, 0, 0, 0.65)' }}
         >
           <div className="bg-white h-full w-full flex flex-col rounded-lg overflow-hidden">
             {/* 宽屏模式内容 */}

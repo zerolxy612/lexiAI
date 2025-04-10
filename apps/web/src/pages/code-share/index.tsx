@@ -1,13 +1,13 @@
-import { useParams } from "react-router-dom";
-import { useMemo, useCallback, useEffect } from "react";
-import { useTranslation } from "react-i18next";
-import Renderer from "@refly-packages/ai-workspace-common/modules/artifacts/code-runner/render";
-import { useSiderStoreShallow } from "@refly-packages/ai-workspace-common/stores/sider";
-import { useFetchShareData } from "@refly-packages/ai-workspace-common/hooks/use-fetch-share-data";
-import PoweredByRefly from "@/components/common/PoweredByRefly";
+import { useParams } from 'react-router-dom';
+import { useMemo, useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import Renderer from '@refly-packages/ai-workspace-common/modules/artifacts/code-runner/render';
+import { useSiderStoreShallow } from '@refly-packages/ai-workspace-common/stores/sider';
+import { useFetchShareData } from '@refly-packages/ai-workspace-common/hooks/use-fetch-share-data';
+import PoweredByRefly from '@/components/common/PoweredByRefly';
 
 const ShareCodePage = () => {
-  const { shareId = "" } = useParams();
+  const { shareId = '' } = useParams();
   const { t } = useTranslation();
   const { collapse, setCollapse } = useSiderStoreShallow((state) => ({
     collapse: state.collapse,
@@ -36,7 +36,7 @@ const ShareCodePage = () => {
   if (isLoading) {
     return (
       <div className="flex h-full w-full grow items-center justify-center">
-        <div className="text-gray-500">{t("codeArtifact.shareLoading")}</div>
+        <div className="text-gray-500">{t('codeArtifact.shareLoading')}</div>
       </div>
     );
   }
@@ -47,7 +47,7 @@ const ShareCodePage = () => {
 
       <div
         className={`absolute h-16 bottom-0 left-0 right-0 box-border flex justify-between items-center py-2 px-4 pr-0 bg-transparent ${
-          collapse ? "w-[calc(100vw-12px)]" : "w-[calc(100vw-232px)]"
+          collapse ? 'w-[calc(100vw-12px)]' : 'w-[calc(100vw-232px)]'
         }`}
       >
         {/* Removed the collapse button since we now use PoweredByRefly for toggling */}
@@ -68,7 +68,7 @@ const ShareCodePage = () => {
             />
           </div>
         ) : (
-          <div className="text-gray-500">{t("codeArtifact.noCodeFound")}</div>
+          <div className="text-gray-500">{t('codeArtifact.noCodeFound')}</div>
         )}
       </div>
     </div>

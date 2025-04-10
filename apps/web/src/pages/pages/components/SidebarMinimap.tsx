@@ -1,10 +1,10 @@
-import { useMemo, CSSProperties } from "react";
-import { Button, message, Tooltip } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import { type NodeRelation } from "./ArtifactRenderer";
-import { NodeRenderer } from "./NodeRenderer";
-import { getNodeTitle } from "../utils/nodeUtils";
+import { useMemo, CSSProperties } from 'react';
+import { Button, message, Tooltip } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { type NodeRelation } from './ArtifactRenderer';
+import { NodeRenderer } from './NodeRenderer';
+import { getNodeTitle } from '../utils/nodeUtils';
 
 // 侧边小地图组件
 function SidebarMinimap({
@@ -41,20 +41,20 @@ function SidebarMinimap({
   };
 
   const addNewSlide = () => {
-    message.info("添加新代码组件功能开发中");
+    message.info('添加新代码组件功能开发中');
   };
 
   // 缓存缩略卡片样式
   const cardStyle = useMemo(
     (): CSSProperties => ({
-      pointerEvents: "none",
-      transform: "scale(0.4)",
-      transformOrigin: "top left",
-      width: "250%",
-      height: "250%",
-      overflow: "hidden",
+      pointerEvents: 'none',
+      transform: 'scale(0.4)',
+      transformOrigin: 'top left',
+      width: '250%',
+      height: '250%',
+      overflow: 'hidden',
     }),
-    []
+    [],
   );
 
   return (
@@ -62,12 +62,7 @@ function SidebarMinimap({
       <div className="flex items-center justify-between p-2 border-b border-gray-200">
         <span className="text-sm font-medium text-gray-600">导航目录</span>
         {!readonly && (
-          <Button
-            type="text"
-            size="small"
-            icon={<PlusOutlined />}
-            onClick={addNewSlide}
-          />
+          <Button type="text" size="small" icon={<PlusOutlined />} onClick={addNewSlide} />
         )}
       </div>
 
@@ -80,11 +75,7 @@ function SidebarMinimap({
           <DragDropContext onDragEnd={handleDragEnd}>
             <Droppable droppableId="sidebar-nodes" isDropDisabled={readonly}>
               {(provided) => (
-                <div
-                  {...provided.droppableProps}
-                  ref={provided.innerRef}
-                  className="space-y-3"
-                >
+                <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3">
                   {nodes.map((node, index) => (
                     <Draggable
                       key={node.relationId || `node-${index}`}
@@ -99,20 +90,16 @@ function SidebarMinimap({
                           {...provided.dragHandleProps}
                           className={`relative rounded ${!readonly ? 'cursor-grab' : 'cursor-pointer'} transition border overflow-hidden shadow-sm hover:shadow-md ${
                             activeNodeIndex === index
-                              ? "ring-2 ring-purple-500 bg-purple-50"
-                              : "border-gray-200 hover:border-purple-300"
+                              ? 'ring-2 ring-purple-500 bg-purple-50'
+                              : 'border-gray-200 hover:border-purple-300'
                           }`}
                           onClick={() => onNodeSelect(index)}
                         >
                           {/* 卡片标题 */}
                           <div className="py-1.5 px-2 bg-white border-b border-gray-100 z-10 relative flex items-center justify-between">
                             <div className="flex items-center gap-1.5 truncate">
-                              <span className="text-xs text-gray-500">
-                                {index + 1}.
-                              </span>
-                              <Tooltip
-                                title={getNodeTitle(node)}
-                              >
+                              <span className="text-xs text-gray-500">{index + 1}.</span>
+                              <Tooltip title={getNodeTitle(node)}>
                                 <span className="truncate text-xs font-medium text-gray-600 max-w-[100px]">
                                   {getNodeTitle(node)}
                                 </span>
@@ -123,15 +110,11 @@ function SidebarMinimap({
                           {/* 内容预览区 */}
                           <div className="h-20 overflow-hidden relative bg-gray-50">
                             <div style={cardStyle}>
-                              <NodeRenderer
-                                node={node}
-                                isActive={false}
-                                isMinimap={true}
-                              />
+                              <NodeRenderer node={node} isActive={false} isMinimap={true} />
                             </div>
 
                             {/* 渐变遮罩 */}
-                            <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent"></div>
+                            <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent" />
                           </div>
                         </div>
                       )}
