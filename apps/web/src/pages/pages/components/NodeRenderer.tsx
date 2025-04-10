@@ -1,119 +1,156 @@
-import React from 'react'
-import { Empty } from 'antd'
-import { NodeRelationResponse } from '@refly-packages/ai-workspace-common/requests/types.gen'
+import React, { memo } from "react";
+import { type NodeRelation } from "./ArtifactRenderer";
+import { CodeArtifactRenderer } from "./CodeArtifactRenderer";
+import { DocumentRenderer } from "./DocumentRenderer";
+import { SkillResponseRenderer } from "./SkillResponseRenderer";
+import { ImageRenderer } from "./ImageRenderer";
+import { NodeBlockHeader } from "./NodeBlockHeader";
 
-interface NodeRendererProps {
-  node: NodeRelationResponse
-}
-
-function NodeRenderer({ node }: NodeRendererProps) {
-  if (!node) {
-    return <Empty description="未找到节点" />
-  }
-
-  const { nodeType, nodeData } = node
-
-  // 文本节点渲染
-  if (nodeType === 'text') {
-    return nodeData?.content ? (
-      <div className="p-4">
-        <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: nodeData.content }} />
-      </div>
-    ) : (
-      <Empty description="空文本节点" />
-    )
-  }
-
-  // 图片节点渲染
-  if (nodeType === 'image') {
-    return nodeData?.url ? (
-      <div className="p-4 flex justify-center">
-        <img 
-          src={nodeData.url} 
-          alt={nodeData.alt || '图片'} 
-          className="max-w-full max-h-[60vh] object-contain"
-        />
-      </div>
-    ) : (
-      <Empty description="图片未找到" />
-    )
-  }
-
-  // 图表节点渲染
-  if (nodeType === 'chart') {
-    // 图表渲染需要更复杂的逻辑，这里仅展示一个占位符
-    return (
-      <div className="p-4">
-        <div className="bg-blue-50 p-6 rounded-lg text-center">
-          <p className="text-blue-600 font-medium">图表组件</p>
-          <p className="text-sm text-gray-500">
-            {nodeData?.chartType || '未知图表类型'}
-          </p>
-        </div>
-      </div>
-    )
-  }
-
-  // 代码节点渲染
-  if (nodeType === 'code') {
-    return (
-      <div className="p-4">
-        <pre className="bg-gray-900 text-gray-100 p-4 rounded-md overflow-x-auto">
-          <code>{nodeData?.content || '// 空代码块'}</code>
-        </pre>
-      </div>
-    )
-  }
-
-  // 表格节点渲染
-  if (nodeType === 'table') {
-    // 简单表格渲染示例
-    if (nodeData?.rows && Array.isArray(nodeData.rows) && nodeData.rows.length > 0) {
-      return (
-        <div className="p-4 overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                {nodeData.rows[0].map((cell: string, index: number) => (
-                  <th 
-                    key={index}
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    {cell}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {nodeData.rows.slice(1).map((row: string[], rowIndex: number) => (
-                <tr key={rowIndex}>
-                  {row.map((cell: string, cellIndex: number) => (
-                    <td 
-                      key={cellIndex}
-                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
-                    >
-                      {cell}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )
+// 内容渲染组件
+const NodeRenderer = memo(
+  ({
+    node,
+    isActive = false,
+    isFullscreen = false,
+    isModal = false,
+    isMinimap = false,
+    onDelete,
+    onStartSlideshow,
+    onWideMode,
+  }: {
+    node: NodeRelation;
+    isActive?: boolean;
+    isFullscreen?: boolean;
+    isModal?: boolean;
+    isMinimap?: boolean;
+    onDelete?: (nodeId: string) => void;
+    onStartSlideshow?: (nodeId: string) => void;
+    onWideMode?: (nodeId: string) => void;
+  }) => {
+    // 根据不同节点类型返回对应的渲染器
+    switch (node.nodeType) {
+      case "codeArtifact":
+        return (
+          <div className="flex flex-col h-full">
+            {/* 只在常规编辑模式（非全屏模式且非模态框模式）下显示header */}
+            {!isFullscreen && !isModal && (
+              <NodeBlockHeader
+                node={node}
+                isMinimap={isMinimap}
+                onMaximize={() => onStartSlideshow?.(node.nodeId)}
+                onWideMode={() => onWideMode?.(node.nodeId)}
+                onPin={() => console.log("Pin codeArtifact")}
+                isPinned={false}
+                onDelete={onDelete}
+              />
+            )}
+            <div
+              className={`flex-1 overflow-auto ${!isFullscreen ? "" : "h-full"}`}
+            >
+              <CodeArtifactRenderer
+                node={node}
+                isFullscreen={isFullscreen}
+                isMinimap={isMinimap}
+              />
+            </div>
+          </div>
+        );
+      case "document":
+        return (
+          <div className="flex flex-col h-full">
+            {/* 只在常规编辑模式（非全屏模式且非模态框模式）下显示header */}
+            {!isFullscreen && !isModal && (
+              <NodeBlockHeader
+                node={node}
+                isMinimap={isMinimap}
+                onMaximize={() => onStartSlideshow?.(node.nodeId)}
+                onWideMode={() => onWideMode?.(node.nodeId)}
+                onPin={() => console.log("Pin document")}
+                isPinned={false}
+                onDelete={onDelete}
+              />
+            )}
+            <div
+              className={`flex-1 overflow-auto ${!isFullscreen ? "" : "h-full"}`}
+            >
+              <DocumentRenderer
+                node={node}
+                isFullscreen={isFullscreen}
+                isMinimap={isMinimap}
+              />
+            </div>
+          </div>
+        );
+      case "skillResponse":
+        return (
+          <div className="flex flex-col h-full">
+            {/* 只在常规编辑模式（非全屏模式且非模态框模式）下显示header */}
+            {!isFullscreen && !isModal && (
+              <NodeBlockHeader
+                node={node}
+                isMinimap={isMinimap}
+                onMaximize={() => onStartSlideshow?.(node.nodeId)}
+                onWideMode={() => onWideMode?.(node.nodeId)}
+                onPin={() => console.log("Pin skillResponse")}
+                isPinned={false}
+                onDelete={onDelete}
+              />
+            )}
+            <div
+              className={`flex-1 overflow-auto ${!isFullscreen ? "" : "h-full"}`}
+            >
+              <SkillResponseRenderer
+                node={node}
+                isFullscreen={isFullscreen}
+                isMinimap={isMinimap}
+              />
+            </div>
+          </div>
+        );
+      case "image":
+        return (
+          <div className="flex flex-col h-full">
+            {/* 只在常规编辑模式（非全屏模式且非模态框模式）下显示header */}
+            {!isFullscreen && !isModal && (
+              <NodeBlockHeader
+                node={node}
+                isMinimap={isMinimap}
+                onMaximize={() => onStartSlideshow?.(node.nodeId)}
+                onWideMode={() => onWideMode?.(node.nodeId)}
+                onPin={() => console.log("Pin image")}
+                isPinned={false}
+                onDelete={onDelete}
+              />
+            )}
+            <div
+              className={`flex-1 overflow-auto ${!isFullscreen ? "" : "h-full"}`}
+            >
+              <ImageRenderer
+                node={node}
+                isFullscreen={isFullscreen}
+                isMinimap={isMinimap}
+              />
+            </div>
+          </div>
+        );
+      default:
+        // 不支持的类型显示提示
+        return (
+          <div
+            className={`p-6 bg-white rounded-lg flex flex-col items-center justify-center text-gray-400 ${
+              !isFullscreen ? "h-[400px]" : "h-full"
+            } shadow-md ${isMinimap ? "p-2 h-full" : ""}`}
+          >
+            <div className={`${isMinimap ? "text-xs" : "text-lg"}`}>
+              {isMinimap ? "不支持的组件" : "仅支持代码组件类型"}
+            </div>
+            {!isMinimap && (
+              <div className="text-sm text-gray-400 mt-2">{node.nodeType}</div>
+            )}
+          </div>
+        );
     }
-    
-    return <Empty description="空表格" />
   }
+);
 
-  // 默认渲染
-  return (
-    <div className="p-4 text-center">
-      <p className="text-gray-500">
-        不支持的节点类型: {nodeType}
-      </p>
-    </div>
-  )
-}
-
-export default NodeRenderer 
+export { NodeRenderer };

@@ -2838,6 +2838,7 @@ components:
         - project
         - skillResponse
         - codeArtifact
+        - page
     Entity:
       type: object
       description: Entity

@@ -737,6 +737,7 @@ export const EntityTypeSchema = {
     'project',
     'skillResponse',
     'codeArtifact',
+    'page',
   ],
 } as const;
 

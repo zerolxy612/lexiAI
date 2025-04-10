@@ -552,7 +552,8 @@ export type EntityType =
   | 'user'
   | 'project'
   | 'skillResponse'
-  | 'codeArtifact';
+  | 'codeArtifact'
+  | 'page';
 
 /**
  * Entity

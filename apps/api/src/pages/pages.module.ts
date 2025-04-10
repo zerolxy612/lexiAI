@@ -7,6 +7,7 @@ import { CanvasModule } from '@/canvas/canvas.module';
 import { KnowledgeModule } from '@/knowledge/knowledge.module';
 import { ActionModule } from '@/action/action.module';
 import { CodeArtifactModule } from '@/code-artifact/code-artifact.module';
+import { ShareModule } from '@/share/share.module';
 
 @Module({
   imports: [
@@ -16,9 +17,10 @@ import { CodeArtifactModule } from '@/code-artifact/code-artifact.module';
     KnowledgeModule,
     ActionModule,
     CodeArtifactModule,
+    ShareModule, // 确保 ShareModule 在这里正确导入
   ],
   controllers: [PagesController],
   providers: [PagesService],
   exports: [PagesService],
 })
-export class PagesModule {} 
+export class PagesModule {}

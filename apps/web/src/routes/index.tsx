@@ -21,15 +21,14 @@ const Canvas = lazy(() => import('@/pages/canvas'));
 const Pricing = lazy(() => import('@/pages/pricing'));
 const ShareCanvasPage = lazy(() => import('@/pages/share'));
 const ShareCodePage = lazy(() => import('@/pages/code-share'));
-const SharePagePage = lazy(() => import('@/pages/share/pages/[shareId]'));
+const SharePagePage = lazy(() => import('@/pages/page-share'));
 const TemplatePreviewPage = lazy(() => import('@/pages/template-preview'));
 const SkillResponseSharePage = lazy(() => import('@/pages/skill-response-share'));
 const DocumentSharePage = lazy(() => import('@/pages/document-share'));
 const ArtifactGalleryPage = lazy(() => import('@/pages/artifact-gallery'));
 const UseCasesGalleryPage = lazy(() => import('@/pages/use-cases-gallery'));
-const PagesListPage = lazy(() => import('@/pages/pages'));
-const PageEditPage = lazy(() => import('@/pages/pages/edit/[pageId]'));
-const PagePreviewPage = lazy(() => import('@/pages/pages/preview/[pageId]'));
+const PagesListPage = lazy(() => import('@/pages/pages/list'));
+const PageEditPage = lazy(() => import('@/pages/pages'));
 const ProjectPage = lazy(() => import('@/pages/project'));
 
 const prefetchRoutes = () => {
@@ -37,11 +36,6 @@ const prefetchRoutes = () => {
   import('@refly-packages/ai-workspace-common/components/request-access');
   import('@/pages/artifact-gallery');
   import('@/pages/use-cases-gallery');
-  // 预加载Pages相关组件
-  import('@/pages/pages');
-  import('@/pages/pages/edit/[pageId]');
-  import('@/pages/pages/preview/[pageId]');
-  import('@/pages/share/pages/[shareId]');
 };
 
 export const AppRouter = (props: { layout?: any }) => {
@@ -121,16 +115,12 @@ export const AppRouter = (props: { layout?: any }) => {
             element={<RequestAccessRoute hasBetaAccess={hasBetaAccess} />}
           />
           <Route
-            path="/pages"
+            path="/pages/list"
             element={<BetaProtectedRoute component={PagesListPage} hasBetaAccess={true} />}
           />
           <Route
-            path="/pages/edit/:pageId"
+            path="/pages/:pageId"
             element={<BetaProtectedRoute component={PageEditPage} hasBetaAccess={true} />}
-          />
-          <Route
-            path="/pages/preview/:pageId"
-            element={<BetaProtectedRoute component={PagePreviewPage} hasBetaAccess={true} />}
           />
           <Route
             path="/pages/new"

@@ -113,20 +113,20 @@ export const NodeBlockHeader: React.FC<NodeBlockHeaderProps> = memo(
 
     // 定义下拉菜单项
     const menuItems: MenuProps["items"] = [
-      {
-        key: "pin",
-        label: (
-          <div className="flex items-center gap-2 whitespace-nowrap">
-            {isPinned ? (
-              <IconUnpin className="w-4 h-4 flex-shrink-0" />
-            ) : (
-              <IconPin className="w-4 h-4 flex-shrink-0" />
-            )}
-            {isPinned ? "取消固定" : "固定节点"}
-          </div>
-        ),
-        onClick: onPin,
-      },
+      // {
+      //   key: "pin",
+      //   label: (
+      //     <div className="flex items-center gap-2 whitespace-nowrap">
+      //       {isPinned ? (
+      //         <IconUnpin className="w-4 h-4 flex-shrink-0" />
+      //       ) : (
+      //         <IconPin className="w-4 h-4 flex-shrink-0" />
+      //       )}
+      //       {isPinned ? "取消固定" : "固定节点"}
+      //     </div>
+      //   ),
+      //   onClick: onPin,
+      // },
       {
         key: "delete",
         label: (
@@ -186,7 +186,7 @@ export const NodeBlockHeader: React.FC<NodeBlockHeaderProps> = memo(
               )}
             </Button>
           )}
-          <Button
+          {/* <Button
             type="text"
             className={`p-1.5 hover:bg-gray-100 ${isPinned ? "text-primary-600" : "text-gray-500"}`}
             onClick={onPin}
@@ -197,7 +197,8 @@ export const NodeBlockHeader: React.FC<NodeBlockHeaderProps> = memo(
             ) : (
               <IconPin className="w-4 h-4" />
             )}
-          </Button>
+          </Button> */}
+
           <Dropdown
             menu={{ items: menuItems }}
             trigger={["click"]}

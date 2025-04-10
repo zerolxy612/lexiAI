@@ -1010,24 +1010,6 @@ model Page {
   @@map("pages")
 }
 
-model PageShare {
-  /// Primary key
-  pk        BigInt    @id @default(autoincrement())
-  /// Share ID
-  shareId   String    @unique @map("share_id")
-  /// Page ID
-  pageId    String    @map("page_id")
-  /// Create timestamp
-  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz()
-  /// Update timestamp
-  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
-  /// Soft delete timestamp
-  deletedAt DateTime? @map("deleted_at") @db.Timestamptz()
-
-  @@index([pageId, deletedAt])
-  @@map("page_shares")
-}
-
 model PageNodeRelation {
   /// Primary key
   pk         BigInt    @id @default(autoincrement())
