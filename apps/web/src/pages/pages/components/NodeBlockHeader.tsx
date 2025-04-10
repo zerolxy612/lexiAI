@@ -102,18 +102,20 @@ export const NodeBlockHeader: React.FC<NodeBlockHeaderProps> = memo(
     }, [node.nodeId, onDelete, title]);
 
     // 定义下拉菜单项
-    const menuItems: MenuProps['items'] = [
-      {
-        key: 'delete',
-        label: (
-          <div className="flex items-center gap-2 text-red-600 whitespace-nowrap">
-            <Trash2 className="w-4 h-4 flex-shrink-0" />
-            <span>删除节点</span>
-          </div>
-        ),
-        onClick: handleDeleteNode,
-      },
-    ];
+    const menuItems: MenuProps['items'] = onDelete
+      ? [
+          {
+            key: 'delete',
+            label: (
+              <div className="flex items-center gap-2 text-red-600 whitespace-nowrap">
+                <Trash2 className="w-4 h-4 flex-shrink-0" />
+                <span>删除节点</span>
+              </div>
+            ),
+            onClick: handleDeleteNode,
+          },
+        ]
+      : [];
 
     // 如果是小地图模式，不显示header
     if (isMinimap) {
@@ -159,22 +161,24 @@ export const NodeBlockHeader: React.FC<NodeBlockHeaderProps> = memo(
             </Button>
           )}
 
-          <Dropdown
-            menu={{ items: menuItems }}
-            trigger={['click']}
-            placement="bottomRight"
-            overlayClassName="min-w-[160px] w-max"
-            getPopupContainer={(triggerNode) => triggerNode.parentNode as HTMLElement}
-            dropdownRender={(menu) => (
-              <div className="min-w-[160px] bg-white rounded-lg border-[0.5px] border-[rgba(0,0,0,0.03)] shadow-lg">
-                {menu}
-              </div>
-            )}
-          >
-            <Button type="text" className="p-1.5 hover:bg-gray-100 text-gray-500">
-              <MoreHorizontal className="w-4 h-4" />
-            </Button>
-          </Dropdown>
+          {menuItems?.length > 0 && (
+            <Dropdown
+              menu={{ items: menuItems }}
+              trigger={['click']}
+              placement="bottomRight"
+              overlayClassName="min-w-[160px] w-max"
+              getPopupContainer={(triggerNode) => triggerNode.parentNode as HTMLElement}
+              dropdownRender={(menu) => (
+                <div className="min-w-[160px] bg-white rounded-lg border-[0.5px] border-[rgba(0,0,0,0.03)] shadow-lg">
+                  {menu}
+                </div>
+              )}
+            >
+              <Button type="text" className="p-1.5 hover:bg-gray-100 text-gray-500">
+                <MoreHorizontal className="w-4 h-4" />
+              </Button>
+            </Dropdown>
+          )}
           {onClose && (
             <Button type="text" className="p-1.5 hover:bg-gray-100 text-gray-500" onClick={onClose}>
               <X className="w-4 h-4" />

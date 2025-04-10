@@ -1,11 +1,6 @@
 import React from 'react';
 import { Button } from 'antd';
-import {
-  LeftCircleOutlined,
-  RightCircleOutlined,
-  CloseCircleOutlined,
-  UnorderedListOutlined,
-} from '@ant-design/icons';
+import { CloseCircleOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import { NodeRenderer } from './NodeRenderer';
 import { type NodeRelation } from './ArtifactRenderer';
 import '../styles/preview-mode.css';
@@ -37,9 +32,6 @@ const PreviewMode: React.FC<PreviewModeProps> = ({
   currentSlideIndex,
   showPreviewMinimap,
   uiState,
-  title,
-  onNext,
-  onPrev,
   onClose,
   onMouseMove,
   onSideHintClick,
@@ -56,36 +48,35 @@ const PreviewMode: React.FC<PreviewModeProps> = ({
       className={`preview-content-container relative ${uiState.isIdle ? 'idle' : ''} ${uiState.showNav ? 'show-nav' : ''}`}
       onMouseMove={onMouseMove}
     >
-      {/* 预览导航栏 */}
-      <div className="preview-header" onMouseEnter={onUiInteraction}>
-        <div className="preview-header-title">
-          {title}
-          <span className="page-indicator">
-            {currentSlideIndex + 1}/{nodes.length}
-          </span>
-        </div>
-        <div className="preview-header-controls">
-          <Button
-            type="text"
-            icon={<LeftCircleOutlined />}
-            onClick={onPrev}
-            disabled={currentSlideIndex <= 0}
-            className={`preview-control-button ${currentSlideIndex <= 0 ? 'disabled' : ''}`}
-          />
-          <Button
-            type="text"
-            icon={<RightCircleOutlined />}
-            onClick={onNext}
-            disabled={currentSlideIndex >= nodes.length - 1}
-            className={`preview-control-button ${currentSlideIndex >= nodes.length - 1 ? 'disabled' : ''}`}
-          />
-          <Button
-            type="text"
-            icon={<CloseCircleOutlined />}
-            onClick={onClose}
-            className="preview-control-button close-button"
-          />
-        </div>
+      {/* 预览导航栏 - 只保留右上角关闭按钮 */}
+      <div
+        className={`preview-close-button ${uiState.isIdle ? 'opacity-0' : 'opacity-100'}`}
+        onMouseEnter={onUiInteraction}
+        style={{
+          position: 'absolute',
+          top: '16px',
+          right: '16px',
+          zIndex: 50,
+          transition: 'opacity 0.3s ease-out',
+        }}
+      >
+        <Button
+          type="text"
+          icon={<CloseCircleOutlined style={{ fontSize: '24px' }} />}
+          onClick={onClose}
+          className="preview-control-button close-button"
+          style={{
+            background: 'rgba(0, 0, 0, 0.2)',
+            borderRadius: '50%',
+            width: '40px',
+            height: '40px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            border: 'none',
+          }}
+        />
       </div>
 
       {/* 小地图提示 - 当小地图隐藏时显示 */}
@@ -166,8 +157,12 @@ const PreviewMode: React.FC<PreviewModeProps> = ({
       )}
 
       {/* 预览模式底部进度指示器 */}
-      {nodes.length > 0 && (
-        <div className="preview-footer" onMouseEnter={onUiInteraction}>
+      {nodes.length > 1 && (
+        <div
+          className={`preview-footer ${uiState.isIdle ? 'opacity-0' : 'opacity-100'}`}
+          onMouseEnter={onUiInteraction}
+          style={{ transition: 'opacity 0.3s ease-out' }}
+        >
           <div className="dots-container">
             {nodes.map((_, index) => (
               <div

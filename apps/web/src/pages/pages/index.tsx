@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Form, Input, Button, Spin, message, Modal, Select } from 'antd';
 import {
@@ -30,6 +30,9 @@ import PreviewMode from './components/PreviewMode';
 import { usePreviewUI } from './hooks/usePreviewUI';
 import { useSlideshow } from './hooks/useSlideshow';
 import { getNodeTitle } from './utils/nodeUtils';
+
+// 懒加载虚拟列表组件
+const VirtualizedNodeList = lazy(() => import('./components/VirtualizedNodeList'));
 
 interface PageDetailType {
   title: string;
@@ -352,6 +355,145 @@ function PageEdit() {
     setShareModalVisible(false);
   };
 
+  // 渲染页面内容
+  const renderPageContent = useMemo(() => {
+    if (isLoadingPage) {
+      return (
+        <div className="flex items-center justify-center py-20">
+          <Spin size="large" tip="加载中..." />
+        </div>
+      );
+    }
+
+    if (pageLoadError) {
+      return (
+        <div className="flex flex-col items-center justify-center py-20">
+          <FileTextOutlined className="text-4xl text-red-500 mb-4" />
+          <p className="text-lg text-gray-700 mb-2">加载页面失败</p>
+          <p className="text-sm text-gray-500 mb-4">请检查网络连接或稍后再试</p>
+          <Button type="primary" onClick={() => navigate('/pages/list')}>
+            返回列表
+          </Button>
+        </div>
+      );
+    }
+
+    if (!pageDetail) {
+      return (
+        <div className="flex flex-col items-center justify-center py-20">
+          <FileTextOutlined className="text-4xl text-gray-400 mb-4" />
+          <p className="text-lg text-gray-700 mb-2">页面不存在</p>
+          <p className="text-sm text-gray-500 mb-4">请检查URL或返回页面列表</p>
+          <Button type="primary" onClick={() => navigate('/pages/list')}>
+            返回列表
+          </Button>
+        </div>
+      );
+    }
+
+    if (isPreviewMode) {
+      return (
+        <PreviewMode
+          nodes={nodesList}
+          currentIndex={currentSlideIndex}
+          onNext={nextSlide}
+          onPrev={prevSlide}
+          onClose={togglePreviewMode}
+          onMouseMove={handlePreviewMouseMove}
+          showUI={uiState.showUI}
+          showMinimap={showPreviewMinimap}
+          onMinimapMouseEnter={handleMinimapMouseEnter}
+          onMinimapMouseLeave={handleMinimapMouseLeave}
+          onSlideSelect={handlePreviewSlideSelect}
+          onSideHintClick={handleSideHintClick}
+          contentRef={previewContentRef}
+        />
+      );
+    }
+
+    return (
+      <div>
+        {/* 内容部分 - 使用虚拟列表优化渲染 */}
+        {nodesList.length > 0 ? (
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center h-64">
+                <Spin tip="加载中..." />
+              </div>
+            }
+          >
+            <VirtualizedNodeList
+              nodes={nodesList}
+              activeNodeIndex={activeNodeIndex}
+              onNodeSelect={handleNodeSelect}
+              onDelete={handleDeleteNode}
+              onStartSlideshow={handleStartSlideshow}
+              onWideMode={handleWideMode}
+            />
+          </Suspense>
+        ) : (
+          <div className="text-center py-16 bg-white rounded-lg border border-dashed border-gray-300 shadow-sm">
+            <FileTextOutlined className="text-5xl text-gray-300 mb-4" />
+            <h3 className="text-xl text-gray-500 mb-2">暂无内容</h3>
+            <p className="text-gray-400 mb-6">您可以添加新的内容组件</p>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => message.info('添加新组件功能开发中')}
+            >
+              添加组件
+            </Button>
+          </div>
+        )}
+
+        {/* 预览按钮 */}
+        {nodesList.length > 0 && (
+          <div className="fixed bottom-6 right-6 z-10">
+            <Button
+              type="primary"
+              shape="circle"
+              size="large"
+              icon={<PlayCircleOutlined />}
+              onClick={togglePreviewMode}
+              className="shadow-lg bg-blue-600 hover:bg-blue-700 border-none"
+              title="幻灯片预览"
+            />
+          </div>
+        )}
+      </div>
+    );
+  }, [
+    isLoadingPage,
+    pageLoadError,
+    pageDetail,
+    isPreviewMode,
+    nodesList,
+    currentSlideIndex,
+    nextSlide,
+    prevSlide,
+    togglePreviewMode,
+    handlePreviewMouseMove,
+    uiState.showUI,
+    showPreviewMinimap,
+    handleMinimapMouseEnter,
+    handleMinimapMouseLeave,
+    handlePreviewSlideSelect,
+    handleSideHintClick,
+    previewContentRef,
+    form,
+    handleSubmit,
+    handleFormChange,
+    handleBack,
+    handleShare,
+    isUpdating,
+    activeNodeIndex,
+    handleNodeSelect,
+    handleDeleteNode,
+    handleStartSlideshow,
+    handleWideMode,
+    navigate,
+  ]);
+
   // 加载状态
   if (isLoadingPage) {
     return (
@@ -509,62 +651,7 @@ function PageEdit() {
       </div>
 
       {/* 内容模块 */}
-      {nodesList.length > 0 ? (
-        <div className="space-y-6">
-          {nodesList.map((node, index) => (
-            <div
-              key={node.relationId || `content-${index}`}
-              id={`content-block-${index}`}
-              onClick={() => setActiveNodeIndex(index)}
-              className={`transition-all duration-300 h-[400px] rounded-lg bg-white ${
-                activeNodeIndex === index
-                  ? 'shadow-[0_10px_30px_rgba(0,0,0,0.15)] transform -translate-y-1 border border-blue-400'
-                  : 'shadow-md hover:shadow-lg'
-              }`}
-            >
-              <NodeRenderer
-                node={node}
-                isFullscreen={isPreviewMode}
-                isModal={false}
-                isMinimap={false}
-                onDelete={handleDeleteNode}
-                onStartSlideshow={handleStartSlideshow}
-                onWideMode={handleWideMode}
-              />
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-16 bg-white rounded-lg border border-dashed border-gray-300 shadow-sm">
-          <div className="text-6xl text-gray-300 mb-6">
-            <FileTextOutlined />
-          </div>
-          <h3 className="text-xl font-medium text-gray-500 mb-3">暂无代码组件</h3>
-          <p className="text-gray-400 mb-6">
-            {showMinimap
-              ? '点击左侧"添加代码组件"按钮添加内容'
-              : '点击侧边按钮打开代码组件面板，然后添加内容'}
-          </p>
-          <Button
-            type="primary"
-            size="large"
-            icon={<PlusOutlined />}
-            onClick={() => {
-              if (!showMinimap) {
-                setShowMinimap(true);
-                setTimeout(() => {
-                  message.info('请使用左侧面板添加代码组件');
-                }, 300);
-              } else {
-                message.info('添加新代码组件功能开发中');
-              }
-            }}
-            className="bg-blue-600 hover:bg-blue-700 border-none shadow"
-          >
-            添加代码组件
-          </Button>
-        </div>
-      )}
+      {renderPageContent}
 
       {/* 宽屏模式弹窗 */}
       <Modal
