@@ -1,10 +1,4 @@
-import React, {
-  useState,
-  useEffect,
-  useMemo,
-  useCallback,
-  useRef,
-} from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Form,
@@ -12,11 +6,8 @@ import {
   Button,
   Spin,
   message,
-  Layout,
-  Tooltip,
   Modal,
   Select,
-  Dropdown,
 } from "antd";
 import {
   useGetPageDetail,
@@ -27,31 +18,26 @@ import {
 import {
   ArrowLeftOutlined,
   SaveOutlined,
-  LeftOutlined,
-  UnorderedListOutlined,
-  MenuUnfoldOutlined,
-  PlusOutlined,
-  FileTextOutlined,
-  PlayCircleOutlined,
-  LeftCircleOutlined,
-  RightCircleOutlined,
-  CloseCircleOutlined,
   ShareAltOutlined,
   CopyOutlined,
   GlobalOutlined,
   UserOutlined,
+  PlayCircleOutlined,
+  CloseCircleOutlined,
+  FileTextOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
-import {
-  useSiderStoreShallow,
-} from "@refly-packages/ai-workspace-common/stores/sider";
+import { useSiderStoreShallow } from "@refly-packages/ai-workspace-common/stores/sider";
 import { NodeRenderer } from "./components/NodeRenderer";
-import { SidebarMinimap } from "./components/SidebarMinimap";
-import {
-  type NodeRelation,
-  type NodeData,
-} from "./components/ArtifactRenderer";
+import { type NodeRelation } from "./components/ArtifactRenderer";
 import "./styles/preview-mode.css";
-import axios from "axios";
+
+// 导入抽象的组件和 hooks
+import PageLayout from "./components/PageLayout";
+import PreviewMode from "./components/PreviewMode";
+import { usePreviewUI } from "./hooks/usePreviewUI";
+import { useSlideshow } from "./hooks/useSlideshow";
+import { getNodeTitle } from "./utils/nodeUtils";
 
 interface PageDetailType {
   title: string;
@@ -68,20 +54,8 @@ function PageEdit() {
   const [nodes, setNodes] = useState<NodeRelation[]>([]);
   const [showMinimap, setShowMinimap] = useState(true);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
-  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const [showPreviewMinimap, setShowPreviewMinimap] = useState(false);
-  const [wideMode, setWideMode] = useState<{ isActive: boolean; nodeId: string | null }>({ isActive: false, nodeId: null });
-  const previewContentRef = useRef<HTMLDivElement>(null);
   const [isDeletingNode, setIsDeletingNode] = useState(false);
-  const [uiState, setUiState] = useState({
-    isIdle: false,
-    showNav: false
-  });
-  const timersRef = useRef<{
-    idle: NodeJS.Timeout | null;
-    nav: NodeJS.Timeout | null;
-    minimap: NodeJS.Timeout | null;
-  }>({ idle: null, nav: null, minimap: null });
+  const [wideMode, setWideMode] = useState<{ isActive: boolean; nodeId: string | null }>({ isActive: false, nodeId: null });
 
   // 分享相关状态
   const [shareModalVisible, setShareModalVisible] = useState(false);
@@ -101,55 +75,49 @@ function PageEdit() {
     setCollapse(true);
   }, [setCollapse]);
 
+  // 使用抽象的 UI 状态管理 hook
+  const {
+    uiState,
+    showPreviewMinimap,
+    handleUiInteraction,
+    handlePreviewMouseMove,
+    handleMinimapMouseEnter,
+    handleMinimapMouseLeave,
+    handleSideHintClick,
+  } = usePreviewUI({ isPreviewMode });
+
+  // 使用抽象的幻灯片预览 hook
+  const {
+    currentSlideIndex,
+    nextSlide,
+    prevSlide,
+    handlePreviewSlideSelect,
+    previewContentRef,
+    resetSlideIndex,
+    setCurrentSlideIndex, // Add this line
+  } = useSlideshow({
+    nodes,
+    isPreviewMode,
+    handleUiInteraction,
+  });
+
   // UI 交互处理方法
   const toggleSidebar = useCallback(
     () => setCollapse(!collapse),
     [collapse, setCollapse]
   );
+  
   const toggleMinimap = useCallback(
     () => setShowMinimap(!showMinimap),
     [showMinimap]
   );
+  
   const togglePreviewMode = useCallback(() => {
     setIsPreviewMode(!isPreviewMode);
-    if (!isPreviewMode) setCurrentSlideIndex(0);
-  }, [isPreviewMode]);
-
-  // 幻灯片导航方法
-  const nextSlide = useCallback(() => {
-    if (currentSlideIndex < nodes.length - 1) {
-      setCurrentSlideIndex(currentSlideIndex + 1);
+    if (!isPreviewMode) {
+      resetSlideIndex();
     }
-  }, [currentSlideIndex, nodes.length]);
-
-  const prevSlide = useCallback(() => {
-    if (currentSlideIndex > 0) {
-      setCurrentSlideIndex(currentSlideIndex - 1);
-    }
-  }, [currentSlideIndex]);
-
-  // 键盘导航控制
-  useEffect(() => {
-    if (!isPreviewMode) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      switch (e.key) {
-        case "ArrowRight":
-        case "Space":
-          nextSlide();
-          break;
-        case "ArrowLeft":
-          prevSlide();
-          break;
-        case "Escape":
-          setIsPreviewMode(false);
-          break;
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isPreviewMode, nextSlide, prevSlide]);
+  }, [isPreviewMode, resetSlideIndex]);
 
   // 获取页面详情
   const {
@@ -249,165 +217,6 @@ function PageEdit() {
     setFormChanged(true);
   };
 
-  // 统一的UI状态管理函数
-  const updateUiState = useCallback((updates: Partial<typeof uiState>) => {
-    setUiState(prev => ({ ...prev, ...updates }));
-  }, []);
-
-  // 重置定时器
-  const resetTimer = useCallback((timerKey: keyof typeof timersRef.current, callback: () => void, delay: number) => {
-    if (timersRef.current[timerKey]) {
-      clearTimeout(timersRef.current[timerKey]!);
-    }
-    timersRef.current[timerKey] = setTimeout(callback, delay);
-  }, []);
-
-  // 重置闲置状态
-  const resetIdleState = useCallback(() => {
-    updateUiState({ isIdle: false });
-    
-    if (isPreviewMode) {
-      resetTimer('idle', () => {
-        updateUiState({ isIdle: true, showNav: false });
-      }, 2000); // 2秒无操作后隐藏导航栏
-    }
-  }, [isPreviewMode, updateUiState, resetTimer]);
-
-  // 统一的UI交互处理函数
-  const handleUiInteraction = useCallback(() => {
-    resetIdleState();
-    updateUiState({ showNav: true });
-
-    resetTimer('nav', () => {
-      if (uiState.isIdle) {
-        updateUiState({ showNav: false });
-      }
-    }, 3000); // 悬停3秒后，如果处于闲置状态则隐藏
-  }, [resetIdleState, updateUiState, resetTimer, uiState.isIdle]);
-
-  // 预览模式状态变化处理
-  useEffect(() => {
-    if (isPreviewMode) {
-      resetIdleState();
-      updateUiState({ showNav: true });
-    } else {
-      updateUiState({ isIdle: false, showNav: false });
-      Object.keys(timersRef.current).forEach(key => {
-        const timerKey = key as keyof typeof timersRef.current;
-        if (timersRef.current[timerKey]) {
-          clearTimeout(timersRef.current[timerKey]!);
-          timersRef.current[timerKey] = null;
-        }
-      });
-    }
-  }, [isPreviewMode, resetIdleState, updateUiState]);
-
-  // 清理所有定时器
-  useEffect(() => {
-    return () => {
-      Object.values(timersRef.current).forEach(timer => {
-        if (timer) clearTimeout(timer);
-      });
-    };
-  }, []);
-
-  // 添加触摸手势支持
-  useEffect(() => {
-    if (!isPreviewMode || !previewContentRef.current) return;
-
-    let touchStartX = 0;
-    let touchEndX = 0;
-
-    const handleTouchStart = (e: TouchEvent) => {
-      touchStartX = e.changedTouches[0].screenX;
-      // 触摸时重置闲置状态
-      handleUiInteraction();
-    };
-
-    const handleTouchEnd = (e: TouchEvent) => {
-      touchEndX = e.changedTouches[0].screenX;
-      handleSwipe();
-    };
-
-    const handleTouchMove = () => {
-      // 触摸移动时重置闲置状态
-      handleUiInteraction();
-    };
-
-    const handleSwipe = () => {
-      const swipeThreshold = 50;
-      if (touchEndX < touchStartX - swipeThreshold) {
-        nextSlide();
-      }
-      if (touchEndX > touchStartX + swipeThreshold) {
-        prevSlide();
-      }
-    };
-
-    const element = previewContentRef.current;
-    element.addEventListener("touchstart", handleTouchStart, { passive: true });
-    element.addEventListener("touchend", handleTouchEnd, { passive: true });
-    element.addEventListener("touchmove", handleTouchMove, { passive: true });
-
-    return () => {
-      element.removeEventListener("touchstart", handleTouchStart);
-      element.removeEventListener("touchend", handleTouchEnd);
-      element.removeEventListener("touchmove", handleTouchMove);
-    };
-  }, [isPreviewMode, nextSlide, prevSlide, handleUiInteraction]);
-
-  // 预览模式交互处理
-  const handlePreviewMouseMove = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (!isPreviewMode) return;
-
-      handleUiInteraction();
-
-      // 当鼠标移动到屏幕左侧边缘时显示小地图
-      if (e.clientX < 20) {
-        setShowPreviewMinimap(true);
-        resetTimer('minimap', () => {}, 0);
-      }
-    },
-    [isPreviewMode, handleUiInteraction, resetTimer]
-  );
-
-  // 小地图交互处理
-  const handleMinimapMouseEnter = useCallback(() => {
-    if (timersRef.current.minimap) {
-      clearTimeout(timersRef.current.minimap);
-      timersRef.current.minimap = null;
-    }
-  }, []);
-
-  const handleMinimapMouseLeave = useCallback(() => {
-    setShowPreviewMinimap(false);
-  }, []);
-
-  const handlePreviewSlideSelect = useCallback((index: number) => {
-    setCurrentSlideIndex(index);
-  }, []);
-
-  const handleSideHintClick = useCallback(() => {
-    setShowPreviewMinimap(true);
-  }, []);
-
-  // 获取节点标题
-  const getNodeTitle = useCallback((node: NodeRelation) => {
-    // 尝试从nodeData.title获取标题
-    if (node.nodeData?.title) return node.nodeData.title;
-
-    // 尝试从nodeData.metadata.title获取标题
-    if (node.nodeData?.metadata?.title) return node.nodeData.metadata.title;
-
-    // 根据节点类型返回默认标题
-    if (node.nodeType === "codeArtifact") return "代码组件";
-    if (node.nodeType === "document") return "文档组件";
-    if (node.nodeType === "skillResponse") return "技能响应";
-
-    return `幻灯片 ${node.orderIndex + 1}`;
-  }, []);
-
   // 处理删除节点
   const deletePageNodeMutation = useDeletePageNode();
 
@@ -455,12 +264,12 @@ function PageEdit() {
       const nodeIndex = nodes.findIndex((node) => node.nodeId === nodeId);
       if (nodeIndex !== -1) {
         // 设置当前幻灯片索引为找到的节点索引
-        setCurrentSlideIndex(nodeIndex);
+        setCurrentSlideIndex(nodeIndex); // Use setCurrentSlideIndex here
         // 打开预览模式
         setIsPreviewMode(true);
       }
     },
-    [nodes]
+    [nodes, setCurrentSlideIndex]
   );
 
   // 宽屏模式处理
@@ -577,45 +386,92 @@ function PageEdit() {
     );
   }
 
-  return (
-    <Layout className="h-screen overflow-hidden bg-[#f7f9fc]">
-      {/* 顶部导航栏 */}
-      <div className="flex justify-between items-center px-4 py-2.5 bg-white border-b border-gray-200 z-20 shadow-sm">
-        <div className="flex items-center">
-          <Button
-            onClick={handleBack}
-            icon={<ArrowLeftOutlined />}
-            type="text"
-            className="mr-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+  // 预览模式渲染
+  if (isPreviewMode) {
+    return (
+      <Modal
+        open={isPreviewMode}
+        footer={null}
+        closable={false}
+        onCancel={togglePreviewMode}
+        width="100%"
+        style={{ top: 0, padding: 0, maxWidth: "100vw" }}
+        bodyStyle={{ height: "100vh", padding: 0, overflow: "hidden" }}
+        className="preview-modal"
+        maskStyle={{ background: "rgba(0, 0, 0, 0.85)" }}
+        wrapClassName="preview-modal-wrap"
+      >
+        <div className="bg-black h-full w-full flex flex-col">
+          {/* 使用抽象的 PreviewMode 组件 */}
+          <PreviewMode
+            nodes={nodes}
+            currentSlideIndex={currentSlideIndex}
+            showPreviewMinimap={showPreviewMinimap}
+            uiState={uiState}
+            title={form.getFieldValue("title")}
+            onNext={nextSlide}
+            onPrev={prevSlide}
+            onClose={togglePreviewMode}
+            onMouseMove={handlePreviewMouseMove}
+            onSideHintClick={handleSideHintClick}
+            onUiInteraction={handleUiInteraction}
+            onPreviewSlideSelect={handlePreviewSlideSelect}
+            onMinimapMouseEnter={handleMinimapMouseEnter}
+            onMinimapMouseLeave={handleMinimapMouseLeave}
+            getNodeTitle={getNodeTitle}
+            previewContentRef={previewContentRef}
           />
-          <Form
-            form={form}
-            layout="inline"
-            onFinish={handleSubmit}
-            onValuesChange={handleFormChange}
-            initialValues={{
-              title: pageDetail.title,
-              description: pageDetail.description || "",
-            }}
-            className="flex items-center"
-          >
-            <Form.Item
-              name="title"
-              rules={[{ required: true, message: "请输入页面标题" }]}
-              className="mb-0"
-            >
-              <Input
-                placeholder="请输入页面标题"
-                bordered={false}
-                className="text-lg font-medium px-0"
-              />
-            </Form.Item>
-          </Form>
         </div>
+      </Modal>
+    );
+  }
 
-        <div className="flex items-center">
-          {nodes.length > 0 && (
-            <Tooltip title="预览模式">
+  return (
+    <PageLayout
+      showMinimap={showMinimap}
+      collapse={collapse}
+      nodes={nodes}
+      activeNodeIndex={activeNodeIndex}
+      onNodeSelect={handleNodeSelect}
+      onReorderNodes={handleReorderNodes}
+      toggleMinimap={toggleMinimap}
+      toggleSidebar={toggleSidebar}
+      headerContent={
+        <div className="flex justify-between items-center w-full">
+          <div className="flex items-center">
+            <Button
+              onClick={handleBack}
+              icon={<ArrowLeftOutlined />}
+              type="text"
+              className="mr-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            />
+            <Form
+              form={form}
+              layout="inline"
+              onFinish={handleSubmit}
+              onValuesChange={handleFormChange}
+              initialValues={{
+                title: pageDetail.title,
+                description: pageDetail.description || "",
+              }}
+              className="flex items-center"
+            >
+              <Form.Item
+                name="title"
+                rules={[{ required: true, message: "请输入页面标题" }]}
+                className="mb-0"
+              >
+                <Input
+                  placeholder="请输入页面标题"
+                  bordered={false}
+                  className="text-lg font-medium px-0"
+                />
+              </Form.Item>
+            </Form>
+          </div>
+
+          <div className="flex items-center">
+            {nodes.length > 0 && (
               <Button
                 type="text"
                 onClick={togglePreviewMode}
@@ -624,9 +480,7 @@ function PageEdit() {
               >
                 幻灯片预览
               </Button>
-            </Tooltip>
-          )}
-          <Tooltip title="分享页面">
+            )}
             <Button
               type="text"
               onClick={handleShare}
@@ -635,451 +489,227 @@ function PageEdit() {
             >
               复制分享链接
             </Button>
-          </Tooltip>
-          {formChanged && (
-            <Button
-              type="primary"
-              htmlType="submit"
-              onClick={() => form.submit()}
-              loading={isUpdating}
-              icon={<SaveOutlined />}
-              className="flex items-center bg-blue-600 hover:bg-blue-700 border-none"
-            >
-              保存更改
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* 主体内容区 */}
-      <Layout className="flex-1 overflow-hidden">
-        {/* 左侧缩略图面板 */}
-        {showMinimap && (
-          <Layout.Sider
-            width={180}
-            theme="light"
-            className="bg-[#f7f9fc] border-r border-gray-200 overflow-hidden relative"
-          >
-            <SidebarMinimap
-              nodes={nodes}
-              activeNodeIndex={activeNodeIndex}
-              onNodeSelect={handleNodeSelect}
-              onReorderNodes={handleReorderNodes}
-            />
-            {/* 隐藏小地图的按钮 */}
-            <Button
-              type="text"
-              icon={<LeftOutlined />}
-              onClick={toggleMinimap}
-              className="absolute top-2 right-2 z-10 bg-white shadow-sm hover:bg-gray-100 border border-gray-200 rounded-full h-6 w-6 flex items-center justify-center p-0"
-              size="small"
-            />
-          </Layout.Sider>
-        )}
-
-        {/* 中间内容区域 */}
-        <Layout.Content
-          className="relative overflow-y-auto overflow-x-hidden"
-          style={{ backgroundColor: "#f7f9fc" }}
-        >
-          {/* 显示小地图的按钮 */}
-          {!showMinimap && (
-            <div className="absolute left-0 top-14 z-10">
-              <Tooltip title="显示代码组件面板" placement="right">
-                <Button
-                  type="default"
-                  icon={<UnorderedListOutlined />}
-                  onClick={toggleMinimap}
-                  className="bg-white shadow-md rounded-r-md border-l-0 h-8 hover:bg-gray-50 border border-gray-200"
-                  style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}
-                />
-              </Tooltip>
-            </div>
-          )}
-
-          {/* 展开全局侧边栏的按钮 */}
-          {collapse && (
-            <Button
-              type="text"
-              icon={<MenuUnfoldOutlined />}
-              onClick={toggleSidebar}
-              className="absolute top-4 right-4 z-10 bg-white shadow-sm hover:bg-gray-100 border border-gray-200 h-8 w-8 flex items-center justify-center p-0 rounded-md"
-            />
-          )}
-
-          <div
-            className="mx-auto py-4 px-8 mb-16"
-            style={{ maxWidth: "900px" }}
-          >
-            {/* 页面描述区域 */}
-            {pageDetail.description && (
-              <div className="mb-6">
-                <Form
-                  form={form}
-                  onFinish={handleSubmit}
-                  onValuesChange={handleFormChange}
-                >
-                  <Form.Item name="description">
-                    <Input.TextArea
-                      placeholder="添加页面描述..."
-                      autoSize={{ minRows: 2, maxRows: 4 }}
-                      bordered={false}
-                      className="text-gray-700 text-base resize-none bg-transparent"
-                    />
-                  </Form.Item>
-                </Form>
-              </div>
-            )}
-
-            {/* 内容模块 */}
-            {nodes.length > 0 ? (
-              <div className="space-y-6">
-                {nodes.map((node, index) => (
-                  <div
-                    key={node.relationId || `content-${index}`}
-                    id={`content-block-${index}`}
-                    onClick={() => setActiveNodeIndex(index)}
-                    className={`transition-all duration-300 h-[400px] rounded-lg bg-white ${
-                      activeNodeIndex === index
-                        ? "shadow-[0_10px_30px_rgba(0,0,0,0.15)] transform -translate-y-1 border border-blue-400"
-                        : "shadow-md hover:shadow-lg"
-                    }`}
-                  >
-                    <NodeRenderer
-                      node={node}
-                      isActive={activeNodeIndex === index}
-                      onDelete={handleDeleteNode}
-                      onStartSlideshow={handleStartSlideshow}
-                      onWideMode={handleWideMode}
-                    />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-16 bg-white rounded-lg border border-dashed border-gray-300 shadow-sm">
-                <div className="text-6xl text-gray-300 mb-6">
-                  <FileTextOutlined />
-                </div>
-                <h3 className="text-xl font-medium text-gray-500 mb-3">
-                  暂无代码组件
-                </h3>
-                <p className="text-gray-400 mb-6">
-                  {showMinimap
-                    ? '点击左侧"添加代码组件"按钮添加内容'
-                    : "点击侧边按钮打开代码组件面板，然后添加内容"}
-                </p>
-                <Button
-                  type="primary"
-                  size="large"
-                  icon={<PlusOutlined />}
-                  onClick={() => {
-                    if (!showMinimap) {
-                      setShowMinimap(true);
-                      setTimeout(() => {
-                        message.info("请使用左侧面板添加代码组件");
-                      }, 300);
-                    } else {
-                      message.info("添加新代码组件功能开发中");
-                    }
-                  }}
-                  className="bg-blue-600 hover:bg-blue-700 border-none shadow"
-                >
-                  添加代码组件
-                </Button>
-              </div>
-            )}
-
-            <div className="h-24"></div>
-          </div>
-        </Layout.Content>
-
-        {/* 预览模式弹窗 */}
-        <Modal
-          open={isPreviewMode}
-          footer={null}
-          closable={false}
-          onCancel={togglePreviewMode}
-          width="100%"
-          style={{ top: 0, padding: 0, maxWidth: "100vw" }}
-          bodyStyle={{ height: "100vh", padding: 0, overflow: "hidden" }}
-          className="preview-modal"
-          maskStyle={{ background: "rgba(0, 0, 0, 0.85)" }}
-          wrapClassName="preview-modal-wrap"
-        >
-          <div className="bg-black h-full w-full flex flex-col">
-            {/* 预览内容区域 */}
-            <div
-              ref={previewContentRef}
-              className={`preview-content-container relative ${uiState.isIdle ? "idle" : ""} ${uiState.showNav ? "show-nav" : ""}`}
-              onMouseMove={handlePreviewMouseMove}
-            >
-              {/* 预览导航栏 - 默认隐藏 */}
-              <div className="preview-header" onMouseEnter={handleUiInteraction}>
-                <div className="preview-header-title">
-                  {form.getFieldValue("title")}
-                  <span className="page-indicator">
-                    {currentSlideIndex + 1}/{nodes.length}
-                  </span>
-                </div>
-                <div className="preview-header-controls">
-                  <Button
-                    type="text"
-                    icon={<LeftCircleOutlined />}
-                    onClick={prevSlide}
-                    disabled={currentSlideIndex <= 0}
-                    className={`preview-control-button ${currentSlideIndex <= 0 ? "disabled" : ""}`}
-                  />
-                  <Button
-                    type="text"
-                    icon={<RightCircleOutlined />}
-                    onClick={nextSlide}
-                    disabled={currentSlideIndex >= nodes.length - 1}
-                    className={`preview-control-button ${currentSlideIndex >= nodes.length - 1 ? "disabled" : ""}`}
-                  />
-                  <Button
-                    type="text"
-                    icon={<CloseCircleOutlined />}
-                    onClick={togglePreviewMode}
-                    className="preview-control-button close-button"
-                  />
-                </div>
-              </div>
-
-              {/* 小地图提示 - 当小地图隐藏时显示 */}
-              {!showPreviewMinimap && nodes.length > 1 && (
-                <div className="side-hint" onClick={handleSideHintClick}>
-                  <UnorderedListOutlined />
-                </div>
-              )}
-
-              {/* 预览模式小地图 */}
-              <div
-                className={`preview-minimap ${showPreviewMinimap ? "preview-minimap-show" : ""}`}
-                onMouseEnter={handleMinimapMouseEnter}
-                onMouseLeave={handleMinimapMouseLeave}
-              >
-                <div className="preview-minimap-header">导航目录</div>
-                <div className="preview-minimap-content">
-                  {nodes.map((node, index) => (
-                    <div
-                      key={`minimap-slide-${index}`}
-                      className={`preview-minimap-slide ${currentSlideIndex === index ? "active" : ""}`}
-                      onClick={() => handlePreviewSlideSelect(index)}
-                    >
-                      <div className="preview-minimap-number">{index + 1}</div>
-                      <div className="preview-minimap-thumbnail">
-                        <div
-                          style={{
-                            height: "100%",
-                            overflow: "hidden",
-                            transform: "scale(0.95)",
-                            background: "#fff",
-                            pointerEvents: "none",
-                            userSelect: "none",
-                          }}
-                        >
-                          <NodeRenderer
-                            node={node}
-                            isActive={false}
-                            isFullscreen={false}
-                            isModal={true}
-                            isMinimap={true}
-                          />
-                        </div>
-                        {/* 透明遮罩层 */}
-                        <div className="absolute inset-0 bg-transparent" />
-                      </div>
-                      <div className="preview-minimap-title">
-                        {getNodeTitle(node)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* 主要预览内容 */}
-              <div className="preview-content">
-                {nodes.length > 0 ? (
-                  <div
-                    className="w-full h-full preview-slide"
-                    style={{
-                      animationName: "slideIn",
-                      animationDuration: "0.5s",
-                      animationTimingFunction: "ease-out",
-                      animationFillMode: "forwards",
-                    }}
-                  >
-                    <NodeRenderer
-                      node={nodes[currentSlideIndex]}
-                      isActive={true}
-                      isFullscreen={true}
-                      isModal={true}
-                    />
-                  </div>
-                ) : (
-                  <div className="text-center text-white">
-                    <p>没有可用的内容来预览</p>
-                  </div>
-                )}
-              </div>
-
-              {/* 滑动提示 - 只在移动设备上显示 */}
-              {nodes.length > 1 && (
-                <div className="swipe-hint md:hidden">
-                  左右滑动切换幻灯片 ({currentSlideIndex + 1}/{nodes.length})
-                </div>
-              )}
-
-              {/* 预览模式底部进度指示器 - 默认隐藏 */}
-              {nodes.length > 0 && (
-                <div className="preview-footer" onMouseEnter={handleUiInteraction}>
-                  <div className="dots-container">
-                    {nodes.map((_, index) => (
-                      <div
-                        key={`preview-dot-${index}`}
-                        className={`preview-dot ${
-                          index === currentSlideIndex ? "active" : ""
-                        }`}
-                        onClick={() => setCurrentSlideIndex(index)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </Modal>
-
-        {/* 宽屏模式弹窗 */}
-        <Modal
-          open={wideMode.isActive}
-          footer={null}
-          onCancel={handleCloseWideMode}
-          width="85%"
-          style={{ top: 20 }}
-          bodyStyle={{
-            maxHeight: "calc(100vh - 100px)",
-            padding: 0,
-            overflow: "hidden",
-          }}
-          className="wide-mode-modal"
-          closeIcon={
-            <CloseCircleOutlined className="text-gray-500 hover:text-red-500" />
-          }
-          maskStyle={{ background: "rgba(0, 0, 0, 0.65)" }}
-        >
-          <div className="bg-white h-full w-full flex flex-col rounded-lg overflow-hidden">
-            {/* 宽屏模式内容 */}
-            <div className="flex-1 overflow-auto">
-              {wideMode.nodeId && nodes.find((n) => n.nodeId === wideMode.nodeId) ? (
-                <div className="h-[calc(100vh-160px)]">
-                  <NodeRenderer
-                    node={nodes.find((n) => n.nodeId === wideMode.nodeId)!}
-                    isActive={true}
-                    isFullscreen={false}
-                    isModal={true}
-                    isMinimap={false}
-                    onDelete={handleDeleteNode}
-                    onStartSlideshow={handleStartSlideshow}
-                    onWideMode={handleWideMode}
-                  />
-                </div>
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <p className="text-gray-500">无法加载内容</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </Modal>
-
-        {/* 分享弹窗 */}
-        <Modal
-          title={
-            <div className="flex items-center text-lg font-medium">
-              <ShareAltOutlined className="mr-2 text-green-500" /> 链接分享
-            </div>
-          }
-          open={shareModalVisible}
-          onCancel={handleCloseShareModal}
-          footer={null}
-          width={420}
-          className="share-modal"
-          maskClosable={false}
-        >
-          <div className="py-2">
-            <div className="mb-4">
-              <div className="text-gray-700 mb-2">谁可以查看此页面</div>
-              <Select
-                value={shareOption}
-                onChange={(value) => setShareOption(value)}
-                style={{ width: "100%" }}
-                options={[
-                  {
-                    value: "internet",
-                    label: (
-                      <div className="flex items-center">
-                        <GlobalOutlined className="mr-2 text-green-500" />
-                        互联网获得链接的人
-                      </div>
-                    ),
-                  },
-                  {
-                    value: "未开启",
-                    label: (
-                      <div className="flex items-center">
-                        <UserOutlined className="mr-2 text-gray-500" />
-                        未开启
-                      </div>
-                    ),
-                    disabled: true,
-                  },
-                ]}
-              />
-            </div>
-
-            {!shareUrl ? (
+            {formChanged && (
               <Button
                 type="primary"
-                block
-                icon={<ShareAltOutlined />}
-                onClick={handleShareSubmit}
-                loading={isSharing}
-                className="bg-green-600 hover:bg-green-700 border-none mt-2"
+                htmlType="submit"
+                onClick={() => form.submit()}
+                loading={isUpdating}
+                icon={<SaveOutlined />}
+                className="flex items-center bg-blue-600 hover:bg-blue-700 border-none"
               >
-                复制分享链接
+                保存更改
               </Button>
+            )}
+          </div>
+        </div>
+      }
+    >
+      {/* 页面描述区域 */}
+      <div className="mb-6">
+        <Form
+          form={form}
+          onFinish={handleSubmit}
+          onValuesChange={handleFormChange}
+        >
+          <Form.Item name="description">
+            <Input.TextArea
+              placeholder="添加页面描述..."
+              autoSize={{ minRows: 2, maxRows: 4 }}
+              bordered={false}
+              className="text-gray-700 text-base resize-none bg-transparent"
+            />
+          </Form.Item>
+        </Form>
+      </div>
+
+      {/* 内容模块 */}
+      {nodes.length > 0 ? (
+        <div className="space-y-6">
+          {nodes.map((node, index) => (
+            <div
+              key={node.relationId || `content-${index}`}
+              id={`content-block-${index}`}
+              onClick={() => setActiveNodeIndex(index)}
+              className={`transition-all duration-300 h-[400px] rounded-lg bg-white ${
+                activeNodeIndex === index
+                  ? "shadow-[0_10px_30px_rgba(0,0,0,0.15)] transform -translate-y-1 border border-blue-400"
+                  : "shadow-md hover:shadow-lg"
+              }`}
+            >
+              <NodeRenderer
+                node={node}
+                isActive={activeNodeIndex === index}
+                onDelete={handleDeleteNode}
+                onStartSlideshow={handleStartSlideshow}
+                onWideMode={handleWideMode}
+              />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-16 bg-white rounded-lg border border-dashed border-gray-300 shadow-sm">
+          <div className="text-6xl text-gray-300 mb-6">
+            <FileTextOutlined />
+          </div>
+          <h3 className="text-xl font-medium text-gray-500 mb-3">
+            暂无代码组件
+          </h3>
+          <p className="text-gray-400 mb-6">
+            {showMinimap
+              ? '点击左侧"添加代码组件"按钮添加内容'
+              : "点击侧边按钮打开代码组件面板，然后添加内容"}
+          </p>
+          <Button
+            type="primary"
+            size="large"
+            icon={<PlusOutlined />}
+            onClick={() => {
+              if (!showMinimap) {
+                setShowMinimap(true);
+                setTimeout(() => {
+                  message.info("请使用左侧面板添加代码组件");
+                }, 300);
+              } else {
+                message.info("添加新代码组件功能开发中");
+              }
+            }}
+            className="bg-blue-600 hover:bg-blue-700 border-none shadow"
+          >
+            添加代码组件
+          </Button>
+        </div>
+      )}
+
+      {/* 宽屏模式弹窗 */}
+      <Modal
+        open={wideMode.isActive}
+        footer={null}
+        onCancel={handleCloseWideMode}
+        width="85%"
+        style={{ top: 20 }}
+        bodyStyle={{
+          maxHeight: "calc(100vh - 100px)",
+          padding: 0,
+          overflow: "hidden",
+        }}
+        className="wide-mode-modal"
+        closeIcon={
+          <CloseCircleOutlined className="text-gray-500 hover:text-red-500" />
+        }
+        maskStyle={{ background: "rgba(0, 0, 0, 0.65)" }}
+      >
+        <div className="bg-white h-full w-full flex flex-col rounded-lg overflow-hidden">
+          {/* 宽屏模式内容 */}
+          <div className="flex-1 overflow-auto">
+            {wideMode.nodeId && nodes.find((n) => n.nodeId === wideMode.nodeId) ? (
+              <div className="h-[calc(100vh-160px)]">
+                <NodeRenderer
+                  node={nodes.find((n) => n.nodeId === wideMode.nodeId)!}
+                  isActive={true}
+                  isFullscreen={false}
+                  isModal={true}
+                  isMinimap={false}
+                  onDelete={handleDeleteNode}
+                  onStartSlideshow={handleStartSlideshow}
+                  onWideMode={handleWideMode}
+                />
+              </div>
             ) : (
-              <div className="mt-4">
-                <div className="text-gray-700 mb-2">分享链接</div>
-                <div className="flex items-center">
-                  <Input
-                    value={shareUrl}
-                    readOnly
-                    className="flex-1 bg-gray-50"
-                  />
-                  <Button
-                    type="primary"
-                    icon={<CopyOutlined />}
-                    onClick={handleCopyShareUrl}
-                    className={`ml-2 flex items-center justify-center h-[32px] ${
-                      isCopied
-                        ? "bg-green-600 hover:bg-green-700"
-                        : "bg-blue-600 hover:bg-blue-700"
-                    } border-none`}
-                  >
-                    {isCopied ? "已复制" : "复制"}
-                  </Button>
-                </div>
-                <div className="mt-4 text-gray-500 text-sm">
-                  获得此链接的人均可查看此页面内容
-                </div>
+              <div className="flex items-center justify-center h-full">
+                <p className="text-gray-500">无法加载内容</p>
               </div>
             )}
           </div>
-        </Modal>
-      </Layout>
-    </Layout>
+        </div>
+      </Modal>
+
+      {/* 分享弹窗 */}
+      <Modal
+        title={
+          <div className="flex items-center text-lg font-medium">
+            <ShareAltOutlined className="mr-2 text-green-500" /> 链接分享
+          </div>
+        }
+        open={shareModalVisible}
+        onCancel={handleCloseShareModal}
+        footer={null}
+        width={420}
+        className="share-modal"
+        maskClosable={false}
+      >
+        <div className="py-2">
+          <div className="mb-4">
+            <div className="text-gray-700 mb-2">谁可以查看此页面</div>
+            <Select
+              value={shareOption}
+              onChange={(value) => setShareOption(value)}
+              style={{ width: "100%" }}
+              options={[
+                {
+                  value: "internet",
+                  label: (
+                    <div className="flex items-center">
+                      <GlobalOutlined className="mr-2 text-green-500" />
+                      互联网获得链接的人
+                    </div>
+                  ),
+                },
+                {
+                  value: "未开启",
+                  label: (
+                    <div className="flex items-center">
+                      <UserOutlined className="mr-2 text-gray-500" />
+                      未开启
+                    </div>
+                  ),
+                  disabled: true,
+                },
+              ]}
+            />
+          </div>
+
+          {!shareUrl ? (
+            <Button
+              type="primary"
+              block
+              icon={<ShareAltOutlined />}
+              onClick={handleShareSubmit}
+              loading={isSharing}
+              className="bg-green-600 hover:bg-green-700 border-none mt-2"
+            >
+              复制分享链接
+            </Button>
+          ) : (
+            <div className="mt-4">
+              <div className="text-gray-700 mb-2">分享链接</div>
+              <div className="flex items-center">
+                <Input
+                  value={shareUrl}
+                  readOnly
+                  className="flex-1 bg-gray-50"
+                />
+                <Button
+                  type="primary"
+                  icon={<CopyOutlined />}
+                  onClick={handleCopyShareUrl}
+                  className={`ml-2 flex items-center justify-center h-[32px] ${
+                    isCopied
+                      ? "bg-green-600 hover:bg-green-700"
+                      : "bg-blue-600 hover:bg-blue-700"
+                  } border-none`}
+                >
+                  {isCopied ? "已复制" : "复制"}
+                </Button>
+              </div>
+              <div className="mt-4 text-gray-500 text-sm">
+                获得此链接的人均可查看此页面内容
+              </div>
+            </div>
+          )}
+        </div>
+      </Modal>
+    </PageLayout>
   );
 }
 

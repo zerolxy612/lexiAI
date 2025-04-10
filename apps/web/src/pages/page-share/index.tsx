@@ -1,26 +1,21 @@
 import { useParams } from "react-router-dom";
-import { useMemo, useCallback, useEffect, useState, useRef } from "react";
+import { useMemo, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Spin, Button, Layout, Tooltip } from "antd";
-import {
-  LeftCircleOutlined,
-  RightCircleOutlined,
-  CloseCircleOutlined,
-  UnorderedListOutlined,
-  MenuUnfoldOutlined,
-  PlayCircleOutlined,
-  LeftOutlined,
-  FileTextOutlined,
-} from "@ant-design/icons";
+import { Spin, Layout, Button, Modal } from "antd";
+import { FileTextOutlined, PlayCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
 import { useSiderStoreShallow } from "@refly-packages/ai-workspace-common/stores/sider";
 import { useFetchShareData } from "@refly-packages/ai-workspace-common/hooks/use-fetch-share-data";
 import PoweredByRefly from "@/components/common/PoweredByRefly";
 import "../pages/styles/preview-mode.css";
 
-// 导入 NodeRenderer 组件
+// 导入抽象的组件和 hooks
 import { NodeRenderer } from "../pages/components/NodeRenderer";
-import { SidebarMinimap } from "../pages/components/SidebarMinimap";
 import { type NodeRelation } from "../pages/components/ArtifactRenderer";
+import PageLayout from "../pages/components/PageLayout";
+import PreviewMode from "../pages/components/PreviewMode";
+import { usePreviewUI } from "../pages/hooks/usePreviewUI";
+import { useSlideshow } from "../pages/hooks/useSlideshow";
+import { getNodeTitle } from "../pages/utils/nodeUtils";
 
 const SharePage = () => {
   const { shareId = "" } = useParams();
@@ -33,20 +28,9 @@ const SharePage = () => {
   
   // 常规模式和预览模式相关状态
   const [isPreviewMode, setIsPreviewMode] = useState(false);
-  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const [showPreviewMinimap, setShowPreviewMinimap] = useState(false);
   const [showMinimap, setShowMinimap] = useState(true);
   const [activeNodeIndex, setActiveNodeIndex] = useState(0);
-  const [uiState, setUiState] = useState({
-    isIdle: false,
-    showNav: false
-  });
-  const previewContentRef = useRef<HTMLDivElement>(null);
-  const timersRef = useRef<{
-    idle: NodeJS.Timeout | null;
-    nav: NodeJS.Timeout | null;
-    minimap: NodeJS.Timeout | null;
-  }>({ idle: null, nav: null, minimap: null });
+  const [wideMode, setWideMode] = useState<{ isActive: boolean; nodeId: string | null }>({ isActive: false, nodeId: null });
 
   // 提取页面数据和节点关系
   const pageData = useMemo(() => {
@@ -67,6 +51,45 @@ const SharePage = () => {
     return pageData.nodeRelations;
   }, [pageData?.nodeRelations]);
 
+  // 使用抽象的 UI 状态管理 hook
+  const {
+    uiState,
+    showPreviewMinimap,
+    handleUiInteraction,
+    handlePreviewMouseMove,
+    handleMinimapMouseEnter,
+    handleMinimapMouseLeave,
+    handleSideHintClick,
+  } = usePreviewUI({
+    isPreviewMode,
+  });
+
+  // 使用抽象的幻灯片预览 hook
+  const {
+    currentSlideIndex,
+    nextSlide,
+    prevSlide,
+    handlePreviewSlideSelect,
+    previewContentRef,
+    resetSlideIndex,
+    setCurrentSlideIndex,
+  } = useSlideshow({
+    nodes,
+    isPreviewMode,
+    handleUiInteraction,
+  });
+
+  // 切换预览模式
+  const togglePreviewMode = useCallback(() => {
+    setIsPreviewMode((prev) => {
+      if (!prev) {
+        // 进入预览模式时重置幻灯片索引
+        resetSlideIndex();
+      }
+      return !prev;
+    });
+  }, [resetSlideIndex]);
+
   // 强制默认隐藏侧边栏
   useEffect(() => {
     setCollapse(true);
@@ -83,165 +106,6 @@ const SharePage = () => {
     [showMinimap]
   );
 
-  // 切换预览模式
-  const togglePreviewMode = useCallback(() => {
-    setIsPreviewMode(!isPreviewMode);
-    if (!isPreviewMode) setCurrentSlideIndex(0);
-  }, [isPreviewMode]);
-
-  // 统一的UI状态管理函数
-  const updateUiState = useCallback((updates: Partial<typeof uiState>) => {
-    setUiState(prev => ({ ...prev, ...updates }));
-  }, []);
-
-  // 重置定时器
-  const resetTimer = useCallback((timerKey: keyof typeof timersRef.current, callback: () => void, delay: number) => {
-    if (timersRef.current[timerKey]) {
-      clearTimeout(timersRef.current[timerKey]!);
-    }
-    timersRef.current[timerKey] = setTimeout(callback, delay);
-  }, []);
-
-  // 重置闲置状态
-  const resetIdleState = useCallback(() => {
-    updateUiState({ isIdle: false });
-    
-    if (isPreviewMode) {
-      resetTimer('idle', () => {
-        updateUiState({ isIdle: true, showNav: false });
-      }, 2000); // 2秒无操作后隐藏导航栏
-    }
-  }, [isPreviewMode, updateUiState, resetTimer]);
-
-  // 统一的UI交互处理函数
-  const handleUiInteraction = useCallback(() => {
-    resetIdleState();
-    updateUiState({ showNav: true });
-
-    resetTimer('nav', () => {
-      if (uiState.isIdle) {
-        updateUiState({ showNav: false });
-      }
-    }, 3000); // 悬停3秒后，如果处于闲置状态则隐藏
-  }, [resetIdleState, updateUiState, resetTimer, uiState.isIdle]);
-
-  // 幻灯片导航方法
-  const nextSlide = useCallback(() => {
-    if (currentSlideIndex < nodes.length - 1) {
-      setCurrentSlideIndex(currentSlideIndex + 1);
-    }
-  }, [currentSlideIndex, nodes.length]);
-
-  const prevSlide = useCallback(() => {
-    if (currentSlideIndex > 0) {
-      setCurrentSlideIndex(currentSlideIndex - 1);
-    }
-  }, [currentSlideIndex]);
-
-  // 键盘导航控制
-  useEffect(() => {
-    if (!isPreviewMode) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      switch (e.key) {
-        case "ArrowRight":
-        case "Space":
-          nextSlide();
-          break;
-        case "ArrowLeft":
-          prevSlide();
-          break;
-        case "Escape":
-          setIsPreviewMode(false);
-          break;
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isPreviewMode, nextSlide, prevSlide]);
-
-  // 添加触摸手势支持
-  useEffect(() => {
-    if (!isPreviewMode || !previewContentRef.current) return;
-
-    let touchStartX = 0;
-    let touchEndX = 0;
-
-    const handleTouchStart = (e: TouchEvent) => {
-      touchStartX = e.changedTouches[0].screenX;
-      // 触摸时重置闲置状态
-      handleUiInteraction();
-    };
-
-    const handleTouchEnd = (e: TouchEvent) => {
-      touchEndX = e.changedTouches[0].screenX;
-      handleSwipe();
-    };
-
-    const handleTouchMove = () => {
-      // 触摸移动时重置闲置状态
-      handleUiInteraction();
-    };
-
-    const handleSwipe = () => {
-      const swipeThreshold = 50;
-      if (touchEndX < touchStartX - swipeThreshold) {
-        nextSlide();
-      }
-      if (touchEndX > touchStartX + swipeThreshold) {
-        prevSlide();
-      }
-    };
-
-    const element = previewContentRef.current;
-    element.addEventListener("touchstart", handleTouchStart, { passive: true });
-    element.addEventListener("touchend", handleTouchEnd, { passive: true });
-    element.addEventListener("touchmove", handleTouchMove, { passive: true });
-
-    return () => {
-      element.removeEventListener("touchstart", handleTouchStart);
-      element.removeEventListener("touchend", handleTouchEnd);
-      element.removeEventListener("touchmove", handleTouchMove);
-    };
-  }, [isPreviewMode, nextSlide, prevSlide, handleUiInteraction]);
-
-  // 预览模式交互处理
-  const handlePreviewMouseMove = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (!isPreviewMode) return;
-
-      handleUiInteraction();
-
-      // 当鼠标移动到屏幕左侧边缘时显示小地图
-      if (e.clientX < 20) {
-        setShowPreviewMinimap(true);
-        resetTimer('minimap', () => {}, 0);
-      }
-    },
-    [isPreviewMode, handleUiInteraction, resetTimer]
-  );
-
-  // 小地图交互处理
-  const handleMinimapMouseEnter = useCallback(() => {
-    if (timersRef.current.minimap) {
-      clearTimeout(timersRef.current.minimap);
-      timersRef.current.minimap = null;
-    }
-  }, []);
-
-  const handleMinimapMouseLeave = useCallback(() => {
-    setShowPreviewMinimap(false);
-  }, []);
-
-  const handlePreviewSlideSelect = useCallback((index: number) => {
-    setCurrentSlideIndex(index);
-  }, []);
-
-  const handleSideHintClick = useCallback(() => {
-    setShowPreviewMinimap(true);
-  }, []);
-
   // 处理节点选择
   const handleNodeSelect = useCallback((index: number) => {
     setActiveNodeIndex(index);
@@ -253,62 +117,84 @@ const SharePage = () => {
     }
   }, []);
 
-  // 获取节点标题
-  const getNodeTitle = useCallback((node: NodeRelation) => {
-    // 尝试从nodeData.title获取标题
-    if (node.nodeData?.title) return node.nodeData.title;
+  // 处理从指定节点开始幻灯片预览
+  const handleStartSlideshow = useCallback(
+    (nodeId: string) => {
+      // 查找点击的节点索引
+      const nodeIndex = nodes.findIndex((node) => node.nodeId === nodeId);
+      if (nodeIndex !== -1) {
+        // 设置当前幻灯片索引为找到的节点索引
+        setCurrentSlideIndex?.(nodeIndex);
+        // 打开预览模式
+        setIsPreviewMode(true);
+      }
+    },
+    [nodes, setCurrentSlideIndex]
+  );
 
-    // 尝试从nodeData.metadata.title获取标题
-    if (node.nodeData?.metadata?.title) return node.nodeData.metadata.title;
+  // 宽屏模式处理
+  const handleWideMode = useCallback(
+    (nodeId: string) => {
+      const node = nodes.find((n) => n.nodeId === nodeId);
+      if (node) {
+        setWideMode({ isActive: true, nodeId });
+      }
+    },
+    [nodes]
+  );
 
-    // 根据节点类型返回默认标题
-    if (node.nodeType === "codeArtifact") return "代码组件";
-    if (node.nodeType === "document") return "文档组件";
-    if (node.nodeType === "skillResponse") return "技能响应";
-
-    return `幻灯片 ${node.orderIndex + 1}`;
+  // 关闭宽屏模式
+  const handleCloseWideMode = useCallback(() => {
+    setWideMode({ isActive: false, nodeId: null });
   }, []);
 
-  // 清理所有定时器
+  // 宽屏模式键盘快捷键
   useEffect(() => {
-    return () => {
-      Object.values(timersRef.current).forEach(timer => {
-        if (timer) clearTimeout(timer);
-      });
+    if (!wideMode.isActive) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleCloseWideMode();
+      }
     };
-  }, []);
 
-  // 预览模式状态变化处理
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [wideMode.isActive, handleCloseWideMode]);
+
+  // 添加 Escape 键退出幻灯片预览模式
   useEffect(() => {
-    if (isPreviewMode) {
-      resetIdleState();
-      updateUiState({ showNav: true });
-    } else {
-      updateUiState({ isIdle: false, showNav: false });
-      Object.keys(timersRef.current).forEach(key => {
-        const timerKey = key as keyof typeof timersRef.current;
-        if (timersRef.current[timerKey]) {
-          clearTimeout(timersRef.current[timerKey]!);
-          timersRef.current[timerKey] = null;
-        }
-      });
-    }
-  }, [isPreviewMode, resetIdleState, updateUiState]);
+    if (!isPreviewMode) return;
+
+    const handleEscapeKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        togglePreviewMode();
+      }
+    };
+
+    window.addEventListener("keydown", handleEscapeKey);
+    return () => window.removeEventListener("keydown", handleEscapeKey);
+  }, [isPreviewMode, togglePreviewMode]);
 
   // 加载状态
   if (isLoading) {
     return (
-      <div className="flex h-full w-full grow items-center justify-center">
-        <Spin size="large" tip={t("codeArtifact.shareLoading")} />
+      <div className="flex items-center justify-center h-screen">
+        <Spin size="large" />
       </div>
     );
   }
 
-  // 无数据状态
-  if (!pageData || !nodes.length) {
+  // 数据加载失败或无效分享链接
+  if (!shareData || !pageData.page) {
     return (
-      <div className="flex h-full w-full grow items-center justify-center">
-        <div className="text-gray-500">{t("codeArtifact.noCodeFound")}</div>
+      <div className="flex flex-col items-center justify-center h-screen">
+        <div className="text-2xl font-medium mb-4 text-gray-700">
+          {t("Invalid share link")}
+        </div>
+        <div className="text-gray-500">
+          {t("This share link may have expired or does not exist")}
+        </div>
       </div>
     );
   }
@@ -316,290 +202,162 @@ const SharePage = () => {
   // 预览模式渲染
   if (isPreviewMode) {
     return (
-      <Layout className="h-screen overflow-hidden bg-black">
-        {collapse && <PoweredByRefly onClick={toggleSidebar} />}
-
-        {/* 主内容区域 */}
-        <div
-          ref={previewContentRef}
-          className={`preview-content-container relative ${uiState.isIdle ? "idle" : ""} ${uiState.showNav ? "show-nav" : ""}`}
+      <div className="h-screen overflow-hidden bg-black">
+        <PreviewMode
+          nodes={nodes}
+          currentSlideIndex={currentSlideIndex}
+          showPreviewMinimap={showPreviewMinimap}
+          uiState={uiState}
+          title={pageData.page?.title || "分享页面"}
+          onNext={nextSlide}
+          onPrev={prevSlide}
+          onClose={togglePreviewMode}
           onMouseMove={handlePreviewMouseMove}
-        >
-          {/* 预览导航栏 */}
-          <div className="preview-header" onMouseEnter={handleUiInteraction}>
-            <div className="preview-header-title">
-              {pageData.page?.title || "分享页面"}
-              <span className="page-indicator">
-                {currentSlideIndex + 1}/{nodes.length}
-              </span>
-            </div>
-            <div className="preview-header-controls">
-              <Button
-                type="text"
-                icon={<LeftCircleOutlined />}
-                onClick={prevSlide}
-                disabled={currentSlideIndex <= 0}
-                className={`preview-control-button ${currentSlideIndex <= 0 ? "disabled" : ""}`}
-              />
-              <Button
-                type="text"
-                icon={<RightCircleOutlined />}
-                onClick={nextSlide}
-                disabled={currentSlideIndex >= nodes.length - 1}
-                className={`preview-control-button ${currentSlideIndex >= nodes.length - 1 ? "disabled" : ""}`}
-              />
-              <Button
-                type="text"
-                icon={<CloseCircleOutlined />}
-                onClick={togglePreviewMode}
-                className="preview-control-button close-button"
-              />
-            </div>
-          </div>
-
-          {/* 小地图提示 - 当小地图隐藏时显示 */}
-          {!showPreviewMinimap && nodes.length > 1 && (
-            <div className="side-hint" onClick={handleSideHintClick}>
-              <UnorderedListOutlined />
-            </div>
-          )}
-
-          {/* 预览模式小地图 */}
-          <div
-            className={`preview-minimap ${showPreviewMinimap ? "preview-minimap-show" : ""}`}
-            onMouseEnter={handleMinimapMouseEnter}
-            onMouseLeave={handleMinimapMouseLeave}
-          >
-            <div className="preview-minimap-header">导航目录</div>
-            <div className="preview-minimap-content">
-              {nodes.map((node, index) => (
-                <div
-                  key={`minimap-slide-${index}`}
-                  className={`preview-minimap-slide ${currentSlideIndex === index ? "active" : ""}`}
-                  onClick={() => handlePreviewSlideSelect(index)}
-                >
-                  <div className="preview-minimap-number">{index + 1}</div>
-                  <div className="preview-minimap-thumbnail">
-                    <div
-                      style={{
-                        height: "100%",
-                        overflow: "hidden",
-                        transform: "scale(0.95)",
-                        background: "#fff",
-                        pointerEvents: "none",
-                        userSelect: "none",
-                      }}
-                    >
-                      <NodeRenderer
-                        node={node}
-                        isActive={false}
-                        isFullscreen={false}
-                        isModal={true}
-                        isMinimap={true}
-                      />
-                    </div>
-                    {/* 透明遮罩层 */}
-                    <div className="absolute inset-0 bg-transparent" />
-                  </div>
-                  <div className="preview-minimap-title">
-                    {getNodeTitle(node)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* 主要预览内容 */}
-          <div className="preview-content">
-            <div
-              className="w-full h-full preview-slide"
-              style={{
-                animationName: "slideIn",
-                animationDuration: "0.5s",
-                animationTimingFunction: "ease-out",
-                animationFillMode: "forwards",
-              }}
-            >
-              <NodeRenderer
-                node={nodes[currentSlideIndex]}
-                isActive={true}
-                isFullscreen={true}
-                isModal={true}
-              />
-            </div>
-          </div>
-
-          {/* 滑动提示 - 只在移动设备上显示 */}
-          {nodes.length > 1 && (
-            <div className="swipe-hint md:hidden">
-              左右滑动切换幻灯片 ({currentSlideIndex + 1}/{nodes.length})
-            </div>
-          )}
-
-          {/* 预览模式底部进度指示器 */}
-          {nodes.length > 0 && (
-            <div className="preview-footer" onMouseEnter={handleUiInteraction}>
-              <div className="dots-container">
-                {nodes.map((_, index) => (
-                  <div
-                    key={`preview-dot-${index}`}
-                    className={`preview-dot ${
-                      index === currentSlideIndex ? "active" : ""
-                    }`}
-                    onClick={() => setCurrentSlideIndex(index)}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </Layout>
+          onSideHintClick={handleSideHintClick}
+          onUiInteraction={handleUiInteraction}
+          onPreviewSlideSelect={handlePreviewSlideSelect}
+          onMinimapMouseEnter={handleMinimapMouseEnter}
+          onMinimapMouseLeave={handleMinimapMouseLeave}
+          getNodeTitle={getNodeTitle}
+          previewContentRef={previewContentRef}
+        />
+      </div>
     );
   }
 
-  // 常规模式渲染
+  // 常规模式渲染 - 使用抽象的 PageLayout 组件
   return (
-    <Layout className="h-screen overflow-hidden bg-[#f7f9fc]">
-      {/* 顶部导航栏 */}
-      <div className="flex justify-between items-center px-4 py-2.5 bg-white border-b border-gray-200 z-20 shadow-sm">
-        <div className="flex items-center">
-          <div className="text-lg font-medium px-2">
-            {pageData.page?.title || "分享页面"}
-          </div>
-          {pageData.shareInfo && (
-            <div className="text-sm text-gray-500 ml-2">
-              分享于: {new Date(pageData.shareInfo.sharedAt).toLocaleString()}
+    <>
+      <PageLayout
+        showMinimap={showMinimap}
+        collapse={collapse}
+        nodes={nodes}
+        activeNodeIndex={activeNodeIndex}
+        onNodeSelect={handleNodeSelect}
+        toggleMinimap={toggleMinimap}
+        toggleSidebar={toggleSidebar}
+        readonly={true}
+        headerContent={
+          <div className="flex justify-between items-center w-full">
+            <div className="flex items-center">
+              <div className="text-lg font-medium px-2">
+                {pageData.page?.title || "分享页面"}
+              </div>
+              {pageData.shareInfo && (
+                <div className="text-sm text-gray-500 ml-2">
+                  分享于: {new Date(pageData.shareInfo.sharedAt).toLocaleString()}
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        <div className="flex items-center">
-          {nodes.length > 0 && (
-            <Tooltip title="幻灯片预览">
-              <Button
-                type="text"
-                onClick={togglePreviewMode}
-                icon={<PlayCircleOutlined />}
-                className="flex items-center mx-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-              >
-                幻灯片预览
-              </Button>
-            </Tooltip>
-          )}
-        </div>
-      </div>
-
-      {/* 主体内容区 */}
-      <Layout className="flex-1 overflow-hidden">
-        {/* 左侧缩略图面板 */}
-        {showMinimap && (
-          <Layout.Sider
-            width={180}
-            theme="light"
-            className="bg-[#f7f9fc] border-r border-gray-200 overflow-hidden relative"
-          >
-            <SidebarMinimap
-              nodes={nodes}
-              activeNodeIndex={activeNodeIndex}
-              onNodeSelect={handleNodeSelect}
-              onReorderNodes={() => {}}
-              readonly={true}
-            />
-            {/* 隐藏小地图的按钮 */}
-            <Button
-              type="text"
-              icon={<LeftOutlined />}
-              onClick={toggleMinimap}
-              className="absolute top-2 right-2 z-10 bg-white shadow-sm hover:bg-gray-100 border border-gray-200 rounded-full h-6 w-6 flex items-center justify-center p-0"
-              size="small"
-            />
-          </Layout.Sider>
+            <div className="flex items-center">
+              {nodes.length > 0 && (
+                <Button
+                  type="text"
+                  onClick={togglePreviewMode}
+                  icon={<PlayCircleOutlined />}
+                  className="flex items-center mx-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                >
+                  幻灯片预览
+                </Button>
+              )}
+            </div>
+          </div>
+        }
+      >
+        {/* 页面描述区域 */}
+        {pageData.page?.description && (
+          <div className="mb-6 p-4 bg-white rounded-lg shadow-sm">
+            <div className="text-gray-700 text-base">
+              {pageData.page.description}
+            </div>
+          </div>
         )}
 
-        {/* 中间内容区域 */}
-        <Layout.Content
-          className="relative overflow-y-auto overflow-x-hidden"
-          style={{ backgroundColor: "#f7f9fc" }}
-        >
-          {/* 显示小地图的按钮 */}
-          {!showMinimap && (
-            <div className="absolute left-0 top-14 z-10">
-              <Tooltip title="显示导航面板" placement="right">
-                <Button
-                  type="default"
-                  icon={<UnorderedListOutlined />}
-                  onClick={toggleMinimap}
-                  className="bg-white shadow-md rounded-r-md border-l-0 h-8 hover:bg-gray-50 border border-gray-200"
-                  style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}
+        {/* 内容模块 */}
+        {nodes.length > 0 ? (
+          <div className="space-y-6">
+            {nodes.map((node, index) => (
+              <div
+                key={node.relationId || `content-${index}`}
+                id={`content-block-${index}`}
+                onClick={() => setActiveNodeIndex(index)}
+                className={`transition-all duration-300 h-[400px] rounded-lg bg-white ${
+                  activeNodeIndex === index
+                    ? "shadow-[0_10px_30px_rgba(0,0,0,0.15)] transform -translate-y-1 border border-blue-400"
+                    : "shadow-md hover:shadow-lg"
+                }`}
+              >
+                <NodeRenderer
+                  node={node}
+                  isActive={activeNodeIndex === index}
+                  onStartSlideshow={handleStartSlideshow}
+                  onWideMode={handleWideMode}
                 />
-              </Tooltip>
-            </div>
-          )}
-
-          {/* 展开全局侧边栏的按钮 */}
-          {collapse && (
-            <Button
-              type="text"
-              icon={<MenuUnfoldOutlined />}
-              onClick={toggleSidebar}
-              className="absolute top-4 right-4 z-10 bg-white shadow-sm hover:bg-gray-100 border border-gray-200 h-8 w-8 flex items-center justify-center p-0 rounded-md"
-            />
-          )}
-
-          <div
-            className="mx-auto py-4 px-8 mb-16"
-            style={{ maxWidth: "900px" }}
-          >
-            {/* 页面描述区域 */}
-            {pageData.page?.description && (
-              <div className="mb-6 p-4 bg-white rounded-lg shadow-sm">
-                <div className="text-gray-700 text-base">
-                  {pageData.page.description}
-                </div>
               </div>
-            )}
-
-            {/* 内容模块 */}
-            {nodes.length > 0 ? (
-              <div className="space-y-6">
-                {nodes.map((node, index) => (
-                  <div
-                    key={node.relationId || `content-${index}`}
-                    id={`content-block-${index}`}
-                    onClick={() => setActiveNodeIndex(index)}
-                    className={`transition-all duration-300 h-[400px] rounded-lg bg-white ${
-                      activeNodeIndex === index
-                        ? "shadow-[0_10px_30px_rgba(0,0,0,0.15)] transform -translate-y-1 border border-blue-400"
-                        : "shadow-md hover:shadow-lg"
-                    }`}
-                  >
-                    <NodeRenderer
-                      node={node}
-                      isActive={activeNodeIndex === index}
-                      readonly={true}
-                    />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-16 bg-white rounded-lg border border-dashed border-gray-300 shadow-sm">
-                <div className="text-6xl text-gray-300 mb-6">
-                  <FileTextOutlined />
-                </div>
-                <h3 className="text-xl font-medium text-gray-500 mb-3">
-                  暂无内容
-                </h3>
-                <p className="text-gray-400 mb-6">
-                  该分享页面没有任何内容
-                </p>
-              </div>
-            )}
-
-            <div className="h-24"></div>
+            ))}
           </div>
-        </Layout.Content>
-      </Layout>
-    </Layout>
+        ) : (
+          <div className="text-center py-16 bg-white rounded-lg border border-dashed border-gray-300 shadow-sm">
+            <div className="text-6xl text-gray-300 mb-6">
+              <FileTextOutlined />
+            </div>
+            <h3 className="text-xl font-medium text-gray-500 mb-3">
+              暂无内容
+            </h3>
+            <p className="text-gray-400 mb-6">
+              该分享页面没有任何内容
+            </p>
+          </div>
+        )}
+
+        <div className="h-24"></div>
+      </PageLayout>
+      
+      {/* 宽屏模式弹窗 */}
+      {wideMode.isActive && (
+        <Modal
+          open={wideMode.isActive}
+          footer={null}
+          onCancel={handleCloseWideMode}
+          width="85%"
+          style={{ top: 20 }}
+          bodyStyle={{
+            maxHeight: "calc(100vh - 100px)",
+            padding: 0,
+            overflow: "hidden",
+          }}
+          className="wide-mode-modal"
+          closeIcon={
+            <CloseCircleOutlined className="text-gray-500 hover:text-red-500" />
+          }
+          maskStyle={{ background: "rgba(0, 0, 0, 0.65)" }}
+        >
+          <div className="bg-white h-full w-full flex flex-col rounded-lg overflow-hidden">
+            {/* 宽屏模式内容 */}
+            <div className="flex-1 overflow-auto">
+              {wideMode.nodeId && nodes.find((n) => n.nodeId === wideMode.nodeId) ? (
+                <div className="h-[calc(100vh-160px)]">
+                  <NodeRenderer
+                    node={nodes.find((n) => n.nodeId === wideMode.nodeId)!}
+                    isActive={true}
+                    isFullscreen={false}
+                    isModal={true}
+                    isMinimap={false}
+                    onStartSlideshow={handleStartSlideshow}
+                    onWideMode={handleWideMode}
+                  />
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-gray-500">无法加载内容</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </Modal>
+      )}
+    </>
   );
 };
 

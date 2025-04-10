@@ -1,9 +1,10 @@
-import React, { useMemo, CSSProperties } from "react";
+import { useMemo, CSSProperties } from "react";
 import { Button, message, Tooltip } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { type NodeRelation } from "./ArtifactRenderer";
 import { NodeRenderer } from "./NodeRenderer";
+import { getNodeTitle } from "../utils/nodeUtils";
 
 // 侧边小地图组件
 function SidebarMinimap({
@@ -11,11 +12,13 @@ function SidebarMinimap({
   activeNodeIndex,
   onNodeSelect,
   onReorderNodes,
+  readonly = false,
 }: {
   nodes: NodeRelation[];
   activeNodeIndex: number;
   onNodeSelect: (index: number) => void;
   onReorderNodes: (newOrder: NodeRelation[]) => void;
+  readonly?: boolean;
 }) {
   // 处理拖拽结束事件
   const handleDragEnd = (result: any) => {
@@ -57,23 +60,25 @@ function SidebarMinimap({
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-between p-2 border-b border-gray-200">
-        <span className="text-sm font-medium text-gray-600">代码组件</span>
-        <Button
-          type="text"
-          size="small"
-          icon={<PlusOutlined />}
-          onClick={addNewSlide}
-        />
+        <span className="text-sm font-medium text-gray-600">导航目录</span>
+        {!readonly && (
+          <Button
+            type="text"
+            size="small"
+            icon={<PlusOutlined />}
+            onClick={addNewSlide}
+          />
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
         {nodes.length === 0 ? (
           <div className="text-center p-6 text-gray-400">
-            <div className="text-xs">暂无代码组件</div>
+            <div className="text-xs">暂无导航目录</div>
           </div>
         ) : (
           <DragDropContext onDragEnd={handleDragEnd}>
-            <Droppable droppableId="sidebar-nodes">
+            <Droppable droppableId="sidebar-nodes" isDropDisabled={readonly}>
               {(provided) => (
                 <div
                   {...provided.droppableProps}
@@ -85,13 +90,14 @@ function SidebarMinimap({
                       key={node.relationId || `node-${index}`}
                       draggableId={node.relationId || `node-${index}`}
                       index={index}
+                      isDragDisabled={readonly}
                     >
                       {(provided) => (
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
-                          className={`relative rounded cursor-grab transition border overflow-hidden shadow-sm hover:shadow-md ${
+                          className={`relative rounded ${!readonly ? 'cursor-grab' : 'cursor-pointer'} transition border overflow-hidden shadow-sm hover:shadow-md ${
                             activeNodeIndex === index
                               ? "ring-2 ring-purple-500 bg-purple-50"
                               : "border-gray-200 hover:border-purple-300"
@@ -105,12 +111,10 @@ function SidebarMinimap({
                                 {index + 1}.
                               </span>
                               <Tooltip
-                                title={
-                                  node.nodeData?.metadata?.title || "未命名"
-                                }
+                                title={getNodeTitle(node)}
                               >
                                 <span className="truncate text-xs font-medium text-gray-600 max-w-[100px]">
-                                  {node.nodeData?.metadata?.title || "未命名"}
+                                  {getNodeTitle(node)}
                                 </span>
                               </Tooltip>
                             </div>
