@@ -15,7 +15,7 @@ function PagesPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  // 使用 useListPages 查询钩子获取页面列表
+  // Use useListPages query hook to get page list
   const {
     data: pagesData,
     isLoading: loading,
@@ -23,15 +23,15 @@ function PagesPage() {
     error,
   } = useListPages({}, undefined);
 
-  // 处理错误
+  // Handle errors
   useEffect(() => {
     if (error) {
-      console.error('获取页面列表失败');
+      console.error('Failed to fetch page list');
       message.error(t('pages.list.fetchFailed'));
     }
   }, [error, t]);
 
-  // 使用 useSharePage 和 useDeletePage 变更钩子处理页面操作
+  // Use useSharePage and useDeletePage mutation hooks to handle page operations
   const { mutate: sharePage, isPending: isSharing } = useSharePage(undefined, {
     onSuccess: (data) => {
       if (data?.data?.data?.shareUrl) {
@@ -40,7 +40,7 @@ function PagesPage() {
       }
     },
     onError: () => {
-      console.error('分享页面失败');
+      console.error('Failed to share page');
       message.error(t('pages.list.shareFailed'));
     },
   });
@@ -51,7 +51,7 @@ function PagesPage() {
       refetchPages();
     },
     onError: () => {
-      console.error('删除页面失败');
+      console.error('Failed to delete page');
       message.error(t('pages.list.deleteFailed'));
     },
   });
@@ -68,7 +68,7 @@ function PagesPage() {
     deletePage({ path: { pageId } });
   };
 
-  // 提取页面数据
+  // Extract page data
   const pages = pagesData?.data?.pages || [];
 
   const columns = [
@@ -153,7 +153,7 @@ function PagesPage() {
             total: pagesData?.data?.total,
             current: pagesData?.data?.page,
             onChange: (_page, _pageSize) => {
-              // 切换页面时重新查询
+              // Refresh query when changing page
               refetchPages();
             },
           }}

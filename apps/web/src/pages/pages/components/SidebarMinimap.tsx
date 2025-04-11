@@ -7,7 +7,7 @@ import { NodeRenderer } from './NodeRenderer';
 import { getNodeTitle } from '../utils/nodeUtils';
 import { useTranslation } from 'react-i18next';
 
-// 侧边小地图组件
+// Sidebar minimap component
 function SidebarMinimap({
   nodes,
   activeNodeIndex,
@@ -23,7 +23,7 @@ function SidebarMinimap({
 }) {
   const { t } = useTranslation();
 
-  // 处理拖拽结束事件
+  // Handle drag end event
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
 
@@ -36,10 +36,10 @@ function SidebarMinimap({
     const [reorderedItem] = items.splice(sourceIndex, 1);
     items.splice(destinationIndex, 0, reorderedItem);
 
-    // 更新节点顺序
+    // Update node order
     onReorderNodes(items);
 
-    // 在拖拽后将选中节点设置为拖拽后的节点位置
+    // After dragging, set the selected node to the dragged node's new position
     onNodeSelect(destinationIndex);
   };
 
@@ -47,8 +47,8 @@ function SidebarMinimap({
     message.info(t('pages.sidebar.addNewSlideInDevelopment'));
   };
 
-  // 缓存缩略卡片样式
-  const cardStyle = useMemo(
+  // Cache thumbnail card style
+  const thumbnailCardStyle = useMemo(
     (): CSSProperties => ({
       pointerEvents: 'none',
       transform: 'scale(0.4)',
@@ -100,7 +100,7 @@ function SidebarMinimap({
                           }`}
                           onClick={() => onNodeSelect(index)}
                         >
-                          {/* 卡片标题 */}
+                          {/* Card title */}
                           <div className="py-1.5 px-2 bg-white border-b border-gray-100 z-10 relative flex items-center justify-between">
                             <div className="flex items-center gap-1.5 truncate">
                               <span className="text-xs text-gray-500">{index + 1}.</span>
@@ -112,13 +112,13 @@ function SidebarMinimap({
                             </div>
                           </div>
 
-                          {/* 内容预览区 */}
+                          {/* Content preview area */}
                           <div className="h-20 overflow-hidden relative bg-gray-50">
-                            <div style={cardStyle}>
+                            <div style={thumbnailCardStyle}>
                               <NodeRenderer node={node} isMinimap={true} />
                             </div>
 
-                            {/* 渐变遮罩 */}
+                            {/* Gradient mask */}
                             <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent" />
                           </div>
                         </div>

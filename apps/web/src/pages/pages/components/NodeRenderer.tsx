@@ -10,7 +10,7 @@ import {
 } from './LazyComponents';
 import { useTranslation } from 'react-i18next';
 
-// 内容渲染组件
+// Content renderer component
 const NodeRenderer = memo(
   ({
     node,
@@ -31,14 +31,14 @@ const NodeRenderer = memo(
   }) => {
     const { t } = useTranslation();
 
-    // 使用useMemo缓存渲染内容，避免不必要的重新计算
+    // Use useMemo to cache rendered content, avoiding unnecessary recalculations
     const renderContent = useMemo(() => {
-      // 根据不同节点类型返回对应的渲染器
+      // Return appropriate renderer based on node type
       switch (node.nodeType) {
         case 'codeArtifact':
           return (
             <div className="flex flex-col h-full">
-              {/* 只在常规编辑模式（非全屏模式且非模态框模式）下显示header */}
+              {/* Only show header in regular editing mode (not full screen or modal) */}
               {!isFullscreen && !isModal && (
                 <NodeBlockHeader
                   node={node}
@@ -62,7 +62,7 @@ const NodeRenderer = memo(
         case 'document':
           return (
             <div className="flex flex-col h-full">
-              {/* 只在常规编辑模式（非全屏模式且非模态框模式）下显示header */}
+              {/* Only show header in regular editing mode (not full screen or modal) */}
               {!isFullscreen && !isModal && (
                 <NodeBlockHeader
                   node={node}
@@ -86,7 +86,7 @@ const NodeRenderer = memo(
         case 'skillResponse':
           return (
             <div className="flex flex-col h-full">
-              {/* 只在常规编辑模式（非全屏模式且非模态框模式）下显示header */}
+              {/* Only show header in regular editing mode (not full screen or modal) */}
               {!isFullscreen && !isModal && (
                 <NodeBlockHeader
                   node={node}
@@ -110,7 +110,7 @@ const NodeRenderer = memo(
         case 'image':
           return (
             <div className="flex flex-col h-full">
-              {/* 只在常规编辑模式（非全屏模式且非模态框模式）下显示header */}
+              {/* Only show header in regular editing mode (not full screen or modal) */}
               {!isFullscreen && !isModal && (
                 <NodeBlockHeader
                   node={node}
@@ -132,7 +132,7 @@ const NodeRenderer = memo(
             </div>
           );
         default:
-          // 不支持的类型显示提示
+          // Display message for unsupported types
           return (
             <div
               className={`p-6 bg-white rounded-lg flex flex-col items-center justify-center text-gray-400 ${
@@ -152,9 +152,9 @@ const NodeRenderer = memo(
 
     return renderContent;
   },
-  // 自定义比较函数，只有当关键属性变化时才重新渲染
+  // Custom comparison function, only re-render when key properties change
   (prevProps, nextProps) => {
-    // 检查关键属性是否变化
+    // Check if key properties have changed
     return (
       prevProps.node.nodeId === nextProps.node.nodeId &&
       prevProps.node.nodeType === nextProps.node.nodeType &&

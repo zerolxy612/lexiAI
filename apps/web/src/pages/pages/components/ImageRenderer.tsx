@@ -3,7 +3,7 @@ import { type NodeRelation } from './ArtifactRenderer';
 import { ImagePreview } from '@refly-packages/ai-workspace-common/components/common/image-preview';
 import { useTranslation } from 'react-i18next';
 
-// 图片渲染组件
+// Image renderer component
 const ImageRenderer = memo(
   ({
     node,
@@ -17,11 +17,11 @@ const ImageRenderer = memo(
     const { t } = useTranslation();
     const [isPreviewModalVisible, setIsPreviewModalVisible] = useState(false);
 
-    // 从节点数据中获取图片URL
+    // Get image URL from node data
     const imageUrl = node.nodeData?.metadata?.imageUrl;
     const title = node.nodeData?.title || t('pages.components.image.defaultTitle');
 
-    // 如果没有图片URL，显示提示
+    // If no image URL, show a prompt
     if (!imageUrl) {
       return (
         <div className="h-full flex items-center justify-center bg-white rounded p-3">
@@ -41,7 +41,7 @@ const ImageRenderer = memo(
         }`}
       >
         <div className="h-full w-full overflow-hidden flex flex-col">
-          {/* 图片内容区域 */}
+          {/* Image content area */}
           <div className="flex-1 overflow-auto p-4">
             <div
               className="cursor-pointer hover:opacity-90 transition-opacity"
@@ -55,7 +55,7 @@ const ImageRenderer = memo(
             </div>
           </div>
 
-          {/* 预览模态框 */}
+          {/* Preview modal */}
           {isPreviewModalVisible && (
             <ImagePreview
               isPreviewModalVisible={isPreviewModalVisible}

@@ -1,4 +1,4 @@
-// 页面实体类型接口定义
+// Page entity type interface definitions
 export interface PageNodeRelation {
   relation_id: string;
   page_id: string;
@@ -37,7 +37,7 @@ export interface PageVersion {
   created_at: Date;
 }
 
-// 服务方法返回类型
+// Service method return types
 export interface PageDetailResult {
   page: Page;
   nodeRelations: PageNodeRelation[];
@@ -107,7 +107,7 @@ export interface NodeRelationDto {
   orderIndex?: number;
 }
 
-// 专门用于更新节点顺序的DTO
+// DTO specifically for updating node order
 export interface NodeRelationOrderDto {
   relationId: string;
   orderIndex: number;

@@ -7,7 +7,7 @@ import { useSiderStoreShallow } from '@refly-packages/ai-workspace-common/stores
 import { useFetchShareData } from '@refly-packages/ai-workspace-common/hooks/use-fetch-share-data';
 import '../pages/styles/preview-mode.css';
 
-// 导入抽象的组件和 hooks
+// Import abstract components and hooks
 import { NodeRenderer } from '../pages/components/NodeRenderer';
 import { type NodeRelation } from '../pages/components/ArtifactRenderer';
 import PageLayout from '../pages/components/PageLayout';
@@ -25,7 +25,7 @@ const SharePage = () => {
   }));
   const { data: shareData, loading: isLoading } = useFetchShareData(shareId);
 
-  // 常规模式和预览模式相关状态
+  // Regular mode and preview mode related states
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [showMinimap, setShowMinimap] = useState(true);
   const [activeNodeIndex, setActiveNodeIndex] = useState(0);
@@ -34,7 +34,7 @@ const SharePage = () => {
     nodeId: null,
   });
 
-  // 提取页面数据和节点关系
+  // Extract page data and node relations
   const pageData = useMemo(() => {
     if (!shareData) return null;
     return {
@@ -47,13 +47,13 @@ const SharePage = () => {
     };
   }, [shareData]);
 
-  // 节点数据
+  // Node data
   const nodes = useMemo<NodeRelation[]>(() => {
     if (!pageData?.nodeRelations) return [];
     return pageData.nodeRelations;
   }, [pageData?.nodeRelations]);
 
-  // 使用抽象的 UI 状态管理 hook
+  // Use abstract UI state management hook
   const {
     uiState,
     showPreviewMinimap,
@@ -66,7 +66,7 @@ const SharePage = () => {
     isPreviewMode,
   });
 
-  // 使用抽象的幻灯片预览 hook
+  // Use abstract slideshow preview hook
   const {
     currentSlideIndex,
     nextSlide,
@@ -81,57 +81,57 @@ const SharePage = () => {
     handleUiInteraction,
   });
 
-  // 切换预览模式
+  // Toggle preview mode
   const togglePreviewMode = useCallback(() => {
     setIsPreviewMode((prev) => {
       if (!prev) {
-        // 进入预览模式时重置幻灯片索引
+        // Reset slideshow index when entering preview mode
         resetSlideIndex();
       }
       return !prev;
     });
   }, [resetSlideIndex]);
 
-  // 强制默认隐藏侧边栏
+  // Force hide sidebar by default
   useEffect(() => {
     setCollapse(true);
   }, [setCollapse]);
 
-  // 切换侧边栏
+  // Toggle sidebar
   const toggleSidebar = useCallback(() => {
     setCollapse(!collapse);
   }, [collapse, setCollapse]);
 
-  // 切换小地图
+  // Toggle minimap
   const toggleMinimap = useCallback(() => setShowMinimap(!showMinimap), [showMinimap]);
 
-  // 处理节点选择
+  // Handle node selection
   const handleNodeSelect = useCallback((index: number) => {
     setActiveNodeIndex(index);
 
-    // 滚动到对应的内容块
+    // Scroll to the corresponding content block
     const element = document.getElementById(`content-block-${index}`);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }, []);
 
-  // 处理从指定节点开始幻灯片预览
+  // Handle starting a slideshow from a specific node
   const handleStartSlideshow = useCallback(
     (nodeId: string) => {
-      // 查找点击的节点索引
+      // Find the index of the clicked node
       const nodeIndex = nodes.findIndex((node) => node.nodeId === nodeId);
       if (nodeIndex !== -1) {
-        // 设置当前幻灯片索引为找到的节点索引
+        // Set the current slideshow index to the found node index
         setCurrentSlideIndex?.(nodeIndex);
-        // 打开预览模式
+        // Open preview mode
         setIsPreviewMode(true);
       }
     },
     [nodes, setCurrentSlideIndex],
   );
 
-  // 宽屏模式处理
+  // Handle wide mode
   const handleWideMode = useCallback(
     (nodeId: string) => {
       const node = nodes.find((n) => n.nodeId === nodeId);
@@ -142,12 +142,12 @@ const SharePage = () => {
     [nodes],
   );
 
-  // 关闭宽屏模式
+  // Close wide mode
   const handleCloseWideMode = useCallback(() => {
     setWideMode({ isActive: false, nodeId: null });
   }, []);
 
-  // 宽屏模式键盘快捷键
+  // Wide mode keyboard shortcut
   useEffect(() => {
     if (!wideMode.isActive) return;
 
@@ -161,7 +161,7 @@ const SharePage = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [wideMode.isActive, handleCloseWideMode]);
 
-  // 添加 Escape 键退出幻灯片预览模式
+  // Add Escape key to exit slideshow preview mode
   useEffect(() => {
     if (!isPreviewMode) return;
 
@@ -175,7 +175,7 @@ const SharePage = () => {
     return () => window.removeEventListener('keydown', handleEscapeKey);
   }, [isPreviewMode, togglePreviewMode]);
 
-  // 加载状态
+  // Loading state
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -184,7 +184,7 @@ const SharePage = () => {
     );
   }
 
-  // 数据加载失败或无效分享链接
+  // Data loading failed or invalid share link
   if (!shareData || !pageData.page) {
     return (
       <div className="flex flex-col items-center justify-center h-screen">
@@ -196,7 +196,7 @@ const SharePage = () => {
     );
   }
 
-  // 预览模式渲染
+  // Preview mode rendering
   if (isPreviewMode) {
     return (
       <div className="fixed inset-0 bg-black z-50">
@@ -224,7 +224,7 @@ const SharePage = () => {
     );
   }
 
-  // 常规模式渲染 - 使用抽象的 PageLayout 组件
+  // Regular mode rendering - using abstract PageLayout component
   return (
     <>
       <PageLayout
@@ -265,14 +265,14 @@ const SharePage = () => {
           </div>
         }
       >
-        {/* 页面描述区域 */}
+        {/* Page description area */}
         {pageData?.page?.description && (
           <div className="mb-6 p-4 bg-white rounded-lg shadow-sm">
             <div className="text-gray-700 text-base">{pageData.page.description}</div>
           </div>
         )}
 
-        {/* 内容模块 */}
+        {/* Content modules */}
         {nodes.length > 0 ? (
           <div className="space-y-6">
             {nodes.map((node, index) => (
@@ -308,7 +308,7 @@ const SharePage = () => {
         <div className="h-24" />
       </PageLayout>
 
-      {/* 宽屏模式弹窗 */}
+      {/* Wide mode modal */}
       {wideMode.isActive && (
         <Modal
           open={wideMode.isActive}
@@ -326,7 +326,7 @@ const SharePage = () => {
           maskStyle={{ background: 'rgba(0, 0, 0, 0.65)' }}
         >
           <div className="bg-white h-full w-full flex flex-col rounded-lg overflow-hidden">
-            {/* 宽屏模式内容 */}
+            {/* Wide mode content */}
             <div className="flex-1 overflow-auto">
               {wideMode.nodeId && nodes.find((n) => n.nodeId === wideMode.nodeId) ? (
                 <div className="h-[calc(100vh-160px)]">

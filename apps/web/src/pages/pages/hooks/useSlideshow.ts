@@ -8,18 +8,18 @@ interface UseSlideshowOptions {
 }
 
 /**
- * 幻灯片预览模式 Hook
+ * Slideshow preview mode Hook
  */
 export const useSlideshow = ({
   nodes,
   isPreviewMode,
   handleUiInteraction,
 }: UseSlideshowOptions) => {
-  // 幻灯片状态
+  // Slideshow state
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const previewContentRef = useRef<HTMLDivElement>(null);
 
-  // 幻灯片导航方法
+  // Slideshow navigation methods
   const nextSlide = useCallback(() => {
     if (currentSlideIndex < nodes.length - 1) {
       setCurrentSlideIndex(currentSlideIndex + 1);
@@ -32,12 +32,12 @@ export const useSlideshow = ({
     }
   }, [currentSlideIndex]);
 
-  // 处理幻灯片选择
+  // Handle slideshow selection
   const handlePreviewSlideSelect = useCallback((index: number) => {
     setCurrentSlideIndex(index);
   }, []);
 
-  // 键盘导航控制
+  // Keyboard navigation control
   useEffect(() => {
     if (!isPreviewMode) return;
 
@@ -51,7 +51,7 @@ export const useSlideshow = ({
           prevSlide();
           break;
         case 'Escape':
-          // 这里不直接设置 isPreviewMode，而是通过外部回调处理
+          // Don't set isPreviewMode directly, handle through external callback
           break;
       }
     };
@@ -60,7 +60,7 @@ export const useSlideshow = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isPreviewMode, nextSlide, prevSlide]);
 
-  // 添加触摸手势支持
+  // Add touch gesture support
   useEffect(() => {
     if (!isPreviewMode || !previewContentRef.current) return;
 
@@ -69,7 +69,7 @@ export const useSlideshow = ({
 
     const handleTouchStart = (e: TouchEvent) => {
       touchStartX = e.changedTouches[0].screenX;
-      // 触摸时重置闲置状态
+      // Reset idle state on touch
       handleUiInteraction();
     };
 
@@ -79,7 +79,7 @@ export const useSlideshow = ({
     };
 
     const handleTouchMove = () => {
-      // 触摸移动时重置闲置状态
+      // Reset idle state on touch movement
       handleUiInteraction();
     };
 
@@ -105,7 +105,7 @@ export const useSlideshow = ({
     };
   }, [isPreviewMode, nextSlide, prevSlide, handleUiInteraction]);
 
-  // 重置当前幻灯片索引
+  // Reset current slide index
   const resetSlideIndex = useCallback(() => {
     setCurrentSlideIndex(0);
   }, []);

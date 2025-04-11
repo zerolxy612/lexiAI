@@ -36,16 +36,16 @@ const PageLayout: React.FC<PageLayoutProps> = ({
 
   return (
     <Layout className="h-screen overflow-hidden bg-[#f7f9fc]">
-      {/* 顶部导航栏 */}
+      {/* Top navigation bar */}
       {headerContent && (
         <div className="flex justify-between items-center px-4 py-2.5 bg-white border-b border-gray-200 z-20 shadow-sm">
           {headerContent}
         </div>
       )}
 
-      {/* 主体内容区 */}
+      {/* Main content area */}
       <Layout className="flex-1 overflow-hidden">
-        {/* 左侧缩略图面板 */}
+        {/* Left thumbnail panel */}
         {showMinimap && (
           <Layout.Sider
             width={180}
@@ -59,7 +59,7 @@ const PageLayout: React.FC<PageLayoutProps> = ({
               onReorderNodes={onReorderNodes || (() => {})}
               readonly={!!readonly} // Fix readonly property
             />
-            {/* 隐藏小地图的按钮 */}
+            {/* Button to hide minimap */}
             <Button
               type="text"
               icon={<LeftOutlined />}
@@ -70,12 +70,12 @@ const PageLayout: React.FC<PageLayoutProps> = ({
           </Layout.Sider>
         )}
 
-        {/* 中间内容区域 */}
+        {/* Middle content area */}
         <Layout.Content
           className="relative overflow-y-auto overflow-x-hidden"
           style={{ backgroundColor: '#f7f9fc' }}
         >
-          {/* 显示小地图的按钮 */}
+          {/* Button to show minimap */}
           {!showMinimap && (
             <div className="absolute left-0 top-14 z-10">
               <Tooltip title={t('pages.preview.navigationDirectory')} placement="right">
@@ -90,7 +90,7 @@ const PageLayout: React.FC<PageLayoutProps> = ({
             </div>
           )}
 
-          {/* 展开全局侧边栏的按钮 */}
+          {/* Button to expand global sidebar */}
           {collapse && (
             <Button
               type="text"

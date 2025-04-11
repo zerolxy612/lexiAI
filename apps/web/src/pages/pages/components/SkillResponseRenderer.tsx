@@ -27,7 +27,7 @@ export const SkillResponseRenderer = memo(({ node, isMinimap = false }: SkillRes
   const entityId = node.nodeData?.entityId || '';
   const shareId = node.nodeData?.metadata?.shareId;
 
-  // 使用共享数据或直接获取 Action 结果
+  // Use shared data or directly get Action result
   const { data: shareData } = useFetchShareData<GetActionResultResponse['data']>(shareId);
 
   const { data: actionResultData } = useGetActionResult(
@@ -40,13 +40,13 @@ export const SkillResponseRenderer = memo(({ node, isMinimap = false }: SkillRes
     },
   );
 
-  // 合并数据源
+  // Merge data sources
   const resultData = useMemo(
     () => shareData || actionResultData?.data || null,
     [shareData, actionResultData],
   );
 
-  // 如果没有 entityId
+  // If no entityId
   if (!resultData) {
     return (
       <div className="h-full flex items-center justify-center bg-white rounded p-3">

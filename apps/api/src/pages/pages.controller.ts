@@ -30,8 +30,8 @@ import {
 export class PagesController {
   constructor(private readonly pagesService: PagesService) {}
 
-  @ApiOperation({ summary: 'Get all user pages' }) // 获取用户所有页面
-  @ApiResponse({ status: 200, description: 'Success' }) // 成功
+  @ApiOperation({ summary: 'Get all user pages' })
+  @ApiResponse({ status: 200, description: 'Get all user pages successfully' })
   @UseGuards(JwtAuthGuard)
   @Get()
   async listPages(
@@ -46,8 +46,8 @@ export class PagesController {
     });
   }
 
-  @ApiOperation({ summary: 'Create page' }) // 创建页面
-  @ApiResponse({ status: 201, description: 'Created successfully' }) // 创建成功
+  @ApiOperation({ summary: 'Create page' })
+  @ApiResponse({ status: 201, description: 'Page created successfully' })
   @UseGuards(JwtAuthGuard)
   @Post()
   async createPage(@LoginedUser() user: User, @Body() createPageDto: CreatePageDto) {
@@ -61,8 +61,8 @@ export class PagesController {
     });
   }
 
-  @ApiOperation({ summary: 'Get page details' }) // 获取页面详情
-  @ApiResponse({ status: 200, description: 'Success' }) // 成功
+  @ApiOperation({ summary: 'Get page details' })
+  @ApiResponse({ status: 200, description: 'Get page details successfully' })
   @UseGuards(JwtAuthGuard)
   @Get(':pageId')
   async getPageDetail(@LoginedUser() user: User, @Param('pageId') pageId: string) {
@@ -77,8 +77,8 @@ export class PagesController {
     });
   }
 
-  @ApiOperation({ summary: 'Update page' }) // 更新页面
-  @ApiResponse({ status: 200, description: 'Updated successfully' }) // 更新成功
+  @ApiOperation({ summary: 'Update page' })
+  @ApiResponse({ status: 200, description: 'Page updated successfully' })
   @UseGuards(JwtAuthGuard)
   @Patch(':pageId')
   async updatePage(
@@ -96,8 +96,8 @@ export class PagesController {
     });
   }
 
-  @ApiOperation({ summary: 'Update page (PUT)' }) // 更新页面(PUT)
-  @ApiResponse({ status: 200, description: 'Updated successfully' }) // 更新成功
+  @ApiOperation({ summary: 'Update page (PUT)' })
+  @ApiResponse({ status: 200, description: 'Page updated successfully' })
   @UseGuards(JwtAuthGuard)
   @Put(':pageId')
   async updatePagePut(
@@ -115,8 +115,8 @@ export class PagesController {
     });
   }
 
-  @ApiOperation({ summary: 'Publish page' }) // 发布页面
-  @ApiResponse({ status: 200, description: 'Published successfully' }) // 发布成功
+  @ApiOperation({ summary: 'Publish page' })
+  @ApiResponse({ status: 200, description: 'Page published successfully' })
   @UseGuards(JwtAuthGuard)
   @Post(':pageId/publish')
   async publishPage(@LoginedUser() user: User, @Param('pageId') pageId: string) {
@@ -128,8 +128,8 @@ export class PagesController {
     });
   }
 
-  @ApiOperation({ summary: 'Get page version content' }) // 获取页面版本内容
-  @ApiResponse({ status: 200, description: 'Success' }) // 成功
+  @ApiOperation({ summary: 'Get page version content' })
+  @ApiResponse({ status: 200, description: 'Get page version content successfully' })
   @UseGuards(JwtAuthGuard)
   @Get(':pageId/version')
   async getPageVersion(@Param() params: PageVersionParamDto) {
@@ -142,8 +142,8 @@ export class PagesController {
     });
   }
 
-  @ApiOperation({ summary: 'Get all page versions' }) // 获取页面所有版本
-  @ApiResponse({ status: 200, description: 'Success' }) // 成功
+  @ApiOperation({ summary: 'Get all page versions' })
+  @ApiResponse({ status: 200, description: 'Get all page versions successfully' })
   @UseGuards(JwtAuthGuard)
   @Get(':pageId/versions')
   async getPageVersions(@Param('pageId') pageId: string) {
@@ -155,8 +155,8 @@ export class PagesController {
     });
   }
 
-  @ApiOperation({ summary: 'Share page' }) // 分享页面
-  @ApiResponse({ status: 200, description: 'Shared successfully' }) // 分享成功
+  @ApiOperation({ summary: 'Share page' })
+  @ApiResponse({ status: 200, description: 'Page shared successfully' })
   @UseGuards(JwtAuthGuard)
   @Post(':pageId/share')
   async sharePage(@LoginedUser() user: User, @Param('pageId') pageId: string) {
@@ -169,19 +169,19 @@ export class PagesController {
     });
   }
 
-  @ApiOperation({ summary: 'Get shared page content' }) // 获取分享页面内容
-  @ApiResponse({ status: 200, description: 'Get shared content successfully' }) // 获取分享内容成功
-  @ApiParam({ name: 'shareId', description: 'Share ID' }) // 分享ID
+  @ApiOperation({ summary: 'Get shared page content' })
+  @ApiResponse({ status: 200, description: 'Get shared page content successfully' })
+  @ApiParam({ name: 'shareId', description: 'Share ID' })
   @Get('share/:shareId')
   async getSharedPage(@Param('shareId') shareId: string, @LoginedUser() user?: User) {
-    // 使用统一的分享服务处理
+    // Use unified share service to handle
     const result = await this.pagesService.getSharedPage(shareId, user);
 
     return buildSuccessResponse(result);
   }
 
-  @ApiOperation({ summary: 'Delete page' }) // 删除页面
-  @ApiResponse({ status: 200, description: 'Deleted successfully' }) // 删除成功
+  @ApiOperation({ summary: 'Delete page' })
+  @ApiResponse({ status: 200, description: 'Page deleted successfully' })
   @UseGuards(JwtAuthGuard)
   @Delete(':pageId')
   async deletePage(@LoginedUser() user: User, @Param('pageId') pageId: string) {
@@ -192,8 +192,8 @@ export class PagesController {
     });
   }
 
-  @ApiOperation({ summary: 'Delete page node' }) // 删除页面节点
-  @ApiResponse({ status: 200, description: 'Deleted successfully' }) // 删除成功
+  @ApiOperation({ summary: 'Delete page node' })
+  @ApiResponse({ status: 200, description: 'Page node deleted successfully' })
   @UseGuards(JwtAuthGuard)
   @Delete(':pageId/nodes/:nodeId')
   async deletePageNode(
@@ -209,15 +209,15 @@ export class PagesController {
     });
   }
 
-  @ApiOperation({ summary: 'Delete page share' }) // 删除页面分享
-  @ApiResponse({ status: 200, description: 'Deleted successfully' }) // 删除成功
+  @ApiOperation({ summary: 'Delete page share' })
+  @ApiResponse({ status: 200, description: 'Page share deleted successfully' })
   @UseGuards(JwtAuthGuard)
   @Delete(':pageId/share')
   async deletePageShare(@LoginedUser() user: User, @Param('pageId') pageId: string) {
-    // 查找与pageId相关的所有分享记录
+    // Find all share records related to pageId
     const shareRecords = await this.pagesService.listSharesByEntityId(user, pageId);
 
-    // 使用ShareService删除分享
+    // Use ShareService to delete shares
     for (const record of shareRecords) {
       await this.pagesService.deleteShareById(user, record.shareId);
     }

@@ -25,14 +25,14 @@ import { NodeRenderer } from './components/NodeRenderer';
 import { type NodeRelation } from './components/ArtifactRenderer';
 import './styles/preview-mode.css';
 
-// 导入抽象的组件和 hooks
+// Import abstract components and hooks
 import PageLayout from './components/PageLayout';
 import PreviewMode from './components/PreviewMode';
 import { usePreviewUI } from './hooks/usePreviewUI';
 import { useSlideshow } from './hooks/useSlideshow';
 import { getNodeTitle } from './utils/nodeUtils';
 
-// 懒加载虚拟列表组件
+// Lazy load virtualized list component
 const VirtualizedNodeList = lazy(() => import('./components/VirtualizedNodeList'));
 
 interface PageDetailType {
@@ -57,25 +57,25 @@ function PageEdit() {
     nodeId: null,
   });
 
-  // 分享相关状态
+  // Share related states
   const [shareModalVisible, setShareModalVisible] = useState(false);
-  const [shareOption, setShareOption] = useState<'internet' | '未开启'>('internet');
+  const [shareOption, setShareOption] = useState<'internet' | 'notEnabled'>('internet');
   const [shareUrl, setShareUrl] = useState<string>('');
   const [isCopied, setIsCopied] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
 
-  // 获取侧边栏状态
+  // Get sidebar state
   const { collapse, setCollapse } = useSiderStoreShallow((state) => ({
     collapse: state.collapse,
     setCollapse: state.setCollapse,
   }));
 
-  // 强制默认隐藏侧边栏
+  // Force hide sidebar by default
   useEffect(() => {
     setCollapse(true);
   }, [setCollapse]);
 
-  // 使用抽象的 UI 状态管理 hook
+  // Use abstract UI state management hook
   const {
     uiState,
     showPreviewMinimap,
@@ -86,7 +86,7 @@ function PageEdit() {
     handleSideHintClick,
   } = usePreviewUI({ isPreviewMode });
 
-  // 使用抽象的幻灯片预览 hook
+  // Use abstract slideshow preview hook
   const {
     currentSlideIndex,
     nextSlide,
@@ -101,7 +101,7 @@ function PageEdit() {
     handleUiInteraction,
   });
 
-  // UI 交互处理方法
+  // UI interaction handling methods
   const toggleSidebar = useCallback(() => setCollapse(!collapse), [collapse, setCollapse]);
 
   const toggleMinimap = useCallback(() => setShowMinimap(!showMinimap), [showMinimap]);
@@ -113,7 +113,7 @@ function PageEdit() {
     }
   }, [isPreviewMode, resetSlideIndex]);
 
-  // 获取页面详情
+  // Get page details
   const {
     data: pageDetailResponse,
     isLoading: isLoadingPage,
@@ -122,26 +122,26 @@ function PageEdit() {
     enabled: !!pageId,
   });
 
-  // 更新页面Hook
+  // Update page hook
   const { mutate: updatePage, isPending: isUpdating } = useUpdatePage();
 
-  // 分享页面Hook
+  // Share page hook
   const { mutate: sharePage } = useSharePage();
 
-  // 从响应中提取页面数据
+  // Extract page data from response
   const pageDetail = pageDetailResponse?.data as PageDetailType | undefined;
 
-  // 获取节点数据
+  // Get node data
   const nodes = useMemo<NodeRelation[]>(() => {
     if (!pageDetail?.nodeRelations) return [];
 
-    // 注: 原本有过滤逻辑，但实际上不过滤任何内容 (node.nodeType === "codeArtifact" || 1)
+    // Note: Originally had filtering logic, but it doesn't filter anything (node.nodeType === "codeArtifact" || 1)
     return pageDetail.nodeRelations.map((node) => ({
       ...node,
     }));
   }, [pageDetail]);
 
-  // 当页面数据加载完成后，更新本地状态
+  // Update local state when page data is loaded
   useEffect(() => {
     if (pageDetail) {
       form.setFieldsValue({
@@ -153,61 +153,72 @@ function PageEdit() {
     }
   }, [form, pageDetail, nodes]);
 
-  // 提交表单处理函数
-  const handleSubmit = async (values: any) => {
-    if (!pageId) return;
+  // Form submission handler
+  const handleSubmit = useCallback(
+    (values: any) => {
+      if (!pageId) return;
 
-    const updateData = {
-      title: values.title,
-      description: values.description || '',
-    };
+      const { title, description } = values;
 
-    // 更新页面
-    updatePage(
-      {
-        path: { pageId },
-        body: updateData,
-      },
-      {
-        onSuccess: () => {
-          message.success(t('common.saveSuccess'));
-          setFormChanged(false);
-        },
-        onError: (error) => {
-          console.error('更新页面失败', error);
-          message.error(t('common.saveFailed'));
-        },
-      },
-    );
-  };
-
-  // 表单与导航处理
-  const handleBack = () => navigate('/pages');
-  const handleFormChange = () => setFormChanged(true);
-
-  // 处理节点选择
-  const handleNodeSelect = (index: number) => {
-    setActiveNodeIndex(index);
-
-    // 滚动到对应的内容块
-    const element = document.getElementById(`content-block-${index}`);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  };
-
-  // 处理节点重新排序
-  const handleReorderNodes = (newOrder: NodeRelation[]) => {
-    setNodes(
-      newOrder.map((node, index) => ({
-        ...node,
+      // Prepare node relations with updated order
+      const nodeRelations = nodesList.map((node, index) => ({
+        nodeId: node.nodeId,
+        nodeType: node.nodeType,
+        entityId: node.entityId,
+        nodeData: node.nodeData,
         orderIndex: index,
-      })),
-    );
-    setFormChanged(true);
-  };
+      }));
 
-  // 处理删除节点
+      setFormChanged(false);
+
+      // Call update API
+      updatePage(
+        {
+          path: { pageId },
+          body: {
+            title,
+            description,
+            nodeRelations,
+          },
+        },
+        {
+          onSuccess: () => {
+            message.success(t('pages.edit.saveSuccess'));
+          },
+          onError: (error) => {
+            console.error('Failed to update page:', error);
+            message.error(t('pages.edit.saveFailed'));
+          },
+        },
+      );
+    },
+    [pageId, nodesList, updatePage, t],
+  );
+
+  // Form and navigation handling
+  const handleBack = useCallback(() => navigate('/pages'), [navigate]);
+  const handleFormChange = useCallback(() => setFormChanged(true), []);
+
+  // Handle node selection
+  const handleNodeSelect = useCallback(
+    (index: number) => {
+      if (index >= 0 && index < nodesList.length) {
+        setActiveNodeIndex(index);
+        if (isPreviewMode) {
+          setCurrentSlideIndex(index);
+        }
+      }
+    },
+    [nodesList.length, isPreviewMode, setCurrentSlideIndex],
+  );
+
+  // Handle node reordering
+  const handleReorderNodes = useCallback((newOrder: NodeRelation[]) => {
+    setNodes(newOrder);
+    setFormChanged(true);
+  }, []);
+
+  // Handle deleting a node
   const deletePageNodeMutation = useDeletePageNode();
 
   const handleDeleteNode = useCallback(
@@ -217,7 +228,7 @@ function PageEdit() {
       try {
         setIsDeletingNode(true);
 
-        // 使用 useDeletePageNode 删除节点
+        // Use useDeletePageNode to delete the node
         await deletePageNodeMutation.mutateAsync({
           path: {
             pageId,
@@ -225,10 +236,10 @@ function PageEdit() {
           },
         });
 
-        // 从本地状态中移除节点
+        // Remove the node from local state
         setNodes((prevNodes) => prevNodes.filter((node) => node.nodeId !== nodeId));
 
-        // 如果删除的是当前选中的节点，选择第一个节点
+        // If the deleted node is the currently selected node, select the first node
         if (nodesList[activeNodeIndex]?.nodeId === nodeId) {
           setActiveNodeIndex(0);
         }
@@ -236,7 +247,7 @@ function PageEdit() {
         message.success(t('common.deleteSuccess'));
         setFormChanged(true);
       } catch (error) {
-        console.error('删除节点失败:', error);
+        console.error('Failed to delete node:', error);
         message.error(t('common.deleteFailed'));
       } finally {
         setIsDeletingNode(false);
@@ -245,22 +256,22 @@ function PageEdit() {
     [pageId, activeNodeIndex, nodesList, deletePageNodeMutation],
   );
 
-  // 处理从指定节点开始幻灯片预览
+  // Handle starting a slideshow from a specific node
   const handleStartSlideshow = useCallback(
     (nodeId: string) => {
-      // 查找点击的节点索引
+      // Find the index of the clicked node
       const nodeIndex = nodesList.findIndex((node) => node.nodeId === nodeId);
       if (nodeIndex !== -1) {
-        // 设置当前幻灯片索引为找到的节点索引
+        // Set the current slideshow index to the found node index
         setCurrentSlideIndex(nodeIndex);
-        // 打开预览模式
+        // Open preview mode
         setIsPreviewMode(true);
       }
     },
     [nodesList, setCurrentSlideIndex],
   );
 
-  // 宽屏模式处理
+  // Handle wide mode
   const handleWideMode = useCallback(
     (nodeId: string) => {
       const node = nodesList.find((n) => n.nodeId === nodeId);
@@ -271,12 +282,12 @@ function PageEdit() {
     [nodesList],
   );
 
-  // 关闭宽屏模式
+  // Close wide mode
   const handleCloseWideMode = useCallback(() => {
     setWideMode({ isActive: false, nodeId: null });
   }, []);
 
-  // 宽屏模式键盘快捷键
+  // Wide mode keyboard shortcut
   useEffect(() => {
     if (!wideMode.isActive) return;
 
@@ -290,13 +301,13 @@ function PageEdit() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [wideMode.isActive, handleCloseWideMode]);
 
-  // 处理分享页面
-  const handleShare = () => {
+  // Handle sharing a page
+  const handleShare = useCallback(() => {
     setShareModalVisible(true);
-  };
+  }, []);
 
-  // 执行分享操作
-  const handleShareSubmit = () => {
+  // Execute share operation
+  const handleShareSubmit = useCallback(() => {
     if (!pageId) return;
 
     setIsSharing(true);
@@ -309,54 +320,56 @@ function PageEdit() {
           if (shareData?.shareId && shareData?.shareUrl) {
             setShareUrl(shareData.shareUrl);
 
-            // 自动复制到剪贴板
-            navigator.clipboard
-              .writeText(shareData.shareUrl)
-              .then(() => {
-                setIsCopied(true);
-                message.success(t('common.shareSuccess'));
-              })
-              .catch(() => {
-                message.info(t('common.copyShareLink'));
-              })
-              .finally(() => {
-                setIsSharing(false);
-              });
+            // Try to copy to clipboard automatically
+            try {
+              navigator.clipboard.writeText(shareData.shareUrl).then(
+                () => {
+                  setIsCopied(true);
+                  message.success(t('common.copySuccess'));
+                  setTimeout(() => setIsCopied(false), 3000);
+                },
+                () => {
+                  console.error('Failed to copy to clipboard');
+                },
+              );
+            } catch (error) {
+              console.error('Clipboard API not available:', error);
+            }
           } else {
-            message.error(t('common.shareFailed'));
             setIsSharing(false);
+            message.error(t('common.shareFailed'));
           }
         },
         onError: () => {
-          message.error(t('common.shareFailed'));
           setIsSharing(false);
+          message.error(t('common.shareFailed'));
         },
       },
     );
-  };
+  }, [pageId, sharePage, t]);
 
-  // 复制分享链接
-  const handleCopyShareUrl = () => {
+  // Copy share link
+  const handleCopyShareUrl = useCallback(() => {
     if (!shareUrl) return;
 
-    navigator.clipboard
-      .writeText(shareUrl)
-      .then(() => {
+    navigator.clipboard.writeText(shareUrl).then(
+      () => {
         setIsCopied(true);
-        message.success(t('common.copied'));
+        message.success(t('common.copySuccess'));
         setTimeout(() => setIsCopied(false), 3000);
-      })
-      .catch(() => {
+      },
+      () => {
         message.error(t('common.copyFailed'));
-      });
-  };
+      },
+    );
+  }, [shareUrl, t]);
 
-  // 关闭分享弹窗
-  const handleCloseShareModal = () => {
+  // Close share modal
+  const handleCloseShareModal = useCallback(() => {
     setShareModalVisible(false);
-  };
+  }, []);
 
-  // 渲染页面内容
+  // Render page content
   const renderPageContent = useMemo(() => {
     if (isLoadingPage) {
       return (
@@ -414,7 +427,7 @@ function PageEdit() {
 
     return (
       <div>
-        {/* 内容部分 - 使用虚拟列表优化渲染 */}
+        {/* Content section - using virtualized list for optimization */}
         {nodesList.length > 0 ? (
           <Suspense
             fallback={
@@ -447,7 +460,7 @@ function PageEdit() {
           </div>
         )}
 
-        {/* 预览按钮 */}
+        {/* Preview button */}
         {nodesList.length > 0 && (
           <div className="fixed bottom-6 right-6 z-10">
             <Button
@@ -495,7 +508,7 @@ function PageEdit() {
     navigate,
   ]);
 
-  // 加载状态
+  // Loading state
   if (isLoadingPage) {
     return (
       <div className="flex justify-center items-center h-[70vh]">
@@ -504,7 +517,7 @@ function PageEdit() {
     );
   }
 
-  // 错误状态
+  // Error state
   if (pageLoadError || !pageDetail) {
     return (
       <div className="p-6">
@@ -518,7 +531,7 @@ function PageEdit() {
     );
   }
 
-  // 预览模式渲染
+  // Preview mode rendering
   if (isPreviewMode) {
     return (
       <Modal
@@ -534,7 +547,7 @@ function PageEdit() {
         wrapClassName="preview-modal-wrap"
       >
         <div className="bg-black h-full w-full flex flex-col">
-          {/* 使用抽象的 PreviewMode 组件 */}
+          {/* Use abstract PreviewMode component */}
           <PreviewMode
             nodes={nodesList}
             currentSlideIndex={currentSlideIndex}
@@ -638,7 +651,7 @@ function PageEdit() {
         </div>
       }
     >
-      {/* 页面描述区域 */}
+      {/* Page description section */}
       <div className="mb-6">
         <Form form={form} onFinish={handleSubmit} onValuesChange={handleFormChange}>
           <Form.Item name="description">
@@ -652,10 +665,10 @@ function PageEdit() {
         </Form>
       </div>
 
-      {/* 内容模块 */}
+      {/* Content module */}
       {renderPageContent}
 
-      {/* 宽屏模式弹窗 */}
+      {/* Wide mode modal */}
       <Modal
         open={wideMode.isActive}
         footer={null}
@@ -672,7 +685,7 @@ function PageEdit() {
         maskStyle={{ background: 'rgba(0, 0, 0, 0.65)' }}
       >
         <div className="bg-white h-full w-full flex flex-col rounded-lg overflow-hidden">
-          {/* 宽屏模式内容 */}
+          {/* Wide mode content */}
           <div className="flex-1 overflow-auto">
             {wideMode.nodeId && nodesList.find((n) => n.nodeId === wideMode.nodeId) ? (
               <div className="h-[calc(100vh-160px)]">
@@ -695,7 +708,7 @@ function PageEdit() {
         </div>
       </Modal>
 
-      {/* 分享弹窗 */}
+      {/* Share modal */}
       <Modal
         title={
           <div className="flex items-center text-lg font-medium">
@@ -727,7 +740,7 @@ function PageEdit() {
                   ),
                 },
                 {
-                  value: '未开启',
+                  value: 'notEnabled',
                   label: (
                     <div className="flex items-center">
                       <UserOutlined className="mr-2 text-gray-500" />
@@ -764,7 +777,7 @@ function PageEdit() {
                     isCopied ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'
                   } border-none`}
                 >
-                  {isCopied ? t('common.copied') : t('common.copy')}
+                  {isCopied ? t('common.copied') : t('common.copy.title')}
                 </Button>
               </div>
               <div className="mt-4 text-gray-500 text-sm">{t('common.shareUrlDesc')}</div>

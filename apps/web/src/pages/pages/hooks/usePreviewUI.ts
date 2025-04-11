@@ -16,31 +16,31 @@ interface UsePreviewUIOptions {
 }
 
 /**
- * 预览模式 UI 状态管理 Hook
+ * Preview mode UI state management Hook
  */
 export const usePreviewUI = ({ isPreviewMode }: UsePreviewUIOptions) => {
-  // UI 状态
+  // UI state
   const [uiState, setUiState] = useState<UIState>({
     isIdle: false,
     showNav: false,
   });
 
-  // 预览模式小地图状态
+  // Preview mode minimap state
   const [showPreviewMinimap, setShowPreviewMinimap] = useState(false);
 
-  // 定时器引用
+  // Timer references
   const timersRef = useRef<Timers>({
     idle: null,
     nav: null,
     minimap: null,
   });
 
-  // 统一的 UI 状态更新函数
+  // Unified UI state update function
   const updateUiState = useCallback((updates: Partial<UIState>) => {
     setUiState((prev) => ({ ...prev, ...updates }));
   }, []);
 
-  // 重置定时器
+  // Reset timer
   const resetTimer = useCallback((timerKey: keyof Timers, callback: () => void, delay: number) => {
     if (timersRef.current[timerKey]) {
       clearTimeout(timersRef.current[timerKey]!);
@@ -48,7 +48,7 @@ export const usePreviewUI = ({ isPreviewMode }: UsePreviewUIOptions) => {
     timersRef.current[timerKey] = setTimeout(callback, delay);
   }, []);
 
-  // 重置闲置状态
+  // Reset idle state
   const resetIdleState = useCallback(() => {
     updateUiState({ isIdle: false });
 
@@ -59,11 +59,11 @@ export const usePreviewUI = ({ isPreviewMode }: UsePreviewUIOptions) => {
           updateUiState({ isIdle: true, showNav: false });
         },
         2000,
-      ); // 2秒无操作后隐藏导航栏
+      ); // Hide navigation bar after 2 seconds of inactivity
     }
   }, [isPreviewMode, updateUiState, resetTimer]);
 
-  // 统一的 UI 交互处理函数
+  // Unified UI interaction handler
   const handleUiInteraction = useCallback(() => {
     resetIdleState();
     updateUiState({ showNav: true });
@@ -76,17 +76,17 @@ export const usePreviewUI = ({ isPreviewMode }: UsePreviewUIOptions) => {
         }
       },
       3000,
-    ); // 悬停3秒后，如果处于闲置状态则隐藏
+    ); // Hide after 3 seconds if in idle state
   }, [resetIdleState, updateUiState, resetTimer, uiState.isIdle]);
 
-  // 预览模式鼠标移动处理
+  // Preview mode mouse movement handler
   const handlePreviewMouseMove = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       if (!isPreviewMode) return;
 
       handleUiInteraction();
 
-      // 当鼠标移动到屏幕左侧边缘时显示小地图
+      // Show minimap when mouse moves to the left edge of the screen
       if (e.clientX < 20) {
         setShowPreviewMinimap(true);
         resetTimer('minimap', () => {}, 0);
@@ -95,7 +95,7 @@ export const usePreviewUI = ({ isPreviewMode }: UsePreviewUIOptions) => {
     [isPreviewMode, handleUiInteraction, resetTimer],
   );
 
-  // 小地图交互处理
+  // Minimap interaction handlers
   const handleMinimapMouseEnter = useCallback(() => {
     if (timersRef.current.minimap) {
       clearTimeout(timersRef.current.minimap);
@@ -111,7 +111,7 @@ export const usePreviewUI = ({ isPreviewMode }: UsePreviewUIOptions) => {
     setShowPreviewMinimap(true);
   }, []);
 
-  // 预览模式状态变化处理
+  // Handle preview mode state changes
   useEffect(() => {
     if (isPreviewMode) {
       resetIdleState();
@@ -128,7 +128,7 @@ export const usePreviewUI = ({ isPreviewMode }: UsePreviewUIOptions) => {
     }
   }, [isPreviewMode, resetIdleState, updateUiState]);
 
-  // 清理所有定时器
+  // Clean up all timers
   useEffect(() => {
     return () => {
       for (const timer of Object.values(timersRef.current)) {

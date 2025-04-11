@@ -2,7 +2,7 @@ import React, { lazy, Suspense } from 'react';
 import { Spin } from 'antd';
 import { useTranslation } from 'react-i18next';
 
-// 加载中组件
+// Loading component
 const LoadingComponent = () => {
   const { t } = useTranslation();
   return (
@@ -12,7 +12,7 @@ const LoadingComponent = () => {
   );
 };
 
-// 懒加载各个渲染器组件
+// 统一使用命名导出方式的懒加载组件
 export const LazyCodeArtifactRenderer = lazy(() =>
   import('./CodeArtifactRenderer').then((module) => ({
     default: module.CodeArtifactRenderer,
@@ -37,11 +37,12 @@ export const LazyImageRenderer = lazy(() =>
   })),
 );
 
-// 包装组件，添加Suspense
+// Wrapper component with Suspense
 interface WithSuspenseProps {
   children: React.ReactNode;
 }
 
+// The WithSuspense component should directly render the Suspense component with its children
 export const WithSuspense: React.FC<WithSuspenseProps> = ({ children }) => (
   <Suspense fallback={<LoadingComponent />}>{children}</Suspense>
 );

@@ -1,26 +1,18 @@
-import React, { useCallback, useMemo, useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from 'antd';
 import {
-  LeftCircleOutlined,
-  RightCircleOutlined,
-  CloseCircleOutlined,
-  UnorderedListOutlined,
+  ArrowLeftOutlined,
+  ArrowRightOutlined,
+  CloseOutlined,
+  FullscreenOutlined,
+  MenuOutlined,
 } from '@ant-design/icons';
-import { NodeRenderer } from './NodeRenderer';
 import { type NodeRelation } from './ArtifactRenderer';
-import {
-  LazyImageRenderer,
-  LazyCodeArtifactRenderer,
-  LazyDocumentRenderer,
-  LazySkillResponseRenderer,
-  WithSuspense,
-} from './LazyComponents';
-import '../styles/preview-mode.css';
-import { useTranslation } from 'react-i18next';
+import { NodeRenderer } from './NodeRenderer';
 
-interface PreviewModeProps {
+interface OptimizedPreviewModeProps {
   nodes: NodeRelation[];
-  currentIndex: number;
+  currentSlideIndex: number;
   onNext: () => void;
   onPrev: () => void;
   onClose: () => void;
@@ -30,20 +22,21 @@ interface PreviewModeProps {
   onMinimapMouseEnter: () => void;
   onMinimapMouseLeave: () => void;
   onSlideSelect: (index: number) => void;
-  onSideHintClick: () => void;
   contentRef: React.RefObject<HTMLDivElement>;
 }
 
-// 获取节点标题的辅助函数
+// Helper function to get node title
 const getNodeTitle = (node: NodeRelation) => {
-  const { t } = useTranslation();
-  return node.nodeData?.title || t('pages.components.nodeBlock.untitledNode');
+  return (
+    node.nodeData?.title ||
+    `${node.nodeType.charAt(0).toUpperCase() + node.nodeType.slice(1)} ${node.nodeId.slice(0, 6)}`
+  );
 };
 
-// 优化的预览模式组件
-const OptimizedPreviewMode: React.FC<PreviewModeProps> = ({
+// Optimized preview mode component
+export const OptimizedPreviewMode: React.FC<OptimizedPreviewModeProps> = ({
   nodes,
-  currentIndex,
+  currentSlideIndex,
   onNext,
   onPrev,
   onClose,
@@ -53,281 +46,168 @@ const OptimizedPreviewMode: React.FC<PreviewModeProps> = ({
   onMinimapMouseEnter,
   onMinimapMouseLeave,
   onSlideSelect,
-  onSideHintClick,
   contentRef,
 }) => {
-  const { t } = useTranslation();
+  // Track which thumbnails have been viewed
+  const [viewedThumbnails, setViewedThumbnails] = useState<Record<number, boolean>>({});
 
-  // 跟踪哪些缩略图已经被查看过
-  const [visibleThumbnails, setVisibleThumbnails] = useState<Record<number, boolean>>({});
+  // Preload next slide state
+  const [preloadIndex, setPreloadIndex] = useState<number | null>(null);
 
-  // 预加载下一张幻灯片的状态
-  const [preloadNextIndex, setPreloadNextIndex] = useState<number | null>(null);
-
-  // 当前幻灯片变化时预加载下一张
+  // Preload next slide when current slide changes
   useEffect(() => {
-    if (currentIndex < nodes.length - 1) {
-      setPreloadNextIndex(currentIndex + 1);
-    } else if (currentIndex > 0) {
-      setPreloadNextIndex(currentIndex - 1);
+    const nextIndex = currentSlideIndex + 1;
+    if (nextIndex < nodes.length) {
+      setPreloadIndex(nextIndex);
+    } else if (currentSlideIndex > 0) {
+      setPreloadIndex(currentSlideIndex - 1);
     }
-  }, [currentIndex, nodes.length]);
+  }, [currentSlideIndex, nodes.length]);
 
-  // 当缩略图可见时记录
+  // Record when thumbnails are visible
   const handleThumbnailVisible = useCallback((index: number) => {
-    setVisibleThumbnails((prev) => ({
+    setViewedThumbnails((prev) => ({
       ...prev,
       [index]: true,
     }));
   }, []);
 
-  // 优化：只渲染当前幻灯片和预加载的幻灯片
-  const renderSlide = useCallback(
-    (index: number) => {
-      if (index !== currentIndex && index !== preloadNextIndex) {
-        return null;
-      }
+  // Optimization: only render current slide and preloaded slide
+  const visibleSlides = useMemo(() => {
+    const result: Record<number, boolean> = {
+      [currentSlideIndex]: true,
+    };
 
-      const node = nodes[index];
-      if (!node) return null;
+    if (preloadIndex !== null) {
+      result[preloadIndex] = true;
+    }
 
-      return (
-        <div
-          key={`slide-${index}`}
-          className="w-full h-full preview-slide"
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            opacity: index === currentIndex ? 1 : 0,
-            pointerEvents: index === currentIndex ? 'auto' : 'none',
-            transform: `translate3d(${index === currentIndex ? 0 : index < currentIndex ? '-100%' : '100%'}, 0, 0)`,
-            transition: 'transform 0.3s ease-out, opacity 0.3s ease-out',
-            willChange: 'transform, opacity',
-            zIndex: index === currentIndex ? 2 : 1,
-          }}
-        >
-          <WithSuspense>
-            <LazySlideContent node={node} isFullscreen={true} />
-          </WithSuspense>
-        </div>
-      );
-    },
-    [currentIndex, preloadNextIndex, nodes],
-  );
+    return result;
+  }, [currentSlideIndex, preloadIndex]);
 
-  // 懒加载幻灯片内容组件
-  const LazySlideContent = useCallback(
-    ({
-      node,
-      isFullscreen,
-    }: {
-      node: NodeRelation;
-      isFullscreen: boolean;
-    }) => {
-      switch (node.nodeType) {
-        case 'codeArtifact':
-          return (
-            <LazyCodeArtifactRenderer node={node} isFullscreen={isFullscreen} isMinimap={false} />
-          );
-        case 'document':
-          return <LazyDocumentRenderer node={node} isFullscreen={isFullscreen} isMinimap={false} />;
-        case 'skillResponse':
-          return (
-            <LazySkillResponseRenderer node={node} isFullscreen={isFullscreen} isMinimap={false} />
-          );
-        case 'image':
-          return <LazyImageRenderer node={node} isFullscreen={isFullscreen} isMinimap={false} />;
-        default:
-          return (
-            <div className="flex items-center justify-center h-full text-gray-400">
-              <div className="text-lg">{t('pages.components.preview.unsupportedNodeType')}</div>
+  return (
+    <div
+      className="h-full w-full flex flex-col bg-black relative"
+      onMouseMove={onMouseMove}
+      ref={contentRef}
+    >
+      {/* Main content area */}
+      <div className="flex-1 flex items-center justify-center relative">
+        {nodes.map((node, index) => (
+          <div
+            key={node.nodeId}
+            className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${
+              index === currentSlideIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
+            }`}
+            style={{ display: visibleSlides[index] ? 'flex' : 'none' }}
+          >
+            {visibleSlides[index] && (
+              <NodeRenderer node={node} isFullscreen={true} isMinimap={false} />
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Lazy load slide content component */}
+      {showUI && (
+        <>
+          {/* Navigation controls */}
+          <div
+            className={`absolute top-0 left-0 right-0 p-4 flex justify-between items-center transition-opacity duration-300 ${
+              showUI ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            }`}
+          >
+            <Button
+              icon={<CloseOutlined />}
+              onClick={onClose}
+              className="text-white border-none bg-transparent hover:bg-gray-800"
+            />
+            <div className="text-white text-lg">
+              {currentSlideIndex + 1} / {nodes.length}
             </div>
-          );
-      }
-    },
-    [t],
-  );
+            <Button
+              icon={<FullscreenOutlined />}
+              className="text-white border-none bg-transparent hover:bg-gray-800"
+            />
+          </div>
 
-  // 优化：只在小地图打开时渲染缩略图
-  const renderMinimap = useMemo(() => {
-    if (!showMinimap) return null;
+          {/* Prev/Next buttons */}
+          <div className="absolute inset-y-0 left-0 flex items-center">
+            {currentSlideIndex > 0 && (
+              <Button
+                icon={<ArrowLeftOutlined />}
+                onClick={onPrev}
+                className="ml-4 text-white border-none bg-transparent hover:bg-gray-800"
+              />
+            )}
+          </div>
+          <div className="absolute inset-y-0 right-0 flex items-center">
+            {currentSlideIndex < nodes.length - 1 && (
+              <Button
+                icon={<ArrowRightOutlined />}
+                onClick={onNext}
+                className="mr-4 text-white border-none bg-transparent hover:bg-gray-800"
+              />
+            )}
+          </div>
+        </>
+      )}
 
-    return (
-      <div
-        className={`preview-minimap ${showMinimap ? 'preview-minimap-show' : ''}`}
-        onMouseEnter={onMinimapMouseEnter}
-        onMouseLeave={onMinimapMouseLeave}
-        style={{ willChange: 'transform' }}
-      >
-        <div className="preview-minimap-header">
-          {t('pages.components.preview.navigationDirectory')}
-        </div>
-        <div className="preview-minimap-content">
+      {/* Optimization: only render thumbnails when minimap is open */}
+      {showMinimap && (
+        <div
+          className="absolute top-0 left-0 bottom-0 w-64 bg-gray-900 overflow-y-auto transition-transform duration-300 transform"
+          style={{ transform: showMinimap ? 'translateX(0)' : 'translateX(-100%)' }}
+          onMouseEnter={onMinimapMouseEnter}
+          onMouseLeave={onMinimapMouseLeave}
+        >
           {nodes.map((node, index) => {
-            // 判断是否需要渲染缩略图内容
-            const shouldRenderContent = visibleThumbnails[index] || index === currentIndex;
+            // Determine if thumbnail content should be rendered
+            const shouldRenderContent = viewedThumbnails[index] || index === currentSlideIndex;
 
             return (
               <div
-                key={`minimap-slide-${index}`}
-                className={`preview-minimap-slide ${currentIndex === index ? 'active' : ''}`}
-                onClick={() => {
-                  handleThumbnailVisible(index);
-                  onSlideSelect(index);
-                }}
+                key={node.nodeId}
+                className={`p-2 cursor-pointer ${
+                  index === currentSlideIndex ? 'bg-gray-700' : 'hover:bg-gray-800'
+                }`}
+                onClick={() => onSlideSelect(index)}
                 onMouseEnter={() => handleThumbnailVisible(index)}
               >
-                <div className="preview-minimap-number">{index + 1}</div>
-                <div className="preview-minimap-thumbnail">
+                <div className="text-white text-xs mb-1 truncate">
+                  {index + 1}. {getNodeTitle(node)}
+                </div>
+                <div className="h-24 bg-black rounded overflow-hidden">
                   {shouldRenderContent ? (
-                    <div
-                      style={{
-                        height: '100%',
-                        overflow: 'hidden',
-                        transform: 'scale(0.95)',
-                        background: '#fff',
-                        pointerEvents: 'none',
-                        userSelect: 'none',
-                      }}
-                    >
-                      <NodeRenderer
-                        node={node}
-                        isFullscreen={false}
-                        isModal={true}
-                        isMinimap={true}
-                      />
+                    <div className="h-full w-full transform scale-[0.2] origin-top-left">
+                      <div className="transform scale-[5] h-full w-full">
+                        <NodeRenderer node={node} isFullscreen={false} isMinimap={true} />
+                      </div>
                     </div>
                   ) : (
-                    // 使用占位符代替实际内容
-                    <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                      <div className="text-xs text-gray-400">{t('common.loading')}</div>
+                    // Use placeholder instead of actual content
+                    <div className="h-full w-full flex items-center justify-center bg-gray-800">
+                      <MenuOutlined className="text-gray-500" />
                     </div>
                   )}
-                  {/* 透明遮罩层 */}
-                  <div className="absolute inset-0 bg-transparent" />
                 </div>
-                <div className="preview-minimap-title">{getNodeTitle(node)}</div>
               </div>
             );
           })}
         </div>
-      </div>
-    );
-  }, [
-    showMinimap,
-    nodes,
-    currentIndex,
-    visibleThumbnails,
-    onMinimapMouseEnter,
-    onMinimapMouseLeave,
-    onSlideSelect,
-    handleThumbnailVisible,
-    t,
-  ]);
-
-  return (
-    <div
-      ref={contentRef}
-      className={`preview-content-container relative ${!showUI ? 'idle' : ''}`}
-      onMouseMove={onMouseMove}
-      style={{ willChange: 'contents' }}
-    >
-      {/* 预览导航栏 */}
-      <div
-        className={`preview-header ${showUI ? 'opacity-100' : 'opacity-0'}`}
-        style={{
-          transition: 'opacity 0.3s ease-out',
-          willChange: 'opacity',
-        }}
-      >
-        <div className="preview-header-title">
-          {nodes[currentIndex]
-            ? getNodeTitle(nodes[currentIndex])
-            : t('pages.components.preview.slideshowPreview')}
-          <span className="page-indicator">
-            {currentIndex + 1}/{nodes.length}
-          </span>
-        </div>
-        <div className="preview-header-controls">
-          <Button
-            type="text"
-            icon={<LeftCircleOutlined />}
-            onClick={onPrev}
-            disabled={currentIndex <= 0}
-            className={`preview-control-button ${currentIndex <= 0 ? 'disabled' : ''}`}
-          />
-          <Button
-            type="text"
-            icon={<RightCircleOutlined />}
-            onClick={onNext}
-            disabled={currentIndex >= nodes.length - 1}
-            className={`preview-control-button ${currentIndex >= nodes.length - 1 ? 'disabled' : ''}`}
-          />
-          <Button
-            type="text"
-            icon={<CloseCircleOutlined />}
-            onClick={onClose}
-            className="preview-control-button close-button"
-          />
-        </div>
-      </div>
-
-      {/* 小地图提示 - 当小地图隐藏时显示 */}
-      {!showMinimap && nodes.length > 1 && (
-        <div
-          className={`side-hint ${showUI ? 'opacity-100' : 'opacity-0'}`}
-          onClick={onSideHintClick}
-          style={{
-            transition: 'opacity 0.3s ease-out',
-            willChange: 'opacity',
-          }}
-        >
-          <UnorderedListOutlined />
-        </div>
       )}
 
-      {/* 渲染小地图 */}
-      {renderMinimap}
-
-      {/* 主要预览内容 - 只渲染当前和预加载的幻灯片 */}
-      <div className="preview-content">{nodes.map((_, index) => renderSlide(index))}</div>
-
-      {/* 滑动提示 - 只在移动设备上显示 */}
-      {nodes.length > 1 && (
-        <div
-          className={`swipe-hint md:hidden ${showUI ? 'opacity-100' : 'opacity-0'}`}
-          style={{
-            transition: 'opacity 0.3s ease-out',
-            willChange: 'opacity',
-          }}
-        >
-          {t('pages.components.preview.swipeToNavigate')} ({currentIndex + 1}/{nodes.length})
-        </div>
-      )}
-
-      {/* 预览模式底部进度指示器 */}
-      {nodes.length > 0 && (
-        <div
-          className={`preview-footer ${showUI ? 'opacity-100' : 'opacity-0'}`}
-          style={{
-            transition: 'opacity 0.3s ease-out',
-            willChange: 'opacity',
-          }}
-        >
-          <div className="dots-container">
-            {nodes.map((_, index) => (
-              <div
-                key={`preview-dot-${index}`}
-                className={`preview-dot ${index === currentIndex ? 'active' : ''}`}
-                onClick={() => onSlideSelect(index)}
-              />
-            ))}
+      {/* Side hint for minimap */}
+      {!showMinimap && showUI && (
+        <div className="absolute top-1/2 left-0 transform -translate-y-1/2">
+          <div
+            className="w-6 h-24 bg-gray-800 rounded-r flex items-center justify-center cursor-pointer hover:bg-gray-700"
+            onMouseEnter={onMinimapMouseEnter}
+          >
+            <MenuOutlined className="text-white" />
           </div>
         </div>
       )}
     </div>
   );
 };
-
-export default OptimizedPreviewMode;

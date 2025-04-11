@@ -5,7 +5,7 @@ import { CanvasNode } from '@refly/openapi-schema';
 import { useCreatePage } from '@refly-packages/ai-workspace-common/queries/queries';
 import { useTranslation } from 'react-i18next';
 
-// 简单的Spinner组件
+// Simple Spinner component
 const Spinner = ({ size = 'normal' }: { size?: 'small' | 'normal' }) => (
   <div
     className={`animate-spin rounded-full border-t-2 border-indigo-500 ${size === 'small' ? 'h-4 w-4' : 'h-6 w-6'}`}
@@ -23,45 +23,45 @@ export default function CreatePageFromCanvas() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // 创建页面的mutate函数
+  // Mutate function for creating a page
   const { mutate: createPage, isPending } = useCreatePage(undefined, {
     onError: (error) => {
-      console.error('创建页面失败:', error);
+      console.error('Failed to create page:', error);
       setError(
         `${t('pages.new.createPageFailed')}: ${error instanceof Error ? error.message : String(error)}`,
       );
     },
   });
 
-  // 当输入Canvas ID时，加载Canvas数据
+  // Load Canvas data when Canvas ID is input
   const fetchCanvasData = async () => {
     if (!canvasId.trim()) return;
 
     try {
       setCanvasLoading(true);
       setError('');
-      // 使用正确的方式获取client
+      // Use the correct way to get client
       const client = getClient();
 
-      // 调用API获取Canvas数据
+      // Call API to get Canvas data
       const response = await client.getCanvasData({
         query: { canvasId },
       });
 
-      // 获取数据
-      // 按照API响应格式，节点数据位于 response.data.data.nodes
+      // Get data
+      // According to API response format, node data is located at response.data.data.nodes
       const data = response?.data;
 
-      // 通用方式处理响应数据
+      // General way to process response data
       if (data?.success && data?.data) {
-        // 从响应中正确提取节点数据
+        // Extract node data correctly from the response
         const canvasData = data.data;
 
         if (canvasData.nodes && Array.isArray(canvasData.nodes)) {
-          // 节点直接在canvasData.nodes中
+          // Nodes are directly in canvasData.nodes
           const nodes = canvasData.nodes;
 
-          // 验证节点的结构是否符合预期
+          // Verify if node structure meets expectations
           const validNodes = nodes.filter(
             (node: any) => node?.type && node.data && node.data.entityId,
           );
@@ -81,7 +81,7 @@ export default function CreatePageFromCanvas() {
         setAvailableNodes([]);
       }
     } catch (err) {
-      console.error('获取Canvas数据失败:', err);
+      console.error('Failed to fetch Canvas data:', err);
       setError(
         `${t('pages.new.fetchCanvasDataFailed')}: ${err instanceof Error ? err.message : String(err)}`,
       );
@@ -91,14 +91,14 @@ export default function CreatePageFromCanvas() {
     }
   };
 
-  // 处理节点选择
+  // Handle node selection
   const handleNodeToggle = (nodeId: string) => {
     setNodeIds((prev) =>
       prev.includes(nodeId) ? prev.filter((id) => id !== nodeId) : [...prev, nodeId],
     );
   };
 
-  // 提交表单创建页面
+  // Submit form to create page
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -120,7 +120,7 @@ export default function CreatePageFromCanvas() {
           body: {
             title: title.trim() || t('pages.new.untitledPage'),
             description: t('pages.new.createdFromCanvas', { canvasId }),
-            // 按CreatePageRequest接口要求，将canvasId和nodeIds放入content对象中
+            // According to CreatePageRequest interface requirements, put canvasId and nodeIds into content object
             content: {
               canvasId,
               nodeIds,
@@ -133,10 +133,10 @@ export default function CreatePageFromCanvas() {
             setSuccess(
               `${t('pages.new.pageCreatedSuccess')}! ${t('pages.new.pageId')}: ${data?.pageId || t('pages.new.unknown')}`,
             );
-            // 重置表单
+            // Reset form
             setTitle('');
             setNodeIds([]);
-            // 三秒后跳转到页面列表
+            // Redirect to page list after three seconds
             setTimeout(() => {
               navigate('/pages');
             }, 3000);

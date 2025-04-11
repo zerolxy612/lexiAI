@@ -45,7 +45,7 @@ const PreviewMode: React.FC<PreviewModeProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  // 计算当前进度百分比
+  // Calculate current progress percentage
   const progressPercentage = useMemo(() => {
     if (nodes.length <= 1) return 100;
     return (currentSlideIndex / (nodes.length - 1)) * 100;
@@ -57,7 +57,7 @@ const PreviewMode: React.FC<PreviewModeProps> = ({
       className={`preview-content-container relative ${uiState.isIdle ? 'idle' : ''} ${uiState.showNav ? 'show-nav' : ''}`}
       onMouseMove={onMouseMove}
     >
-      {/* 顶部进度条 */}
+      {/* Top progress bar */}
       <div
         className="preview-progress-bar"
         style={{
@@ -74,7 +74,7 @@ const PreviewMode: React.FC<PreviewModeProps> = ({
         }}
       />
 
-      {/* 预览导航栏 - 只保留右上角关闭按钮 */}
+      {/* Preview navigation bar - only keep the close button in the top right corner */}
       <div
         className={`preview-close-button ${uiState.isIdle ? 'opacity-0' : 'opacity-100'}`}
         onMouseEnter={onUiInteraction}
@@ -105,14 +105,14 @@ const PreviewMode: React.FC<PreviewModeProps> = ({
         />
       </div>
 
-      {/* 小地图提示 - 当小地图隐藏时显示 */}
+      {/* Side hint - displayed when the minimap is hidden */}
       {!showPreviewMinimap && nodes.length > 1 && (
         <div className="side-hint" onClick={onSideHintClick}>
           <UnorderedListOutlined />
         </div>
       )}
 
-      {/* 预览模式小地图 */}
+      {/* Preview mode minimap */}
       <div
         className={`preview-minimap ${showPreviewMinimap ? 'preview-minimap-show' : ''}`}
         onMouseEnter={onMinimapMouseEnter}
@@ -146,7 +146,7 @@ const PreviewMode: React.FC<PreviewModeProps> = ({
                     isMinimap={true}
                   />
                 </div>
-                {/* 透明遮罩层 */}
+                {/* Transparent mask layer */}
                 <div className="absolute inset-0 bg-transparent" />
               </div>
               <div className="preview-minimap-title">{getNodeTitle(node)}</div>
@@ -155,7 +155,7 @@ const PreviewMode: React.FC<PreviewModeProps> = ({
         </div>
       </div>
 
-      {/* 主要预览内容 */}
+      {/* Main preview content */}
       <div className="preview-content">
         <div
           className="w-full h-full preview-slide"
@@ -175,14 +175,14 @@ const PreviewMode: React.FC<PreviewModeProps> = ({
         </div>
       </div>
 
-      {/* 滑动提示 - 只在移动设备上显示 */}
+      {/* Swipe hint - only displayed on mobile devices */}
       {nodes.length > 1 && (
         <div className="swipe-hint md:hidden">
           {t('pages.components.swipeHint', { current: currentSlideIndex + 1, total: nodes.length })}
         </div>
       )}
 
-      {/* 预览模式底部进度指示器 */}
+      {/* Preview mode footer progress indicator */}
       {nodes.length > 1 && (
         <div
           className={`preview-footer ${uiState.isIdle ? 'opacity-0' : 'opacity-100'}`}

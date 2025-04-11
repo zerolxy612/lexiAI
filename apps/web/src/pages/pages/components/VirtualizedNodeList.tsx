@@ -14,8 +14,8 @@ interface VirtualizedNodeListProps {
 }
 
 /**
- * 虚拟化节点列表组件
- * 使用react-window实现虚拟滚动，只渲染可见区域的节点，提高性能
+ * Virtualized node list component
+ * Uses react-window to implement virtual scrolling, only rendering visible areas of nodes to improve performance
  */
 const VirtualizedNodeList: React.FC<VirtualizedNodeListProps> = ({
   nodes,
@@ -25,16 +25,16 @@ const VirtualizedNodeList: React.FC<VirtualizedNodeListProps> = ({
   onStartSlideshow,
   onWideMode,
 }) => {
-  // 列表引用，用于滚动控制
+  // List reference for scroll control
   const listRef = useRef<List>(null);
 
-  // 固定节点高度为400px加上间距
+  // Fixed node height of 400px plus spacing
   const getNodeHeight = useCallback(() => {
-    // 节点高度 + 间距
-    return 400 + 24; // 400px高度 + 24px间距
+    // Node height + spacing
+    return 400 + 24; // 400px height + 24px spacing
   }, []);
 
-  // 渲染单个节点
+  // Render single node
   const renderNode = useCallback(
     ({ index, style }: { index: number; style: React.CSSProperties }) => {
       const node = nodes[index];
@@ -76,7 +76,7 @@ const VirtualizedNodeList: React.FC<VirtualizedNodeListProps> = ({
     [nodes, activeNodeIndex, onNodeSelect, onDelete, onStartSlideshow, onWideMode],
   );
 
-  // 使用AutoSizer确保List组件填充可用空间
+  // Use AutoSizer to ensure List component fills available space
   return (
     <div className="space-y-6">
       <AutoSizer disableHeight>
@@ -87,8 +87,8 @@ const VirtualizedNodeList: React.FC<VirtualizedNodeListProps> = ({
             width={width}
             itemCount={nodes.length}
             itemSize={getNodeHeight}
-            overscanCount={2} // 预渲染上下2个项目以提高滚动体验
-            style={{ overflow: 'visible' }} // 确保阴影效果不被裁剪
+            overscanCount={2} // Pre-render 2 items above and below to improve scrolling experience
+            style={{ overflow: 'visible' }} // Ensure shadow effects aren't clipped
           >
             {renderNode}
           </List>

@@ -24,7 +24,7 @@ import {
 } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { useTranslation } from 'react-i18next';
 
-// 获取节点图标组件
+// Get node icon component
 const getNodeIcon = (nodeType: string) => {
   switch (nodeType) {
     case 'document':
@@ -40,7 +40,7 @@ const getNodeIcon = (nodeType: string) => {
     case 'website':
       return IconWebsite;
     case 'skill':
-      // 这里可以根据skillType返回不同的图标，但目前我们简化处理
+      // We can return different icons based on skillType, but we simplify it for now
       return Sparkles;
     case 'tool':
       return Wrench;
@@ -49,7 +49,7 @@ const getNodeIcon = (nodeType: string) => {
   }
 };
 
-// 获取节点标题
+// Get node title
 const getNodeTitle = (node: NodeRelation) => {
   const { t } = useTranslation();
   return node.nodeData?.title || t('pages.components.nodeBlock.untitledNode');
@@ -82,13 +82,13 @@ export const NodeBlockHeader: React.FC<NodeBlockHeaderProps> = memo(
     const nodeColor = NODE_COLORS[node.nodeType as keyof typeof NODE_COLORS] || '#17B26A';
     const title = getNodeTitle(node);
 
-    // 处理标题更新
+    // Handle title update
     const handleTitleUpdate = useCallback((newTitle: string) => {
-      // 这里可以添加标题更新的逻辑
+      // Logic for title update can be added here
       console.log('Title updated:', newTitle);
     }, []);
 
-    // 处理删除节点
+    // Handle node deletion
     const handleDeleteNode = useCallback(() => {
       if (!onDelete) return;
 
@@ -104,7 +104,7 @@ export const NodeBlockHeader: React.FC<NodeBlockHeaderProps> = memo(
       });
     }, [node.nodeId, onDelete, title, t]);
 
-    // 定义下拉菜单项
+    // Define dropdown menu items
     const menuItems: MenuProps['items'] = onDelete
       ? [
           {
@@ -120,7 +120,7 @@ export const NodeBlockHeader: React.FC<NodeBlockHeaderProps> = memo(
         ]
       : [];
 
-    // 如果是小地图模式，不显示header
+    // If in minimap mode, don't display header
     if (isMinimap) {
       return null;
     }

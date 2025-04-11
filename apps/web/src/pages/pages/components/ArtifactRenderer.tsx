@@ -8,7 +8,7 @@ import { useFetchShareData } from '@refly-packages/ai-workspace-common/hooks/use
 import Renderer from '@refly-packages/ai-workspace-common/modules/artifacts/code-runner/render';
 import { useTranslation } from 'react-i18next';
 
-// 接口定义
+// Interface definitions
 interface NodeData {
   title?: string;
   content?: string;
@@ -32,7 +32,7 @@ interface NodeRelation {
   nodeData: NodeData;
 }
 
-// 统一的工件渲染组件
+// Unified artifact renderer component
 const ArtifactRenderer = memo(
   ({
     node,
@@ -53,11 +53,11 @@ const ArtifactRenderer = memo(
         : t('pages.components.codeComponent'),
       status,
       shareId,
-      type = 'text/html', // 默认类型
+      type = 'text/html', // Default type
       language,
     } = node.nodeData?.metadata || {};
 
-    // 根据类型选择不同的数据获取hook
+    // Choose different data fetching hook based on type
     const { data: remoteData, isLoading: isRemoteLoading } =
       rendererType === 'document'
         ? useGetDocumentDetail(
@@ -87,39 +87,21 @@ const ArtifactRenderer = memo(
 
     const isLoading = isRemoteLoading || isShareLoading;
 
-    // 合并数据源
+    // Merge data sources
     const artifactData = useMemo(
       () => shareData || remoteData?.data || null,
       [shareData, remoteData],
     );
 
-    // 获取内容
+    // Get content
     const content = artifactData?.content || node.nodeData?.metadata?.content || '';
 
-    // 确定当前使用的渲染类型
+    // Determine current rendering type
     const currentType = rendererType === 'document' ? 'text/markdown' : artifactData?.type || type;
 
-    const handleRequestFix = useCallback(
-      (error: string) => {
-        message.warning(`${t('pages.components.artifact.fixCodeNeeded')}: ${error}`);
-      },
-      [t],
-    );
-
-    // 根据类型获取显示名称
-    const _getTypeDisplayName = (typeStr: string) => {
-      const typeMap: Record<string, string> = {
-        'text/html': t('pages.components.artifact.webRender'),
-        'application/refly.artifacts.react': t('pages.components.artifact.reactComponent'),
-        'application/refly.artifacts.mermaid': t('pages.components.artifact.flowchart'),
-        'application/refly.artifacts.mindmap': t('pages.components.artifact.mindmap'),
-        'text/markdown': t('pages.components.artifact.markdown'),
-        'application/refly.artifacts.code': t('pages.components.artifact.code'),
-        'image/svg+xml': t('pages.components.artifact.svgImage'),
-      };
-
-      return typeMap[typeStr] || typeStr;
-    };
+    const handleRequestFix = useCallback(() => {
+      message.info(t('pages.components.artifact.fixNotAvailable'));
+    }, [t]);
 
     if (!artifactId) {
       return (
@@ -195,16 +177,20 @@ const ArtifactRenderer = memo(
                   </div>
                 </div>
               ) : (
-                <Renderer
-                  content={content}
-                  type={currentType}
-                  title={title}
-                  language={artifactData?.language || language}
-                  readonly
-                  onRequestFix={handleRequestFix}
-                  width="100%"
-                  height="100%"
-                />
+                <div className="h-full flex flex-col">
+                  <div className="flex-grow">
+                    <Renderer
+                      content={content}
+                      type={currentType}
+                      title={title}
+                      language={artifactData?.language || language}
+                      readonly
+                      onRequestFix={handleRequestFix}
+                      width="100%"
+                      height="100%"
+                    />
+                  </div>
+                </div>
               )}
             </div>
           )}
@@ -213,7 +199,7 @@ const ArtifactRenderer = memo(
     );
   },
   (prevProps, nextProps) => {
-    // 只有当节点ID、类型和关键元数据没有变化时，跳过重新渲染
+    // Only skip re-rendering when node ID, type, and key metadata haven't changed
     const prevMetadata = prevProps.node.nodeData?.metadata || {};
     const nextMetadata = nextProps.node.nodeData?.metadata || {};
 

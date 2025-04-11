@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { ArtifactRenderer, type NodeRelation } from './ArtifactRenderer';
 
-// 为了向后兼容，保留原始组件名称但使用统一组件
+// For backward compatibility, keeping the original component name but using the unified component
 const CodeArtifactRenderer = memo(
   (props: {
     node: NodeRelation;
@@ -18,5 +18,7 @@ const CodeArtifactRenderer = memo(
     );
   },
 );
+
+CodeArtifactRenderer.displayName = 'CodeArtifactRenderer';
 
 export { CodeArtifactRenderer };

@@ -29,7 +29,7 @@ import {
 } from './pages.dto';
 import { createId } from '@paralleldrive/cuid2';
 
-// 类型定义
+// Type definitions
 interface ResolveUserResponse {
   uid: string;
   userInfo?: {
@@ -37,16 +37,16 @@ interface ResolveUserResponse {
   };
 }
 
-// 自定义PageNotFoundError错误类
+// Custom PageNotFoundError class
 class PageNotFoundError extends ShareNotFoundError {
-  code = 'E1010'; // 自定义错误代码，确保不与其他错误代码冲突
+  code = 'E1010'; // Custom error code, ensure it doesn't conflict with other error codes
   messageDict = {
     en: 'Page not found',
-    'zh-CN': '页面不存在',
+    'zh-CN': 'Page not found',
   };
 }
 
-// 生成唯一ID
+// Generate unique IDs
 const genPageId = (): string => `page-${createId()}`;
 const genPageNodeRelationId = (): string => `pnr-${createId()}`;
 const genPageVersionId = (): string => `pver-${createId()}`;
@@ -66,7 +66,7 @@ export class PagesService {
     @Inject(MINIO_INTERNAL) private minio: MinioService,
   ) {}
 
-  // 列出用户的所有Pages
+  // List all pages for a user
   async listPages(
     user: User,
     page = 1,
@@ -97,18 +97,18 @@ export class PagesService {
     };
   }
 
-  // 创建Page
+  // Create a new page
   async createPage(
     user: User | ResolveUserResponse,
     { title = 'Untitled', content }: CreatePageDto,
   ): Promise<CreatePageResult> {
     const { uid } = user as User;
 
-    // 生成pageId
+    // Generate pageId
     const pageId = genPageId();
     const stateStorageKey = `pages/${uid}/${pageId}/state.update`;
 
-    // 从content中提取canvasId和nodeIds
+    // Extract canvasId and nodeIds from content
     const canvasId = content?.canvasId;
     const nodeIds = content?.nodeIds || [];
 
@@ -120,27 +120,27 @@ export class PagesService {
       throw new Error('No nodes selected');
     }
 
-    // 从画布获取数据
+    // Get data from canvas
     const canvasData = await this.canvasService.getCanvasRawData(user, canvasId);
 
-    // 筛选指定的节点
+    // Filter specified nodes
     const selectedNodes = (canvasData.nodes as CanvasNode[]).filter((node) =>
       nodeIds.includes(node.data.entityId),
     );
 
-    // 验证所有需要的节点都存在
+    // Verify all required nodes exist
     if (selectedNodes.length !== nodeIds.length) {
       throw new Error('Some selected nodes cannot be found');
     }
 
-    // 创建新的Page记录
+    // Create new Page record
     const [page] = await this.prisma.$queryRaw<Page[]>`
       INSERT INTO "pages" ("page_id", "uid", "title", "state_storage_key", "status", "created_at", "updated_at")
       VALUES (${pageId}, ${uid}, ${title || 'Untitled Page'}, ${stateStorageKey}, 'draft', NOW(), NOW())
       RETURNING *
     `;
 
-    // 创建初始的Y.doc来存储页面状态
+    // Create initial Y.doc to store page state
     const doc = new Y.Doc();
     doc.transact(() => {
       doc.getText('title').insert(0, page.title);
@@ -149,11 +149,11 @@ export class PagesService {
       doc.getMap('pageConfig').set('theme', 'default');
     });
 
-    // 上传Y.doc - 将Y.Doc转换为Uint8Array，再转为Buffer
+    // Upload Y.doc - Convert Y.Doc to Uint8Array, then to Buffer
     const state = Y.encodeStateAsUpdate(doc);
     await this.minio.client.putObject(stateStorageKey, Buffer.from(state));
 
-    // 创建页面与节点的关联记录
+    // Create page-node relation records
     const nodeRelationsPromises = selectedNodes.map(async (node, index) => {
       const relationId = genPageNodeRelationId();
       const [relation] = await this.prisma.$queryRaw<PageNodeRelation[]>`
@@ -173,7 +173,7 @@ export class PagesService {
     };
   }
 
-  // 获取页面详情 - 编辑时使用
+  // Get page details - used for editing
   async getPageDetail(user: User | ResolveUserResponse, pageId: string): Promise<PageDetailResult> {
     const { uid } = user as User;
 
@@ -188,7 +188,7 @@ export class PagesService {
       throw new PageNotFoundError();
     }
 
-    // 获取页面的节点关联
+    // Get page node relations
     const nodeRelations = await this.prisma.$queryRaw<PageNodeRelation[]>`
       SELECT * FROM "page_node_relations"
       WHERE "page_id" = ${pageId}
@@ -196,14 +196,14 @@ export class PagesService {
       ORDER BY "order_index" ASC
     `;
 
-    // 获取页面配置
+    // Get page configuration
     let pageConfig = {
       layout: 'slides',
       theme: 'light',
     };
 
     try {
-      // 从存储服务读取页面状态
+      // Read page state from storage service
       if (page.state_storage_key) {
         const stateStream = await this.minio.client.getObject(page.state_storage_key);
         const stateBuffer = await streamToBuffer(stateStream);
@@ -234,7 +234,7 @@ export class PagesService {
     };
   }
 
-  // 更新页面 - 保存编辑状态
+  // Update page - save edit state
   async updatePage(
     user: User | ResolveUserResponse,
     pageId: string,
@@ -243,7 +243,7 @@ export class PagesService {
     const { uid } = user as User;
     const { title, nodeRelations, nodeRelationOrders, pageConfig } = param;
 
-    // 检查页面是否存在
+    // Check if page exists
     const [page] = await this.prisma.$queryRaw<Page[]>`
       SELECT * FROM "pages"
       WHERE "page_id" = ${pageId}
@@ -255,12 +255,12 @@ export class PagesService {
       throw new PageNotFoundError();
     }
 
-    // 使用事务处理所有数据库操作
+    // Use transaction for all database operations
     return await this.prisma.$transaction(async (tx) => {
-      // 开始更新操作
+      // Start update operations
       let updatePage = page;
 
-      // 如果有标题更新
+      // If title is updated
       if (title !== undefined) {
         const [updated] = await tx.$queryRaw<Page[]>`
           UPDATE "pages"
@@ -271,19 +271,19 @@ export class PagesService {
         updatePage = updated;
       }
 
-      // 如果仅是更新节点顺序
+      // If only updating node order
       let updatedRelations = undefined;
       if (nodeRelationOrders && nodeRelationOrders.length > 0) {
         this.logger.log('Updating node relation orders', nodeRelationOrders);
 
-        // 获取当前页面的节点关联
+        // Get current page node relations
         const existingRelations = await tx.$queryRaw<PageNodeRelation[]>`
           SELECT * FROM "page_node_relations"
           WHERE "page_id" = ${pageId}
           AND "deleted_at" IS NULL
         `;
 
-        // 按relationId分组现有关系，方便查找
+        // Group existing relations by relationId for easy lookup
         const relationsByRelationId = existingRelations.reduce(
           (acc: Record<string, PageNodeRelation>, relation) => {
             acc[relation.relation_id] = relation;
@@ -292,13 +292,13 @@ export class PagesService {
           {},
         );
 
-        // 只更新节点顺序
+        // Only update node order
         const updatedRelationsPromises = nodeRelationOrders.map(async (relation) => {
           const { relationId, orderIndex } = relation;
 
-          // 检查是否存在此关联ID
+          // Check if this relation ID exists
           if (relationsByRelationId[relationId]) {
-            // 仅更新顺序
+            // Only update order
             const [updated] = await tx.$queryRaw<PageNodeRelation[]>`
               UPDATE "page_node_relations"
               SET "order_index" = ${orderIndex}, "updated_at" = NOW()
@@ -307,24 +307,24 @@ export class PagesService {
             `;
             return updated;
           }
-          // 如果找不到关联ID，返回null
+          // If relation ID not found, return null
           return null;
         });
 
-        // 过滤掉null值
+        // Filter out null values
         const results = await Promise.all(updatedRelationsPromises);
         updatedRelations = results.filter(Boolean);
       }
-      // 如果是完整的节点关联更新
+      // If complete node relation update
       else if (nodeRelations && nodeRelations.length > 0) {
-        // 获取当前页面的节点关联
+        // Get current page node relations
         const existingRelations = await tx.$queryRaw<PageNodeRelation[]>`
           SELECT * FROM "page_node_relations"
           WHERE "page_id" = ${pageId}
           AND "deleted_at" IS NULL
         `;
 
-        // 按节点ID分组现有关系，方便查找
+        // Group existing relations by nodeId for easy lookup
         const relationsByNodeId = existingRelations.reduce(
           (acc: Record<string, PageNodeRelation>, relation) => {
             acc[relation.node_id] = relation;
@@ -333,13 +333,13 @@ export class PagesService {
           {},
         );
 
-        // 更新现有关系或创建新关系
+        // Update existing relations or create new ones
         const updatedRelationsPromises = nodeRelations.map(async (relation, index) => {
           const { nodeId, nodeType, entityId, nodeData, orderIndex = index } = relation;
 
-          // 检查是否已有此节点关联
+          // Check if this node relation already exists
           if (relationsByNodeId[nodeId]) {
-            // 更新现有关联
+            // Update existing relation
             const [updated] = await tx.$queryRaw<PageNodeRelation[]>`
               UPDATE "page_node_relations"
               SET 
@@ -353,7 +353,7 @@ export class PagesService {
             `;
             return updated;
           }
-          // 创建新关联
+          // Create new relation
           const relationId = genPageNodeRelationId();
           const nodeDataStr =
             typeof nodeData === 'string' ? nodeData : JSON.stringify(nodeData || {});
@@ -375,10 +375,10 @@ export class PagesService {
         updatedRelations = await Promise.all(updatedRelationsPromises);
       }
 
-      // 在事务完成后处理非数据库操作（如更新页面状态文件）
+      // Handle non-database operations after transaction (like updating page state file)
       if (pageConfig) {
         try {
-          // 读取现有状态文件
+          // Read existing state file
           let ydoc = new Y.Doc();
 
           if (page.state_storage_key) {
@@ -391,19 +391,19 @@ export class PagesService {
                 Y.applyUpdate(ydoc, update);
               }
             } catch (error) {
-              // 如果文件不存在，使用新的Y.Doc()
+              // If file doesn't exist, use new Y.Doc()
               this.logger.error('Error reading state file, creating new:', error);
               ydoc = new Y.Doc();
             }
           }
 
-          // 更新pageConfig
+          // Update pageConfig
           const pageConfigMap = ydoc.getMap('pageConfig');
           for (const [key, value] of Object.entries(pageConfig)) {
             pageConfigMap.set(key, value);
           }
 
-          // 保存更新后的状态
+          // Save updated state
           const update = Y.encodeStateAsUpdate(ydoc);
           await this.minio.client.putObject(page.state_storage_key, Buffer.from(update));
         } catch (error) {
@@ -418,7 +418,7 @@ export class PagesService {
     });
   }
 
-  // 发布页面 - 生成可分享的版本
+  // Publish page - generate shareable version
   async publishPage(user: User | ResolveUserResponse, pageId: string): Promise<PublishPageResult> {
     const { uid } = user as User;
 
@@ -433,7 +433,7 @@ export class PagesService {
       throw new PageNotFoundError();
     }
 
-    // 获取节点关联
+    // Get node relations
     const nodeRelations = await this.prisma.$queryRaw<PageNodeRelation[]>`
       SELECT * FROM "page_node_relations"
       WHERE "page_id" = ${pageId}
@@ -441,7 +441,7 @@ export class PagesService {
       ORDER BY "order_index" ASC
     `;
 
-    // 获取页面内容，这里假设是从state_storage_key中获取
+    // Get page content, assuming it's from state_storage_key
     let content: any = { nodes: [] };
     let pageConfig = {
       layout: 'slides',
@@ -449,7 +449,7 @@ export class PagesService {
     };
 
     try {
-      // 从存储服务读取页面状态
+      // Read page state from storage service
       if (page.state_storage_key) {
         const stateStream = await this.minio.client.getObject(page.state_storage_key);
         const stateBuffer = await streamToBuffer(stateStream);
@@ -459,7 +459,7 @@ export class PagesService {
           const ydoc = new Y.Doc();
           Y.applyUpdate(ydoc, update);
 
-          // 获取pageConfig
+          // Get pageConfig
           const pageConfigMap = ydoc.getMap('pageConfig');
           pageConfig = {
             layout: (pageConfigMap.get('layout') as string) || 'slides',
@@ -468,7 +468,7 @@ export class PagesService {
         }
       }
 
-      // 构建内容对象
+      // Build content object
       content = {
         pageConfig,
         nodes: await Promise.all(
@@ -484,7 +484,7 @@ export class PagesService {
               this.logger.error('Error parsing node data:', error);
             }
 
-            // 为代码节点添加代码内容
+            // Add code content for code nodes
             if (relation.node_type === 'code_artifact') {
               try {
                 const codeArtifact = await this.codeArtifactService.getCodeArtifactDetail(
@@ -510,7 +510,7 @@ export class PagesService {
               }
             }
 
-            // 为知识节点添加知识内容
+            // Add knowledge content for knowledge nodes
             if (relation.node_type === 'knowledge') {
               try {
                 const knowledge = await this.knowledgeService.getResourceDetail(user, {
@@ -550,7 +550,7 @@ export class PagesService {
       this.logger.error('Error building page content:', error);
     }
 
-    // 获取最新版本号
+    // Get latest version number
     const [latestVersion] = await this.prisma.$queryRaw<{ max_version: number }[]>`
       SELECT COALESCE(MAX(version), 0) as max_version FROM "page_versions"
       WHERE "page_id" = ${pageId}
@@ -559,11 +559,11 @@ export class PagesService {
     const nextVersion = latestVersion.max_version + 1;
     const contentStorageKey = `pages/${page.uid}/${pageId}/versions/${nextVersion}.json`;
 
-    // 保存内容到存储
+    // Save content to storage
     const contentString = JSON.stringify(content);
     await this.minio.client.putObject(contentStorageKey, Buffer.from(contentString));
 
-    // 保存最新版本
+    // Save latest version
     const pageVersionId = genPageVersionId();
     const [version] = await this.prisma.$queryRaw<PageVersion[]>`
       INSERT INTO "page_versions" (
@@ -575,7 +575,7 @@ export class PagesService {
       RETURNING *
     `;
 
-    // 更新页面状态为已发布
+    // Update page status to published
     const [updatedPage] = await this.prisma.$queryRaw<Page[]>`
       UPDATE "pages"
       SET "status" = 'published', "updated_at" = NOW()
@@ -589,9 +589,9 @@ export class PagesService {
     };
   }
 
-  // 获取页面版本 - 可以指定版本，不指定则获取最新版本
+  // Get page version - can specify version, if not specified get latest version
   async getPageVersion(pageId: string, version?: number): Promise<PageVersionResult> {
-    // 获取页面信息
+    // Get page information
     const [page] = await this.prisma.$queryRaw<Page[]>`
       SELECT * FROM "pages"
       WHERE "page_id" = ${pageId}
@@ -602,7 +602,7 @@ export class PagesService {
       throw new PageNotFoundError();
     }
 
-    // 获取版本信息
+    // Get version information
     let versionQuery: Promise<PageVersion[]>;
     if (version) {
       versionQuery = this.prisma.$queryRaw<PageVersion[]>`
@@ -627,7 +627,7 @@ export class PagesService {
       throw new ShareNotFoundError();
     }
 
-    // 获取版本内容
+    // Get version content
     let content: any = null;
 
     try {
@@ -651,9 +651,9 @@ export class PagesService {
     };
   }
 
-  // 获取页面的所有版本
+  // Get all versions of a page
   async getPageVersions(pageId: string): Promise<PageVersionsResult> {
-    // 获取页面信息
+    // Get page information
     const [page] = await this.prisma.$queryRaw<Page[]>`
       SELECT * FROM "pages"
       WHERE "page_id" = ${pageId}
@@ -664,7 +664,7 @@ export class PagesService {
       throw new PageNotFoundError();
     }
 
-    // 获取所有版本
+    // Get all versions
     const versions = await this.prisma.$queryRaw<PageVersion[]>`
       SELECT * FROM "page_versions"
       WHERE "page_id" = ${pageId}
@@ -677,11 +677,11 @@ export class PagesService {
     };
   }
 
-  // 分享页面 - 创建公开分享链接
+  // Share page - create public share link
   async sharePage(user: User | ResolveUserResponse, pageId: string): Promise<SharePageResult> {
     const { uid } = user as User;
 
-    // 检查页面是否存在
+    // Check if page exists
     const [page] = await this.prisma.$queryRaw<Page[]>`
       SELECT * FROM "pages"
       WHERE "page_id" = ${pageId}
@@ -693,12 +693,12 @@ export class PagesService {
       throw new PageNotFoundError();
     }
 
-    // 使用ShareService创建分享
+    // Use ShareService to create share
     const shareRecord = await this.shareService.createShare(user as User, {
       entityId: pageId,
       entityType: 'page' as EntityType,
       title: page.title,
-      allowDuplication: false, // 默认不允许复制
+      allowDuplication: false, // Default: do not allow duplication
     });
 
     return {
@@ -708,9 +708,9 @@ export class PagesService {
     };
   }
 
-  // 获取分享页面内容
+  // Get shared page content
   async getSharedPage(shareId: string, currentUser?: User) {
-    // 使用ShareService获取分享记录
+    // Use ShareService to get share record
     const shareRecord = await this.prisma.shareRecord.findFirst({
       where: {
         shareId,
@@ -723,13 +723,13 @@ export class PagesService {
       throw new ShareNotFoundError();
     }
 
-    // 获取分享内容
+    // Get shared content
     const sharedContent = await this.shareService.getSharedData(shareRecord.storageKey);
 
-    // 确定当前用户是否为所有者
+    // Determine if current user is owner
     const isOwner = currentUser && currentUser.uid === shareRecord.uid;
 
-    // 解析额外数据
+    // Parse extra data
     let extraData = {};
     if (shareRecord.extraData) {
       try {
@@ -739,7 +739,7 @@ export class PagesService {
       }
     }
 
-    // 返回分享内容
+    // Return shared content
     return {
       page: sharedContent.page,
       content: sharedContent.content,
@@ -756,7 +756,7 @@ export class PagesService {
     };
   }
 
-  // 删除页面
+  // Delete page
   async deletePage(user: User | ResolveUserResponse, pageId: string): Promise<DeletePageResult> {
     const { uid } = user as User;
 
@@ -771,14 +771,14 @@ export class PagesService {
       throw new PageNotFoundError();
     }
 
-    // 软删除页面
+    // Soft delete page
     await this.prisma.$queryRaw`
       UPDATE "pages"
       SET "deleted_at" = NOW()
       WHERE "page_id" = ${pageId}
     `;
 
-    // 软删除页面节点关联
+    // Soft delete page node relations
     await this.prisma.$queryRaw`
       UPDATE "page_node_relations"
       SET "deleted_at" = NOW()
@@ -790,7 +790,7 @@ export class PagesService {
     };
   }
 
-  // 删除页面节点
+  // Delete page node
   async deletePageNode(
     user: User | ResolveUserResponse,
     pageId: string,
@@ -798,7 +798,7 @@ export class PagesService {
   ): Promise<{ pageId: string; nodeId: string }> {
     const { uid } = user as User;
 
-    // 检查页面是否存在
+    // Check if page exists
     const page = await this.prisma.$queryRaw<Page[]>`
       SELECT * FROM "pages"
       WHERE "page_id" = ${pageId} AND "uid" = ${uid} AND "deleted_at" IS NULL
@@ -808,7 +808,7 @@ export class PagesService {
       throw new PageNotFoundError();
     }
 
-    // 检查节点关系是否存在
+    // Check if node relation exists
     const nodeRelation = await this.prisma.$queryRaw<PageNodeRelation[]>`
       SELECT * FROM "page_node_relations"
       WHERE "page_id" = ${pageId} AND "node_id" = ${nodeId} AND "deleted_at" IS NULL
@@ -818,7 +818,7 @@ export class PagesService {
       throw new PageNotFoundError();
     }
 
-    // 软删除节点关系
+    // Soft delete node relation
     await this.prisma.$queryRaw`
       UPDATE "page_node_relations"
       SET "deleted_at" = NOW()
@@ -831,7 +831,7 @@ export class PagesService {
     };
   }
 
-  // 按实体ID查找所有分享记录
+  // List all share records by entity ID
   async listSharesByEntityId(user: User, entityId: string) {
     const shares = await this.shareService.listShares(user, {
       entityId,
@@ -840,7 +840,7 @@ export class PagesService {
     return shares;
   }
 
-  // 删除指定分享ID的分享
+  // Delete share by share ID
   async deleteShareById(user: User, shareId: string) {
     await this.shareService.deleteShare(user, { shareId });
     return { shareId, deleted: true };

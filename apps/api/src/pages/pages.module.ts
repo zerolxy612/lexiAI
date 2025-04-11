@@ -17,7 +17,7 @@ import { ShareModule } from '@/share/share.module';
     KnowledgeModule,
     ActionModule,
     CodeArtifactModule,
-    ShareModule, // 确保 ShareModule 在这里正确导入
+    ShareModule, // Make sure ShareModule is correctly imported here
   ],
   controllers: [PagesController],
   providers: [PagesService],
