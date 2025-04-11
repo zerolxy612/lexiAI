@@ -596,6 +596,7 @@ function PageEdit() {
                   placeholder="请输入页面标题"
                   bordered={false}
                   className="text-lg font-medium px-0"
+                  style={{ height: '32px' }}
                 />
               </Form.Item>
             </Form>

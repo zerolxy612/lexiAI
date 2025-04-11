@@ -58,16 +58,16 @@ const PreviewMode: React.FC<PreviewModeProps> = ({
       <div
         className="preview-progress-bar"
         style={{
-          position: 'absolute',
+          position: 'fixed',
           top: 0,
           left: 0,
           width: `${progressPercentage}%`,
-          height: '4px',
+          height: '2px',
           background: 'linear-gradient(to right, #108ee9, #1890ff)',
           borderRadius: '0 2px 2px 0',
           boxShadow: '0 0 6px rgba(24, 144, 255, 0.5)',
           transition: 'width 0.4s cubic-bezier(0.23, 1, 0.32, 1)',
-          zIndex: 100,
+          zIndex: 1000,
         }}
       />
 
