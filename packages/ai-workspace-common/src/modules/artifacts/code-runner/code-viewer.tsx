@@ -357,7 +357,7 @@ export default memo(
 
         {/* Content area */}
         <div
-          className={`flex flex-grow ${layoutMode === 'split' ? 'flex-row' : 'flex-col'} rounded-md`}
+          className={`flex flex-grow overflow-auto ${layoutMode === 'split' ? 'flex-row' : 'flex-col '} rounded-md`}
         >
           {layoutMode === 'tabs' ? (
             <>
