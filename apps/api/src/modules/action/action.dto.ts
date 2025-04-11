@@ -1,4 +1,11 @@
-import { ActionResult, ActionStep, ActionType, EntityType, ModelTier } from '@refly/openapi-schema';
+import {
+  ActionResult,
+  ActionStatus,
+  ActionStep,
+  ActionType,
+  EntityType,
+  ModelTier,
+} from '@refly/openapi-schema';
 import {
   ActionResult as ActionResultModel,
   ActionStep as ActionStepModel,
@@ -24,11 +31,12 @@ export function actionStepPO2DTO(step: ActionStepModel): ActionStep {
 
 export function actionResultPO2DTO(result: ActionDetail): ActionResult {
   return {
-    ...pick(result, ['resultId', 'version', 'title', 'targetId', 'status']),
+    ...pick(result, ['resultId', 'version', 'title', 'targetId']),
     type: result.type as ActionType,
     tier: result.tier as ModelTier,
     targetType: result.targetType as EntityType,
     input: JSON.parse(result.input || '{}'),
+    status: result.status as ActionStatus,
     actionMeta: JSON.parse(result.actionMeta || '{}'),
     context: JSON.parse(result.context || '{}'),
     tplConfig: JSON.parse(result.tplConfig || '{}'),

@@ -871,7 +871,7 @@ export class MiscService implements OnModuleInit {
       // Batch insert all new files at once
       const result = await this.prisma.staticFile.createMany({
         data: filesToCreate,
-        skipDuplicates: true, // As an extra precaution against duplicates
+        // skipDuplicates: true, // As an extra precaution against duplicates
       });
       duplicatedCount = result.count;
     }

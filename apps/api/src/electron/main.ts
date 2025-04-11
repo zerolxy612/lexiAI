@@ -110,6 +110,8 @@ async function createWindow() {
 
   initializeStore();
 
+  process.env.DATABASE_URL = `file:${app.getPath('userData')}/refly.db`;
+
   await startNestServer();
 
   win = new BrowserWindow({

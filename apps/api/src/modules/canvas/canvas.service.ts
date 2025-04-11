@@ -33,6 +33,7 @@ import { SubscriptionService } from '../subscription/subscription.service';
 import { KnowledgeService } from '../knowledge/knowledge.service';
 import { ActionService } from '../action/action.service';
 import { generateCanvasTitle, CanvasContentItem } from './canvas-title-generator';
+import { RedisService } from '@/modules/common/redis.service';
 
 @Injectable()
 export class CanvasService {
@@ -40,6 +41,7 @@ export class CanvasService {
 
   constructor(
     private prisma: PrismaService,
+    private redis: RedisService,
     private elasticsearch: ElasticsearchService,
     private collabService: CollabService,
     private miscService: MiscService,
@@ -570,60 +572,72 @@ export class CanvasService {
       throw new CanvasNotFoundError();
     }
 
-    const ydoc = new Y.Doc();
-    await this.collabService.loadDocument({
-      document: ydoc,
-      documentName: canvas.canvasId,
-      context: {
-        user: { uid: canvas.uid },
-        entity: canvas,
-        entityType: 'canvas',
-      },
-    });
-    const nodes = ydoc.getArray('nodes').toJSON();
+    const releaseLock = await this.redis.acquireLock(`canvas-entity-relation-lock:${canvasId}`);
+    if (!releaseLock) {
+      this.logger.warn(`Failed to acquire lock for canvas ${canvasId}`);
+      return;
+    }
 
-    const entities: Entity[] = nodes
-      .map((node) => ({
-        entityId: node.data?.entityId,
-        entityType: node.type,
-      }))
-      .filter((entity) => entity.entityId && entity.entityType);
-
-    const existingRelations = await this.prisma.canvasEntityRelation.findMany({
-      where: { canvasId, deletedAt: null },
-    });
-
-    // Find relations to be removed (soft delete)
-    const entityIds = new Set(entities.map((e) => e.entityId));
-    const relationsToRemove = existingRelations.filter(
-      (relation) => !entityIds.has(relation.entityId),
-    );
-
-    // Find new relations to be created
-    const existingEntityIds = new Set(existingRelations.map((r) => r.entityId));
-    const relationsToCreate = entities.filter((entity) => !existingEntityIds.has(entity.entityId));
-
-    // Perform bulk operations
-    await Promise.all([
-      // Soft delete removed relations in bulk
-      this.prisma.canvasEntityRelation.updateMany({
-        where: {
-          canvasId,
-          entityId: { in: relationsToRemove.map((r) => r.entityId) },
-          deletedAt: null,
+    try {
+      const ydoc = new Y.Doc();
+      await this.collabService.loadDocument({
+        document: ydoc,
+        documentName: canvas.canvasId,
+        context: {
+          user: { uid: canvas.uid },
+          entity: canvas,
+          entityType: 'canvas',
         },
-        data: { deletedAt: new Date() },
-      }),
-      // Create new relations in bulk
-      this.prisma.canvasEntityRelation.createMany({
-        data: relationsToCreate.map((entity) => ({
-          canvasId,
-          entityId: entity.entityId,
-          entityType: entity.entityType,
-        })),
-        skipDuplicates: true,
-      }),
-    ]);
+      });
+      const nodes = ydoc.getArray('nodes').toJSON();
+
+      const entities: Entity[] = nodes
+        .map((node) => ({
+          entityId: node.data?.entityId,
+          entityType: node.type,
+        }))
+        .filter((entity) => entity.entityId && entity.entityType);
+
+      const existingRelations = await this.prisma.canvasEntityRelation.findMany({
+        select: { entityId: true },
+        where: { canvasId, deletedAt: null },
+      });
+
+      // Find relations to be removed (soft delete)
+      const entityIds = new Set(entities.map((e) => e.entityId));
+      const relationsToRemove = existingRelations.filter(
+        (relation) => !entityIds.has(relation.entityId),
+      );
+
+      // Find new relations to be created
+      const existingEntityIds = new Set(existingRelations.map((r) => r.entityId));
+      const relationsToCreate = entities.filter(
+        (entity) => !existingEntityIds.has(entity.entityId),
+      );
+
+      // Perform bulk operations
+      await Promise.all([
+        // Soft delete removed relations in bulk
+        this.prisma.canvasEntityRelation.updateMany({
+          where: {
+            canvasId,
+            entityId: { in: relationsToRemove.map((r) => r.entityId) },
+            deletedAt: null,
+          },
+          data: { deletedAt: new Date() },
+        }),
+        // Create new relations in bulk
+        this.prisma.canvasEntityRelation.createMany({
+          data: relationsToCreate.map((entity) => ({
+            canvasId,
+            entityId: entity.entityId,
+            entityType: entity.entityType,
+          })),
+        }),
+      ]);
+    } finally {
+      await releaseLock();
+    }
   }
 
   /**
