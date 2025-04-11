@@ -22,6 +22,7 @@ import {
   IconCodeArtifact,
   IconWebsite,
 } from '@refly-packages/ai-workspace-common/components/common/icon';
+import { useTranslation } from 'react-i18next';
 
 // 获取节点图标组件
 const getNodeIcon = (nodeType: string) => {
@@ -50,7 +51,8 @@ const getNodeIcon = (nodeType: string) => {
 
 // 获取节点标题
 const getNodeTitle = (node: NodeRelation) => {
-  return node.nodeData?.title || '未命名节点';
+  const { t } = useTranslation();
+  return node.nodeData?.title || t('pages.components.nodeBlock.untitledNode');
 };
 
 interface NodeBlockHeaderProps {
@@ -75,6 +77,7 @@ export const NodeBlockHeader: React.FC<NodeBlockHeaderProps> = memo(
     isMinimap = false,
     onDelete,
   }) => {
+    const { t } = useTranslation();
     const IconComponent = getNodeIcon(node.nodeType);
     const nodeColor = NODE_COLORS[node.nodeType as keyof typeof NODE_COLORS] || '#17B26A';
     const title = getNodeTitle(node);
@@ -90,16 +93,16 @@ export const NodeBlockHeader: React.FC<NodeBlockHeaderProps> = memo(
       if (!onDelete) return;
 
       Modal.confirm({
-        title: '确认删除节点',
-        content: `确定要删除节点"${title}"吗？此操作不可恢复。`,
-        okText: '删除',
+        title: t('pages.components.nodeBlock.confirmDelete'),
+        content: t('pages.components.nodeBlock.confirmDeleteContent', { title }),
+        okText: t('common.delete'),
         okType: 'danger',
-        cancelText: '取消',
+        cancelText: t('common.cancel'),
         onOk: () => {
           onDelete(node.nodeId);
         },
       });
-    }, [node.nodeId, onDelete, title]);
+    }, [node.nodeId, onDelete, title, t]);
 
     // 定义下拉菜单项
     const menuItems: MenuProps['items'] = onDelete
@@ -109,7 +112,7 @@ export const NodeBlockHeader: React.FC<NodeBlockHeaderProps> = memo(
             label: (
               <div className="flex items-center gap-2 text-red-600 whitespace-nowrap">
                 <Trash2 className="w-4 h-4 flex-shrink-0" />
-                <span>删除节点</span>
+                <span>{t('pages.components.nodeBlock.deleteNode')}</span>
               </div>
             ),
             onClick: handleDeleteNode,
@@ -145,7 +148,7 @@ export const NodeBlockHeader: React.FC<NodeBlockHeaderProps> = memo(
               type="text"
               className={`p-1.5 hover:bg-gray-100 ${isWideMode ? 'text-primary-600' : 'text-gray-500'}`}
               onClick={onWideMode}
-              title="宽屏模式查看"
+              title={t('pages.components.nodeBlock.wideModeView')}
             >
               <IconWideMode className="w-4 h-4" />
             </Button>
@@ -155,7 +158,7 @@ export const NodeBlockHeader: React.FC<NodeBlockHeaderProps> = memo(
               type="text"
               className={`p-1.5 hover:bg-gray-100 ${isMaximized ? 'text-primary-600' : 'text-gray-500'}`}
               onClick={onMaximize}
-              title="幻灯片预览"
+              title={t('pages.components.nodeBlock.slideshowPreview')}
             >
               {isMaximized ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
             </Button>

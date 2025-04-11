@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Form, Input, Button, Spin, message, Modal, Select } from 'antd';
+import { useTranslation } from 'react-i18next';
 import {
   useGetPageDetail,
   useUpdatePage,
@@ -44,6 +45,7 @@ function PageEdit() {
   const { pageId } = useParams<{ pageId: string }>();
   const navigate = useNavigate();
   const [form] = Form.useForm();
+  const { t } = useTranslation();
   const [formChanged, setFormChanged] = useState(false);
   const [activeNodeIndex, setActiveNodeIndex] = useState(0);
   const [nodesList, setNodes] = useState<NodeRelation[]>([]);
@@ -92,7 +94,7 @@ function PageEdit() {
     handlePreviewSlideSelect,
     previewContentRef,
     resetSlideIndex,
-    setCurrentSlideIndex, // Add this line
+    setCurrentSlideIndex,
   } = useSlideshow({
     nodes: nodesList,
     isPreviewMode,
@@ -152,35 +154,31 @@ function PageEdit() {
   }, [form, pageDetail, nodes]);
 
   // 提交表单处理函数
-  const handleSubmit = (values: any) => {
+  const handleSubmit = async (values: any) => {
     if (!pageId) return;
 
     const updateData = {
-      path: { pageId },
-      body: {
-        title: values.title,
-        description: values.description,
-      } as any,
+      title: values.title,
+      description: values.description || '',
     };
 
-    // 如果有节点数据，仅更新节点顺序
-    if (nodesList.length > 0) {
-      updateData.body.nodeRelationOrders = nodesList.map((node: NodeRelation, index: number) => ({
-        relationId: node.relationId,
-        orderIndex: index,
-      }));
-    }
-
-    updatePage(updateData, {
-      onSuccess: () => {
-        message.success('页面更新成功');
-        setFormChanged(false);
+    // 更新页面
+    updatePage(
+      {
+        path: { pageId },
+        body: updateData,
       },
-      onError: (error) => {
-        console.error('更新页面失败:', error);
-        message.error('保存失败，请稍后重试');
+      {
+        onSuccess: () => {
+          message.success(t('common.saveSuccess'));
+          setFormChanged(false);
+        },
+        onError: (error) => {
+          console.error('更新页面失败', error);
+          message.error(t('common.saveFailed'));
+        },
       },
-    });
+    );
   };
 
   // 表单与导航处理
@@ -235,11 +233,11 @@ function PageEdit() {
           setActiveNodeIndex(0);
         }
 
-        message.success('节点删除成功');
+        message.success(t('common.deleteSuccess'));
         setFormChanged(true);
       } catch (error) {
         console.error('删除节点失败:', error);
-        message.error('删除节点失败，请重试');
+        message.error(t('common.deleteFailed'));
       } finally {
         setIsDeletingNode(false);
       }
@@ -254,7 +252,7 @@ function PageEdit() {
       const nodeIndex = nodesList.findIndex((node) => node.nodeId === nodeId);
       if (nodeIndex !== -1) {
         // 设置当前幻灯片索引为找到的节点索引
-        setCurrentSlideIndex(nodeIndex); // Use setCurrentSlideIndex here
+        setCurrentSlideIndex(nodeIndex);
         // 打开预览模式
         setIsPreviewMode(true);
       }
@@ -307,30 +305,31 @@ function PageEdit() {
       { path: { pageId } },
       {
         onSuccess: (response) => {
-          if (!response?.data?.data?.shareUrl) {
-            console.error('分享链接获取失败', response);
-            message.error('分享失败，无法获取链接');
+          const shareData = response?.data?.data;
+          if (shareData?.shareId && shareData?.shareUrl) {
+            setShareUrl(shareData.shareUrl);
+
+            // 自动复制到剪贴板
+            navigator.clipboard
+              .writeText(shareData.shareUrl)
+              .then(() => {
+                setIsCopied(true);
+                message.success(t('common.shareSuccess'));
+              })
+              .catch(() => {
+                message.info(t('common.copyShareLink'));
+              })
+              .finally(() => {
+                setIsSharing(false);
+              });
+          } else {
+            message.error(t('common.shareFailed'));
             setIsSharing(false);
-            return;
           }
-
-          const shareLink = response.data.data.shareUrl;
-          setShareUrl(shareLink);
-          setIsSharing(false);
-
-          // 自动复制分享链接到剪贴板
-          navigator.clipboard
-            .writeText(shareLink)
-            .then(() => {
-              setIsCopied(true);
-              message.success('链接已复制到剪贴板');
-              setTimeout(() => setIsCopied(false), 3000);
-            })
-            .catch(() => message.warning('分享成功，请手动复制链接'));
         },
         onError: () => {
+          message.error(t('common.shareFailed'));
           setIsSharing(false);
-          message.error('分享失败，请稍后重试');
         },
       },
     );
@@ -338,16 +337,18 @@ function PageEdit() {
 
   // 复制分享链接
   const handleCopyShareUrl = () => {
-    if (shareUrl) {
-      navigator.clipboard
-        .writeText(shareUrl)
-        .then(() => {
-          setIsCopied(true);
-          message.success('链接已复制到剪贴板');
-          setTimeout(() => setIsCopied(false), 3000);
-        })
-        .catch(() => message.warning('分享成功，请手动复制链接'));
-    }
+    if (!shareUrl) return;
+
+    navigator.clipboard
+      .writeText(shareUrl)
+      .then(() => {
+        setIsCopied(true);
+        message.success(t('common.copied'));
+        setTimeout(() => setIsCopied(false), 3000);
+      })
+      .catch(() => {
+        message.error(t('common.copyFailed'));
+      });
   };
 
   // 关闭分享弹窗
@@ -360,7 +361,7 @@ function PageEdit() {
     if (isLoadingPage) {
       return (
         <div className="flex items-center justify-center py-20">
-          <Spin size="large" tip="加载中..." />
+          <Spin size="large" tip={t('common.loading')} />
         </div>
       );
     }
@@ -369,10 +370,10 @@ function PageEdit() {
       return (
         <div className="flex flex-col items-center justify-center py-20">
           <FileTextOutlined className="text-4xl text-red-500 mb-4" />
-          <p className="text-lg text-gray-700 mb-2">加载页面失败</p>
-          <p className="text-sm text-gray-500 mb-4">请检查网络连接或稍后再试</p>
+          <p className="text-lg text-gray-700 mb-2">{t('common.loadFailed')}</p>
+          <p className="text-sm text-gray-500 mb-4">{t('common.loadFailedDesc')}</p>
           <Button type="primary" onClick={() => navigate('/pages/list')}>
-            返回列表
+            {t('common.returnToList')}
           </Button>
         </div>
       );
@@ -382,10 +383,10 @@ function PageEdit() {
       return (
         <div className="flex flex-col items-center justify-center py-20">
           <FileTextOutlined className="text-4xl text-gray-400 mb-4" />
-          <p className="text-lg text-gray-700 mb-2">页面不存在</p>
-          <p className="text-sm text-gray-500 mb-4">请检查URL或返回页面列表</p>
+          <p className="text-lg text-gray-700 mb-2">{t('common.noPage')}</p>
+          <p className="text-sm text-gray-500 mb-4">{t('common.noPageDesc')}</p>
           <Button type="primary" onClick={() => navigate('/pages/list')}>
-            返回列表
+            {t('common.returnToList')}
           </Button>
         </div>
       );
@@ -418,7 +419,7 @@ function PageEdit() {
           <Suspense
             fallback={
               <div className="flex items-center justify-center h-64">
-                <Spin tip="加载中..." />
+                <Spin tip={t('common.loading')} />
               </div>
             }
           >
@@ -434,14 +435,14 @@ function PageEdit() {
         ) : (
           <div className="text-center py-16 bg-white rounded-lg border border-dashed border-gray-300 shadow-sm">
             <FileTextOutlined className="text-5xl text-gray-300 mb-4" />
-            <h3 className="text-xl text-gray-500 mb-2">暂无内容</h3>
-            <p className="text-gray-400 mb-6">您可以添加新的内容组件</p>
+            <h3 className="text-xl text-gray-500 mb-2">{t('common.noContent')}</h3>
+            <p className="text-gray-400 mb-6">{t('common.noContentDesc')}</p>
             <Button
               type="primary"
               icon={<PlusOutlined />}
-              onClick={() => message.info('添加新组件功能开发中')}
+              onClick={() => message.info(t('common.addContentInfo'))}
             >
-              添加组件
+              {t('common.addContent')}
             </Button>
           </div>
         )}
@@ -456,7 +457,7 @@ function PageEdit() {
               icon={<PlayCircleOutlined />}
               onClick={togglePreviewMode}
               className="shadow-lg bg-blue-600 hover:bg-blue-700 border-none"
-              title="幻灯片预览"
+              title={t('common.preview')}
             />
           </div>
         )}
@@ -498,7 +499,7 @@ function PageEdit() {
   if (isLoadingPage) {
     return (
       <div className="flex justify-center items-center h-[70vh]">
-        <Spin size="large" tip="加载页面中..." />
+        <Spin size="large" tip={t('common.loading')} />
       </div>
     );
   }
@@ -508,9 +509,9 @@ function PageEdit() {
     return (
       <div className="p-6">
         <div className="text-center">
-          <p className="text-red-500 mb-4">无法加载页面信息</p>
+          <p className="text-red-500 mb-4">{t('common.loadFailed')}</p>
           <Button onClick={handleBack} icon={<ArrowLeftOutlined />}>
-            返回列表
+            {t('common.returnToList')}
           </Button>
         </div>
       </div>
@@ -589,11 +590,11 @@ function PageEdit() {
             >
               <Form.Item
                 name="title"
-                rules={[{ required: true, message: '请输入页面标题' }]}
+                rules={[{ required: true, message: t('common.titleRequired') }]}
                 className="mb-0"
               >
                 <Input
-                  placeholder="请输入页面标题"
+                  placeholder={t('common.titlePlaceholder')}
                   bordered={false}
                   className="text-lg font-medium px-0"
                   style={{ height: '32px' }}
@@ -610,7 +611,7 @@ function PageEdit() {
                 icon={<PlayCircleOutlined />}
                 className="flex items-center mx-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
               >
-                幻灯片预览
+                {t('common.preview')}
               </Button>
             )}
             <Button
@@ -619,7 +620,7 @@ function PageEdit() {
               icon={<ShareAltOutlined />}
               className="flex items-center mx-2 text-green-600 hover:text-green-700 hover:bg-green-50"
             >
-              复制分享链接
+              {t('common.shareLink')}
             </Button>
             {formChanged && (
               <Button
@@ -630,7 +631,7 @@ function PageEdit() {
                 icon={<SaveOutlined />}
                 className="flex items-center bg-blue-600 hover:bg-blue-700 border-none"
               >
-                保存更改
+                {isUpdating ? t('common.saving') : t('common.savePage')}
               </Button>
             )}
           </div>
@@ -642,7 +643,7 @@ function PageEdit() {
         <Form form={form} onFinish={handleSubmit} onValuesChange={handleFormChange}>
           <Form.Item name="description">
             <Input.TextArea
-              placeholder="添加页面描述..."
+              placeholder={t('common.descriptionPlaceholder')}
               autoSize={{ minRows: 2, maxRows: 4 }}
               bordered={false}
               className="text-gray-700 text-base resize-none bg-transparent"
@@ -687,7 +688,7 @@ function PageEdit() {
               </div>
             ) : (
               <div className="flex items-center justify-center h-full">
-                <p className="text-gray-500">无法加载内容</p>
+                <p className="text-gray-500">{t('common.wideModeLoadFailed')}</p>
               </div>
             )}
           </div>
@@ -698,7 +699,7 @@ function PageEdit() {
       <Modal
         title={
           <div className="flex items-center text-lg font-medium">
-            <ShareAltOutlined className="mr-2 text-green-500" /> 链接分享
+            <ShareAltOutlined className="mr-2 text-green-500" /> {t('common.shareLink')}
           </div>
         }
         open={shareModalVisible}
@@ -710,7 +711,7 @@ function PageEdit() {
       >
         <div className="py-2">
           <div className="mb-4">
-            <div className="text-gray-700 mb-2">谁可以查看此页面</div>
+            <div className="text-gray-700 mb-2">{t('common.whoCanView')}</div>
             <Select
               value={shareOption}
               onChange={(value) => setShareOption(value)}
@@ -721,7 +722,7 @@ function PageEdit() {
                   label: (
                     <div className="flex items-center">
                       <GlobalOutlined className="mr-2 text-green-500" />
-                      互联网获得链接的人
+                      {t('common.internetUsers')}
                     </div>
                   ),
                 },
@@ -730,7 +731,7 @@ function PageEdit() {
                   label: (
                     <div className="flex items-center">
                       <UserOutlined className="mr-2 text-gray-500" />
-                      未开启
+                      {t('common.notEnabled')}
                     </div>
                   ),
                   disabled: true,
@@ -748,11 +749,11 @@ function PageEdit() {
               loading={isSharing}
               className="bg-green-600 hover:bg-green-700 border-none mt-2"
             >
-              复制分享链接
+              {t('common.copyShareLink')}
             </Button>
           ) : (
             <div className="mt-4">
-              <div className="text-gray-700 mb-2">分享链接</div>
+              <div className="text-gray-700 mb-2">{t('common.shareUrl')}</div>
               <div className="flex items-center">
                 <Input value={shareUrl} readOnly className="flex-1 bg-gray-50" />
                 <Button
@@ -763,10 +764,10 @@ function PageEdit() {
                     isCopied ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'
                   } border-none`}
                 >
-                  {isCopied ? '已复制' : '复制'}
+                  {isCopied ? t('common.copied') : t('common.copy')}
                 </Button>
               </div>
-              <div className="mt-4 text-gray-500 text-sm">获得此链接的人均可查看此页面内容</div>
+              <div className="mt-4 text-gray-500 text-sm">{t('common.shareUrlDesc')}</div>
             </div>
           )}
         </div>

@@ -8,6 +8,7 @@ import {
   LazyImageRenderer,
   WithSuspense,
 } from './LazyComponents';
+import { useTranslation } from 'react-i18next';
 
 // 内容渲染组件
 const NodeRenderer = memo(
@@ -28,6 +29,8 @@ const NodeRenderer = memo(
     onStartSlideshow?: (nodeId: string) => void;
     onWideMode?: (nodeId: string) => void;
   }) => {
+    const { t } = useTranslation();
+
     // 使用useMemo缓存渲染内容，避免不必要的重新计算
     const renderContent = useMemo(() => {
       // 根据不同节点类型返回对应的渲染器
@@ -137,13 +140,15 @@ const NodeRenderer = memo(
               } shadow-md ${isMinimap ? 'p-2 h-full' : ''}`}
             >
               <div className={`${isMinimap ? 'text-xs' : 'text-lg'}`}>
-                {isMinimap ? '不支持的组件' : '仅支持代码组件类型'}
+                {isMinimap
+                  ? t('pages.components.nodeRenderer.unsupportedComponent')
+                  : t('pages.components.nodeRenderer.onlyCodeComponentSupported')}
               </div>
               {!isMinimap && <div className="text-sm text-gray-400 mt-2">{node.nodeType}</div>}
             </div>
           );
       }
-    }, [node, isFullscreen, isModal, isMinimap, onDelete, onStartSlideshow, onWideMode]);
+    }, [node, isFullscreen, isModal, isMinimap, onDelete, onStartSlideshow, onWideMode, t]);
 
     return renderContent;
   },

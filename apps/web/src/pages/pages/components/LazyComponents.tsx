@@ -1,12 +1,16 @@
 import React, { lazy, Suspense } from 'react';
 import { Spin } from 'antd';
+import { useTranslation } from 'react-i18next';
 
 // 加载中组件
-const LoadingComponent = () => (
-  <div className="flex items-center justify-center p-8 h-full">
-    <Spin tip="加载中..." />
-  </div>
-);
+const LoadingComponent = () => {
+  const { t } = useTranslation();
+  return (
+    <div className="flex items-center justify-center p-8 h-full">
+      <Spin tip={t('common.loading')} />
+    </div>
+  );
+};
 
 // 懒加载各个渲染器组件
 export const LazyCodeArtifactRenderer = lazy(() =>

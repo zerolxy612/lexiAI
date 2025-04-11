@@ -4,6 +4,7 @@ import { useFetchShareData } from '@refly-packages/ai-workspace-common/hooks/use
 import { ActionStep, GetActionResultResponse } from '@refly-packages/ai-workspace-common/requests';
 import { PreviewChatInput } from '@refly-packages/ai-workspace-common/components/canvas/node-preview/skill-response/preview-chat-input';
 import { SimpleStepCard } from '@/pages/skill-response-share';
+import { useTranslation } from 'react-i18next';
 
 interface SkillResponseProps {
   node: {
@@ -22,6 +23,7 @@ interface SkillResponseProps {
 }
 
 export const SkillResponseRenderer = memo(({ node, isMinimap = false }: SkillResponseProps) => {
+  const { t } = useTranslation();
   const entityId = node.nodeData?.entityId || '';
   const shareId = node.nodeData?.metadata?.shareId;
 
@@ -48,7 +50,7 @@ export const SkillResponseRenderer = memo(({ node, isMinimap = false }: SkillRes
   if (!resultData) {
     return (
       <div className="h-full flex items-center justify-center bg-white rounded p-3">
-        <span className="text-gray-500">未选择技能响应组件</span>
+        <span className="text-gray-500">{t('pages.components.skillResponse.notSelected')}</span>
       </div>
     );
   }

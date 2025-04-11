@@ -3,6 +3,7 @@ import { Layout, Button, Tooltip } from 'antd';
 import { UnorderedListOutlined, MenuUnfoldOutlined, LeftOutlined } from '@ant-design/icons';
 import { SidebarMinimap } from './SidebarMinimap';
 import { type NodeRelation } from './ArtifactRenderer';
+import { useTranslation } from 'react-i18next';
 
 interface PageLayoutProps {
   children: ReactNode;
@@ -31,6 +32,8 @@ const PageLayout: React.FC<PageLayoutProps> = ({
   toggleMinimap,
   toggleSidebar,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <Layout className="h-screen overflow-hidden bg-[#f7f9fc]">
       {/* 顶部导航栏 */}
@@ -75,7 +78,7 @@ const PageLayout: React.FC<PageLayoutProps> = ({
           {/* 显示小地图的按钮 */}
           {!showMinimap && (
             <div className="absolute left-0 top-14 z-10">
-              <Tooltip title="显示导航面板" placement="right">
+              <Tooltip title={t('pages.preview.navigationDirectory')} placement="right">
                 <Button
                   type="default"
                   icon={<UnorderedListOutlined />}

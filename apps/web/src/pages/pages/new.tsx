@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 import { CanvasNode } from '@refly/openapi-schema';
 import { useCreatePage } from '@refly-packages/ai-workspace-common/queries/queries';
+import { useTranslation } from 'react-i18next';
 
 // 简单的Spinner组件
 const Spinner = ({ size = 'normal' }: { size?: 'small' | 'normal' }) => (
@@ -13,6 +14,7 @@ const Spinner = ({ size = 'normal' }: { size?: 'small' | 'normal' }) => (
 
 export default function CreatePageFromCanvas() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [canvasId, setCanvasId] = useState('');
   const [nodeIds, setNodeIds] = useState<string[]>([]);
@@ -25,7 +27,9 @@ export default function CreatePageFromCanvas() {
   const { mutate: createPage, isPending } = useCreatePage(undefined, {
     onError: (error) => {
       console.error('创建页面失败:', error);
-      setError(`创建页面失败: ${error instanceof Error ? error.message : String(error)}`);
+      setError(
+        `${t('pages.new.createPageFailed')}: ${error instanceof Error ? error.message : String(error)}`,
+      );
     },
   });
 
@@ -65,20 +69,22 @@ export default function CreatePageFromCanvas() {
           if (validNodes.length > 0) {
             setAvailableNodes(validNodes as CanvasNode[]);
           } else {
-            setError('未找到有效的节点数据');
+            setError(t('pages.new.noValidNodes'));
             setAvailableNodes([]);
           }
         } else {
-          setError('Canvas中没有找到节点数据');
+          setError(t('pages.new.noNodesFound'));
           setAvailableNodes([]);
         }
       } else {
-        setError('API响应格式不符合预期');
+        setError(t('pages.new.invalidApiResponse'));
         setAvailableNodes([]);
       }
     } catch (err) {
       console.error('获取Canvas数据失败:', err);
-      setError(`获取Canvas数据失败: ${err instanceof Error ? err.message : String(err)}`);
+      setError(
+        `${t('pages.new.fetchCanvasDataFailed')}: ${err instanceof Error ? err.message : String(err)}`,
+      );
       setAvailableNodes([]);
     } finally {
       setCanvasLoading(false);
@@ -97,12 +103,12 @@ export default function CreatePageFromCanvas() {
     e.preventDefault();
 
     if (!canvasId.trim()) {
-      setError('请输入Canvas ID');
+      setError(t('pages.new.pleaseEnterCanvasId'));
       return;
     }
 
     if (nodeIds.length === 0) {
-      setError('请至少选择一个节点');
+      setError(t('pages.new.pleaseSelectAtLeastOneNode'));
       return;
     }
 
@@ -112,8 +118,8 @@ export default function CreatePageFromCanvas() {
       createPage(
         {
           body: {
-            title: title.trim() || 'Untitled Page',
-            description: `从Canvas ${canvasId}创建`,
+            title: title.trim() || t('pages.new.untitledPage'),
+            description: t('pages.new.createdFromCanvas', { canvasId }),
             // 按CreatePageRequest接口要求，将canvasId和nodeIds放入content对象中
             content: {
               canvasId,
@@ -124,7 +130,9 @@ export default function CreatePageFromCanvas() {
         {
           onSuccess: (response: any) => {
             const data = response?.data;
-            setSuccess(`页面创建成功! 页面ID: ${data?.pageId || '未知'}`);
+            setSuccess(
+              `${t('pages.new.pageCreatedSuccess')}! ${t('pages.new.pageId')}: ${data?.pageId || t('pages.new.unknown')}`,
+            );
             // 重置表单
             setTitle('');
             setNodeIds([]);
@@ -134,18 +142,22 @@ export default function CreatePageFromCanvas() {
             }, 3000);
           },
           onError: (error: unknown) => {
-            setError(`创建页面失败: ${error instanceof Error ? error.message : String(error)}`);
+            setError(
+              `${t('pages.new.createPageFailed')}: ${error instanceof Error ? error.message : String(error)}`,
+            );
           },
         },
       );
     } catch (err) {
-      setError(`创建页面失败: ${err instanceof Error ? err.message : String(err)}`);
+      setError(
+        `${t('pages.new.createPageFailed')}: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   };
 
   return (
     <div className="container mx-auto p-6 max-w-3xl">
-      <h1 className="text-2xl font-bold mb-6">从Canvas创建Page</h1>
+      <h1 className="text-2xl font-bold mb-6">{t('pages.new.createPageFromCanvas')}</h1>
 
       {success && (
         <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
@@ -161,30 +173,30 @@ export default function CreatePageFromCanvas() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label htmlFor="page-title" className="block text-sm font-medium text-gray-700 mb-1">
-            页面标题 (可选)
+          <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+            {t('pages.new.pageTitle')} ({t('pages.new.optional')})
           </label>
           <input
-            id="page-title"
+            id="title"
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="输入页面标题"
+            placeholder={t('pages.new.enterPageTitle')}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
           />
         </div>
 
         <div>
-          <label htmlFor="canvas-id" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="canvasId" className="block text-sm font-medium text-gray-700 mb-2">
             Canvas ID *
           </label>
-          <div className="flex space-x-2">
+          <div className="flex gap-2">
             <input
-              id="canvas-id"
+              id="canvasId"
               type="text"
               value={canvasId}
               onChange={(e) => setCanvasId(e.target.value)}
-              placeholder="输入Canvas ID"
+              placeholder={t('pages.new.enterCanvasId')}
               className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               required
             />
@@ -194,7 +206,7 @@ export default function CreatePageFromCanvas() {
               disabled={loading || !canvasId.trim()}
               className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-300"
             >
-              {loading ? <Spinner size="small" /> : '加载节点'}
+              {loading ? <Spinner size="small" /> : t('pages.new.loadNodes')}
             </button>
           </div>
         </div>
@@ -205,7 +217,7 @@ export default function CreatePageFromCanvas() {
               htmlFor="node-selection"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              选择要包含的节点 *
+              {t('pages.new.selectNodesToInclude')} *
             </label>
             <div
               id="node-selection"
@@ -224,9 +236,11 @@ export default function CreatePageFromCanvas() {
                     className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                   />
                   <label htmlFor={`node-${node.data.entityId}`} className="ml-2 flex-1">
-                    <div className="font-medium">{node.data.title || '无标题'}</div>
+                    <div className="font-medium">{node.data.title || t('pages.new.untitled')}</div>
                     <div className="text-xs text-gray-500">
-                      <span className="px-2 py-1 bg-gray-100 rounded mr-2">类型: {node.type}</span>
+                      <span className="px-2 py-1 bg-gray-100 rounded mr-2">
+                        {t('pages.new.type')}: {node.type}
+                      </span>
                       <span className="px-2 py-1 bg-gray-100 rounded">
                         ID: {node.data.entityId}
                       </span>
@@ -242,14 +256,14 @@ export default function CreatePageFromCanvas() {
                 onClick={() => setNodeIds(availableNodes.map((node) => node.data.entityId))}
                 className="text-sm text-indigo-600 hover:text-indigo-800"
               >
-                全选
+                {t('pages.new.selectAll')}
               </button>
               <button
                 type="button"
                 onClick={() => setNodeIds([])}
                 className="text-sm text-indigo-600 hover:text-indigo-800"
               >
-                取消全选
+                {t('pages.new.deselectAll')}
               </button>
             </div>
           </div>
@@ -261,19 +275,19 @@ export default function CreatePageFromCanvas() {
             disabled={isPending || nodeIds.length === 0 || !canvasId.trim()}
             className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-300"
           >
-            {isPending ? <Spinner size="small" /> : '创建页面'}
+            {isPending ? <Spinner size="small" /> : t('pages.new.createPage')}
           </button>
         </div>
       </form>
 
       <div className="mt-8">
-        <h2 className="text-lg font-medium mb-4">使用说明</h2>
+        <h2 className="text-lg font-medium mb-4">{t('pages.new.instructions')}</h2>
         <ol className="list-decimal pl-5 space-y-2">
-          <li>输入Canvas ID并点击"加载节点"按钮</li>
-          <li>从列表中选择您想包含在页面中的节点</li>
-          <li>输入页面标题（可选）</li>
-          <li>点击"创建页面"按钮</li>
-          <li>成功后，您将被重定向到页面列表</li>
+          <li>{t('pages.new.instructionStep1')}</li>
+          <li>{t('pages.new.instructionStep2')}</li>
+          <li>{t('pages.new.instructionStep3')}</li>
+          <li>{t('pages.new.instructionStep4')}</li>
+          <li>{t('pages.new.instructionStep5')}</li>
         </ol>
       </div>
     </div>

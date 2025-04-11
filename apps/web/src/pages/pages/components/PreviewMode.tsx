@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Button } from 'antd';
 import { CloseCircleOutlined, UnorderedListOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { NodeRenderer } from './NodeRenderer';
 import { type NodeRelation } from './ArtifactRenderer';
 import '../styles/preview-mode.css';
@@ -42,6 +43,8 @@ const PreviewMode: React.FC<PreviewModeProps> = ({
   getNodeTitle,
   previewContentRef,
 }) => {
+  const { t } = useTranslation();
+
   // 计算当前进度百分比
   const progressPercentage = useMemo(() => {
     if (nodes.length <= 1) return 100;
@@ -115,7 +118,7 @@ const PreviewMode: React.FC<PreviewModeProps> = ({
         onMouseEnter={onMinimapMouseEnter}
         onMouseLeave={onMinimapMouseLeave}
       >
-        <div className="preview-minimap-header">导航目录</div>
+        <div className="preview-minimap-header">{t('pages.components.navigationDirectory')}</div>
         <div className="preview-minimap-content">
           {nodes.map((node, index) => (
             <div
@@ -175,7 +178,7 @@ const PreviewMode: React.FC<PreviewModeProps> = ({
       {/* 滑动提示 - 只在移动设备上显示 */}
       {nodes.length > 1 && (
         <div className="swipe-hint md:hidden">
-          左右滑动切换幻灯片 ({currentSlideIndex + 1}/{nodes.length})
+          {t('pages.components.swipeHint', { current: currentSlideIndex + 1, total: nodes.length })}
         </div>
       )}
 

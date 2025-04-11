@@ -5,6 +5,7 @@ import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { type NodeRelation } from './ArtifactRenderer';
 import { NodeRenderer } from './NodeRenderer';
 import { getNodeTitle } from '../utils/nodeUtils';
+import { useTranslation } from 'react-i18next';
 
 // 侧边小地图组件
 function SidebarMinimap({
@@ -20,6 +21,8 @@ function SidebarMinimap({
   onReorderNodes: (newOrder: NodeRelation[]) => void;
   readonly?: boolean;
 }) {
+  const { t } = useTranslation();
+
   // 处理拖拽结束事件
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
@@ -41,7 +44,7 @@ function SidebarMinimap({
   };
 
   const addNewSlide = () => {
-    message.info('添加新代码组件功能开发中');
+    message.info(t('pages.sidebar.addNewSlideInDevelopment'));
   };
 
   // 缓存缩略卡片样式
@@ -60,7 +63,9 @@ function SidebarMinimap({
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-between p-2 border-b border-gray-200">
-        <span className="text-sm font-medium text-gray-600">导航目录</span>
+        <span className="text-sm font-medium text-gray-600">
+          {t('pages.components.navigationDirectory')}
+        </span>
         {!readonly && (
           <Button type="text" size="small" icon={<PlusOutlined />} onClick={addNewSlide} />
         )}
@@ -69,7 +74,7 @@ function SidebarMinimap({
       <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
         {nodes.length === 0 ? (
           <div className="text-center p-6 text-gray-400">
-            <div className="text-xs">暂无导航目录</div>
+            <div className="text-xs">{t('common.empty')}</div>
           </div>
         ) : (
           <DragDropContext onDragEnd={handleDragEnd}>
@@ -110,7 +115,7 @@ function SidebarMinimap({
                           {/* 内容预览区 */}
                           <div className="h-20 overflow-hidden relative bg-gray-50">
                             <div style={cardStyle}>
-                              <NodeRenderer node={node} isActive={false} isMinimap={true} />
+                              <NodeRenderer node={node} isMinimap={true} />
                             </div>
 
                             {/* 渐变遮罩 */}

@@ -1,6 +1,7 @@
 import { memo, useState } from 'react';
 import { type NodeRelation } from './ArtifactRenderer';
 import { ImagePreview } from '@refly-packages/ai-workspace-common/components/common/image-preview';
+import { useTranslation } from 'react-i18next';
 
 // 图片渲染组件
 const ImageRenderer = memo(
@@ -13,17 +14,18 @@ const ImageRenderer = memo(
     isFullscreen?: boolean;
     isMinimap?: boolean;
   }) => {
+    const { t } = useTranslation();
     const [isPreviewModalVisible, setIsPreviewModalVisible] = useState(false);
 
     // 从节点数据中获取图片URL
     const imageUrl = node.nodeData?.metadata?.imageUrl;
-    const title = node.nodeData?.title || '图片';
+    const title = node.nodeData?.title || t('pages.components.image.defaultTitle');
 
     // 如果没有图片URL，显示提示
     if (!imageUrl) {
       return (
         <div className="h-full flex items-center justify-center bg-white rounded p-3">
-          <span className="text-gray-500">未找到图片资源</span>
+          <span className="text-gray-500">{t('pages.components.image.notFound')}</span>
         </div>
       );
     }

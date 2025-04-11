@@ -6,6 +6,7 @@ import {
 } from '@refly-packages/ai-workspace-common/queries/queries';
 import { useFetchShareData } from '@refly-packages/ai-workspace-common/hooks/use-fetch-share-data';
 import Renderer from '@refly-packages/ai-workspace-common/modules/artifacts/code-runner/render';
+import { useTranslation } from 'react-i18next';
 
 // 接口定义
 interface NodeData {
@@ -44,9 +45,12 @@ const ArtifactRenderer = memo(
     isFullscreen?: boolean;
     isMinimap?: boolean;
   }) => {
+    const { t } = useTranslation();
     const artifactId = node.nodeData?.entityId || '';
     const {
-      title = rendererType === 'document' ? '文档组件' : '代码组件',
+      title = rendererType === 'document'
+        ? t('pages.components.documentComponent')
+        : t('pages.components.codeComponent'),
       status,
       shareId,
       type = 'text/html', // 默认类型
@@ -95,20 +99,23 @@ const ArtifactRenderer = memo(
     // 确定当前使用的渲染类型
     const currentType = rendererType === 'document' ? 'text/markdown' : artifactData?.type || type;
 
-    const handleRequestFix = useCallback((error: string) => {
-      message.warning(`需要修复代码: ${error}`);
-    }, []);
+    const handleRequestFix = useCallback(
+      (error: string) => {
+        message.warning(`${t('pages.components.artifact.fixCodeNeeded')}: ${error}`);
+      },
+      [t],
+    );
 
     // 根据类型获取显示名称
     const _getTypeDisplayName = (typeStr: string) => {
       const typeMap: Record<string, string> = {
-        'text/html': '网页渲染',
-        'application/refly.artifacts.react': 'React组件',
-        'application/refly.artifacts.mermaid': '流程图',
-        'application/refly.artifacts.mindmap': '思维导图',
-        'text/markdown': 'Markdown',
-        'application/refly.artifacts.code': '代码',
-        'image/svg+xml': 'SVG图像',
+        'text/html': t('pages.components.artifact.webRender'),
+        'application/refly.artifacts.react': t('pages.components.artifact.reactComponent'),
+        'application/refly.artifacts.mermaid': t('pages.components.artifact.flowchart'),
+        'application/refly.artifacts.mindmap': t('pages.components.artifact.mindmap'),
+        'text/markdown': t('pages.components.artifact.markdown'),
+        'application/refly.artifacts.code': t('pages.components.artifact.code'),
+        'image/svg+xml': t('pages.components.artifact.svgImage'),
       };
 
       return typeMap[typeStr] || typeStr;
@@ -118,7 +125,12 @@ const ArtifactRenderer = memo(
       return (
         <div className="h-full flex items-center justify-center bg-white rounded p-3">
           <span className="text-gray-500">
-            未选择{rendererType === 'document' ? '文档' : '代码'}组件
+            {t('pages.components.artifact.notSelected', {
+              type:
+                rendererType === 'document'
+                  ? t('common.document').toLowerCase()
+                  : t('pages.components.artifact.code').toLowerCase(),
+            })}
           </span>
         </div>
       );
@@ -128,7 +140,12 @@ const ArtifactRenderer = memo(
       return (
         <div className="flex h-full w-full grow items-center justify-center">
           <div className="text-gray-500">
-            {rendererType === 'document' ? '文档' : '代码'}加载中...
+            {t('pages.components.artifact.loading', {
+              type:
+                rendererType === 'document'
+                  ? t('common.document').toLowerCase()
+                  : t('pages.components.artifact.code').toLowerCase(),
+            })}
           </div>
         </div>
       );
@@ -143,7 +160,9 @@ const ArtifactRenderer = memo(
             <div className="flex-1 bg-white overflow-hidden">
               {status === 'generating' ? (
                 <div className="flex h-full w-full items-center justify-center">
-                  <div className="text-xs text-gray-500">生成中...</div>
+                  <div className="text-xs text-gray-500">
+                    {t('pages.components.artifact.generating', { type: '' })}
+                  </div>
                 </div>
               ) : (
                 <div className="transform scale-[0.5] origin-top-left w-[200%] h-[200%] overflow-hidden bg-white rounded shadow-sm">
@@ -167,7 +186,12 @@ const ArtifactRenderer = memo(
               {status === 'generating' ? (
                 <div className="flex h-full w-full items-center justify-center">
                   <div className="text-gray-500">
-                    {rendererType === 'document' ? '文档' : '代码'}生成中...
+                    {t('pages.components.artifact.generating', {
+                      type:
+                        rendererType === 'document'
+                          ? t('common.document').toLowerCase()
+                          : t('pages.components.artifact.code').toLowerCase(),
+                    })}
                   </div>
                 </div>
               ) : (

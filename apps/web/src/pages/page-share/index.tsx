@@ -179,7 +179,7 @@ const SharePage = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <Spin size="large" />
+        <Spin size="large" tip={t('common.loading')} />
       </div>
     );
   }
@@ -188,10 +188,10 @@ const SharePage = () => {
   if (!shareData || !pageData.page) {
     return (
       <div className="flex flex-col items-center justify-center h-screen">
-        <div className="text-2xl font-medium mb-4 text-gray-700">{t('Invalid share link')}</div>
-        <div className="text-gray-500">
-          {t('This share link may have expired or does not exist')}
+        <div className="text-2xl font-medium mb-4 text-gray-700">
+          {t('pages.share.invalidShareLink')}
         </div>
+        <div className="text-gray-500">{t('pages.share.expiredShareLink')}</div>
       </div>
     );
   }
@@ -199,25 +199,27 @@ const SharePage = () => {
   // 预览模式渲染
   if (isPreviewMode) {
     return (
-      <div className="h-screen overflow-hidden bg-black">
-        <PreviewMode
-          nodes={nodes}
-          currentSlideIndex={currentSlideIndex}
-          showPreviewMinimap={showPreviewMinimap}
-          uiState={uiState}
-          title={pageData.page?.title || '分享页面'}
-          onNext={nextSlide}
-          onPrev={prevSlide}
-          onClose={togglePreviewMode}
-          onMouseMove={handlePreviewMouseMove}
-          onSideHintClick={handleSideHintClick}
-          onUiInteraction={handleUiInteraction}
-          onPreviewSlideSelect={handlePreviewSlideSelect}
-          onMinimapMouseEnter={handleMinimapMouseEnter}
-          onMinimapMouseLeave={handleMinimapMouseLeave}
-          getNodeTitle={getNodeTitle}
-          previewContentRef={previewContentRef}
-        />
+      <div className="fixed inset-0 bg-black z-50">
+        <div className="bg-black h-full w-full flex flex-col">
+          <PreviewMode
+            nodes={nodes}
+            currentSlideIndex={currentSlideIndex}
+            showPreviewMinimap={showPreviewMinimap}
+            uiState={uiState}
+            title={pageData?.page?.title || t('common.untitled')}
+            onNext={nextSlide}
+            onPrev={prevSlide}
+            onClose={togglePreviewMode}
+            onMouseMove={handlePreviewMouseMove}
+            onSideHintClick={handleSideHintClick}
+            onUiInteraction={handleUiInteraction}
+            onPreviewSlideSelect={handlePreviewSlideSelect}
+            onMinimapMouseEnter={handleMinimapMouseEnter}
+            onMinimapMouseLeave={handleMinimapMouseLeave}
+            getNodeTitle={getNodeTitle}
+            previewContentRef={previewContentRef}
+          />
+        </div>
       </div>
     );
   }
@@ -231,16 +233,19 @@ const SharePage = () => {
         nodes={nodes}
         activeNodeIndex={activeNodeIndex}
         onNodeSelect={handleNodeSelect}
-        toggleMinimap={toggleMinimap}
         toggleSidebar={toggleSidebar}
+        toggleMinimap={toggleMinimap}
         readonly={true}
         headerContent={
           <div className="flex justify-between items-center w-full">
             <div className="flex items-center">
-              <div className="text-lg font-medium px-2">{pageData.page?.title || '分享页面'}</div>
-              {pageData.shareInfo && (
+              <div className="text-xl font-semibold text-gray-800 mr-2">
+                {pageData?.page?.title || t('common.untitled')}
+              </div>
+              {pageData?.shareInfo && (
                 <div className="text-sm text-gray-500 ml-2">
-                  分享于: {new Date(pageData.shareInfo.sharedAt).toLocaleString()}
+                  {t('pages.share.sharedAt')}:{' '}
+                  {new Date(pageData.shareInfo.sharedAt).toLocaleString()}
                 </div>
               )}
             </div>
@@ -253,7 +258,7 @@ const SharePage = () => {
                   icon={<PlayCircleOutlined />}
                   className="flex items-center mx-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                 >
-                  幻灯片预览
+                  {t('common.preview')}
                 </Button>
               )}
             </div>
@@ -261,7 +266,7 @@ const SharePage = () => {
         }
       >
         {/* 页面描述区域 */}
-        {pageData.page?.description && (
+        {pageData?.page?.description && (
           <div className="mb-6 p-4 bg-white rounded-lg shadow-sm">
             <div className="text-gray-700 text-base">{pageData.page.description}</div>
           </div>
@@ -295,8 +300,8 @@ const SharePage = () => {
             <div className="text-6xl text-gray-300 mb-6">
               <FileTextOutlined />
             </div>
-            <h3 className="text-xl font-medium text-gray-500 mb-3">暂无内容</h3>
-            <p className="text-gray-400 mb-6">该分享页面没有任何内容</p>
+            <h3 className="text-xl font-medium text-gray-500 mb-3">{t('common.noContent')}</h3>
+            <p className="text-gray-400 mb-6">{t('common.noContentDesc')}</p>
           </div>
         )}
 
@@ -337,7 +342,7 @@ const SharePage = () => {
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-full">
-                  <p className="text-gray-500">无法加载内容</p>
+                  <p className="text-gray-500">{t('common.wideModeLoadFailed')}</p>
                 </div>
               )}
             </div>

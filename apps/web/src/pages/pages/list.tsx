@@ -8,44 +8,51 @@ import {
 } from '@refly-packages/ai-workspace-common/queries/queries';
 import { Page } from '@refly-packages/ai-workspace-common/requests/types.gen';
 import { formatDate } from '@/utils/date';
+import { useTranslation } from 'react-i18next';
+import { useEffect } from 'react';
 
 function PagesPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // 使用 useListPages 查询钩子获取页面列表
   const {
     data: pagesData,
     isLoading: loading,
     refetch: refetchPages,
-  } = useListPages({}, undefined, {
-    onError: () => {
+    error,
+  } = useListPages({}, undefined);
+
+  // 处理错误
+  useEffect(() => {
+    if (error) {
       console.error('获取页面列表失败');
-      message.error('获取页面列表失败');
-    },
-  });
+      message.error(t('pages.list.fetchFailed'));
+    }
+  }, [error, t]);
 
   // 使用 useSharePage 和 useDeletePage 变更钩子处理页面操作
   const { mutate: sharePage, isPending: isSharing } = useSharePage(undefined, {
     onSuccess: (data) => {
-      if (data?.data?.shareUrl) {
-        message.success('分享成功，链接已复制到剪贴板');
-        navigator.clipboard.writeText(data.data.shareUrl);
+      if (data?.data?.data?.shareUrl) {
+        message.success(t('pages.list.shareSuccess'));
+        navigator.clipboard.writeText(data.data.data.shareUrl);
       }
     },
     onError: () => {
       console.error('分享页面失败');
-      message.error('分享页面失败');
+      message.error(t('pages.list.shareFailed'));
     },
   });
 
   const { mutate: deletePage, isPending: isDeleting } = useDeletePage(undefined, {
     onSuccess: () => {
-      message.success('删除成功');
+      message.success(t('pages.list.deleteSuccess'));
       refetchPages();
     },
     onError: () => {
       console.error('删除页面失败');
-      message.error('删除页面失败');
+      message.error(t('pages.list.deleteFailed'));
     },
   });
 
@@ -66,41 +73,41 @@ function PagesPage() {
 
   const columns = [
     {
-      title: '标题',
+      title: t('pages.list.title'),
       dataIndex: 'title',
       key: 'title',
     },
     {
-      title: '状态',
+      title: t('pages.list.status'),
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => {
         const statusMap: Record<string, string> = {
-          draft: '草稿',
-          published: '已发布',
+          draft: t('pages.list.statusDraft'),
+          published: t('pages.list.statusPublished'),
         };
         return statusMap[status] || status;
       },
     },
     {
-      title: '创建时间',
+      title: t('pages.list.createdAt'),
       dataIndex: 'createdAt',
       key: 'createdAt',
       render: (date: string) => formatDate(date),
     },
     {
-      title: '更新时间',
+      title: t('pages.list.updatedAt'),
       dataIndex: 'updatedAt',
       key: 'updatedAt',
       render: (date: string) => formatDate(date),
     },
     {
-      title: '操作',
+      title: t('pages.list.actions'),
       key: 'action',
       render: (_: any, record: Page) => (
         <Space size="middle">
           <Button type="link" icon={<EditOutlined />} onClick={() => handleEditPage(record.pageId)}>
-            编辑
+            {t('pages.list.edit')}
           </Button>
           <Button
             type="link"
@@ -108,16 +115,16 @@ function PagesPage() {
             onClick={() => handleSharePage(record.pageId)}
             loading={isSharing}
           >
-            分享
+            {t('pages.list.share')}
           </Button>
           <Popconfirm
-            title="确定要删除这个页面吗?"
+            title={t('pages.list.confirmDelete')}
             onConfirm={() => handleDeletePage(record.pageId)}
-            okText="确定"
-            cancelText="取消"
+            okText={t('common.confirm')}
+            cancelText={t('common.cancel')}
           >
             <Button type="link" danger icon={<DeleteOutlined />} loading={isDeleting}>
-              删除
+              {t('pages.list.delete')}
             </Button>
           </Popconfirm>
         </Space>
@@ -128,14 +135,14 @@ function PagesPage() {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">我的页面</h1>
+        <h1 className="text-2xl font-bold">{t('pages.list.myPages')}</h1>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/canvas')}>
-          创建页面
+          {t('pages.list.createPage')}
         </Button>
       </div>
 
       {pages.length === 0 && !loading ? (
-        <Empty description="暂无页面" className="py-10" />
+        <Empty description={t('pages.list.noPages')} className="py-10" />
       ) : (
         <Table
           columns={columns}

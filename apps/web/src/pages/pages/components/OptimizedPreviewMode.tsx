@@ -16,6 +16,7 @@ import {
   WithSuspense,
 } from './LazyComponents';
 import '../styles/preview-mode.css';
+import { useTranslation } from 'react-i18next';
 
 interface PreviewModeProps {
   nodes: NodeRelation[];
@@ -35,7 +36,8 @@ interface PreviewModeProps {
 
 // 获取节点标题的辅助函数
 const getNodeTitle = (node: NodeRelation) => {
-  return node.nodeData?.title || '未命名节点';
+  const { t } = useTranslation();
+  return node.nodeData?.title || t('pages.components.nodeBlock.untitledNode');
 };
 
 // 优化的预览模式组件
@@ -54,6 +56,8 @@ const OptimizedPreviewMode: React.FC<PreviewModeProps> = ({
   onSideHintClick,
   contentRef,
 }) => {
+  const { t } = useTranslation();
+
   // 跟踪哪些缩略图已经被查看过
   const [visibleThumbnails, setVisibleThumbnails] = useState<Record<number, boolean>>({});
 
@@ -137,12 +141,12 @@ const OptimizedPreviewMode: React.FC<PreviewModeProps> = ({
         default:
           return (
             <div className="flex items-center justify-center h-full text-gray-400">
-              <div className="text-lg">不支持的内容类型</div>
+              <div className="text-lg">{t('pages.components.preview.unsupportedNodeType')}</div>
             </div>
           );
       }
     },
-    [],
+    [t],
   );
 
   // 优化：只在小地图打开时渲染缩略图
@@ -156,7 +160,9 @@ const OptimizedPreviewMode: React.FC<PreviewModeProps> = ({
         onMouseLeave={onMinimapMouseLeave}
         style={{ willChange: 'transform' }}
       >
-        <div className="preview-minimap-header">导航目录</div>
+        <div className="preview-minimap-header">
+          {t('pages.components.preview.navigationDirectory')}
+        </div>
         <div className="preview-minimap-content">
           {nodes.map((node, index) => {
             // 判断是否需要渲染缩略图内容
@@ -195,7 +201,7 @@ const OptimizedPreviewMode: React.FC<PreviewModeProps> = ({
                   ) : (
                     // 使用占位符代替实际内容
                     <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                      <div className="text-xs text-gray-400">加载中...</div>
+                      <div className="text-xs text-gray-400">{t('common.loading')}</div>
                     </div>
                   )}
                   {/* 透明遮罩层 */}
@@ -217,6 +223,7 @@ const OptimizedPreviewMode: React.FC<PreviewModeProps> = ({
     onMinimapMouseLeave,
     onSlideSelect,
     handleThumbnailVisible,
+    t,
   ]);
 
   return (
@@ -235,7 +242,9 @@ const OptimizedPreviewMode: React.FC<PreviewModeProps> = ({
         }}
       >
         <div className="preview-header-title">
-          {nodes[currentIndex] ? getNodeTitle(nodes[currentIndex]) : '幻灯片预览'}
+          {nodes[currentIndex]
+            ? getNodeTitle(nodes[currentIndex])
+            : t('pages.components.preview.slideshowPreview')}
           <span className="page-indicator">
             {currentIndex + 1}/{nodes.length}
           </span>
@@ -293,7 +302,7 @@ const OptimizedPreviewMode: React.FC<PreviewModeProps> = ({
             willChange: 'opacity',
           }}
         >
-          左右滑动切换幻灯片 ({currentIndex + 1}/{nodes.length})
+          {t('pages.components.preview.swipeToNavigate')} ({currentIndex + 1}/{nodes.length})
         </div>
       )}
 
