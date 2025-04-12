@@ -8,11 +8,10 @@ import { ElasticsearchService } from '../common/elasticsearch.service';
 import { RedisService } from '../common/redis.service';
 import { MiscService } from '../misc/misc.service';
 import { SubscriptionService } from '../subscription/subscription.service';
-import { MINIO_INTERNAL } from '../common/minio.service';
-import { MinioService } from '../common/minio.service';
 import { QUEUE_SYNC_CANVAS_ENTITY } from '../../utils/const';
 import type { Queue } from 'bullmq';
 import { getQueueToken } from '@nestjs/bullmq';
+import { ObjectStorageService, OSS_INTERNAL } from '@/modules/common/object-storage';
 
 describe('CollabService', () => {
   let service: CollabService;
@@ -24,7 +23,7 @@ describe('CollabService', () => {
   const redisService = createMock<RedisService>();
   const miscService = createMock<MiscService>();
   const subscriptionService = createMock<SubscriptionService>();
-  const minioService = createMock<MinioService>();
+  const ossService = createMock<ObjectStorageService>();
 
   const mockQueue = {
     add: jest.fn(),
@@ -40,7 +39,7 @@ describe('CollabService', () => {
         { provide: ElasticsearchService, useValue: elasticsearchService },
         { provide: RedisService, useValue: redisService },
         { provide: MiscService, useValue: miscService },
-        { provide: MINIO_INTERNAL, useValue: minioService },
+        { provide: OSS_INTERNAL, useValue: ossService },
         { provide: SubscriptionService, useValue: subscriptionService },
         { provide: getQueueToken(QUEUE_SYNC_CANVAS_ENTITY), useValue: mockQueue },
       ],

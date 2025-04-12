@@ -20,7 +20,7 @@ import {
   Entity,
 } from '@refly/openapi-schema';
 import { PrismaService } from '../common/prisma.service';
-import { MINIO_EXTERNAL, MINIO_INTERNAL, MinioService } from '../common/minio.service';
+import { OSS_EXTERNAL, OSS_INTERNAL, ObjectStorageService } from '../common/object-storage';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import { ConfigService } from '@nestjs/config';
@@ -45,8 +45,8 @@ export class MiscService implements OnModuleInit {
   constructor(
     private config: ConfigService,
     private prisma: PrismaService,
-    @Inject(MINIO_EXTERNAL) private externalMinio: MinioService,
-    @Inject(MINIO_INTERNAL) private internalMinio: MinioService,
+    @Inject(OSS_EXTERNAL) private externalOss: ObjectStorageService,
+    @Inject(OSS_INTERNAL) private internalOss: ObjectStorageService,
     @InjectQueue(QUEUE_IMAGE_PROCESSING) private imageQueue: Queue<FileObject>,
     @InjectQueue(QUEUE_CLEAN_STATIC_FILES) private cleanStaticFilesQueue: Queue,
   ) {}
@@ -165,9 +165,9 @@ export class MiscService implements OnModuleInit {
 
   minioClient(visibility: FileVisibility) {
     if (visibility === 'public') {
-      return this.externalMinio.client;
+      return this.externalOss;
     }
-    return this.internalMinio.client;
+    return this.internalOss;
   }
 
   async batchRemoveObjects(user: User | null, objects: FileObject[]) {
@@ -773,8 +773,7 @@ export class MiscService implements OnModuleInit {
 
     try {
       // Use the appropriate Minio service based on visibility
-      const minioService =
-        sourceFile.visibility === 'public' ? this.externalMinio : this.internalMinio;
+      const minioService = sourceFile.visibility === 'public' ? this.externalOss : this.internalOss;
 
       // Use the duplicateFile method from MinioService instead of copyObject
       await minioService.duplicateFile(sourceFile.storageKey, targetFile.storageKey);

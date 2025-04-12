@@ -3,8 +3,6 @@ import * as Y from 'yjs';
 import pLimit from 'p-limit';
 import { Queue } from 'bullmq';
 import { InjectQueue } from '@nestjs/bullmq';
-import { MINIO_INTERNAL } from '../common/minio.service';
-import { MinioService } from '../common/minio.service';
 import { PrismaService } from '../common/prisma.service';
 import { MiscService } from '../misc/misc.service';
 import { CollabService } from '../collab/collab.service';
@@ -34,6 +32,7 @@ import { KnowledgeService } from '../knowledge/knowledge.service';
 import { ActionService } from '../action/action.service';
 import { generateCanvasTitle, CanvasContentItem } from './canvas-title-generator';
 import { RedisService } from '@/modules/common/redis.service';
+import { ObjectStorageService, OSS_INTERNAL } from '@/modules/common/object-storage';
 
 @Injectable()
 export class CanvasService {
@@ -49,7 +48,7 @@ export class CanvasService {
     private knowledgeService: KnowledgeService,
     private codeArtifactService: CodeArtifactService,
     private subscriptionService: SubscriptionService,
-    @Inject(MINIO_INTERNAL) private minio: MinioService,
+    @Inject(OSS_INTERNAL) private oss: ObjectStorageService,
     @InjectQueue(QUEUE_DELETE_KNOWLEDGE_ENTITY)
     private deleteKnowledgeQueue: Queue<DeleteKnowledgeEntityJobData>,
     @InjectQueue(QUEUE_POST_DELETE_CANVAS)
@@ -101,7 +100,7 @@ export class CanvasService {
     }
 
     try {
-      const readable = await this.minio.client.getObject(stateStorageKey);
+      const readable = await this.oss.getObject(stateStorageKey);
       if (!readable) {
         throw new Error('Canvas state not found');
       }
@@ -122,7 +121,7 @@ export class CanvasService {
   }
 
   async saveCanvasYDoc(stateStorageKey: string, doc: Y.Doc) {
-    await this.minio.client.putObject(stateStorageKey, Buffer.from(Y.encodeStateAsUpdate(doc)));
+    await this.oss.putObject(stateStorageKey, Buffer.from(Y.encodeStateAsUpdate(doc)));
   }
 
   async getCanvasRawData(user: User, canvasId: string): Promise<RawCanvasData> {
@@ -189,7 +188,7 @@ export class CanvasService {
     const doc = new Y.Doc();
 
     if (canvas.stateStorageKey) {
-      const readable = await this.minio.client.getObject(canvas.stateStorageKey);
+      const readable = await this.oss.getObject(canvas.stateStorageKey);
       const state = await streamToBuffer(readable);
       Y.applyUpdate(doc, state);
     }
@@ -327,7 +326,7 @@ export class CanvasService {
       doc.getArray('nodes').insert(0, nodes);
     });
 
-    await this.minio.client.putObject(stateStorageKey, Buffer.from(Y.encodeStateAsUpdate(doc)));
+    await this.oss.putObject(stateStorageKey, Buffer.from(Y.encodeStateAsUpdate(doc)));
 
     // Update canvas status to completed
     await this.prisma.canvas.update({
@@ -446,7 +445,7 @@ export class CanvasService {
       minimapStorageKey !== undefined &&
       minimapStorageKey !== originalMinimap
     ) {
-      await this.minio.client.removeObject(originalMinimap);
+      await this.oss.removeObject(originalMinimap);
     }
 
     await this.elasticsearch.upsertCanvas({
@@ -514,11 +513,11 @@ export class CanvasService {
     const cleanups: Promise<any>[] = [this.elasticsearch.deleteCanvas(canvas.canvasId)];
 
     if (canvas.stateStorageKey) {
-      cleanups.push(this.minio.client.removeObject(canvas.stateStorageKey));
+      cleanups.push(this.oss.removeObject(canvas.stateStorageKey));
     }
 
     if (canvas.minimapStorageKey) {
-      cleanups.push(this.minio.client.removeObject(canvas.minimapStorageKey));
+      cleanups.push(this.oss.removeObject(canvas.minimapStorageKey));
     }
 
     if (deleteAllFiles) {

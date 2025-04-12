@@ -5,10 +5,10 @@ import { createMock } from '@golevelup/ts-jest';
 import { PrismaService } from '../common/prisma.service';
 import { ElasticsearchService } from '../common/elasticsearch.service';
 import { CollabService } from '../collab/collab.service';
-import { MINIO_INTERNAL, MinioService } from '../common/minio.service';
 import { Queue } from 'bullmq';
 import { getQueueToken } from '@nestjs/bullmq';
 import { QUEUE_DELETE_KNOWLEDGE_ENTITY } from '../../utils/const';
+import { OSS_INTERNAL, ObjectStorageService } from '@/modules/common/object-storage';
 
 describe('CanvasService', () => {
   let service: CanvasService;
@@ -17,7 +17,7 @@ describe('CanvasService', () => {
   const elasticsearchService = createMock<ElasticsearchService>();
   const collabService = createMock<CollabService>();
   const miscService = createMock<MiscService>();
-  const minioService = createMock<MinioService>();
+  const oss = createMock<ObjectStorageService>();
 
   const mockQueue = {
     add: jest.fn(),
@@ -31,7 +31,7 @@ describe('CanvasService', () => {
         { provide: ElasticsearchService, useValue: elasticsearchService },
         { provide: CollabService, useValue: collabService },
         { provide: MiscService, useValue: miscService },
-        { provide: MINIO_INTERNAL, useValue: minioService },
+        { provide: OSS_INTERNAL, useValue: oss },
         { provide: getQueueToken(QUEUE_DELETE_KNOWLEDGE_ENTITY), useValue: mockQueue },
       ],
     }).compile();

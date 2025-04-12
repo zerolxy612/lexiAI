@@ -1,19 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import type { Queue } from 'bullmq';
 import { MiscService } from './misc.service';
-import { MINIO_EXTERNAL, MinioService } from '../common/minio.service';
 import { createMock } from '@golevelup/ts-jest';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../common/prisma.service';
 import { QUEUE_SYNC_STORAGE_USAGE } from '../../utils';
 import { getQueueToken } from '@nestjs/bullmq';
+import { ObjectStorageService, OSS_EXTERNAL } from '../common/object-storage';
 
 describe('MiscService', () => {
   let service: MiscService;
 
   const configService = createMock<ConfigService>();
   const prismaService = createMock<PrismaService>();
-  const minioService = createMock<MinioService>();
+  const ossService = createMock<ObjectStorageService>();
 
   const mockQueue = {
     add: jest.fn(),
@@ -25,7 +25,7 @@ describe('MiscService', () => {
         MiscService,
         { provide: ConfigService, useValue: configService },
         { provide: PrismaService, useValue: prismaService },
-        { provide: MINIO_EXTERNAL, useValue: minioService },
+        { provide: OSS_EXTERNAL, useValue: ossService },
         { provide: getQueueToken(QUEUE_SYNC_STORAGE_USAGE), useValue: mockQueue },
       ],
     }).compile();

@@ -1,11 +1,4 @@
-export interface MinioConfig {
-  endPoint: string;
-  port: number;
-  useSSL: boolean;
-  accessKey: string;
-  secretKey: string;
-  bucket: string;
-}
+import path from 'node:path';
 
 export enum AppMode {
   Server = 'server',
@@ -38,22 +31,28 @@ export default () => ({
     port: Number.parseInt(process.env.REDIS_PORT) || 6379,
     password: process.env.REDIS_PASSWORD || '',
   },
-  minio: {
-    internal: {
-      endPoint: process.env.MINIO_INTERNAL_ENDPOINT || 'localhost',
-      port: Number.parseInt(process.env.MINIO_INTERNAL_PORT) || 9000,
-      useSSL: process.env.MINIO_INTERNAL_USE_SSL === 'true' || false,
-      accessKey: process.env.MINIO_INTERNAL_ACCESS_KEY || 'minioadmin',
-      secretKey: process.env.MINIO_INTERNAL_SECRET_KEY || 'minioadmin',
-      bucket: process.env.MINIO_INTERNAL_BUCKET || 'refly-weblink',
+  objectStorage: {
+    backend: process.env.OBJECT_STORAGE_BACKEND || 'minio',
+    fs: {
+      root: process.env.OBJECT_STORAGE_FS_ROOT || path.join(process.cwd(), 'storage'),
     },
-    external: {
-      endPoint: process.env.MINIO_EXTERNAL_ENDPOINT || 'localhost',
-      port: Number.parseInt(process.env.MINIO_EXTERNAL_PORT) || 9000,
-      useSSL: process.env.MINIO_EXTERNAL_USE_SSL === 'true' || false,
-      accessKey: process.env.MINIO_EXTERNAL_ACCESS_KEY || 'minioadmin',
-      secretKey: process.env.MINIO_EXTERNAL_SECRET_KEY || 'minioadmin',
-      bucket: process.env.MINIO_EXTERNAL_BUCKET || 'refly-weblink',
+    minio: {
+      internal: {
+        endPoint: process.env.MINIO_INTERNAL_ENDPOINT || 'localhost',
+        port: Number.parseInt(process.env.MINIO_INTERNAL_PORT) || 9000,
+        useSSL: process.env.MINIO_INTERNAL_USE_SSL === 'true' || false,
+        accessKey: process.env.MINIO_INTERNAL_ACCESS_KEY || 'minioadmin',
+        secretKey: process.env.MINIO_INTERNAL_SECRET_KEY || 'minioadmin',
+        bucket: process.env.MINIO_INTERNAL_BUCKET || 'refly-weblink',
+      },
+      external: {
+        endPoint: process.env.MINIO_EXTERNAL_ENDPOINT || 'localhost',
+        port: Number.parseInt(process.env.MINIO_EXTERNAL_PORT) || 9000,
+        useSSL: process.env.MINIO_EXTERNAL_USE_SSL === 'true' || false,
+        accessKey: process.env.MINIO_EXTERNAL_ACCESS_KEY || 'minioadmin',
+        secretKey: process.env.MINIO_EXTERNAL_SECRET_KEY || 'minioadmin',
+        bucket: process.env.MINIO_EXTERNAL_BUCKET || 'refly-weblink',
+      },
     },
   },
   vectorStore: {

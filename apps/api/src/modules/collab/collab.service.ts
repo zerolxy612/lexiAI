@@ -6,8 +6,6 @@ import * as Y from 'yjs';
 import { Request } from 'express';
 import { WebSocket } from 'ws';
 import { Server, Hocuspocus } from '@hocuspocus/server';
-import { MINIO_INTERNAL } from '../common/minio.service';
-import { MinioService } from '../common/minio.service';
 import { RAGService } from '../rag/rag.service';
 import { CodeArtifact, Prisma } from '@/generated/client';
 import { UpsertCodeArtifactRequest, User } from '@refly/openapi-schema';
@@ -30,6 +28,7 @@ import { QUEUE_SYNC_CANVAS_ENTITY } from '../../utils/const';
 import ms from 'ms';
 import pLimit from 'p-limit';
 import { AppMode } from '@/modules/config/app.config';
+import { OSS_INTERNAL, ObjectStorageService } from '@/modules/common/object-storage';
 
 @Injectable()
 export class CollabService {
@@ -44,7 +43,7 @@ export class CollabService {
     private config: ConfigService,
     private miscService: MiscService,
     private subscriptionService: SubscriptionService,
-    @Inject(MINIO_INTERNAL) private minio: MinioService,
+    @Inject(OSS_INTERNAL) private oss: ObjectStorageService,
     @InjectQueue(QUEUE_SYNC_CANVAS_ENTITY) private canvasQueue: Queue,
   ) {
     this.server = Server.configure({
@@ -102,38 +101,19 @@ export class CollabService {
 
     let context: CollabContext;
     if (documentName.startsWith(IDPrefix.DOCUMENT)) {
-      let doc = await this.prisma.document.findFirst({
+      const doc = await this.prisma.document.findFirst({
         where: { docId: documentName, deletedAt: null },
       });
       if (!doc) {
-        doc = await this.prisma.document.create({
-          data: {
-            docId: documentName,
-            uid: user.uid,
-            title: '',
-          },
-        });
-        this.logger.log(`document created: ${documentName}`);
-
-        await this.subscriptionService.syncStorageUsage({
-          uid: user.uid,
-          timestamp: new Date(),
-        });
+        throw new Error(`document not found: ${documentName}`);
       }
       context = { user, entity: doc, entityType: 'document' };
     } else if (documentName.startsWith(IDPrefix.CANVAS)) {
-      let canvas = await this.prisma.canvas.findFirst({
+      const canvas = await this.prisma.canvas.findFirst({
         where: { canvasId: documentName, deletedAt: null },
       });
       if (!canvas) {
-        canvas = await this.prisma.canvas.create({
-          data: {
-            canvasId: documentName,
-            uid: user.uid,
-            title: '',
-          },
-        });
-        this.logger.log(`canvas created: ${documentName}`);
+        throw new Error(`canvas not found: ${documentName}`);
       }
       context = { user, entity: canvas, entityType: 'canvas' };
     } else {
@@ -168,7 +148,7 @@ export class CollabService {
     }
 
     try {
-      const readable = await this.minio.client.getObject(stateStorageKey);
+      const readable = await this.oss.getObject(stateStorageKey);
       const state = await streamToBuffer(readable);
       Y.applyUpdate(document, state);
 
@@ -206,8 +186,8 @@ export class CollabService {
 
     // Save content and ydoc state to object storage
     await Promise.all([
-      this.minio.client.putObject(storageKey, content),
-      this.minio.client.putObject(stateStorageKey, state),
+      this.oss.putObject(storageKey, content),
+      this.oss.putObject(stateStorageKey, state),
     ]);
 
     // Prepare document updates
@@ -227,8 +207,8 @@ export class CollabService {
 
     // Re-calculate storage size
     const [storageStat, stateStorageStat] = await Promise.all([
-      this.minio.client.statObject(storageKey),
-      this.minio.client.statObject(stateStorageKey),
+      this.oss.statObject(storageKey),
+      this.oss.statObject(stateStorageKey),
     ]);
     docUpdates.storageSize = storageStat.size + stateStorageStat.size;
 
@@ -279,9 +259,9 @@ export class CollabService {
     const title = cleanedDocument.getText('title').toJSON();
 
     const stateStorageKey = canvas.stateStorageKey || `state/${canvas.canvasId}`;
-    await this.minio.client.putObject(stateStorageKey, cleanedState);
+    await this.oss.putObject(stateStorageKey, cleanedState);
 
-    const stateStorageStat = await this.minio.client.statObject(stateStorageKey);
+    const stateStorageStat = await this.oss.statObject(stateStorageKey);
 
     const canvasUpdates: Prisma.CanvasUpdateInput = {
       storageSize: stateStorageStat.size,
@@ -435,7 +415,7 @@ export class CollabService {
         update: {},
       });
       if (param.content) {
-        await this.minio.client.putObject(storageKey, param.content);
+        await this.oss.putObject(storageKey, param.content);
       }
       return { originArtifactId: artifactId, newArtifact };
     } catch (err) {

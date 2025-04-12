@@ -6,7 +6,6 @@ import { ElasticsearchService } from '../common/elasticsearch.service';
 import { RAGService } from '../rag/rag.service';
 import { MiscService } from '../misc/misc.service';
 import { SubscriptionService } from '../subscription/subscription.service';
-import { MINIO_INTERNAL, MinioService } from '../common/minio.service';
 import { Queue } from 'bullmq';
 import { getQueueToken } from '@nestjs/bullmq';
 import {
@@ -15,6 +14,7 @@ import {
   QUEUE_SIMPLE_EVENT,
   QUEUE_SYNC_STORAGE_USAGE,
 } from '../../utils/const';
+import { ObjectStorageService, OSS_INTERNAL } from '@/modules/common/object-storage';
 
 describe('KnowledgeService', () => {
   let service: KnowledgeService;
@@ -23,7 +23,7 @@ describe('KnowledgeService', () => {
   const elasticsearchService = createMock<ElasticsearchService>();
   const ragService = createMock<RAGService>();
   const miscService = createMock<MiscService>();
-  const minioService = createMock<MinioService>();
+  const ossService = createMock<ObjectStorageService>();
   const subscriptionService = createMock<SubscriptionService>();
 
   const mockQueue = {
@@ -39,7 +39,7 @@ describe('KnowledgeService', () => {
         { provide: RAGService, useValue: ragService },
         { provide: MiscService, useValue: miscService },
         { provide: SubscriptionService, useValue: subscriptionService },
-        { provide: MINIO_INTERNAL, useValue: minioService },
+        { provide: OSS_INTERNAL, useValue: ossService },
         { provide: getQueueToken(QUEUE_RESOURCE), useValue: mockQueue },
         { provide: getQueueToken(QUEUE_SIMPLE_EVENT), useValue: mockQueue },
         { provide: getQueueToken(QUEUE_SYNC_STORAGE_USAGE), useValue: mockQueue },

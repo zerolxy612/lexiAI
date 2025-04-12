@@ -1,17 +1,16 @@
 import { Inject, Injectable, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma.service';
 import { UpsertCodeArtifactRequest, User } from '@refly/openapi-schema';
-import { MinioService } from '../common/minio.service';
-import { MINIO_INTERNAL } from '../common/minio.service';
 import { streamToString } from '../../utils';
 import { CodeArtifactNotFoundError, ParamsError } from '@refly/errors';
 import { genCodeArtifactID } from '@refly/utils';
+import { OSS_INTERNAL, ObjectStorageService } from '@/modules/common/object-storage';
 
 @Injectable()
 export class CodeArtifactService {
   constructor(
     private readonly prisma: PrismaService,
-    @Inject(MINIO_INTERNAL) private minio: MinioService,
+    @Inject(OSS_INTERNAL) private oss: ObjectStorageService,
   ) {}
 
   async createCodeArtifact(user: User, body: UpsertCodeArtifactRequest) {
@@ -32,7 +31,7 @@ export class CodeArtifactService {
     });
 
     if (content) {
-      await this.minio.client.putObject(storageKey, content);
+      await this.oss.putObject(storageKey, content);
     }
 
     return codeArtifact;
@@ -83,7 +82,7 @@ export class CodeArtifactService {
     }
 
     if (content) {
-      await this.minio.client.putObject(existingArtifact.storageKey, content);
+      await this.oss.putObject(existingArtifact.storageKey, content);
     }
 
     return existingArtifact;
@@ -99,7 +98,7 @@ export class CodeArtifactService {
       throw new CodeArtifactNotFoundError();
     }
 
-    const contentStream = await this.minio.client.getObject(artifact.storageKey);
+    const contentStream = await this.oss.getObject(artifact.storageKey);
     const content = await streamToString(contentStream);
 
     return {
@@ -128,8 +127,8 @@ export class CodeArtifactService {
       },
     });
 
-    const contentStream = await this.minio.client.getObject(artifact.storageKey);
-    await this.minio.client.putObject(newStorageKey, contentStream);
+    const contentStream = await this.oss.getObject(artifact.storageKey);
+    await this.oss.putObject(newStorageKey, contentStream);
 
     return newArtifact;
   }

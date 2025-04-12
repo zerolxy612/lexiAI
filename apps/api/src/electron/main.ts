@@ -139,6 +139,9 @@ async function startRedisServer(): Promise<number> {
 }
 
 async function startNestServer() {
+  process.env.OBJECT_STORAGE_BACKEND = 'fs';
+  process.env.OBJECT_STORAGE_FS_ROOT = path.join(app.getPath('userData'), 'objectStorage');
+
   nestApp = await NestFactory.create<NestExpressApplication>(AppModule, {
     rawBody: true,
     bufferLogs: false,

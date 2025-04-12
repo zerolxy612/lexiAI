@@ -16,7 +16,6 @@ import {
 import { RAGService } from '../rag/rag.service';
 import { PrismaService } from '../common/prisma.service';
 import { ElasticsearchService } from '../common/elasticsearch.service';
-import { MINIO_INTERNAL, MinioService } from '../common/minio.service';
 import {
   UpsertResourceRequest,
   ResourceMeta,
@@ -79,6 +78,7 @@ import { DeleteCanvasNodesJobData } from '../canvas/canvas.dto';
 import { ParserFactory } from '../knowledge/parsers/factory';
 import { ConfigService } from '@nestjs/config';
 import { ParseResult, ParserOptions } from './parsers/base';
+import { OSS_INTERNAL, ObjectStorageService } from '@/modules/common/object-storage';
 
 @Injectable()
 export class KnowledgeService {
@@ -91,7 +91,7 @@ export class KnowledgeService {
     private ragService: RAGService,
     private miscService: MiscService,
     private subscriptionService: SubscriptionService,
-    @Inject(MINIO_INTERNAL) private minio: MinioService,
+    @Inject(OSS_INTERNAL) private oss: ObjectStorageService,
     @InjectQueue(QUEUE_RESOURCE) private queue: Queue<FinalizeResourceParam>,
     @InjectQueue(QUEUE_SIMPLE_EVENT) private simpleEventQueue: Queue<SimpleEventData>,
     @InjectQueue(QUEUE_SYNC_STORAGE_USAGE) private ssuQueue: Queue<SyncStorageUsageJobData>,
@@ -169,7 +169,7 @@ export class KnowledgeService {
 
     let content: string;
     if (resource.storageKey) {
-      const contentStream = await this.minio.client.getObject(resource.storageKey);
+      const contentStream = await this.oss.getObject(resource.storageKey);
       content = await streamToString(contentStream);
     }
 
@@ -213,7 +213,7 @@ export class KnowledgeService {
         throw new ParamsError(`static file ${param.storageKey} not found`);
       }
       const sha = crypto.createHash('sha256');
-      const fileStream = await this.minio.client.getObject(staticFile.storageKey);
+      const fileStream = await this.oss.getObject(staticFile.storageKey);
 
       staticFileBuf = await streamToBuffer(fileStream);
 
@@ -226,8 +226,8 @@ export class KnowledgeService {
     if (content) {
       // save content to object storage
       const storageKey = `resources/${param.resourceId}.txt`;
-      await this.minio.client.putObject(storageKey, param.content);
-      const storageSize = (await this.minio.client.statObject(storageKey)).size;
+      await this.oss.putObject(storageKey, param.content);
+      const storageSize = (await this.oss.statObject(storageKey)).size;
 
       return {
         storageKey,
@@ -509,7 +509,7 @@ export class KnowledgeService {
       result = await parser.parse(url);
     } else if (rawFileKey) {
       const parser = parserFactory.createParserByContentType(contentType, parserOptions);
-      const fileStream = await this.minio.client.getObject(rawFileKey);
+      const fileStream = await this.oss.getObject(rawFileKey);
       const fileBuffer = await streamToBuffer(fileStream);
 
       let numPages = 0;
@@ -566,13 +566,13 @@ export class KnowledgeService {
     const title = result.title || resource.title;
 
     const storageKey = `resources/${resourceId}.txt`;
-    await this.minio.client.putObject(storageKey, content);
+    await this.oss.putObject(storageKey, content);
 
     const updatedResource = await this.prisma.resource.update({
       where: { resourceId, uid: user.uid },
       data: {
         storageKey,
-        storageSize: (await this.minio.client.statObject(storageKey)).size,
+        storageSize: (await this.oss.statObject(storageKey)).size,
         wordCount: readingTime(content).words,
         title,
         indexStatus: 'wait_index',
@@ -613,7 +613,7 @@ export class KnowledgeService {
     };
 
     if (storageKey) {
-      const contentStream = await this.minio.client.getObject(storageKey);
+      const contentStream = await this.oss.getObject(storageKey);
       const content = await streamToString(contentStream);
 
       const { size } = await this.ragService.indexDocument(user, {
@@ -730,8 +730,8 @@ export class KnowledgeService {
     }
 
     if (param.content) {
-      await this.minio.client.putObject(resource.storageKey, param.content);
-      updates.storageSize = (await this.minio.client.statObject(resource.storageKey)).size;
+      await this.oss.putObject(resource.storageKey, param.content);
+      updates.storageSize = (await this.oss.statObject(resource.storageKey)).size;
     }
 
     const updatedResource = await this.prisma.resource.update({
@@ -808,10 +808,10 @@ export class KnowledgeService {
     ];
 
     if (resource.storageKey) {
-      cleanups.push(this.minio.client.removeObject(resource.storageKey));
+      cleanups.push(this.oss.removeObject(resource.storageKey));
     }
     if (resource.rawFileKey) {
-      cleanups.push(this.minio.client.removeObject(resource.rawFileKey));
+      cleanups.push(this.oss.removeObject(resource.rawFileKey));
     }
 
     await Promise.all(cleanups);
@@ -863,7 +863,7 @@ export class KnowledgeService {
 
     let content: string;
     if (doc.storageKey) {
-      const contentStream = await this.minio.client.getObject(doc.storageKey);
+      const contentStream = await this.oss.getObject(doc.storageKey);
       content = await streamToString(contentStream);
     }
 
@@ -900,14 +900,14 @@ export class KnowledgeService {
     // Save initial content and ydoc state to object storage
     const ydoc = markdown2StateUpdate(param.initialContent);
     await Promise.all([
-      this.minio.client.putObject(createInput.storageKey, param.initialContent),
-      this.minio.client.putObject(createInput.stateStorageKey, Buffer.from(ydoc)),
+      this.oss.putObject(createInput.storageKey, param.initialContent),
+      this.oss.putObject(createInput.stateStorageKey, Buffer.from(ydoc)),
     ]);
 
     // Calculate storage size
     const [storageStat, stateStorageStat] = await Promise.all([
-      this.minio.client.statObject(createInput.storageKey),
-      this.minio.client.statObject(createInput.stateStorageKey),
+      this.oss.statObject(createInput.storageKey),
+      this.oss.statObject(createInput.stateStorageKey),
     ]);
     createInput.storageSize = storageStat.size + stateStorageStat.size;
 
@@ -1017,11 +1017,11 @@ export class KnowledgeService {
     ];
 
     if (doc.storageKey) {
-      cleanups.push(this.minio.client.removeObject(doc.storageKey));
+      cleanups.push(this.oss.removeObject(doc.storageKey));
     }
 
     if (doc.stateStorageKey) {
-      cleanups.push(this.minio.client.removeObject(doc.stateStorageKey));
+      cleanups.push(this.oss.removeObject(doc.stateStorageKey));
     }
 
     await Promise.all(cleanups);
@@ -1085,8 +1085,8 @@ export class KnowledgeService {
     });
 
     const migrations: Promise<any>[] = [
-      this.minio.duplicateFile(sourceDoc.storageKey, newStorageKey),
-      this.minio.duplicateFile(sourceDoc.stateStorageKey, newStateStorageKey),
+      this.oss.duplicateFile(sourceDoc.storageKey, newStorageKey),
+      this.oss.duplicateFile(sourceDoc.stateStorageKey, newStateStorageKey),
       this.ragService.duplicateDocument({
         sourceUid: sourceDoc.uid,
         targetUid: user.uid,
@@ -1197,7 +1197,7 @@ export class KnowledgeService {
       this.elasticsearch.duplicateResource(sourceResource.resourceId, newResourceId, user),
     ];
     if (sourceResource.storageKey) {
-      migrations.push(this.minio.duplicateFile(sourceResource.storageKey, newStorageKey));
+      migrations.push(this.oss.duplicateFile(sourceResource.storageKey, newStorageKey));
     }
     if (sourceResource.uid !== user.uid) {
       migrations.push(

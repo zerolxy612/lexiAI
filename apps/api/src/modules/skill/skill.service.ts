@@ -99,8 +99,6 @@ import { modelInfoPO2DTO } from '../misc/misc.dto';
 import { MiscService } from '../misc/misc.service';
 import { AutoNameCanvasJobData } from '../canvas/canvas.dto';
 import { ParserFactory } from '../knowledge/parsers/factory';
-import { MINIO_INTERNAL, MinioService } from '../common/minio.service';
-import { Inject } from '@nestjs/common';
 import { CodeArtifactService } from '../code-artifact/code-artifact.service';
 import { projectPO2DTO } from '@/modules/project/project.dto';
 
@@ -134,7 +132,6 @@ export class SkillService {
     private collabService: CollabService,
     private misc: MiscService,
     private codeArtifact: CodeArtifactService,
-    @Inject(MINIO_INTERNAL) private minio: MinioService,
     @InjectQueue(QUEUE_SKILL) private skillQueue: Queue<InvokeSkillJobData>,
     @InjectQueue(QUEUE_SKILL_TIMEOUT_CHECK)
     private timeoutCheckQueue: Queue<SkillTimeoutCheckJobData>,

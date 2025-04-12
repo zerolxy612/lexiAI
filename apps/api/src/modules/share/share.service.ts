@@ -38,8 +38,7 @@ import {
   batchReplaceRegex,
 } from '@refly/utils';
 import { ElasticsearchService } from '../common/elasticsearch.service';
-import { MINIO_INTERNAL } from '../common/minio.service';
-import { MinioService } from '../common/minio.service';
+import { ObjectStorageService, OSS_INTERNAL } from '../common/object-storage';
 import { CodeArtifactService } from '../code-artifact/code-artifact.service';
 import { codeArtifactPO2DTO } from '../code-artifact/code-artifact.dto';
 
@@ -74,7 +73,7 @@ export class ShareService {
     private readonly actionService: ActionService,
     private readonly codeArtifactService: CodeArtifactService,
     private readonly subscriptionService: SubscriptionService,
-    @Inject(MINIO_INTERNAL) private minio: MinioService,
+    @Inject(OSS_INTERNAL) private oss: ObjectStorageService,
   ) {}
 
   async listShares(user: User, param: ListSharesData['query']) {
@@ -897,8 +896,8 @@ export class ShareService {
     const state = markdown2StateUpdate(documentDetail.content ?? '');
 
     const jobs: Promise<any>[] = [
-      this.minio.client.putObject(newStorageKey, documentDetail.content),
-      this.minio.client.putObject(newStateStorageKey, Buffer.from(state)),
+      this.oss.putObject(newStorageKey, documentDetail.content),
+      this.oss.putObject(newStateStorageKey, Buffer.from(state)),
       this.elasticsearch.upsertDocument({
         id: newDocId,
         ...pick(newDoc, ['title', 'uid']),
@@ -1060,7 +1059,7 @@ export class ShareService {
     }
 
     const newStorageKey = `code-artifact/${newCodeArtifactId}`;
-    await this.minio.client.putObject(newStorageKey, codeArtifactDetail.content);
+    await this.oss.putObject(newStorageKey, codeArtifactDetail.content);
 
     // Create a new code artifact record
     await this.prisma.codeArtifact.create({
