@@ -958,7 +958,7 @@ export class SubscriptionService implements OnModuleInit {
 
       this.logger.debug(`Storage usage for user ${uid} synced at ${timestamp}`);
     } catch (error) {
-      this.logger.error(`Error syncing storage usage for user ${uid}: ${error.message}`);
+      this.logger.error(`Error syncing storage usage for user ${uid}: ${error.stack}`);
     }
   }
 
