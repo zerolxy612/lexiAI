@@ -297,6 +297,7 @@ export const useCanvasStore = create<CanvasState>()(
         nodeSizeMode: state.nodeSizeMode,
         showReflyPilot: state.showReflyPilot,
         linearThreadMessages: state.linearThreadMessages,
+        showSlideshow: state.showSlideshow,
       }),
     },
   ),

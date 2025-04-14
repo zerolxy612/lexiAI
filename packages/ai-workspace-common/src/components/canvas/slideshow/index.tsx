@@ -1,10 +1,13 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import { useCanvasStoreShallow } from '@refly-packages/ai-workspace-common/stores/canvas';
 import SlideHeader from './slide-header';
+import { SlideshowEdit } from '../../../../../../apps/web/src/pages/pages';
 
 export const Slideshow = memo(() => {
+  const pageId = 'page-oxlsifqiaw7d2bs3kstci94w';
   const [isMaximized, setIsMaximized] = useState(false);
   const [isWideMode, setIsWideMode] = useState(false);
+  const [showMinimap, setShowMinimap] = useState(false);
 
   const { setShowSlideshow } = useCanvasStoreShallow((state) => ({
     setShowSlideshow: state.setShowSlideshow,
@@ -49,6 +52,10 @@ export const Slideshow = memo(() => {
     [],
   );
 
+  useEffect(() => {
+    setShowMinimap(isMaximized);
+  }, [isMaximized]);
+
   return (
     <div
       className="border border-solid border-gray-100 rounded-lg bg-transparent"
@@ -61,6 +68,12 @@ export const Slideshow = memo(() => {
           onClose={() => setShowSlideshow(false)}
           onMaximize={() => setIsMaximized(!isMaximized)}
           onWideMode={() => setIsWideMode(!isWideMode)}
+        />
+        <SlideshowEdit
+          pageId={pageId}
+          showMinimap={showMinimap}
+          setShowMinimap={setShowMinimap}
+          source="slideshow"
         />
       </div>
     </div>

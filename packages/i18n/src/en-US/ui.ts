@@ -200,6 +200,9 @@ const translations = {
       createPage: 'Create Page',
       noPages: 'No pages yet',
     },
+    slideshow: {
+      title: 'Slideshow',
+    },
   },
   verifyRules: {
     emailRequired: 'Email cannot be empty',

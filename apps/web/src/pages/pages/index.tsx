@@ -41,15 +41,21 @@ interface PageDetailType {
   nodeRelations?: NodeRelation[];
 }
 
-function PageEdit() {
-  const { pageId } = useParams<{ pageId: string }>();
+interface PageEditProps {
+  source: 'slideshow' | 'page';
+  pageId?: string;
+  showMinimap: boolean;
+  setShowMinimap: (show: boolean) => void;
+}
+
+export function SlideshowEdit(props: PageEditProps) {
+  const { pageId, showMinimap, setShowMinimap, source } = props;
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const { t } = useTranslation();
   const [formChanged, setFormChanged] = useState(false);
   const [activeNodeIndex, setActiveNodeIndex] = useState(0);
   const [nodesList, setNodes] = useState<NodeRelation[]>([]);
-  const [showMinimap, setShowMinimap] = useState(true);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [_isDeletingNode, setIsDeletingNode] = useState(false);
   const [wideMode, setWideMode] = useState<{ isActive: boolean; nodeId: string | null }>({
@@ -104,7 +110,9 @@ function PageEdit() {
   // UI interaction handling methods
   const toggleSidebar = useCallback(() => setCollapse(!collapse), [collapse, setCollapse]);
 
-  const toggleMinimap = useCallback(() => setShowMinimap(!showMinimap), [showMinimap]);
+  const toggleMinimap = useCallback(() => {
+    setShowMinimap(!showMinimap);
+  }, [showMinimap, setShowMinimap]);
 
   const togglePreviewMode = useCallback(() => {
     setIsPreviewMode(!isPreviewMode);
@@ -573,6 +581,7 @@ function PageEdit() {
 
   return (
     <PageLayout
+      source={source}
       showMinimap={showMinimap}
       collapse={collapse}
       nodes={nodesList}
@@ -786,6 +795,19 @@ function PageEdit() {
         </div>
       </Modal>
     </PageLayout>
+  );
+}
+
+function PageEdit() {
+  const [showMinimap, setShowMinimap] = useState(true);
+  const { pageId } = useParams<{ pageId: string }>();
+  return (
+    <SlideshowEdit
+      pageId={pageId}
+      showMinimap={showMinimap}
+      setShowMinimap={setShowMinimap}
+      source="page"
+    />
   );
 }
 

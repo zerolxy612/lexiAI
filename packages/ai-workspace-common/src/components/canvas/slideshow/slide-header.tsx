@@ -31,7 +31,7 @@ const SlideHeader = memo(
             </span>
           </div>
           <span className="text-sm font-medium leading-normal">
-            {t('canvas.slideshow.title', { defaultValue: 'Slideshow' })}
+            {t('pages.slideshow.title', { defaultValue: 'Slideshow' })}
           </span>
         </div>
 

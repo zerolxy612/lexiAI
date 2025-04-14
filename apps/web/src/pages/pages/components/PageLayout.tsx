@@ -6,6 +6,7 @@ import { type NodeRelation } from './ArtifactRenderer';
 import { useTranslation } from 'react-i18next';
 
 interface PageLayoutProps {
+  source: 'slideshow' | 'page';
   children: ReactNode;
   showMinimap: boolean;
   collapse: boolean;
@@ -20,6 +21,7 @@ interface PageLayoutProps {
 }
 
 const PageLayout: React.FC<PageLayoutProps> = ({
+  source,
   children,
   showMinimap,
   collapse,
@@ -91,7 +93,7 @@ const PageLayout: React.FC<PageLayoutProps> = ({
           )}
 
           {/* Button to expand global sidebar */}
-          {collapse && (
+          {collapse && source === 'page' && (
             <Button
               type="text"
               icon={<MenuUnfoldOutlined />}

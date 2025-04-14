@@ -2471,6 +2471,9 @@ const translations = {
       pageId: '页面ID',
       unknown: '未知',
     },
+    slideshow: {
+      title: '幻灯片',
+    },
   },
 };
 
