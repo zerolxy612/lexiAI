@@ -56,6 +56,7 @@ import {
   RiImageAiLine,
   RiExpandDiagonalLine,
   RiGuideLine,
+  RiSlideshow2Line,
 } from 'react-icons/ri';
 import { RxEnterFullScreen } from 'react-icons/rx';
 import { PiAtom } from 'react-icons/pi';
@@ -170,7 +171,7 @@ export const IconRight = LuChevronRight;
 export const IconUser = LuUserRound;
 export const IconRemove = MdOutlineRemoveCircleOutline;
 export const IconFiles = LuFileStack;
-
+export const IconSlideshow = RiSlideshow2Line;
 export const IconChrome = ChromeIcon;
 export const ModelProviderIcons = {
   openai: OpenAIIcon,

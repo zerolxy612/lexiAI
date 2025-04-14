@@ -45,6 +45,7 @@ export interface CanvasState {
   autoLayout: boolean;
   showTemplates: boolean;
   showReflyPilot: boolean;
+  showSlideshow: boolean;
   linearThreadMessages: LinearThreadMessage[];
   tplConfig: Record<string, any> | null;
 
@@ -68,6 +69,7 @@ export interface CanvasState {
   setAutoLayout: (enabled: boolean) => void;
   setShowTemplates: (show: boolean) => void;
   setShowReflyPilot: (show: boolean) => void;
+  setShowSlideshow: (show: boolean) => void;
   addLinearThreadMessage: (message: Omit<LinearThreadMessage, 'timestamp'>) => void;
   removeLinearThreadMessage: (id: string) => void;
   removeLinearThreadMessageByNodeId: (nodeId: string) => void;
@@ -94,6 +96,7 @@ const defaultCanvasState = () => ({
   autoLayout: false,
   showTemplates: true,
   showReflyPilot: false,
+  showSlideshow: false,
   linearThreadMessages: [],
   tplConfig: null,
 });
@@ -249,6 +252,10 @@ export const useCanvasStore = create<CanvasState>()(
       setShowReflyPilot: (show) =>
         set((state) => {
           state.showReflyPilot = show;
+        }),
+      setShowSlideshow: (show) =>
+        set((state) => {
+          state.showSlideshow = show;
         }),
       addLinearThreadMessage: (message) =>
         set((state) => {

@@ -1092,6 +1092,7 @@ const translations = {
       hideTemplates: 'Hide Templates',
       showTemplates: 'Show Templates',
       exportImage: 'Export Image',
+      slideshow: 'Slide',
       copyLink: 'Copy Link',
       createWebsite: 'Create Website Node',
       createWebsiteDescription: 'Create a website node to embed a website in your canvas',

@@ -18,6 +18,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import withScrolling, { createHorizontalStrength } from 'react-dnd-scrolling';
 import { getFreshNodePreviews } from '@refly-packages/ai-workspace-common/utils/canvas';
 import { ReflyPilot } from '@refly-packages/ai-workspace-common/components/canvas/refly-pilot';
+import { Slideshow } from '@refly-packages/ai-workspace-common/components/canvas/slideshow';
 import { EnhancedSkillResponse } from './skill-response/enhanced-skill-response';
 import { useReactFlow } from '@xyflow/react';
 import { useSearchParams } from 'react-router-dom';
@@ -362,13 +363,13 @@ export const NodePreviewContainer = memo(
     nodes: CanvasNode<any>[];
   }) => {
     const { getNodes } = useReactFlow<CanvasNode<any>>();
-    const { rawNodePreviews, reorderNodePreviews, showReflyPilot } = useCanvasStoreShallow(
-      (state) => ({
+    const { rawNodePreviews, reorderNodePreviews, showReflyPilot, showSlideshow } =
+      useCanvasStoreShallow((state) => ({
         rawNodePreviews: state.config[canvasId]?.nodePreviews ?? [],
         reorderNodePreviews: state.reorderNodePreviews,
         showReflyPilot: state.showReflyPilot,
-      }),
-    );
+        showSlideshow: state.showSlideshow,
+      }));
 
     // Compute fresh node previews using the utility function
     const nodePreviews = useMemo(() => {
@@ -414,6 +415,7 @@ export const NodePreviewContainer = memo(
       <DndProvider backend={HTML5Backend}>
         <div className="flex h-full w-full">
           <ScrollingComponent {...scrollingComponentProps}>
+            {showSlideshow && <Slideshow />}
             {showReflyPilot && <ReflyPilot />}
             {nodePreviewsRendered}
           </ScrollingComponent>

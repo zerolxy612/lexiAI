@@ -980,6 +980,7 @@ const translations = {
       hideTemplates: '隐藏模板',
       showTemplates: '显示模板',
       exportImage: '导出图片',
+      slideshow: '幻灯片',
       copyLink: '复制链接',
       createWebsite: '创建网站节点',
       createWebsiteDescription: '创建一个网站节点以在画布中嵌入网站',
