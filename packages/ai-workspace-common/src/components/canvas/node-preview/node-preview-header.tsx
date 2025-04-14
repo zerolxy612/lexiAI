@@ -34,6 +34,7 @@ import {
   IconWebsite,
   IconWideMode,
   IconResource,
+  IconExitWideMode,
 } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { useTranslation } from 'react-i18next';
 import { useNodePreviewControl } from '@refly-packages/ai-workspace-common/hooks/canvas/use-node-preview-control';
@@ -361,7 +362,11 @@ export const NodePreviewHeader: FC<NodePreviewHeaderProps> = memo(
               className={`p-1.5 hover:bg-gray-100 ${isWideMode ? 'text-primary-600' : 'text-gray-500'}`}
               onClick={() => onWideMode()}
             >
-              <IconWideMode className="w-4 h-4" />
+              {isWideMode ? (
+                <IconExitWideMode className="w-4 h-4" />
+              ) : (
+                <IconWideMode className="w-4 h-4" />
+              )}
             </Button>
           )}
           {onMaximize && (

@@ -6,8 +6,8 @@ import { SlideshowEdit } from '../../../../../../apps/web/src/pages/pages';
 export const Slideshow = memo(() => {
   const pageId = 'page-oxlsifqiaw7d2bs3kstci94w';
   const [isMaximized, setIsMaximized] = useState(false);
-  const [isWideMode, setIsWideMode] = useState(false);
-  const [showMinimap, setShowMinimap] = useState(false);
+  const [isWideMode, setIsWideMode] = useState(true);
+  const [showMinimap, setShowMinimap] = useState(true);
 
   const { setShowSlideshow } = useCanvasStoreShallow((state) => ({
     setShowSlideshow: state.setShowSlideshow,
@@ -53,8 +53,8 @@ export const Slideshow = memo(() => {
   );
 
   useEffect(() => {
-    setShowMinimap(isMaximized);
-  }, [isMaximized]);
+    setShowMinimap(isMaximized || isWideMode);
+  }, [isMaximized, isWideMode]);
 
   return (
     <div

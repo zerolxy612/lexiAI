@@ -593,12 +593,15 @@ export function SlideshowEdit(props: PageEditProps) {
       headerContent={
         <div className="flex justify-between items-center w-full">
           <div className="flex items-center">
-            <Button
-              onClick={handleBack}
-              icon={<ArrowLeftOutlined />}
-              type="text"
-              className="mr-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-            />
+            {source === 'page' && (
+              <Button
+                onClick={handleBack}
+                icon={<ArrowLeftOutlined />}
+                type="text"
+                className="mr-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              />
+            )}
+
             <Form
               form={form}
               layout="inline"

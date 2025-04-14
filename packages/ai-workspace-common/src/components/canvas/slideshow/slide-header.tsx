@@ -1,4 +1,7 @@
-import { IconClose } from '@refly-packages/ai-workspace-common/components/common/icon';
+import {
+  IconClose,
+  IconExitWideMode,
+} from '@refly-packages/ai-workspace-common/components/common/icon';
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from 'antd';
@@ -42,7 +45,11 @@ const SlideHeader = memo(
             className={`flex items-center justify-center p-0 w-7 h-7 ${isWideMode ? 'text-primary-600' : 'text-gray-500 hover:text-gray-600'} min-w-0`}
             onClick={onWideMode}
           >
-            <IconWideMode className="w-4 h-4" />
+            {isWideMode ? (
+              <IconExitWideMode className="w-4 h-4" />
+            ) : (
+              <IconWideMode className="w-4 h-4" />
+            )}
           </Button>
           <Button
             type="text"
