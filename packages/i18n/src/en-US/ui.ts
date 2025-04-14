@@ -248,7 +248,8 @@ const translations = {
       instructionStep5: 'After successful creation, you will be redirected to the page list',
       createPageFailed: 'Create Page Failed',
       noValidNodes: 'No valid nodes found',
-      noNodesFound: 'No nodes found in Canvas',
+      noNodesFound:
+        'No available nodes found in Canvas, the node types that can be included in the slideshow are: document, resource, skill response, memo, website, artifact, please create available nodes in the canvas first',
       invalidApiResponse: 'Invalid API response',
       fetchCanvasDataFailed: 'Failed to fetch Canvas data',
       pleaseEnterCanvasId: 'Please enter Canvas ID',
