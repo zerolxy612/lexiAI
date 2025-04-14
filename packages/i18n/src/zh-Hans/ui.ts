@@ -2470,9 +2470,12 @@ const translations = {
       pageCreatedSuccess: '页面创建成功',
       pageId: '页面ID',
       unknown: '未知',
+      refresh: '重载节点',
     },
     slideshow: {
       title: '幻灯片',
+      newSlide: '点击创建幻灯片',
+      newSlideDescription: '没有幻灯片？点击创建一个',
     },
   },
 };

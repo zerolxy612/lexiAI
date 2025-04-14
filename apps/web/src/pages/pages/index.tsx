@@ -45,11 +45,12 @@ interface PageEditProps {
   source: 'slideshow' | 'page';
   pageId?: string;
   showMinimap: boolean;
+  minimalMode?: boolean;
   setShowMinimap: (show: boolean) => void;
 }
 
 export function SlideshowEdit(props: PageEditProps) {
-  const { pageId, showMinimap, setShowMinimap, source } = props;
+  const { pageId, showMinimap, setShowMinimap, source, minimalMode = false } = props;
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const { t } = useTranslation();
@@ -333,7 +334,7 @@ export function SlideshowEdit(props: PageEditProps) {
               navigator.clipboard.writeText(shareData.shareUrl).then(
                 () => {
                   setIsCopied(true);
-                  message.success(t('common.copySuccess'));
+                  message.success(t('common.copy.success'));
                   setTimeout(() => setIsCopied(false), 3000);
                 },
                 () => {
@@ -363,7 +364,7 @@ export function SlideshowEdit(props: PageEditProps) {
     navigator.clipboard.writeText(shareUrl).then(
       () => {
         setIsCopied(true);
-        message.success(t('common.copySuccess'));
+        message.success(t('common.copy.success'));
         setTimeout(() => setIsCopied(false), 3000);
       },
       () => {
@@ -621,7 +622,7 @@ export function SlideshowEdit(props: PageEditProps) {
                 <Input
                   placeholder={t('common.titlePlaceholder')}
                   bordered={false}
-                  className="text-lg font-medium px-0"
+                  className={`text-lg font-medium px-0 ${minimalMode ? 'text-sm' : ''}`}
                   style={{ height: '32px' }}
                 />
               </Form.Item>
@@ -632,29 +633,38 @@ export function SlideshowEdit(props: PageEditProps) {
             {nodesList.length > 0 && (
               <Button
                 type="text"
+                size={minimalMode ? 'small' : 'middle'}
                 onClick={togglePreviewMode}
                 icon={<PlayCircleOutlined />}
-                className="flex items-center mx-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                className={`flex items-center text-gray-600 hover:!text-green-600 hover:bg-gray-50 ${
+                  minimalMode ? 'text-xs' : ''
+                }`}
               >
                 {t('common.preview')}
               </Button>
             )}
             <Button
               type="text"
+              size={minimalMode ? 'small' : 'middle'}
               onClick={handleShare}
               icon={<ShareAltOutlined />}
-              className="flex items-center mx-2 text-green-600 hover:text-green-700 hover:bg-green-50"
+              className={`flex items-center mr-2 text-gray-600 hover:!text-green-600 hover:bg-gray-50 ${
+                minimalMode ? 'text-xs' : ''
+              }`}
             >
               {t('common.shareLink')}
             </Button>
             {formChanged && (
               <Button
                 type="primary"
+                size={minimalMode ? 'small' : 'middle'}
                 htmlType="submit"
                 onClick={() => form.submit()}
                 loading={isUpdating}
                 icon={<SaveOutlined />}
-                className="flex items-center bg-blue-600 hover:bg-blue-700 border-none"
+                className={`flex items-center bg-green-600 hover:bg-green-700 border-none ${
+                  minimalMode ? 'text-xs' : ''
+                }`}
               >
                 {isUpdating ? t('common.saving') : t('common.savePage')}
               </Button>

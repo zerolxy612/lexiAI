@@ -1,10 +1,12 @@
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useCanvasStoreShallow } from '@refly-packages/ai-workspace-common/stores/canvas';
 import SlideHeader from './slide-header';
+import NewSlide from './new-slide';
 import { SlideshowEdit } from '../../../../../../apps/web/src/pages/pages';
 
-export const Slideshow = memo(() => {
-  const pageId = 'page-oxlsifqiaw7d2bs3kstci94w';
+export const Slideshow = memo(({ canvasId }: { canvasId: string }) => {
+  // const pageId = 'page-oxlsifqiaw7d2bs3kstci94w';
+  const [pageId, setPageId] = useState<string | null>(null);
   const [isMaximized, setIsMaximized] = useState(false);
   const [isWideMode, setIsWideMode] = useState(true);
   const [showMinimap, setShowMinimap] = useState(true);
@@ -52,6 +54,10 @@ export const Slideshow = memo(() => {
     [],
   );
 
+  const handleCreatePage = useCallback((pageId: string) => {
+    setPageId(pageId);
+  }, []);
+
   useEffect(() => {
     setShowMinimap(isMaximized || isWideMode);
   }, [isMaximized, isWideMode]);
@@ -69,12 +75,17 @@ export const Slideshow = memo(() => {
           onMaximize={() => setIsMaximized(!isMaximized)}
           onWideMode={() => setIsWideMode(!isWideMode)}
         />
-        <SlideshowEdit
-          pageId={pageId}
-          showMinimap={showMinimap}
-          setShowMinimap={setShowMinimap}
-          source="slideshow"
-        />
+        {pageId ? (
+          <SlideshowEdit
+            pageId={pageId}
+            showMinimap={showMinimap}
+            setShowMinimap={setShowMinimap}
+            source="slideshow"
+            minimalMode={!isMaximized && !isWideMode}
+          />
+        ) : (
+          <NewSlide canvasId={canvasId} afterCreate={handleCreatePage} />
+        )}
       </div>
     </div>
   );
