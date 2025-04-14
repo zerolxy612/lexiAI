@@ -15,6 +15,8 @@ import { CustomWsAdapter } from '@/utils/adapters/ws-adapter';
 let nestApp: NestExpressApplication | null = null;
 
 export const startApiServer = async () => {
+  process.env.DATABASE_URL = `file:${app.getPath('userData')}/refly.db`;
+  process.env.FULLTEXT_SEARCH_BACKEND = 'prisma';
   process.env.OBJECT_STORAGE_BACKEND = 'fs';
   process.env.OBJECT_STORAGE_FS_ROOT = path.join(app.getPath('userData'), 'objectStorage');
 

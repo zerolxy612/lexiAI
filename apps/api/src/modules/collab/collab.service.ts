@@ -9,11 +9,9 @@ import { Server, Hocuspocus } from '@hocuspocus/server';
 import { RAGService } from '../rag/rag.service';
 import { CodeArtifact, Prisma } from '@/generated/client';
 import { UpsertCodeArtifactRequest, User } from '@refly/openapi-schema';
-import { SubscriptionService } from '../subscription/subscription.service';
-import { MiscService } from '../misc/misc.service';
 import { ConfigService } from '@nestjs/config';
 import { RedisService } from '../common/redis.service';
-import { ElasticsearchService } from '../common/elasticsearch.service';
+import { FULLTEXT_SEARCH, FulltextSearchService } from '@/modules/common/fulltext-search';
 import { PrismaService } from '../common/prisma.service';
 import {
   genCodeArtifactID,
@@ -39,11 +37,9 @@ export class CollabService {
     private rag: RAGService,
     private prisma: PrismaService,
     private redis: RedisService,
-    private elasticsearch: ElasticsearchService,
     private config: ConfigService,
-    private miscService: MiscService,
-    private subscriptionService: SubscriptionService,
     @Inject(OSS_INTERNAL) private oss: ObjectStorageService,
+    @Inject(FULLTEXT_SEARCH) private fts: FulltextSearchService,
     @InjectQueue(QUEUE_SYNC_CANVAS_ENTITY) private canvasQueue: Queue,
   ) {
     this.server = Server.configure({
@@ -214,7 +210,7 @@ export class CollabService {
 
     // Re-index content to elasticsearch and vector store
     const [, { size }] = await Promise.all([
-      this.elasticsearch.upsertDocument({
+      this.fts.upsertDocument(user, 'document', {
         id: doc.docId,
         content,
         title,
@@ -280,7 +276,7 @@ export class CollabService {
     });
     context.entity = updatedCanvas;
 
-    await this.elasticsearch.upsertCanvas({
+    await this.fts.upsertDocument(user, 'canvas', {
       id: canvas.canvasId,
       title,
       uid: canvas.uid,

@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { KnowledgeService } from './knowledge.service';
 import { createMock } from '@golevelup/ts-jest';
 import { PrismaService } from '../common/prisma.service';
-import { ElasticsearchService } from '../common/elasticsearch.service';
 import { RAGService } from '../rag/rag.service';
 import { MiscService } from '../misc/misc.service';
 import { SubscriptionService } from '../subscription/subscription.service';
@@ -15,12 +14,13 @@ import {
   QUEUE_SYNC_STORAGE_USAGE,
 } from '../../utils/const';
 import { ObjectStorageService, OSS_INTERNAL } from '@/modules/common/object-storage';
+import { FULLTEXT_SEARCH, FulltextSearchService } from '@/modules/common/fulltext-search';
 
 describe('KnowledgeService', () => {
   let service: KnowledgeService;
 
   const prismaService = createMock<PrismaService>();
-  const elasticsearchService = createMock<ElasticsearchService>();
+  const fulltextSearchService = createMock<FulltextSearchService>();
   const ragService = createMock<RAGService>();
   const miscService = createMock<MiscService>();
   const ossService = createMock<ObjectStorageService>();
@@ -35,11 +35,11 @@ describe('KnowledgeService', () => {
       providers: [
         KnowledgeService,
         { provide: PrismaService, useValue: prismaService },
-        { provide: ElasticsearchService, useValue: elasticsearchService },
         { provide: RAGService, useValue: ragService },
         { provide: MiscService, useValue: miscService },
         { provide: SubscriptionService, useValue: subscriptionService },
         { provide: OSS_INTERNAL, useValue: ossService },
+        { provide: FULLTEXT_SEARCH, useValue: fulltextSearchService },
         { provide: getQueueToken(QUEUE_RESOURCE), useValue: mockQueue },
         { provide: getQueueToken(QUEUE_SIMPLE_EVENT), useValue: mockQueue },
         { provide: getQueueToken(QUEUE_SYNC_STORAGE_USAGE), useValue: mockQueue },

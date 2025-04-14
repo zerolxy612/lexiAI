@@ -61,10 +61,13 @@ export default () => ({
     apiKey: process.env.QDRANT_API_KEY,
     vectorDim: Number.parseInt(process.env.REFLY_VEC_DIM) || 768,
   },
-  elasticsearch: {
-    url: process.env.ELASTICSEARCH_URL || 'http://localhost:9200',
-    username: process.env.ELASTICSEARCH_USERNAME,
-    password: process.env.ELASTICSEARCH_PASSWORD,
+  fulltextSearch: {
+    backend: process.env.FULLTEXT_SEARCH_BACKEND || 'elasticsearch',
+    elasticsearch: {
+      url: process.env.ELASTICSEARCH_URL || 'http://localhost:9200',
+      username: process.env.ELASTICSEARCH_USERNAME,
+      password: process.env.ELASTICSEARCH_PASSWORD,
+    },
   },
   auth: {
     skipVerification: process.env.AUTH_SKIP_VERIFICATION === 'true' || false,

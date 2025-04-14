@@ -22,8 +22,6 @@ async function createWindow() {
   console.log('appPath', app.getPath('userData'));
   console.log('systemLocale', app.getSystemLocale());
 
-  process.env.DATABASE_URL = `file:${app.getPath('userData')}/refly.db`;
-
   try {
     const redisPort = await startRedisServer();
     process.env.REDIS_PORT = String(redisPort);

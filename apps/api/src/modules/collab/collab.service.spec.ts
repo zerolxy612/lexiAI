@@ -4,14 +4,12 @@ import { createMock } from '@golevelup/ts-jest';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../common/prisma.service';
 import { RAGService } from '../rag/rag.service';
-import { ElasticsearchService } from '../common/elasticsearch.service';
 import { RedisService } from '../common/redis.service';
-import { MiscService } from '../misc/misc.service';
-import { SubscriptionService } from '../subscription/subscription.service';
 import { QUEUE_SYNC_CANVAS_ENTITY } from '../../utils/const';
 import type { Queue } from 'bullmq';
 import { getQueueToken } from '@nestjs/bullmq';
 import { ObjectStorageService, OSS_INTERNAL } from '@/modules/common/object-storage';
+import { FULLTEXT_SEARCH, FulltextSearchService } from '@/modules/common/fulltext-search';
 
 describe('CollabService', () => {
   let service: CollabService;
@@ -19,10 +17,8 @@ describe('CollabService', () => {
   const configService = createMock<ConfigService>();
   const prismaService = createMock<PrismaService>();
   const ragService = createMock<RAGService>();
-  const elasticsearchService = createMock<ElasticsearchService>();
+  const fulltextSearchService = createMock<FulltextSearchService>();
   const redisService = createMock<RedisService>();
-  const miscService = createMock<MiscService>();
-  const subscriptionService = createMock<SubscriptionService>();
   const ossService = createMock<ObjectStorageService>();
 
   const mockQueue = {
@@ -36,11 +32,9 @@ describe('CollabService', () => {
         { provide: ConfigService, useValue: configService },
         { provide: PrismaService, useValue: prismaService },
         { provide: RAGService, useValue: ragService },
-        { provide: ElasticsearchService, useValue: elasticsearchService },
+        { provide: FULLTEXT_SEARCH, useValue: fulltextSearchService },
         { provide: RedisService, useValue: redisService },
-        { provide: MiscService, useValue: miscService },
         { provide: OSS_INTERNAL, useValue: ossService },
-        { provide: SubscriptionService, useValue: subscriptionService },
         { provide: getQueueToken(QUEUE_SYNC_CANVAS_ENTITY), useValue: mockQueue },
       ],
     }).compile();

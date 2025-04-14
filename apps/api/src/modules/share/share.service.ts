@@ -37,7 +37,7 @@ import {
   safeParseJSON,
   batchReplaceRegex,
 } from '@refly/utils';
-import { ElasticsearchService } from '../common/elasticsearch.service';
+import { FULLTEXT_SEARCH, FulltextSearchService } from '@/modules/common/fulltext-search';
 import { ObjectStorageService, OSS_INTERNAL } from '../common/object-storage';
 import { CodeArtifactService } from '../code-artifact/code-artifact.service';
 import { codeArtifactPO2DTO } from '../code-artifact/code-artifact.dto';
@@ -65,7 +65,6 @@ export class ShareService {
   constructor(
     private readonly config: ConfigService,
     private readonly prisma: PrismaService,
-    private readonly elasticsearch: ElasticsearchService,
     private readonly ragService: RAGService,
     private readonly miscService: MiscService,
     private readonly canvasService: CanvasService,
@@ -74,6 +73,7 @@ export class ShareService {
     private readonly codeArtifactService: CodeArtifactService,
     private readonly subscriptionService: SubscriptionService,
     @Inject(OSS_INTERNAL) private oss: ObjectStorageService,
+    @Inject(FULLTEXT_SEARCH) private readonly fts: FulltextSearchService,
   ) {}
 
   async listShares(user: User, param: ListSharesData['query']) {
@@ -898,7 +898,7 @@ export class ShareService {
     const jobs: Promise<any>[] = [
       this.oss.putObject(newStorageKey, documentDetail.content),
       this.oss.putObject(newStateStorageKey, Buffer.from(state)),
-      this.elasticsearch.upsertDocument({
+      this.fts.upsertDocument(user, 'document', {
         id: newDocId,
         ...pick(newDoc, ['title', 'uid']),
         content: documentDetail.content,
@@ -994,7 +994,7 @@ export class ShareService {
         visibility: 'private',
         storageKey: newStorageKey,
       }),
-      this.elasticsearch.upsertResource({
+      this.fts.upsertDocument(user, 'resource', {
         id: newResourceId,
         ...pick(newResource, ['title', 'uid']),
         content: resourceDetail.content,

@@ -1,6 +1,10 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Readable } from 'node:stream';
-import { ObjectInfo, ObjectStorageBackend } from './backend';
+import { ConfigService } from '@nestjs/config';
+import { FileVisibility } from '@refly/openapi-schema';
+import { FsStorageBackend } from './backend/fs';
+import { MinioStorageBackend } from './backend/minio';
+import { ObjectInfo, ObjectStorageBackend } from './backend/interface';
 
 @Injectable()
 export class ObjectStorageService implements OnModuleInit {
@@ -85,12 +89,30 @@ export class ObjectStorageService implements OnModuleInit {
   }
 }
 
-// Re-export types from backend
-export {
-  ObjectInfo,
-  ObjectStorageType as StorageType,
-  ObjectStorageBackendFactory,
-} from './backend';
+export const createObjectStorageServiceFactory = (options?: { visibility: FileVisibility }) => {
+  return (configService: ConfigService) => {
+    const backendType = configService.get('objectStorage.backend');
+
+    let backend: ObjectStorageBackend;
+    switch (backendType) {
+      case 'fs':
+        backend = new FsStorageBackend(configService.get('objectStorage.fs'));
+        break;
+      case 'minio': {
+        backend = new MinioStorageBackend(
+          options?.visibility === 'public'
+            ? configService.get('objectStorage.minio.external')
+            : configService.get('objectStorage.minio.internal'),
+        );
+        break;
+      }
+      default:
+        throw new Error(`Unknown storage backend type '${backendType}'`);
+    }
+
+    return new ObjectStorageService(backend);
+  };
+};
 
 // Export the provider tokens
 export * from './tokens';

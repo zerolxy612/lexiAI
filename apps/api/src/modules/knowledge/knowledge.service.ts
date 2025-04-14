@@ -15,7 +15,7 @@ import {
 } from '@/generated/client';
 import { RAGService } from '../rag/rag.service';
 import { PrismaService } from '../common/prisma.service';
-import { ElasticsearchService } from '../common/elasticsearch.service';
+import { FULLTEXT_SEARCH, FulltextSearchService } from '@/modules/common/fulltext-search';
 import {
   UpsertResourceRequest,
   ResourceMeta,
@@ -87,11 +87,11 @@ export class KnowledgeService {
   constructor(
     private config: ConfigService,
     private prisma: PrismaService,
-    private elasticsearch: ElasticsearchService,
     private ragService: RAGService,
     private miscService: MiscService,
     private subscriptionService: SubscriptionService,
     @Inject(OSS_INTERNAL) private oss: ObjectStorageService,
+    @Inject(FULLTEXT_SEARCH) private fts: FulltextSearchService,
     @InjectQueue(QUEUE_RESOURCE) private queue: Queue<FinalizeResourceParam>,
     @InjectQueue(QUEUE_SIMPLE_EVENT) private simpleEventQueue: Queue<SimpleEventData>,
     @InjectQueue(QUEUE_SYNC_STORAGE_USAGE) private ssuQueue: Queue<SyncStorageUsageJobData>,
@@ -585,7 +585,7 @@ export class KnowledgeService {
       },
     });
 
-    await this.elasticsearch.upsertResource({
+    await this.fts.upsertDocument(user, 'resource', {
       id: resourceId,
       content,
       url,
@@ -747,7 +747,7 @@ export class KnowledgeService {
       });
     }
 
-    await this.elasticsearch.upsertResource({
+    await this.fts.upsertDocument(user, 'resource', {
       id: updatedResource.resourceId,
       content: param.content || undefined,
       createdAt: updatedResource.createdAt.toJSON(),
@@ -801,7 +801,7 @@ export class KnowledgeService {
 
     const cleanups: Promise<any>[] = [
       this.ragService.deleteResourceNodes(user, resourceId),
-      this.elasticsearch.deleteResource(resourceId),
+      this.fts.deleteDocument(user, 'resource', resourceId),
       this.canvasQueue.add('deleteNodes', {
         entities: [{ entityId: resourceId, entityType: 'resource' }],
       }),
@@ -931,7 +931,7 @@ export class KnowledgeService {
       update: pick(param, ['title', 'readOnly', 'projectId']),
     });
 
-    await this.elasticsearch.upsertDocument({
+    await this.fts.upsertDocument(user, 'document', {
       id: param.docId,
       ...pick(doc, ['title', 'uid', 'projectId']),
       content: param.initialContent,
@@ -1010,7 +1010,7 @@ export class KnowledgeService {
         data: { deletedAt: new Date() },
       }),
       this.ragService.deleteDocumentNodes(user, docId),
-      this.elasticsearch.deleteDocument(docId),
+      this.fts.deleteDocument(user, 'document', docId),
       this.canvasQueue.add('deleteNodes', {
         entities: [{ entityId: docId, entityType: 'document' }],
       }),
@@ -1093,7 +1093,7 @@ export class KnowledgeService {
         sourceDocId: sourceDoc.docId,
         targetDocId: newDocId,
       }),
-      this.elasticsearch.duplicateDocument(sourceDoc.docId, newDocId, user),
+      this.fts.duplicateDocument(user, 'document', sourceDoc.docId, newDocId),
     ];
 
     if (sourceDoc.uid !== user.uid) {
@@ -1194,7 +1194,7 @@ export class KnowledgeService {
         sourceDocId: sourceResource.resourceId,
         targetDocId: newResourceId,
       }),
-      this.elasticsearch.duplicateResource(sourceResource.resourceId, newResourceId, user),
+      this.fts.duplicateDocument(user, 'resource', sourceResource.resourceId, newResourceId),
     ];
     if (sourceResource.storageKey) {
       migrations.push(this.oss.duplicateFile(sourceResource.storageKey, newStorageKey));

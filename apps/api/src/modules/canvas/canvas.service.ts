@@ -7,7 +7,7 @@ import { PrismaService } from '../common/prisma.service';
 import { MiscService } from '../misc/misc.service';
 import { CollabService } from '../collab/collab.service';
 import { CodeArtifactService } from '../code-artifact/code-artifact.service';
-import { ElasticsearchService } from '../common/elasticsearch.service';
+import { FULLTEXT_SEARCH, FulltextSearchService } from '../common/fulltext-search';
 import { CanvasNotFoundError, ParamsError, StorageQuotaExceeded } from '@refly/errors';
 import {
   AutoNameCanvasRequest,
@@ -41,7 +41,6 @@ export class CanvasService {
   constructor(
     private prisma: PrismaService,
     private redis: RedisService,
-    private elasticsearch: ElasticsearchService,
     private collabService: CollabService,
     private miscService: MiscService,
     private actionService: ActionService,
@@ -49,6 +48,7 @@ export class CanvasService {
     private codeArtifactService: CodeArtifactService,
     private subscriptionService: SubscriptionService,
     @Inject(OSS_INTERNAL) private oss: ObjectStorageService,
+    @Inject(FULLTEXT_SEARCH) private fts: FulltextSearchService,
     @InjectQueue(QUEUE_DELETE_KNOWLEDGE_ENTITY)
     private deleteKnowledgeQueue: Queue<DeleteKnowledgeEntityJobData>,
     @InjectQueue(QUEUE_POST_DELETE_CANVAS)
@@ -369,7 +369,7 @@ export class CanvasService {
 
     this.logger.log(`created canvas data: ${JSON.stringify(ydoc.toJSON())}`);
 
-    await this.elasticsearch.upsertCanvas({
+    await this.fts.upsertDocument(user, 'canvas', {
       id: canvas.canvasId,
       title: canvas.title,
       createdAt: canvas.createdAt.toJSON(),
@@ -448,7 +448,7 @@ export class CanvasService {
       await this.oss.removeObject(originalMinimap);
     }
 
-    await this.elasticsearch.upsertCanvas({
+    await this.fts.upsertDocument(user, 'canvas', {
       id: updatedCanvas.canvasId,
       title: updatedCanvas.title,
       updatedAt: updatedCanvas.updatedAt.toJSON(),
@@ -510,7 +510,7 @@ export class CanvasService {
       return;
     }
 
-    const cleanups: Promise<any>[] = [this.elasticsearch.deleteCanvas(canvas.canvasId)];
+    const cleanups: Promise<any>[] = [this.fts.deleteDocument({ uid }, 'canvas', canvas.canvasId)];
 
     if (canvas.stateStorageKey) {
       cleanups.push(this.oss.removeObject(canvas.stateStorageKey));

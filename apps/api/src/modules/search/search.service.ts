@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../common/prisma.service';
 import {
@@ -18,7 +18,7 @@ import {
   SearchDomain,
 } from '@refly/openapi-schema';
 import { RAGService } from '../rag/rag.service';
-import { ElasticsearchService } from '../common/elasticsearch.service';
+import { FULLTEXT_SEARCH, FulltextSearchService } from '@/modules/common/fulltext-search';
 import { ParamsError } from '@refly/errors';
 import { detectLanguage, TimeTracker } from '@refly/utils';
 import { searchResultsToSources, sourcesToSearchResults } from '@refly/utils';
@@ -82,8 +82,8 @@ export class SearchService {
   constructor(
     private configService: ConfigService,
     private prisma: PrismaService,
-    private elasticsearch: ElasticsearchService,
     private rag: RAGService,
+    @Inject(FULLTEXT_SEARCH) private fts: FulltextSearchService,
   ) {}
 
   async preprocessSearchRequest(user: User, req: SearchRequest): Promise<ProcessedSearchRequest[]> {
@@ -235,27 +235,7 @@ export class SearchService {
     user: User,
     req: ProcessedSearchRequest,
   ): Promise<SearchResult[]> {
-    const hits = await this.elasticsearch.searchResources(req.user ?? user, req);
-
-    return hits.map((hit) => ({
-      id: hit._id,
-      domain: 'resource',
-      title: hit._source.title,
-      highlightedTitle: hit.highlight?.title?.[0] || hit._source.title,
-      contentPreview: `${hit._source.content?.slice(0, 500)}...`,
-      snippets: [
-        {
-          text: hit._source.content,
-          highlightedText: hit.highlight?.content?.[0] || hit._source.content,
-        },
-      ],
-      metadata: {
-        // TODO: confirm if metadata is used
-        url: hit._source.url,
-      },
-      createdAt: hit._source.createdAt,
-      updatedAt: hit._source.updatedAt,
-    }));
+    return this.fts.searchDocument(req.user ?? user, 'resource', req);
   }
 
   async searchResourcesByVector(user: User, req: ProcessedSearchRequest): Promise<SearchResult[]> {
@@ -349,23 +329,7 @@ export class SearchService {
     user: User,
     req: ProcessedSearchRequest,
   ): Promise<SearchResult[]> {
-    const hits = await this.elasticsearch.searchDocuments(req.user ?? user, req);
-
-    return hits.map((hit) => ({
-      id: hit._id,
-      domain: 'document',
-      title: hit._source.title,
-      highlightedTitle: hit.highlight?.title?.[0] || hit._source.title,
-      contentPreview: `${hit._source.content?.slice(0, 500)}...`,
-      snippets: [
-        {
-          text: hit._source.content,
-          highlightedText: hit.highlight?.content?.[0] || hit._source.content,
-        },
-      ],
-      createdAt: hit._source.createdAt,
-      updatedAt: hit._source.updatedAt,
-    }));
+    return this.fts.searchDocument(req.user ?? user, 'document', req);
   }
 
   async searchDocumentsByVector(user: User, req: ProcessedSearchRequest): Promise<SearchResult[]> {
@@ -435,18 +399,7 @@ export class SearchService {
   }
 
   async searchCanvasesByKeywords(user: User, req: ProcessedSearchRequest): Promise<SearchResult[]> {
-    const hits = await this.elasticsearch.searchCanvases(req.user ?? user, req);
-
-    return hits.map((hit) => ({
-      id: hit._id,
-      domain: 'canvas',
-      title: hit._source.title ?? '',
-      highlightedTitle: hit.highlight?.title?.[0] ?? hit._source.title ?? '',
-      contentPreview: '',
-      snippets: [],
-      createdAt: hit._source.createdAt,
-      updatedAt: hit._source.updatedAt,
-    }));
+    return this.fts.searchDocument(req.user ?? user, 'canvas', req);
   }
 
   async searchCanvases(user: User, req: ProcessedSearchRequest): Promise<SearchResult[]> {
