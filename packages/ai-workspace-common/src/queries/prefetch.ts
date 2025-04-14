@@ -24,6 +24,8 @@ import {
   listDocuments,
   listLabelClasses,
   listLabelInstances,
+  listModelItems,
+  listModelProviders,
   listModels,
   listProjects,
   listResources,
@@ -48,6 +50,8 @@ import {
   ListDocumentsData,
   ListLabelClassesData,
   ListLabelInstancesData,
+  ListModelItemsData,
+  ListModelProvidersData,
   ListProjectsData,
   ListResourcesData,
   ListSharesData,
@@ -279,6 +283,22 @@ export const prefetchUseListModels = (
   queryClient.prefetchQuery({
     queryKey: Common.UseListModelsKeyFn(clientOptions),
     queryFn: () => listModels({ ...clientOptions }).then((response) => response.data),
+  });
+export const prefetchUseListModelProviders = (
+  queryClient: QueryClient,
+  clientOptions: Options<ListModelProvidersData, true> = {},
+) =>
+  queryClient.prefetchQuery({
+    queryKey: Common.UseListModelProvidersKeyFn(clientOptions),
+    queryFn: () => listModelProviders({ ...clientOptions }).then((response) => response.data),
+  });
+export const prefetchUseListModelItems = (
+  queryClient: QueryClient,
+  clientOptions: Options<ListModelItemsData, true> = {},
+) =>
+  queryClient.prefetchQuery({
+    queryKey: Common.UseListModelItemsKeyFn(clientOptions),
+    queryFn: () => listModelItems({ ...clientOptions }).then((response) => response.data),
   });
 export const prefetchUseServeStatic = (
   queryClient: QueryClient,

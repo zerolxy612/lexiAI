@@ -256,6 +256,30 @@ import type {
   MultiLingualWebSearchData,
   MultiLingualWebSearchError,
   MultiLingualWebSearchResponse2,
+  ListModelProvidersData,
+  ListModelProvidersError,
+  ListModelProvidersResponse2,
+  CreateModelProviderData,
+  CreateModelProviderError,
+  CreateModelProviderResponse,
+  UpdateModelProviderData,
+  UpdateModelProviderError,
+  UpdateModelProviderResponse,
+  DeleteModelProviderData,
+  DeleteModelProviderError,
+  DeleteModelProviderResponse,
+  ListModelItemsData,
+  ListModelItemsError,
+  ListModelItemsResponse2,
+  CreateModelItemData,
+  CreateModelItemError,
+  CreateModelItemResponse,
+  UpdateModelItemData,
+  UpdateModelItemError,
+  UpdateModelItemResponse,
+  DeleteModelItemData,
+  DeleteModelItemError,
+  DeleteModelItemResponse,
   ScrapeData,
   ScrapeError,
   ScrapeResponse,
@@ -1640,6 +1664,142 @@ export const multiLingualWebSearch = <ThrowOnError extends boolean = false>(
   >({
     ...options,
     url: '/search/multilingualSearch',
+  });
+};
+
+/**
+ * List model providers
+ * List all available model providers
+ */
+export const listModelProviders = <ThrowOnError extends boolean = false>(
+  options?: Options<ListModelProvidersData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).get<
+    ListModelProvidersResponse2,
+    ListModelProvidersError,
+    ThrowOnError
+  >({
+    ...options,
+    url: '/model/provider/list',
+  });
+};
+
+/**
+ * Create model provider
+ * Create a new model provider
+ */
+export const createModelProvider = <ThrowOnError extends boolean = false>(
+  options: Options<CreateModelProviderData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).post<
+    CreateModelProviderResponse,
+    CreateModelProviderError,
+    ThrowOnError
+  >({
+    ...options,
+    url: '/model/provider/create',
+  });
+};
+
+/**
+ * Update model provider
+ * Update an existing model provider
+ */
+export const updateModelProvider = <ThrowOnError extends boolean = false>(
+  options: Options<UpdateModelProviderData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).post<
+    UpdateModelProviderResponse,
+    UpdateModelProviderError,
+    ThrowOnError
+  >({
+    ...options,
+    url: '/model/provider/update',
+  });
+};
+
+/**
+ * Delete model provider
+ * Delete an existing model provider
+ */
+export const deleteModelProvider = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteModelProviderData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).post<
+    DeleteModelProviderResponse,
+    DeleteModelProviderError,
+    ThrowOnError
+  >({
+    ...options,
+    url: '/model/provider/delete',
+  });
+};
+
+/**
+ * List model items
+ * List all available model items
+ */
+export const listModelItems = <ThrowOnError extends boolean = false>(
+  options?: Options<ListModelItemsData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).get<
+    ListModelItemsResponse2,
+    ListModelItemsError,
+    ThrowOnError
+  >({
+    ...options,
+    url: '/model/item/list',
+  });
+};
+
+/**
+ * Create model item
+ * Create a new model item
+ */
+export const createModelItem = <ThrowOnError extends boolean = false>(
+  options: Options<CreateModelItemData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).post<
+    CreateModelItemResponse,
+    CreateModelItemError,
+    ThrowOnError
+  >({
+    ...options,
+    url: '/model/item/create',
+  });
+};
+
+/**
+ * Update model item
+ * Update an existing model item
+ */
+export const updateModelItem = <ThrowOnError extends boolean = false>(
+  options: Options<UpdateModelItemData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).post<
+    UpdateModelItemResponse,
+    UpdateModelItemError,
+    ThrowOnError
+  >({
+    ...options,
+    url: '/model/item/update',
+  });
+};
+
+/**
+ * Delete model item
+ * Delete an existing model item
+ */
+export const deleteModelItem = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteModelItemData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).post<
+    DeleteModelItemResponse,
+    DeleteModelItemError,
+    ThrowOnError
+  >({
+    ...options,
+    url: '/model/item/delete',
   });
 };
 

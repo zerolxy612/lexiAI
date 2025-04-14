@@ -4986,6 +4986,250 @@ export const ListModelsResponseSchema = {
   ],
 } as const;
 
+export const ModelProviderSchema = {
+  type: 'object',
+  required: ['providerId', 'providerKey', 'name', 'apiKey', 'baseUrl', 'enabled'],
+  properties: {
+    providerId: {
+      type: 'string',
+      description: 'Model provider ID',
+    },
+    providerKey: {
+      type: 'string',
+      description: 'Model provider key',
+    },
+    name: {
+      type: 'string',
+      description: 'Model provider name',
+    },
+    apiKey: {
+      type: 'string',
+      description: 'Model provider API key',
+    },
+    baseUrl: {
+      type: 'string',
+      description: 'Model provider base URL',
+    },
+    enabled: {
+      type: 'boolean',
+      description: 'Whether the model provider is enabled',
+    },
+    createdAt: {
+      type: 'string',
+      format: 'date-time',
+      description: 'Model provider creation time',
+    },
+    updatedAt: {
+      type: 'string',
+      format: 'date-time',
+      description: 'Model provider update time',
+    },
+  },
+} as const;
+
+export const ModelTypeSchema = {
+  type: 'string',
+  enum: ['llm', 'embedding', 'reranker'],
+} as const;
+
+export const ModelItemSchema = {
+  type: 'object',
+  required: ['itemId', 'providerId', 'modelId', 'modelType', 'name', 'enabled'],
+  properties: {
+    itemId: {
+      type: 'string',
+      description: 'Model item ID',
+    },
+    modelId: {
+      type: 'string',
+      description: 'Model ID',
+    },
+    modelType: {
+      description: 'Model type',
+      $ref: '#/components/schemas/ModelType',
+    },
+    name: {
+      type: 'string',
+      description: 'Model name',
+    },
+    enabled: {
+      type: 'boolean',
+      description: 'Whether the model item is enabled',
+    },
+    providerId: {
+      type: 'string',
+      description: 'Model provider ID',
+    },
+    provider: {
+      type: 'object',
+      $ref: '#/components/schemas/ModelProvider',
+    },
+    createdAt: {
+      type: 'string',
+      format: 'date-time',
+      description: 'Model item creation time',
+    },
+    updatedAt: {
+      type: 'string',
+      format: 'date-time',
+      description: 'Model item update time',
+    },
+  },
+} as const;
+
+export const ListModelProvidersResponseSchema = {
+  allOf: [
+    {
+      $ref: '#/components/schemas/BaseResponse',
+    },
+    {
+      type: 'object',
+      properties: {
+        data: {
+          type: 'array',
+          items: {
+            $ref: '#/components/schemas/ModelProvider',
+          },
+        },
+      },
+    },
+  ],
+} as const;
+
+export const UpsertModelProviderRequestSchema = {
+  type: 'object',
+  properties: {
+    providerId: {
+      type: 'string',
+      description: 'Model provider ID (only for update)',
+    },
+    providerKey: {
+      type: 'string',
+      description: 'Model provider key',
+    },
+    name: {
+      type: 'string',
+      description: 'Model provider name',
+    },
+    apiKey: {
+      type: 'string',
+      description: 'Model provider API key',
+    },
+    baseUrl: {
+      type: 'string',
+      description: 'Model provider base URL',
+    },
+    enabled: {
+      type: 'boolean',
+      description: 'Whether the model provider is enabled',
+    },
+  },
+} as const;
+
+export const UpsertModelProviderResponseSchema = {
+  allOf: [
+    {
+      $ref: '#/components/schemas/BaseResponse',
+    },
+    {
+      type: 'object',
+      properties: {
+        data: {
+          $ref: '#/components/schemas/ModelProvider',
+        },
+      },
+    },
+  ],
+} as const;
+
+export const DeleteModelProviderRequestSchema = {
+  type: 'object',
+  required: ['providerId'],
+  properties: {
+    providerId: {
+      type: 'string',
+      description: 'Model provider ID',
+    },
+  },
+} as const;
+
+export const ListModelItemsResponseSchema = {
+  allOf: [
+    {
+      $ref: '#/components/schemas/BaseResponse',
+    },
+    {
+      type: 'object',
+      properties: {
+        data: {
+          type: 'array',
+          items: {
+            $ref: '#/components/schemas/ModelItem',
+          },
+        },
+      },
+    },
+  ],
+} as const;
+
+export const UpsertModelItemRequestSchema = {
+  type: 'object',
+  required: ['providerId', 'modelId', 'modelType', 'name'],
+  properties: {
+    itemId: {
+      type: 'string',
+      description: 'Model item ID (only for update)',
+    },
+    providerId: {
+      type: 'string',
+      description: 'Model provider ID',
+    },
+    modelId: {
+      type: 'string',
+      description: 'Model ID',
+    },
+    modelType: {
+      description: 'Model type',
+      $ref: '#/components/schemas/ModelType',
+    },
+    name: {
+      type: 'string',
+      description: 'Model name',
+    },
+    enabled: {
+      type: 'boolean',
+      description: 'Whether the model item is enabled',
+    },
+  },
+} as const;
+
+export const UpsertModelItemResponseSchema = {
+  allOf: [
+    {
+      $ref: '#/components/schemas/BaseResponse',
+    },
+    {
+      type: 'object',
+      properties: {
+        data: {
+          $ref: '#/components/schemas/ModelItem',
+        },
+      },
+    },
+  ],
+} as const;
+
+export const DeleteModelItemRequestSchema = {
+  type: 'object',
+  required: ['itemId'],
+  properties: {
+    itemId: {
+      type: 'string',
+      description: 'Model item ID',
+    },
+  },
+} as const;
+
 export const DocumentInterfaceSchema = {
   type: 'object',
   properties: {

@@ -750,6 +750,62 @@ model LabelInstance {
   @@map("label_instances")
 }
 
+model ModelProvider {
+  /// Primary key
+  pk         Int         @id @default(autoincrement())
+  /// Provider id
+  providerId String      @unique @map("provider_id")
+  /// Provider key
+  key        String      @map("key")
+  /// Provider type
+  uid        String      @map("uid")
+  /// Provider API key
+  apiKey     String      @map("api_key")
+  /// Provider base URL
+  baseUrl    String?     @map("base_url")
+  /// Whether the provider is enabled
+  enabled    Boolean     @default(true) @map("enabled")
+  /// Create timestamp
+  createdAt  DateTime    @default(now()) @map("created_at")
+  /// Update timestamp
+  updatedAt  DateTime    @default(now()) @updatedAt @map("updated_at")
+  /// Deletion timestamp
+  deletedAt  DateTime?   @map("deleted_at")
+  /// Model items
+  modelItems ModelItem[]
+
+  @@index([uid, deletedAt])
+  @@map("model_providers")
+}
+
+model ModelItem {
+  /// Primary key
+  pk         Int           @id @default(autoincrement())
+  /// Model provider ID
+  providerId String        @map("provider_id")
+  /// Model item ID
+  providerKey String      @map("provider_key")
+  /// Model ID
+  modelId    String        @map("model_id")
+  /// Model item type
+  modelType  String        @map("model_type")
+  /// Model item name
+  name       String        @map("name")
+  /// Whether the model item is enabled
+  enabled    Boolean       @default(true) @map("enabled")
+  /// Create timestamp
+  createdAt  DateTime      @default(now()) @map("created_at")
+  /// Update timestamp
+  updatedAt  DateTime      @default(now()) @updatedAt @map("updated_at")
+  /// Deletion timestamp
+  deletedAt  DateTime?     @map("deleted_at")
+  /// Provider
+  provider   ModelProvider @relation(fields: [providerId], references: [providerId])
+
+  @@index([providerId])
+  @@map("model_items")
+}
+
 model SubscriptionPlan {
   /// Primary key
   pk                 Int      @id @default(autoincrement())

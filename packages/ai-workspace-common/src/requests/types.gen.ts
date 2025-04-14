@@ -3510,6 +3510,163 @@ export type ListModelsResponse = BaseResponse & {
   data?: Array<ModelInfo>;
 };
 
+export type ModelProvider = {
+  /**
+   * Model provider ID
+   */
+  providerId: string;
+  /**
+   * Model provider key
+   */
+  providerKey: string;
+  /**
+   * Model provider name
+   */
+  name: string;
+  /**
+   * Model provider API key
+   */
+  apiKey: string;
+  /**
+   * Model provider base URL
+   */
+  baseUrl: string;
+  /**
+   * Whether the model provider is enabled
+   */
+  enabled: boolean;
+  /**
+   * Model provider creation time
+   */
+  createdAt?: string;
+  /**
+   * Model provider update time
+   */
+  updatedAt?: string;
+};
+
+export type ModelType = 'llm' | 'embedding' | 'reranker';
+
+export type ModelItem = {
+  /**
+   * Model item ID
+   */
+  itemId: string;
+  /**
+   * Model ID
+   */
+  modelId: string;
+  /**
+   * Model type
+   */
+  modelType: ModelType;
+  /**
+   * Model name
+   */
+  name: string;
+  /**
+   * Whether the model item is enabled
+   */
+  enabled: boolean;
+  /**
+   * Model provider ID
+   */
+  providerId: string;
+  provider?: ModelProvider;
+  /**
+   * Model item creation time
+   */
+  createdAt?: string;
+  /**
+   * Model item update time
+   */
+  updatedAt?: string;
+};
+
+export type ListModelProvidersResponse = BaseResponse & {
+  data?: Array<ModelProvider>;
+};
+
+export type UpsertModelProviderRequest = {
+  /**
+   * Model provider ID (only for update)
+   */
+  providerId?: string;
+  /**
+   * Model provider key
+   */
+  providerKey?: string;
+  /**
+   * Model provider name
+   */
+  name?: string;
+  /**
+   * Model provider API key
+   */
+  apiKey?: string;
+  /**
+   * Model provider base URL
+   */
+  baseUrl?: string;
+  /**
+   * Whether the model provider is enabled
+   */
+  enabled?: boolean;
+};
+
+export type UpsertModelProviderResponse = BaseResponse & {
+  data?: ModelProvider;
+};
+
+export type DeleteModelProviderRequest = {
+  /**
+   * Model provider ID
+   */
+  providerId: string;
+};
+
+export type ListModelItemsResponse = BaseResponse & {
+  data?: Array<ModelItem>;
+};
+
+export type UpsertModelItemRequest = {
+  /**
+   * Model item ID (only for update)
+   */
+  itemId?: string;
+  /**
+   * Model provider ID
+   */
+  providerId: string;
+  /**
+   * Model ID
+   */
+  modelId: string;
+  /**
+   * Model type
+   */
+  modelType: ModelType;
+  /**
+   * Model name
+   */
+  name: string;
+  /**
+   * Whether the model item is enabled
+   */
+  enabled?: boolean;
+};
+
+export type UpsertModelItemResponse = BaseResponse & {
+  data?: ModelItem;
+};
+
+export type DeleteModelItemRequest = {
+  /**
+   * Model item ID
+   */
+  itemId: string;
+};
+
 export type DocumentInterface = {
   /**
    * An optional identifier for the document. Ideally this should be unique across the document collection and formatted as a UUID.
@@ -4510,6 +4667,98 @@ export type MultiLingualWebSearchData = {
 export type MultiLingualWebSearchResponse2 = MultiLingualWebSearchResponse;
 
 export type MultiLingualWebSearchError = unknown;
+
+export type ListModelProvidersData = {
+  query?: {
+    /**
+     * Whether the model provider is enabled
+     */
+    enabled?: boolean;
+    /**
+     * Model provider key
+     */
+    providerKey?: string;
+  };
+};
+
+export type ListModelProvidersResponse2 = ListModelProvidersResponse;
+
+export type ListModelProvidersError = unknown;
+
+export type CreateModelProviderData = {
+  body: UpsertModelProviderRequest;
+};
+
+export type CreateModelProviderResponse = UpsertModelProviderResponse;
+
+export type CreateModelProviderError = unknown;
+
+export type UpdateModelProviderData = {
+  body: UpsertModelProviderRequest;
+};
+
+export type UpdateModelProviderResponse = UpsertModelProviderResponse;
+
+export type UpdateModelProviderError = unknown;
+
+export type DeleteModelProviderData = {
+  body: DeleteModelProviderRequest;
+};
+
+export type DeleteModelProviderResponse = BaseResponse;
+
+export type DeleteModelProviderError = unknown;
+
+export type ListModelItemsData = {
+  query?: {
+    /**
+     * Whether the model item is enabled
+     */
+    enabled?: boolean;
+    /**
+     * Model type
+     */
+    modelType?: ModelType;
+    /**
+     * Provider ID
+     */
+    providerId?: string;
+  };
+};
+
+export type ListModelItemsResponse2 = ListModelItemsResponse;
+
+export type ListModelItemsError = unknown;
+
+export type CreateModelItemData = {
+  body: UpsertModelItemRequest;
+  query: {
+    /**
+     * Provider ID
+     */
+    providerId: string;
+  };
+};
+
+export type CreateModelItemResponse = UpsertModelItemResponse;
+
+export type CreateModelItemError = unknown;
+
+export type UpdateModelItemData = {
+  body: UpsertModelItemRequest;
+};
+
+export type UpdateModelItemResponse = UpsertModelItemResponse;
+
+export type UpdateModelItemError = unknown;
+
+export type DeleteModelItemData = {
+  body: DeleteModelItemRequest;
+};
+
+export type DeleteModelItemResponse = BaseResponse;
+
+export type DeleteModelItemError = unknown;
 
 export type ScrapeData = {
   body: ScrapeWeblinkRequest;

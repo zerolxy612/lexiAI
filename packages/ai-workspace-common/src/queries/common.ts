@@ -17,6 +17,8 @@ import {
   createDocument,
   createLabelClass,
   createLabelInstance,
+  createModelItem,
+  createModelProvider,
   createPortalSession,
   createProject,
   createResource,
@@ -29,6 +31,8 @@ import {
   deleteDocument,
   deleteLabelClass,
   deleteLabelInstance,
+  deleteModelItem,
+  deleteModelProvider,
   deleteProject,
   deleteProjectItems,
   deleteReferences,
@@ -62,6 +66,8 @@ import {
   listDocuments,
   listLabelClasses,
   listLabelInstances,
+  listModelItems,
+  listModelProviders,
   listModels,
   listProjects,
   listResources,
@@ -87,6 +93,8 @@ import {
   updateDocument,
   updateLabelClass,
   updateLabelInstance,
+  updateModelItem,
+  updateModelProvider,
   updateProject,
   updateProjectItems,
   updateResource,
@@ -397,6 +405,28 @@ export const UseListModelsKeyFn = (
   clientOptions: Options<unknown, true> = {},
   queryKey?: Array<unknown>,
 ) => [useListModelsKey, ...(queryKey ?? [clientOptions])];
+export type ListModelProvidersDefaultResponse = Awaited<
+  ReturnType<typeof listModelProviders>
+>['data'];
+export type ListModelProvidersQueryResult<
+  TData = ListModelProvidersDefaultResponse,
+  TError = unknown,
+> = UseQueryResult<TData, TError>;
+export const useListModelProvidersKey = 'ListModelProviders';
+export const UseListModelProvidersKeyFn = (
+  clientOptions: Options<unknown, true> = {},
+  queryKey?: Array<unknown>,
+) => [useListModelProvidersKey, ...(queryKey ?? [clientOptions])];
+export type ListModelItemsDefaultResponse = Awaited<ReturnType<typeof listModelItems>>['data'];
+export type ListModelItemsQueryResult<
+  TData = ListModelItemsDefaultResponse,
+  TError = unknown,
+> = UseQueryResult<TData, TError>;
+export const useListModelItemsKey = 'ListModelItems';
+export const UseListModelItemsKeyFn = (
+  clientOptions: Options<unknown, true> = {},
+  queryKey?: Array<unknown>,
+) => [useListModelItemsKey, ...(queryKey ?? [clientOptions])];
 export type ServeStaticDefaultResponse = Awaited<ReturnType<typeof serveStatic>>['data'];
 export type ServeStaticQueryResult<
   TData = ServeStaticDefaultResponse,
@@ -755,6 +785,42 @@ export type MultiLingualWebSearchMutationResult = Awaited<ReturnType<typeof mult
 export const useMultiLingualWebSearchKey = 'MultiLingualWebSearch';
 export const UseMultiLingualWebSearchKeyFn = (mutationKey?: Array<unknown>) => [
   useMultiLingualWebSearchKey,
+  ...(mutationKey ?? []),
+];
+export type CreateModelProviderMutationResult = Awaited<ReturnType<typeof createModelProvider>>;
+export const useCreateModelProviderKey = 'CreateModelProvider';
+export const UseCreateModelProviderKeyFn = (mutationKey?: Array<unknown>) => [
+  useCreateModelProviderKey,
+  ...(mutationKey ?? []),
+];
+export type UpdateModelProviderMutationResult = Awaited<ReturnType<typeof updateModelProvider>>;
+export const useUpdateModelProviderKey = 'UpdateModelProvider';
+export const UseUpdateModelProviderKeyFn = (mutationKey?: Array<unknown>) => [
+  useUpdateModelProviderKey,
+  ...(mutationKey ?? []),
+];
+export type DeleteModelProviderMutationResult = Awaited<ReturnType<typeof deleteModelProvider>>;
+export const useDeleteModelProviderKey = 'DeleteModelProvider';
+export const UseDeleteModelProviderKeyFn = (mutationKey?: Array<unknown>) => [
+  useDeleteModelProviderKey,
+  ...(mutationKey ?? []),
+];
+export type CreateModelItemMutationResult = Awaited<ReturnType<typeof createModelItem>>;
+export const useCreateModelItemKey = 'CreateModelItem';
+export const UseCreateModelItemKeyFn = (mutationKey?: Array<unknown>) => [
+  useCreateModelItemKey,
+  ...(mutationKey ?? []),
+];
+export type UpdateModelItemMutationResult = Awaited<ReturnType<typeof updateModelItem>>;
+export const useUpdateModelItemKey = 'UpdateModelItem';
+export const UseUpdateModelItemKeyFn = (mutationKey?: Array<unknown>) => [
+  useUpdateModelItemKey,
+  ...(mutationKey ?? []),
+];
+export type DeleteModelItemMutationResult = Awaited<ReturnType<typeof deleteModelItem>>;
+export const useDeleteModelItemKey = 'DeleteModelItem';
+export const UseDeleteModelItemKeyFn = (mutationKey?: Array<unknown>) => [
+  useDeleteModelItemKey,
   ...(mutationKey ?? []),
 ];
 export type ScrapeMutationResult = Awaited<ReturnType<typeof scrape>>;

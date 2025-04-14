@@ -18,6 +18,8 @@ export enum IDPrefix {
   SKILL = 'sk-',
   SKILL_TRIGGER = 'tr-',
   SKILL_JOB = 'sj-',
+  MODEL_PROVIDER = 'mp-',
+  MODEL_ITEM = 'mi-',
   CONTENT_SELECTOR = 'cs-',
   MEMO = 'm-',
   VERIFICATION_SESSION = 'vs-',
@@ -84,6 +86,14 @@ export function genTokenUsageMeterID(): string {
 
 export function genStorageUsageMeterID(): string {
   return IDPrefix.STORAGE_USAGE_METER + createId();
+}
+
+export function genModelProviderID(): string {
+  return IDPrefix.MODEL_PROVIDER + createId();
+}
+
+export function genModelItemID(): string {
+  return IDPrefix.MODEL_ITEM + createId();
 }
 
 export function genSkillID(): string {

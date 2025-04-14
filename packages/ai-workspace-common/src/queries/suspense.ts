@@ -24,6 +24,8 @@ import {
   listDocuments,
   listLabelClasses,
   listLabelInstances,
+  listModelItems,
+  listModelProviders,
   listModels,
   listProjects,
   listResources,
@@ -69,6 +71,10 @@ import {
   ListLabelClassesError,
   ListLabelInstancesData,
   ListLabelInstancesError,
+  ListModelItemsData,
+  ListModelItemsError,
+  ListModelProvidersData,
+  ListModelProvidersError,
   ListModelsError,
   ListProjectsData,
   ListProjectsError,
@@ -510,6 +516,36 @@ export const useListModelsSuspense = <
     queryKey: Common.UseListModelsKeyFn(clientOptions, queryKey),
     queryFn: () =>
       listModels({ ...clientOptions }).then((response) => response.data as TData) as TData,
+    ...options,
+  });
+export const useListModelProvidersSuspense = <
+  TData = Common.ListModelProvidersDefaultResponse,
+  TError = ListModelProvidersError,
+  TQueryKey extends Array<unknown> = unknown[],
+>(
+  clientOptions: Options<ListModelProvidersData, true> = {},
+  queryKey?: TQueryKey,
+  options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
+) =>
+  useSuspenseQuery<TData, TError>({
+    queryKey: Common.UseListModelProvidersKeyFn(clientOptions, queryKey),
+    queryFn: () =>
+      listModelProviders({ ...clientOptions }).then((response) => response.data as TData) as TData,
+    ...options,
+  });
+export const useListModelItemsSuspense = <
+  TData = Common.ListModelItemsDefaultResponse,
+  TError = ListModelItemsError,
+  TQueryKey extends Array<unknown> = unknown[],
+>(
+  clientOptions: Options<ListModelItemsData, true> = {},
+  queryKey?: TQueryKey,
+  options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
+) =>
+  useSuspenseQuery<TData, TError>({
+    queryKey: Common.UseListModelItemsKeyFn(clientOptions, queryKey),
+    queryFn: () =>
+      listModelItems({ ...clientOptions }).then((response) => response.data as TData) as TData,
     ...options,
   });
 export const useServeStaticSuspense = <

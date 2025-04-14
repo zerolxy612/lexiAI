@@ -216,6 +216,22 @@ export class ProjectNotFoundError extends BaseError {
   };
 }
 
+export class ModelProviderNotFoundError extends BaseError {
+  code = 'E1015';
+  messageDict = {
+    en: 'Model provider not found, please refresh',
+    'zh-CN': '模型提供商不存在，请刷新重试',
+  };
+}
+
+export class ModelItemNotFoundError extends BaseError {
+  code = 'E1016';
+  messageDict = {
+    en: 'Model item not found, please refresh',
+    'zh-CN': '模型不存在，请刷新重试',
+  };
+}
+
 export class StorageQuotaExceeded extends BaseError {
   code = 'E2001';
   messageDict = {
@@ -291,6 +307,8 @@ const errorMap = {
   E1012: StaticFileNotFoundError,
   E1013: CodeArtifactNotFoundError,
   E1014: ProjectNotFoundError,
+  E1015: ModelProviderNotFoundError,
+  E1016: ModelItemNotFoundError,
   E2001: StorageQuotaExceeded,
   E2002: ModelUsageQuotaExceeded,
   E2003: ModelNotSupportedError,

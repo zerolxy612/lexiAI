@@ -17,6 +17,8 @@ import {
   createDocument,
   createLabelClass,
   createLabelInstance,
+  createModelItem,
+  createModelProvider,
   createPortalSession,
   createProject,
   createResource,
@@ -29,6 +31,8 @@ import {
   deleteDocument,
   deleteLabelClass,
   deleteLabelInstance,
+  deleteModelItem,
+  deleteModelProvider,
   deleteProject,
   deleteProjectItems,
   deleteReferences,
@@ -62,6 +66,8 @@ import {
   listDocuments,
   listLabelClasses,
   listLabelInstances,
+  listModelItems,
+  listModelProviders,
   listModels,
   listProjects,
   listResources,
@@ -87,6 +93,8 @@ import {
   updateDocument,
   updateLabelClass,
   updateLabelInstance,
+  updateModelItem,
+  updateModelProvider,
   updateProject,
   updateProjectItems,
   updateResource,
@@ -124,6 +132,10 @@ import {
   CreateLabelClassError,
   CreateLabelInstanceData,
   CreateLabelInstanceError,
+  CreateModelItemData,
+  CreateModelItemError,
+  CreateModelProviderData,
+  CreateModelProviderError,
   CreatePortalSessionError,
   CreateProjectData,
   CreateProjectError,
@@ -147,6 +159,10 @@ import {
   DeleteLabelClassError,
   DeleteLabelInstanceData,
   DeleteLabelInstanceError,
+  DeleteModelItemData,
+  DeleteModelItemError,
+  DeleteModelProviderData,
+  DeleteModelProviderError,
   DeleteProjectData,
   DeleteProjectError,
   DeleteProjectItemsData,
@@ -206,6 +222,10 @@ import {
   ListLabelClassesError,
   ListLabelInstancesData,
   ListLabelInstancesError,
+  ListModelItemsData,
+  ListModelItemsError,
+  ListModelProvidersData,
+  ListModelProvidersError,
   ListModelsError,
   ListProjectsData,
   ListProjectsError,
@@ -251,6 +271,10 @@ import {
   UpdateLabelClassError,
   UpdateLabelInstanceData,
   UpdateLabelInstanceError,
+  UpdateModelItemData,
+  UpdateModelItemError,
+  UpdateModelProviderData,
+  UpdateModelProviderError,
   UpdateProjectData,
   UpdateProjectError,
   UpdateProjectItemsData,
@@ -693,6 +717,36 @@ export const useListModels = <
     queryKey: Common.UseListModelsKeyFn(clientOptions, queryKey),
     queryFn: () =>
       listModels({ ...clientOptions }).then((response) => response.data as TData) as TData,
+    ...options,
+  });
+export const useListModelProviders = <
+  TData = Common.ListModelProvidersDefaultResponse,
+  TError = ListModelProvidersError,
+  TQueryKey extends Array<unknown> = unknown[],
+>(
+  clientOptions: Options<ListModelProvidersData, true> = {},
+  queryKey?: TQueryKey,
+  options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
+) =>
+  useQuery<TData, TError>({
+    queryKey: Common.UseListModelProvidersKeyFn(clientOptions, queryKey),
+    queryFn: () =>
+      listModelProviders({ ...clientOptions }).then((response) => response.data as TData) as TData,
+    ...options,
+  });
+export const useListModelItems = <
+  TData = Common.ListModelItemsDefaultResponse,
+  TError = ListModelItemsError,
+  TQueryKey extends Array<unknown> = unknown[],
+>(
+  clientOptions: Options<ListModelItemsData, true> = {},
+  queryKey?: TQueryKey,
+  options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
+) =>
+  useQuery<TData, TError>({
+    queryKey: Common.UseListModelItemsKeyFn(clientOptions, queryKey),
+    queryFn: () =>
+      listModelItems({ ...clientOptions }).then((response) => response.data as TData) as TData,
     ...options,
   });
 export const useServeStatic = <
@@ -1697,6 +1751,108 @@ export const useMultiLingualWebSearch = <
     mutationKey: Common.UseMultiLingualWebSearchKeyFn(mutationKey),
     mutationFn: (clientOptions) =>
       multiLingualWebSearch(clientOptions) as unknown as Promise<TData>,
+    ...options,
+  });
+export const useCreateModelProvider = <
+  TData = Common.CreateModelProviderMutationResult,
+  TError = CreateModelProviderError,
+  TQueryKey extends Array<unknown> = unknown[],
+  TContext = unknown,
+>(
+  mutationKey?: TQueryKey,
+  options?: Omit<
+    UseMutationOptions<TData, TError, Options<CreateModelProviderData, true>, TContext>,
+    'mutationKey' | 'mutationFn'
+  >,
+) =>
+  useMutation<TData, TError, Options<CreateModelProviderData, true>, TContext>({
+    mutationKey: Common.UseCreateModelProviderKeyFn(mutationKey),
+    mutationFn: (clientOptions) => createModelProvider(clientOptions) as unknown as Promise<TData>,
+    ...options,
+  });
+export const useUpdateModelProvider = <
+  TData = Common.UpdateModelProviderMutationResult,
+  TError = UpdateModelProviderError,
+  TQueryKey extends Array<unknown> = unknown[],
+  TContext = unknown,
+>(
+  mutationKey?: TQueryKey,
+  options?: Omit<
+    UseMutationOptions<TData, TError, Options<UpdateModelProviderData, true>, TContext>,
+    'mutationKey' | 'mutationFn'
+  >,
+) =>
+  useMutation<TData, TError, Options<UpdateModelProviderData, true>, TContext>({
+    mutationKey: Common.UseUpdateModelProviderKeyFn(mutationKey),
+    mutationFn: (clientOptions) => updateModelProvider(clientOptions) as unknown as Promise<TData>,
+    ...options,
+  });
+export const useDeleteModelProvider = <
+  TData = Common.DeleteModelProviderMutationResult,
+  TError = DeleteModelProviderError,
+  TQueryKey extends Array<unknown> = unknown[],
+  TContext = unknown,
+>(
+  mutationKey?: TQueryKey,
+  options?: Omit<
+    UseMutationOptions<TData, TError, Options<DeleteModelProviderData, true>, TContext>,
+    'mutationKey' | 'mutationFn'
+  >,
+) =>
+  useMutation<TData, TError, Options<DeleteModelProviderData, true>, TContext>({
+    mutationKey: Common.UseDeleteModelProviderKeyFn(mutationKey),
+    mutationFn: (clientOptions) => deleteModelProvider(clientOptions) as unknown as Promise<TData>,
+    ...options,
+  });
+export const useCreateModelItem = <
+  TData = Common.CreateModelItemMutationResult,
+  TError = CreateModelItemError,
+  TQueryKey extends Array<unknown> = unknown[],
+  TContext = unknown,
+>(
+  mutationKey?: TQueryKey,
+  options?: Omit<
+    UseMutationOptions<TData, TError, Options<CreateModelItemData, true>, TContext>,
+    'mutationKey' | 'mutationFn'
+  >,
+) =>
+  useMutation<TData, TError, Options<CreateModelItemData, true>, TContext>({
+    mutationKey: Common.UseCreateModelItemKeyFn(mutationKey),
+    mutationFn: (clientOptions) => createModelItem(clientOptions) as unknown as Promise<TData>,
+    ...options,
+  });
+export const useUpdateModelItem = <
+  TData = Common.UpdateModelItemMutationResult,
+  TError = UpdateModelItemError,
+  TQueryKey extends Array<unknown> = unknown[],
+  TContext = unknown,
+>(
+  mutationKey?: TQueryKey,
+  options?: Omit<
+    UseMutationOptions<TData, TError, Options<UpdateModelItemData, true>, TContext>,
+    'mutationKey' | 'mutationFn'
+  >,
+) =>
+  useMutation<TData, TError, Options<UpdateModelItemData, true>, TContext>({
+    mutationKey: Common.UseUpdateModelItemKeyFn(mutationKey),
+    mutationFn: (clientOptions) => updateModelItem(clientOptions) as unknown as Promise<TData>,
+    ...options,
+  });
+export const useDeleteModelItem = <
+  TData = Common.DeleteModelItemMutationResult,
+  TError = DeleteModelItemError,
+  TQueryKey extends Array<unknown> = unknown[],
+  TContext = unknown,
+>(
+  mutationKey?: TQueryKey,
+  options?: Omit<
+    UseMutationOptions<TData, TError, Options<DeleteModelItemData, true>, TContext>,
+    'mutationKey' | 'mutationFn'
+  >,
+) =>
+  useMutation<TData, TError, Options<DeleteModelItemData, true>, TContext>({
+    mutationKey: Common.UseDeleteModelItemKeyFn(mutationKey),
+    mutationFn: (clientOptions) => deleteModelItem(clientOptions) as unknown as Promise<TData>,
     ...options,
   });
 export const useScrape = <

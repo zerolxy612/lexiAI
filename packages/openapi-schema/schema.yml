@@ -33,6 +33,8 @@ tags:
     description: User management endpoints
   - name: search
     description: Search related endpoints
+  - name: model
+    description: Model management endpoints
   - name: misc
     description: Miscellaneous endpoints
 paths:
@@ -1977,6 +1979,188 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MultiLingualWebSearchResponse'
+  /model/provider/list:
+    get:
+      tags:
+        - model
+      summary: List model providers
+      description: List all available model providers
+      operationId: listModelProviders
+      parameters:
+        - name: enabled
+          in: query
+          description: Whether the model provider is enabled
+          schema:
+            type: boolean
+        - name: providerKey
+          in: query
+          description: Model provider key
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListModelProvidersResponse'
+  /model/provider/create:
+    post:
+      tags:
+        - model
+      summary: Create model provider
+      description: Create a new model provider
+      operationId: createModelProvider
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertModelProviderRequest'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpsertModelProviderResponse'
+  /model/provider/update:
+    post:
+      tags:
+        - model
+      summary: Update model provider
+      description: Update an existing model provider
+      operationId: updateModelProvider
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertModelProviderRequest'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpsertModelProviderResponse'
+  /model/provider/delete:
+    post:
+      tags:
+        - model
+      summary: Delete model provider
+      description: Delete an existing model provider
+      operationId: deleteModelProvider
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteModelProviderRequest'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+  /model/item/list:
+    get:
+      tags:
+        - model
+      summary: List model items
+      description: List all available model items
+      operationId: listModelItems
+      parameters:
+        - name: providerId
+          in: query
+          description: Provider ID
+          schema:
+            type: string
+        - name: enabled
+          in: query
+          description: Whether the model item is enabled
+          schema:
+            type: boolean
+        - name: modelType
+          in: query
+          description: Model type
+          schema:
+            $ref: '#/components/schemas/ModelType'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListModelItemsResponse'
+  /model/item/create:
+    post:
+      tags:
+        - model
+      summary: Create model item
+      description: Create a new model item
+      operationId: createModelItem
+      parameters:
+        - name: providerId
+          in: query
+          description: Provider ID
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertModelItemRequest'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpsertModelItemResponse'
+  /model/item/update:
+    post:
+      tags:
+        - model
+      summary: Update model item
+      description: Update an existing model item
+      operationId: updateModelItem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertModelItemRequest'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpsertModelItemResponse'
+  /model/item/delete:
+    post:
+      tags:
+        - model
+      summary: Delete model item
+      description: Delete an existing model item
+      operationId: deleteModelItem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteModelItemRequest'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
   /misc/scrape:
     post:
       tags:
@@ -5600,6 +5784,182 @@ components:
               description: Model list
               items:
                 $ref: '#/components/schemas/ModelInfo'
+    ModelProvider:
+      type: object
+      required:
+        - providerId
+        - providerKey
+        - name
+        - apiKey
+        - baseUrl
+        - enabled
+      properties:
+        providerId:
+          type: string
+          description: Model provider ID
+        providerKey:
+          type: string
+          description: Model provider key
+        name:
+          type: string
+          description: Model provider name
+        apiKey:
+          type: string
+          description: Model provider API key
+        baseUrl:
+          type: string
+          description: Model provider base URL
+        enabled:
+          type: boolean
+          description: Whether the model provider is enabled
+        createdAt:
+          type: string
+          format: date-time
+          description: Model provider creation time
+        updatedAt:
+          type: string
+          format: date-time
+          description: Model provider update time
+    ModelType:
+      type: string
+      enum:
+        - llm
+        - embedding
+        - reranker
+    ModelItem:
+      type: object
+      required:
+        - itemId
+        - providerId
+        - modelId
+        - modelType
+        - name
+        - enabled
+      properties:
+        itemId:
+          type: string
+          description: Model item ID
+        modelId:
+          type: string
+          description: Model ID
+        modelType:
+          description: Model type
+          $ref: '#/components/schemas/ModelType'
+        name:
+          type: string
+          description: Model name
+        enabled:
+          type: boolean
+          description: Whether the model item is enabled
+        providerId:
+          type: string
+          description: Model provider ID
+        provider:
+          type: object
+          $ref: '#/components/schemas/ModelProvider'
+        createdAt:
+          type: string
+          format: date-time
+          description: Model item creation time
+        updatedAt:
+          type: string
+          format: date-time
+          description: Model item update time
+    ListModelProvidersResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/ModelProvider'
+    UpsertModelProviderRequest:
+      type: object
+      properties:
+        providerId:
+          type: string
+          description: Model provider ID (only for update)
+        providerKey:
+          type: string
+          description: Model provider key
+        name:
+          type: string
+          description: Model provider name
+        apiKey:
+          type: string
+          description: Model provider API key
+        baseUrl:
+          type: string
+          description: Model provider base URL
+        enabled:
+          type: boolean
+          description: Whether the model provider is enabled
+    UpsertModelProviderResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/ModelProvider'
+    DeleteModelProviderRequest:
+      type: object
+      required:
+        - providerId
+      properties:
+        providerId:
+          type: string
+          description: Model provider ID
+    ListModelItemsResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/ModelItem'
+    UpsertModelItemRequest:
+      type: object
+      required:
+        - providerId
+        - modelId
+        - modelType
+        - name
+      properties:
+        itemId:
+          type: string
+          description: Model item ID (only for update)
+        providerId:
+          type: string
+          description: Model provider ID
+        modelId:
+          type: string
+          description: Model ID
+        modelType:
+          description: Model type
+          $ref: '#/components/schemas/ModelType'
+        name:
+          type: string
+          description: Model name
+        enabled:
+          type: boolean
+          description: Whether the model item is enabled
+    UpsertModelItemResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/ModelItem'
+    DeleteModelItemRequest:
+      type: object
+      required:
+        - itemId
+      properties:
+        itemId:
+          type: string
+          description: Model item ID
     DocumentInterface:
       type: object
       properties:
