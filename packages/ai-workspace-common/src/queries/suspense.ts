@@ -12,6 +12,7 @@ import {
   getCodeArtifactDetail,
   getCollabToken,
   getDocumentDetail,
+  getPageByCanvasId,
   getPageDetail,
   getPageVersion,
   getPageVersions,
@@ -54,6 +55,8 @@ import {
   GetCollabTokenError,
   GetDocumentDetailData,
   GetDocumentDetailError,
+  GetPageByCanvasIdData,
+  GetPageByCanvasIdError,
   GetPageDetailData,
   GetPageDetailError,
   GetPageVersionData,
@@ -96,6 +99,21 @@ import {
   ServeStaticError,
 } from '../requests/types.gen';
 import * as Common from './common';
+export const useGetPageByCanvasIdSuspense = <
+  TData = Common.GetPageByCanvasIdDefaultResponse,
+  TError = GetPageByCanvasIdError,
+  TQueryKey extends Array<unknown> = unknown[],
+>(
+  clientOptions: Options<GetPageByCanvasIdData, true>,
+  queryKey?: TQueryKey,
+  options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
+) =>
+  useSuspenseQuery<TData, TError>({
+    queryKey: Common.UseGetPageByCanvasIdKeyFn(clientOptions, queryKey),
+    queryFn: () =>
+      getPageByCanvasId({ ...clientOptions }).then((response) => response.data as TData) as TData,
+    ...options,
+  });
 export const useListPagesSuspense = <
   TData = Common.ListPagesDefaultResponse,
   TError = ListPagesError,

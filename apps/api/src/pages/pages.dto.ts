@@ -118,6 +118,17 @@ export interface PageVersionParamDto {
   version?: number;
 }
 
+// DTO for adding nodes to canvas page
+export interface AddPageNodesDto {
+  nodeIds: string[];
+}
+
+// Result type for canvas page query
+export interface CanvasPageResult {
+  page: Page | null;
+  nodeRelations: PageNodeRelation[];
+}
+
 export const pagePO2DTO = (page: any) => {
   return {
     pageId: page.page_id,

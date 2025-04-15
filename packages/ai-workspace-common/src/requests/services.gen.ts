@@ -7,6 +7,12 @@ import {
   formDataBodySerializer,
 } from '@hey-api/client-fetch';
 import type {
+  GetPageByCanvasIdData,
+  GetPageByCanvasIdError,
+  GetPageByCanvasIdResponse,
+  AddNodesToCanvasPageData,
+  AddNodesToCanvasPageError,
+  AddNodesToCanvasPageResponse,
   DeletePageNodeData,
   DeletePageNodeError,
   DeletePageNodeResponse,
@@ -300,6 +306,40 @@ import type {
 } from './types.gen';
 
 export const client = createClient(createConfig());
+
+/**
+ * Get page by canvas ID
+ * Retrieve the page associated with a specific canvas
+ */
+export const getPageByCanvasId = <ThrowOnError extends boolean = false>(
+  options: Options<GetPageByCanvasIdData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).get<
+    GetPageByCanvasIdResponse,
+    GetPageByCanvasIdError,
+    ThrowOnError
+  >({
+    ...options,
+    url: '/pages/canvas/{canvasId}',
+  });
+};
+
+/**
+ * Add nodes to canvas page
+ * Add nodes to a page associated with a specific canvas. If no page exists, a new one will be created.
+ */
+export const addNodesToCanvasPage = <ThrowOnError extends boolean = false>(
+  options: Options<AddNodesToCanvasPageData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).post<
+    AddNodesToCanvasPageResponse,
+    AddNodesToCanvasPageError,
+    ThrowOnError
+  >({
+    ...options,
+    url: '/pages/canvas/{canvasId}/nodes',
+  });
+};
 
 /**
  * Delete a node from a page

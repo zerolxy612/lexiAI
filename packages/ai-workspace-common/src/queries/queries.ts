@@ -3,6 +3,7 @@
 import { type Options } from '@hey-api/client-fetch';
 import { useMutation, UseMutationOptions, useQuery, UseQueryOptions } from '@tanstack/react-query';
 import {
+  addNodesToCanvasPage,
   addReferences,
   autoNameCanvas,
   batchCreateResource,
@@ -51,6 +52,7 @@ import {
   getCodeArtifactDetail,
   getCollabToken,
   getDocumentDetail,
+  getPageByCanvasId,
   getPageDetail,
   getPageVersion,
   getPageVersions,
@@ -106,6 +108,8 @@ import {
   upload,
 } from '../requests/services.gen';
 import {
+  AddNodesToCanvasPageData,
+  AddNodesToCanvasPageError,
   AddReferencesData,
   AddReferencesError,
   AutoNameCanvasData,
@@ -199,6 +203,8 @@ import {
   GetCollabTokenError,
   GetDocumentDetailData,
   GetDocumentDetailError,
+  GetPageByCanvasIdData,
+  GetPageByCanvasIdError,
   GetPageDetailData,
   GetPageDetailError,
   GetPageVersionData,
@@ -297,6 +303,21 @@ import {
   UploadError,
 } from '../requests/types.gen';
 import * as Common from './common';
+export const useGetPageByCanvasId = <
+  TData = Common.GetPageByCanvasIdDefaultResponse,
+  TError = GetPageByCanvasIdError,
+  TQueryKey extends Array<unknown> = unknown[],
+>(
+  clientOptions: Options<GetPageByCanvasIdData, true>,
+  queryKey?: TQueryKey,
+  options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
+) =>
+  useQuery<TData, TError>({
+    queryKey: Common.UseGetPageByCanvasIdKeyFn(clientOptions, queryKey),
+    queryFn: () =>
+      getPageByCanvasId({ ...clientOptions }).then((response) => response.data as TData) as TData,
+    ...options,
+  });
 export const useListPages = <
   TData = Common.ListPagesDefaultResponse,
   TError = ListPagesError,
@@ -798,6 +819,23 @@ export const useServeStatic = <
     queryKey: Common.UseServeStaticKeyFn(clientOptions, queryKey),
     queryFn: () =>
       serveStatic({ ...clientOptions }).then((response) => response.data as TData) as TData,
+    ...options,
+  });
+export const useAddNodesToCanvasPage = <
+  TData = Common.AddNodesToCanvasPageMutationResult,
+  TError = AddNodesToCanvasPageError,
+  TQueryKey extends Array<unknown> = unknown[],
+  TContext = unknown,
+>(
+  mutationKey?: TQueryKey,
+  options?: Omit<
+    UseMutationOptions<TData, TError, Options<AddNodesToCanvasPageData, true>, TContext>,
+    'mutationKey' | 'mutationFn'
+  >,
+) =>
+  useMutation<TData, TError, Options<AddNodesToCanvasPageData, true>, TContext>({
+    mutationKey: Common.UseAddNodesToCanvasPageKeyFn(mutationKey),
+    mutationFn: (clientOptions) => addNodesToCanvasPage(clientOptions) as unknown as Promise<TData>,
     ...options,
   });
 export const useCreatePage = <

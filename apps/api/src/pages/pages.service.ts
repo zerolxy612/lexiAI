@@ -37,12 +37,12 @@ interface ResolveUserResponse {
   };
 }
 
-// Custom PageNotFoundError class
+// Custom error class for page not found
 class PageNotFoundError extends ShareNotFoundError {
-  code = 'E1010'; // Custom error code, ensure it doesn't conflict with other error codes
+  code = 'E1010'; // Custom error code
   messageDict = {
     en: 'Page not found',
-    'zh-CN': 'Page not found',
+    'zh-CN': '页面未找到',
   };
 }
 
@@ -624,7 +624,7 @@ export class PagesService {
     const [pageVersion] = await versionQuery;
 
     if (!pageVersion) {
-      throw new ShareNotFoundError();
+      throw new PageNotFoundError();
     }
 
     // Get version content
@@ -829,6 +829,257 @@ export class PagesService {
       pageId,
       nodeId,
     };
+  }
+
+  /**
+   * Get page associated with a canvas
+   * @param user Current user
+   * @param canvasId Canvas ID
+   * @returns Page and node relations
+   */
+  async getPageByCanvasId(
+    user: User,
+    canvasId: string,
+  ): Promise<{ page: Page | null; nodeRelations: PageNodeRelation[] }> {
+    // Check if canvas exists and user has access
+    const canvas = await this.prisma.canvas.findFirst({
+      where: {
+        canvasId,
+        uid: user.uid,
+        deletedAt: null,
+      },
+    });
+
+    if (!canvas) {
+      throw new Error('Canvas not found or access denied');
+    }
+
+    // Find canvas-page relation
+    const canvasEntityRelation = await this.prisma.canvasEntityRelation.findFirst({
+      where: {
+        canvasId,
+        entityType: 'page',
+        deletedAt: null,
+      },
+    });
+
+    if (!canvasEntityRelation) {
+      return { page: null, nodeRelations: [] };
+    }
+
+    // Get page
+    const page = await this.prisma.$queryRaw<Page[]>`
+      SELECT * FROM "pages"
+      WHERE "page_id" = ${canvasEntityRelation.entityId}
+      AND "deleted_at" IS NULL
+    `;
+
+    if (!page || page.length === 0) {
+      return { page: null, nodeRelations: [] };
+    }
+
+    // Get page node relations
+    const nodeRelations = await this.prisma.$queryRaw<PageNodeRelation[]>`
+      SELECT * FROM "page_node_relations"
+      WHERE "page_id" = ${canvasEntityRelation.entityId}
+      AND "deleted_at" IS NULL
+      ORDER BY "order_index" ASC
+    `;
+
+    return { page: page[0], nodeRelations };
+  }
+
+  /**
+   * Add nodes to a canvas page
+   * If page doesn't exist, create a new one
+   * @param user Current user
+   * @param canvasId Canvas ID
+   * @param addNodesDto Nodes to add
+   * @returns Updated page and node relations
+   */
+  async addNodesToCanvasPage(
+    user: User,
+    canvasId: string,
+    addNodesDto: { nodeIds: string[] },
+  ): Promise<CreatePageResult> {
+    // Use transaction for all database operations
+    return this.prisma.$transaction(async (tx) => {
+      // Check if canvas exists and user has access
+      const canvas = await tx.canvas.findFirst({
+        where: {
+          canvasId,
+          uid: user.uid,
+          deletedAt: null,
+        },
+      });
+
+      if (!canvas) {
+        throw new Error('Canvas not found or access denied');
+      }
+
+      // Find canvas-page relation
+      const canvasEntityRelation = await tx.canvasEntityRelation.findFirst({
+        where: {
+          canvasId,
+          entityType: 'page',
+          deletedAt: null,
+        },
+      });
+
+      let page: Page;
+
+      // If no page exists, create a new one
+      if (!canvasEntityRelation) {
+        // Generate pageId
+        const pageId = genPageId();
+        const stateStorageKey = `pages/${user.uid}/${pageId}/state.update`;
+
+        // Create new Page record
+        await tx.$executeRaw`
+          INSERT INTO "pages" ("page_id", "uid", "title", "state_storage_key", "status", "created_at", "updated_at")
+          VALUES (${pageId}, ${user.uid}, ${canvas.title || 'Untitled Page'}, ${stateStorageKey}, 'draft', NOW(), NOW())
+        `;
+
+        // Get the newly created page
+        const [createdPage] = await tx.$queryRaw<Page[]>`
+          SELECT * FROM "pages"
+          WHERE "page_id" = ${pageId}
+        `;
+
+        page = createdPage;
+
+        // Create canvas-page relation
+        await tx.$executeRaw`
+          INSERT INTO "canvas_entity_relations" ("canvas_id", "entity_id", "entity_type", "is_public", "created_at")
+          VALUES (${canvasId}, ${pageId}, 'page', false, NOW())
+        `;
+
+        // Create initial Y.doc to store page state
+        const doc = new Y.Doc();
+        doc.transact(() => {
+          doc.getText('title').insert(0, page.title);
+          doc.getMap('pageConfig').set('layout', 'slides');
+          doc.getMap('pageConfig').set('theme', 'default');
+        });
+
+        // Upload Y.doc - Convert Y.Doc to Uint8Array, then to Buffer
+        const state = Y.encodeStateAsUpdate(doc);
+        await this.minio.client.putObject(stateStorageKey, Buffer.from(state));
+      } else {
+        // Get existing page
+        const [existingPage] = await tx.$queryRaw<Page[]>`
+          SELECT * FROM "pages"
+          WHERE "page_id" = ${canvasEntityRelation.entityId}
+          AND "deleted_at" IS NULL
+        `;
+
+        if (!existingPage) {
+          throw new Error('Associated page not found');
+        }
+
+        // Check ownership
+        if (existingPage.uid !== user.uid) {
+          throw new Error('You do not have permission to modify this page');
+        }
+
+        page = existingPage;
+      }
+
+      // Get raw Canvas data, including node information
+      const canvasData = await this.canvasService.getCanvasRawData(user, canvasId);
+
+      // Get existing node relations for the current page
+      const existingNodeRelations = await tx.$queryRaw<{ node_id: string }[]>`
+        SELECT "node_id" FROM "page_node_relations"
+        WHERE "page_id" = ${page.page_id}
+        AND "deleted_at" IS NULL
+      `;
+
+      // Extract the set of existing node IDs
+      const existingNodeIds = new Set(existingNodeRelations.map((relation) => relation.node_id));
+
+      // Filter out node IDs that already exist
+      const newNodeIds = addNodesDto.nodeIds.filter((nodeId) => !existingNodeIds.has(nodeId));
+
+      // If there are no new nodes to add, directly return the current page and node relations
+      if (newNodeIds.length === 0) {
+        const currentNodeRelations = await tx.$queryRaw<PageNodeRelation[]>`
+          SELECT * FROM "page_node_relations"
+          WHERE "page_id" = ${page.page_id}
+          AND "deleted_at" IS NULL
+          ORDER BY "order_index" ASC
+        `;
+
+        return {
+          page,
+          nodeRelations: currentNodeRelations,
+        };
+      }
+
+      // Extract node information from Canvas data
+      const nodeInfos = newNodeIds.map((nodeId) => {
+        // Find matching node in Canvas nodes array
+        // Note: Canvas node ID may be stored in data.entityId
+        const node = canvasData.nodes.find((n) => n.data?.entityId === nodeId);
+
+        if (!node) {
+          throw new Error(`Node ${nodeId} not found in canvas ${canvasId}`);
+        }
+
+        return {
+          nodeId: nodeId,
+          nodeType: node.type || 'unknown',
+          entityId: node.data?.entityId || nodeId,
+          nodeData: node.data || {},
+        };
+      });
+
+      // Get the current maximum order_index
+      const [maxOrderResult] = await tx.$queryRaw<{ max_order: number }[]>`
+        SELECT COALESCE(MAX("order_index"), -1) as max_order FROM "page_node_relations"
+        WHERE "page_id" = ${page.page_id}
+        AND "deleted_at" IS NULL
+      `;
+
+      const startOrderIndex = (maxOrderResult?.max_order ?? -1) + 1;
+
+      // Create page-node relation records
+      const nodeRelationsPromises = nodeInfos.map(async (node, index) => {
+        const relationId = genPageNodeRelationId();
+        const orderIndex = startOrderIndex + index;
+        const nodeData =
+          typeof node.nodeData === 'string' ? node.nodeData : JSON.stringify(node.nodeData || {});
+
+        const [relation] = await tx.$queryRaw<PageNodeRelation[]>`
+          INSERT INTO "page_node_relations" (
+            "relation_id", "page_id", "node_id", "node_type", "entity_id", 
+            "order_index", "node_data", "created_at", "updated_at"
+          )
+          VALUES (
+            ${relationId}, ${page.page_id}, ${node.nodeId}, ${node.nodeType}, ${node.entityId}, 
+            ${orderIndex}, ${nodeData}, NOW(), NOW()
+          )
+          RETURNING *
+        `;
+
+        return relation;
+      });
+
+      await Promise.all(nodeRelationsPromises);
+
+      // Get all node relations (including both new and existing ones)
+      const allNodeRelations = await tx.$queryRaw<PageNodeRelation[]>`
+        SELECT * FROM "page_node_relations"
+        WHERE "page_id" = ${page.page_id}
+        AND "deleted_at" IS NULL
+        ORDER BY "order_index" ASC
+      `;
+
+      return {
+        page,
+        nodeRelations: allNodeRelations,
+      };
+    });
   }
 
   // List all share records by entity ID

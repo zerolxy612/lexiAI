@@ -12,6 +12,7 @@ import {
   getCodeArtifactDetail,
   getCollabToken,
   getDocumentDetail,
+  getPageByCanvasId,
   getPageDetail,
   getPageVersion,
   getPageVersions,
@@ -45,6 +46,7 @@ import {
   GetCanvasDetailData,
   GetCodeArtifactDetailData,
   GetDocumentDetailData,
+  GetPageByCanvasIdData,
   GetPageDetailData,
   GetPageVersionData,
   GetPageVersionsData,
@@ -63,6 +65,14 @@ import {
   ListSkillTriggersData,
 } from '../requests/types.gen';
 import * as Common from './common';
+export const ensureUseGetPageByCanvasIdData = (
+  queryClient: QueryClient,
+  clientOptions: Options<GetPageByCanvasIdData, true>,
+) =>
+  queryClient.ensureQueryData({
+    queryKey: Common.UseGetPageByCanvasIdKeyFn(clientOptions),
+    queryFn: () => getPageByCanvasId({ ...clientOptions }).then((response) => response.data),
+  });
 export const ensureUseListPagesData = (
   queryClient: QueryClient,
   clientOptions: Options<ListPagesData, true> = {},

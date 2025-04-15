@@ -57,7 +57,7 @@ function PagesPage() {
   });
 
   const handleEditPage = (pageId: string) => {
-    navigate(`/pages/edit/${pageId}`);
+    navigate(`/pages/${pageId}`);
   };
 
   const handleSharePage = (pageId: string) => {

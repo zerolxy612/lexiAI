@@ -36,6 +36,55 @@ tags:
   - name: misc
     description: Miscellaneous endpoints
 paths:
+  /pages/canvas/{canvasId}:
+    get:
+      tags:
+        - pages
+      summary: Get page by canvas ID
+      description: Retrieve the page associated with a specific canvas
+      operationId: getPageByCanvasId
+      parameters:
+        - name: canvasId
+          in: path
+          required: true
+          description: Canvas ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CanvasPageResponse'
+
+  /pages/canvas/{canvasId}/nodes:
+    post:
+      tags:
+        - pages
+      summary: Add nodes to canvas page
+      description: Add nodes to a page associated with a specific canvas. If no page exists, a new one will be created.
+      operationId: addNodesToCanvasPage
+      parameters:
+        - name: canvasId
+          in: path
+          required: true
+          description: Canvas ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddPageNodesRequest'
+      responses:
+        '201':
+          description: Nodes added to canvas page successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddPageNodesResponse'
   /pages/{pageId}/nodes/{nodeId}:
     delete:
       summary: Delete a node from a page
@@ -2285,6 +2334,81 @@ paths:
 
 components:
   schemas:
+    PageNodeRelation:
+      type: object
+      required:
+        - relationId
+        - pageId
+        - nodeId
+        - nodeType
+      properties:
+        relationId:
+          type: string
+          description: Relation ID
+        pageId:
+          type: string
+          description: Page ID
+        nodeId:
+          type: string
+          description: Node ID
+        nodeType:
+          type: string
+          description: Node type
+        entityId:
+          type: string
+          description: Entity ID
+        orderIndex:
+          type: integer
+          description: Order index
+        nodeData:
+          type: object
+          description: Node data
+          additionalProperties: true
+
+    AddPageNodesRequest:
+      type: object
+      required:
+        - nodeIds
+      properties:
+        nodeIds:
+          type: array
+          description: List of node IDs to add to the page
+          items:
+            type: string
+
+    CanvasPageResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                page:
+                  type: object
+                  nullable: true
+                  $ref: '#/components/schemas/Page'
+                nodeRelations:
+                  type: array
+                  description: List of node relations
+                  items:
+                    $ref: '#/components/schemas/PageNodeRelation'
+
+    AddPageNodesResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                page:
+                  $ref: '#/components/schemas/Page'
+                nodeRelations:
+                  type: array
+                  description: List of node relations
+                  items:
+                    $ref: '#/components/schemas/PageNodeRelation'
     Page:
       type: object
       required:

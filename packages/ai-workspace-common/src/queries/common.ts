@@ -3,6 +3,7 @@
 import { type Options } from '@hey-api/client-fetch';
 import { UseQueryResult } from '@tanstack/react-query';
 import {
+  addNodesToCanvasPage,
   addReferences,
   autoNameCanvas,
   batchCreateResource,
@@ -51,6 +52,7 @@ import {
   getCodeArtifactDetail,
   getCollabToken,
   getDocumentDetail,
+  getPageByCanvasId,
   getPageDetail,
   getPageVersion,
   getPageVersions,
@@ -105,6 +107,18 @@ import {
   updateSkillTrigger,
   upload,
 } from '../requests/services.gen';
+export type GetPageByCanvasIdDefaultResponse = Awaited<
+  ReturnType<typeof getPageByCanvasId>
+>['data'];
+export type GetPageByCanvasIdQueryResult<
+  TData = GetPageByCanvasIdDefaultResponse,
+  TError = unknown,
+> = UseQueryResult<TData, TError>;
+export const useGetPageByCanvasIdKey = 'GetPageByCanvasId';
+export const UseGetPageByCanvasIdKeyFn = (
+  clientOptions: Options<unknown, true>,
+  queryKey?: Array<unknown>,
+) => [useGetPageByCanvasIdKey, ...(queryKey ?? [clientOptions])];
 export type ListPagesDefaultResponse = Awaited<ReturnType<typeof listPages>>['data'];
 export type ListPagesQueryResult<
   TData = ListPagesDefaultResponse,
@@ -457,6 +471,12 @@ export const UseServeStaticKeyFn = (
   clientOptions: Options<unknown, true> = {},
   queryKey?: Array<unknown>,
 ) => [useServeStaticKey, ...(queryKey ?? [clientOptions])];
+export type AddNodesToCanvasPageMutationResult = Awaited<ReturnType<typeof addNodesToCanvasPage>>;
+export const useAddNodesToCanvasPageKey = 'AddNodesToCanvasPage';
+export const UseAddNodesToCanvasPageKeyFn = (mutationKey?: Array<unknown>) => [
+  useAddNodesToCanvasPageKey,
+  ...(mutationKey ?? []),
+];
 export type CreatePageMutationResult = Awaited<ReturnType<typeof createPage>>;
 export const useCreatePageKey = 'CreatePage';
 export const UseCreatePageKeyFn = (mutationKey?: Array<unknown>) => [

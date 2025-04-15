@@ -23,6 +23,7 @@ import {
   pagePO2DTO,
   pageNodeRelationPO2DTO,
   pageVersionPO2DTO,
+  AddPageNodesDto,
 } from './pages.dto';
 
 @ApiTags('Pages')
@@ -225,6 +226,40 @@ export class PagesController {
     return buildSuccessResponse({
       pageId,
       deleted: shareRecords.length > 0,
+    });
+  }
+
+  @ApiOperation({ summary: 'Get page by canvas ID' })
+  @ApiResponse({ status: 200, description: 'Get page by canvas ID successfully' })
+  @UseGuards(JwtAuthGuard)
+  @Get('canvas/:canvasId')
+  async getPageByCanvasId(@LoginedUser() user: User, @Param('canvasId') canvasId: string) {
+    const result = await this.pagesService.getPageByCanvasId(user, canvasId);
+
+    return buildSuccessResponse({
+      page: result.page ? pagePO2DTO(result.page) : null,
+      nodeRelations: Array.isArray(result.nodeRelations)
+        ? result.nodeRelations.map(pageNodeRelationPO2DTO)
+        : [],
+    });
+  }
+
+  @ApiOperation({ summary: 'Add nodes to canvas page' })
+  @ApiResponse({ status: 201, description: 'Nodes added to canvas page successfully' })
+  @UseGuards(JwtAuthGuard)
+  @Post('canvas/:canvasId/nodes')
+  async addNodesToCanvasPage(
+    @LoginedUser() user: User,
+    @Param('canvasId') canvasId: string,
+    @Body() addNodesDto: AddPageNodesDto,
+  ) {
+    const result = await this.pagesService.addNodesToCanvasPage(user, canvasId, addNodesDto);
+
+    return buildSuccessResponse({
+      page: pagePO2DTO(result.page),
+      nodeRelations: Array.isArray(result.nodeRelations)
+        ? result.nodeRelations.map(pageNodeRelationPO2DTO)
+        : [],
     });
   }
 }
