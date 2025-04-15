@@ -288,7 +288,6 @@ const SharePage = () => {
               >
                 <NodeRenderer
                   node={node}
-                  isActive={activeNodeIndex === index}
                   onStartSlideshow={handleStartSlideshow}
                   onWideMode={handleWideMode}
                 />

@@ -31,7 +31,6 @@ import PreviewMode from './components/PreviewMode';
 import { usePreviewUI } from './hooks/usePreviewUI';
 import { useSlideshow } from './hooks/useSlideshow';
 import { getNodeTitle } from './utils/nodeUtils';
-import VirtualizedNodeList from './components/VirtualizedNodeList';
 
 interface PageDetailType {
   title: string;
@@ -436,14 +435,37 @@ export function SlideshowEdit(props: PageEditProps) {
       <div>
         {/* Content section - using virtualized list for optimization */}
         {nodesList.length > 0 ? (
-          <VirtualizedNodeList
-            nodes={nodesList}
-            activeNodeIndex={activeNodeIndex}
-            onNodeSelect={handleNodeSelect}
-            onDelete={handleDeleteNode}
-            onStartSlideshow={handleStartSlideshow}
-            onWideMode={handleWideMode}
-          />
+          // (
+          //   <VirtualizedNodeList
+          //     nodes={nodesList}
+          //     activeNodeIndex={activeNodeIndex}
+          //     onNodeSelect={handleNodeSelect}
+          //     onDelete={handleDeleteNode}
+          //     onStartSlideshow={handleStartSlideshow}
+          //     onWideMode={handleWideMode}
+          //   />
+          // )
+          <div className="space-y-6">
+            {nodes.map((node, index) => (
+              <div
+                key={node.relationId || `content-${index}`}
+                id={`content-block-${index}`}
+                onClick={() => setActiveNodeIndex(index)}
+                className={`transition-all duration-300 h-[400px] rounded-lg bg-white ${
+                  activeNodeIndex === index
+                    ? 'shadow-[0_10px_30px_rgba(0,0,0,0.15)] transform -translate-y-1 border border-blue-400'
+                    : 'shadow-md hover:shadow-lg'
+                }`}
+              >
+                <NodeRenderer
+                  onDelete={handleDeleteNode}
+                  onStartSlideshow={handleStartSlideshow}
+                  onWideMode={handleWideMode}
+                  node={node}
+                />
+              </div>
+            ))}
+          </div>
         ) : (
           <div className="text-center py-16 bg-white rounded-lg border border-dashed border-gray-300 shadow-sm">
             <FileTextOutlined className="text-5xl text-gray-300 mb-4" />
@@ -578,30 +600,9 @@ export function SlideshowEdit(props: PageEditProps) {
               />
             )}
 
-            <Form
-              form={form}
-              layout="inline"
-              onFinish={handleSubmit}
-              onValuesChange={handleFormChange}
-              initialValues={{
-                title: pageDetail.title,
-                description: pageDetail.description,
-              }}
-              className="flex items-center"
-            >
-              <Form.Item
-                name="title"
-                rules={[{ required: true, message: t('common.titleRequired') }]}
-                className="mb-0"
-              >
-                <Input
-                  placeholder={t('common.titlePlaceholder')}
-                  bordered={false}
-                  className={`text-lg font-medium px-0 ${minimalMode ? 'text-sm' : ''}`}
-                  style={{ height: '32px' }}
-                />
-              </Form.Item>
-            </Form>
+            <div className="text-xl font-semibold text-gray-800 mr-2">
+              {pageDetail.title || t('common.untitled')}
+            </div>
           </div>
 
           <div className="flex items-center">
@@ -648,20 +649,6 @@ export function SlideshowEdit(props: PageEditProps) {
         </div>
       }
     >
-      {/* Page description section */}
-      <div className="mb-6">
-        <Form form={form} onFinish={handleSubmit} onValuesChange={handleFormChange}>
-          <Form.Item name="description">
-            <Input.TextArea
-              placeholder={t('common.descriptionPlaceholder')}
-              autoSize={{ minRows: 2, maxRows: 4 }}
-              bordered={false}
-              className="text-gray-700 text-base resize-none bg-transparent"
-            />
-          </Form.Item>
-        </Form>
-      </div>
-
       {/* Content module */}
       {renderPageContent}
 
