@@ -54,11 +54,22 @@ const VirtualizedNodeList: React.FC<VirtualizedNodeListProps> = ({
             key={node.relationId || `content-${index}`}
             id={`content-block-${index}`}
             onClick={() => onNodeSelect(index)}
-            className={`transition-all duration-300 h-[400px] rounded-lg bg-white ${
-              isActive
-                ? 'shadow-[0_10px_30px_rgba(0,0,0,0.15)] transform -translate-y-1 border border-blue-400'
-                : 'shadow-md hover:shadow-lg'
-            }`}
+            className={`
+              transform transition-all duration-700 ease-in-out 
+              h-[400px] rounded-lg bg-white 
+              ${
+                isActive
+                  ? 'shadow-[0_8px_28px_rgba(59,130,246,0.08)] border border-blue-200 scale-[1.01] ring-1 ring-blue-100 ring-opacity-50'
+                  : 'shadow-[0_4px_12px_rgba(0,0,0,0.03)] border border-gray-100 hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] hover:border-gray-200'
+              }
+            `}
+            style={{
+              // Transition property, timing function, duration, and will-change property for smooth animation
+              transitionProperty: 'all',
+              transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
+              transitionDuration: '700ms',
+              willChange: 'transform, box-shadow, border-color',
+            }}
           >
             <NodeRenderer
               node={node}

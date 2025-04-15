@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Form, Input, Button, Spin, message, Modal, Select } from 'antd';
 import { useTranslation } from 'react-i18next';
@@ -31,9 +31,7 @@ import PreviewMode from './components/PreviewMode';
 import { usePreviewUI } from './hooks/usePreviewUI';
 import { useSlideshow } from './hooks/useSlideshow';
 import { getNodeTitle } from './utils/nodeUtils';
-
-// Lazy load virtualized list component
-const VirtualizedNodeList = lazy(() => import('./components/VirtualizedNodeList'));
+import VirtualizedNodeList from './components/VirtualizedNodeList';
 
 interface PageDetailType {
   title: string;
@@ -438,22 +436,14 @@ export function SlideshowEdit(props: PageEditProps) {
       <div>
         {/* Content section - using virtualized list for optimization */}
         {nodesList.length > 0 ? (
-          <Suspense
-            fallback={
-              <div className="flex items-center justify-center h-64">
-                <Spin tip={t('common.loading')} />
-              </div>
-            }
-          >
-            <VirtualizedNodeList
-              nodes={nodesList}
-              activeNodeIndex={activeNodeIndex}
-              onNodeSelect={handleNodeSelect}
-              onDelete={handleDeleteNode}
-              onStartSlideshow={handleStartSlideshow}
-              onWideMode={handleWideMode}
-            />
-          </Suspense>
+          <VirtualizedNodeList
+            nodes={nodesList}
+            activeNodeIndex={activeNodeIndex}
+            onNodeSelect={handleNodeSelect}
+            onDelete={handleDeleteNode}
+            onStartSlideshow={handleStartSlideshow}
+            onWideMode={handleWideMode}
+          />
         ) : (
           <div className="text-center py-16 bg-white rounded-lg border border-dashed border-gray-300 shadow-sm">
             <FileTextOutlined className="text-5xl text-gray-300 mb-4" />
@@ -466,21 +456,6 @@ export function SlideshowEdit(props: PageEditProps) {
             >
               {t('common.addContent')}
             </Button>
-          </div>
-        )}
-
-        {/* Preview button */}
-        {nodesList.length > 0 && (
-          <div className="fixed bottom-6 right-6 z-10">
-            <Button
-              type="primary"
-              shape="circle"
-              size="large"
-              icon={<PlayCircleOutlined />}
-              onClick={togglePreviewMode}
-              className="shadow-lg bg-blue-600 hover:bg-blue-700 border-none"
-              title={t('common.preview')}
-            />
           </div>
         )}
       </div>

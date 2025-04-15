@@ -1,4 +1,4 @@
-import { useMemo, CSSProperties } from 'react';
+import { useMemo, CSSProperties, useCallback } from 'react';
 import { Button, message, Tooltip } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
@@ -23,6 +23,25 @@ function SidebarMinimap({
 }) {
   const { t } = useTranslation();
 
+  // Handle node selection and scroll to corresponding content
+  const handleNodeSelect = useCallback(
+    (index: number) => {
+      // Call the original onNodeSelect function
+      onNodeSelect(index);
+
+      // Use setTimeout to ensure scrolling happens after state update
+      setTimeout(() => {
+        // Find the corresponding content node
+        const contentNode = document.getElementById(`content-block-${index}`);
+        if (contentNode) {
+          // Scroll to the content node
+          contentNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 50);
+    },
+    [onNodeSelect],
+  );
+
   // Handle drag end event
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
@@ -40,7 +59,7 @@ function SidebarMinimap({
     onReorderNodes(items);
 
     // After dragging, set the selected node to the dragged node's new position
-    onNodeSelect(destinationIndex);
+    handleNodeSelect(destinationIndex);
   };
 
   const addNewSlide = () => {
@@ -98,7 +117,7 @@ function SidebarMinimap({
                               ? 'ring-2 ring-purple-500 bg-purple-50'
                               : 'border-gray-200 hover:border-purple-300'
                           }`}
-                          onClick={() => onNodeSelect(index)}
+                          onClick={() => handleNodeSelect(index)}
                         >
                           {/* Card title */}
                           <div className="py-1.5 px-2 bg-white border-b border-gray-100 z-10 relative flex items-center justify-between">
