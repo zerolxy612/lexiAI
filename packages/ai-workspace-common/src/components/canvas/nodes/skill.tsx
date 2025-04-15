@@ -36,6 +36,7 @@ import { useFindSkill } from '@refly-packages/ai-workspace-common/hooks/use-find
 import { useNodeData } from '@refly-packages/ai-workspace-common/hooks/canvas';
 import { useDebouncedCallback } from 'use-debounce';
 import { useAskProject } from '@refly-packages/ai-workspace-common/hooks/canvas/use-ask-project';
+import { useContextPanelStore } from '@refly-packages/ai-workspace-common/stores/context-panel';
 
 type SkillNode = Node<CanvasNodeData<SkillNodeMeta>, 'skill'>;
 
@@ -252,10 +253,11 @@ export const SkillNode = memo(
         contextItems = [],
         selectedSkill,
         modelInfo,
-        runtimeConfig,
+        runtimeConfig = {},
         tplConfig,
         projectId,
       } = data?.metadata ?? {};
+      const { runtimeConfig: contextRuntimeConfig } = useContextPanelStore.getState();
       const finalProjectId = getFinalProjectId(projectId);
 
       deleteElements({ nodes: [node] });
@@ -267,7 +269,10 @@ export const SkillNode = memo(
             resultId,
             ...data?.metadata,
             tplConfig,
-            runtimeConfig,
+            runtimeConfig: {
+              ...contextRuntimeConfig,
+              ...runtimeConfig,
+            },
             projectId: finalProjectId,
           },
           {

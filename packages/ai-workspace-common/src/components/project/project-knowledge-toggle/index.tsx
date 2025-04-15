@@ -4,9 +4,9 @@ import { LuBrain, LuCheck } from 'react-icons/lu';
 import { FiHelpCircle } from 'react-icons/fi';
 import { useTranslation } from 'react-i18next';
 import { IconDown, IconProject } from '@refly-packages/ai-workspace-common/components/common/icon';
-import { useKnowledgeBaseStoreShallow } from '@refly-packages/ai-workspace-common/stores/knowledge-base';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 import { Project } from '@refly/openapi-schema';
+import { useContextPanelStoreShallow } from '@refly-packages/ai-workspace-common/stores/context-panel';
 import './index.scss';
 
 // Custom styles for switch component
@@ -40,10 +40,9 @@ export const ProjectKnowledgeToggle: React.FC<ProjectKnowledgeToggleProps> = ({
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [selectOpen, setSelectOpen] = useState(false);
 
-  // Knowledge base state
-  const { kbEnabled, setKbEnabled } = useKnowledgeBaseStoreShallow((state) => ({
-    kbEnabled: state.isKnowledgeBaseEnabled ?? false,
-    setKbEnabled: state.updateIsKnowledgeBaseEnabled,
+  const { setRuntimeConfig, enabledKnowledgeBase } = useContextPanelStoreShallow((state) => ({
+    setRuntimeConfig: state.setRuntimeConfig,
+    enabledKnowledgeBase: state?.runtimeConfig?.enabledKnowledgeBase,
   }));
 
   // Fetch project list
@@ -89,7 +88,7 @@ export const ProjectKnowledgeToggle: React.FC<ProjectKnowledgeToggleProps> = ({
       <div className="rounded-lg flex items-center justify-between bg-gray-50 p-2 pt-0 pb-0 border border-solid  hover:border-[#00968F]/30 transition-all cursor-pointer">
         <div className="flex items-center gap-2 flex-shrink overflow-hidden">
           <LuBrain
-            className={`transition-colors duration-300 flex-shrink-0 ${kbEnabled ? 'text-[#00968F]' : 'text-gray-500'}`}
+            className={`transition-colors duration-300 flex-shrink-0 ${enabledKnowledgeBase ? 'text-[#00968F]' : 'text-gray-500'}`}
             size={16}
           />
 
@@ -164,15 +163,18 @@ export const ProjectKnowledgeToggle: React.FC<ProjectKnowledgeToggleProps> = ({
         <div className="flex items-center gap-2 flex-shrink-0 ml-1">
           <Switch
             size="small"
-            checked={kbEnabled}
+            checked={enabledKnowledgeBase}
             onChange={(checked) => {
-              setKbEnabled(checked);
+              setRuntimeConfig({
+                enabledKnowledgeBase: checked,
+              });
+
               if (onSwitchChange) {
                 onSwitchChange(checked);
               }
             }}
             className="shadow-sm"
-            style={{ ...(kbEnabled ? switchStyles : {}) }}
+            style={{ ...(enabledKnowledgeBase ? switchStyles : {}) }}
           />
           <Tooltip
             title={
@@ -180,7 +182,7 @@ export const ProjectKnowledgeToggle: React.FC<ProjectKnowledgeToggleProps> = ({
                 <div className="font-medium mb-1 text-[#00968F]">{t('project.askProject')}</div>
                 <div className="text-xs text-gray-400">
                   <span className="mt-1 block">
-                    {kbEnabled
+                    {enabledKnowledgeBase
                       ? t('project.knowledgeToggle.enabledDesc', { projectName })
                       : t('project.knowledgeToggle.disabledDesc', { projectName })}
                   </span>

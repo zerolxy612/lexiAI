@@ -65,14 +65,18 @@ export class GenerateDoc extends BaseSkill {
   ) => {
     config.metadata.step = { name: 'analyzeQuery' };
     const { messages = [], images = [] } = state;
-    const { locale = 'en', modelInfo, project } = config.configurable;
+    const { locale = 'en', modelInfo, project, runtimeConfig } = config.configurable;
 
     // Extract customInstructions from project if available
     const customInstructions = project?.customInstructions;
 
-    // Process projectId based knowledge base search
+    // Only enable knowledge base search if both projectId AND runtimeConfig.enabledKnowledgeBase are true
     const projectId = project?.projectId;
-    const enableKnowledgeBaseSearch = !!projectId;
+    const enableKnowledgeBaseSearch = !!projectId && !!runtimeConfig?.enabledKnowledgeBase;
+
+    this.engine.logger.log(
+      `ProjectId: ${projectId}, Enable KB Search: ${enableKnowledgeBaseSearch}`,
+    );
 
     // Update tplConfig with knowledge base search setting
     config.configurable.tplConfig = {

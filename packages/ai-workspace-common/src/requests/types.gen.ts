@@ -1011,6 +1011,10 @@ export type SkillRuntimeConfig = {
    * Whether to disable link parsing for input query
    */
   disableLinkParsing?: boolean;
+  /**
+   * Whether to enable knowledge base for input query
+   */
+  enabledKnowledgeBase?: boolean;
 };
 
 /**

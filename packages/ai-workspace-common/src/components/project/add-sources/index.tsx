@@ -40,6 +40,11 @@ const AddSourcesMemo = React.memo(
     const [selectedItems, setSelectedItems] = useState<SelectedItems[]>([]);
     const [loading, setLoading] = useState(false);
     const [activeKey, setActiveKey] = useState(defaultActiveKey || 'document');
+    const [internalVisible, setInternalVisible] = useState(visible);
+
+    useEffect(() => {
+      setInternalVisible(visible);
+    }, [visible]);
 
     useEffect(() => {
       if (defaultActiveKey) {
@@ -145,11 +150,12 @@ const AddSourcesMemo = React.memo(
 
     return (
       <Modal
-        open={visible}
+        open={internalVisible}
         onCancel={handleCancel}
         title={t('project.addSources.title')}
         width={600}
         className="add-sources-modal"
+        destroyOnClose={true}
         footer={[
           <Button key="cancel" onClick={handleCancel}>
             {t('common.cancel')}

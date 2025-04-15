@@ -312,14 +312,16 @@ const ProjectList = ({
   }, [refresh]);
 
   useEffect(() => {
-    const formattedProjects = dataList.map((project) => ({
-      id: project.projectId,
-      name: project.name,
-      description: project.description,
-      updatedAt: project.updatedAt,
-      coverUrl: project.coverUrl,
-      type: 'project' as const,
-    }));
+    const formattedProjects = dataList
+      .map((project) => ({
+        id: project.projectId,
+        name: project.name,
+        description: project.description,
+        updatedAt: project.updatedAt,
+        coverUrl: project.coverUrl,
+        type: 'project' as const,
+      }))
+      .slice(0, 4);
     updateProjectsList(formattedProjects);
   }, [dataList]);
 

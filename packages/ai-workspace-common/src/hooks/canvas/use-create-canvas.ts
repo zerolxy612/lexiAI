@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSiderStore } from '@refly-packages/ai-workspace-common/stores/sider';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 
-const CANVAS_NUM = 6;
+const CANVAS_NUM = 4;
 
 export const useCreateCanvas = ({
   projectId,

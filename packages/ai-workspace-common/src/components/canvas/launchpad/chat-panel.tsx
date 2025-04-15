@@ -217,7 +217,7 @@ export const ChatPanel = ({
     const { newQAText, selectedModel } = useChatStore.getState();
     const query = userInput || newQAText.trim();
 
-    const { contextItems } = useContextPanelStore.getState();
+    const { contextItems, runtimeConfig } = useContextPanelStore.getState();
     const finalProjectId = getFinalProjectId();
 
     // Generate new message IDs using the provided function

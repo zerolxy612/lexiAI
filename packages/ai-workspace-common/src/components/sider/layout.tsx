@@ -588,7 +588,7 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
                       <Divider
                         key={`divider-${item.key}`}
                         style={{
-                          margin: '8px 0',
+                          margin: '6px 0',
                         }}
                       />
                     )}
@@ -598,7 +598,7 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
             </div>
 
             <div className="mt-auto">
-              <Divider style={{ margin: '8px 0' }} />
+              <Divider style={{ margin: '6px 0' }} />
 
               {subscriptionEnabled && planType === 'free' && (
                 <div className="mb-2 flex flex-col gap-2">
