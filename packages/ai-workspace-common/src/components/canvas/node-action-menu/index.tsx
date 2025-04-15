@@ -47,6 +47,7 @@ import { useHoverCard } from '@refly-packages/ai-workspace-common/hooks/use-hove
 import { useNodePreviewControl } from '@refly-packages/ai-workspace-common/hooks/canvas';
 import { useGetNodeContent } from '@refly-packages/ai-workspace-common/hooks/canvas/use-get-node-content';
 import { useAddNodesToCanvasPage } from '@refly-packages/ai-workspace-common/queries/queries';
+import { slideshowEmitter } from '@refly-packages/ai-workspace-common/events/slideshow';
 
 interface MenuItem {
   key?: string;
@@ -120,6 +121,7 @@ export const NodeActionMenu: FC<NodeActionMenuProps> = ({
             setShowSlideshow(true);
           }
           setCanvasPage(canvasId, pageId);
+          slideshowEmitter.emit('update', { canvasId, pageId });
         }
         onClose?.();
       },
@@ -454,10 +456,9 @@ export const NodeActionMenu: FC<NodeActionMenuProps> = ({
           icon: IconSlideshow,
           label: t('canvas.nodeActions.addToSlideshow'),
           onClick: () => {
-            console.log('createSlideshow', canvasId, nodeId);
             addNodesToCanvasPage({
               path: { canvasId },
-              body: { nodeIds: [nodeId] },
+              body: { nodeIds: [nodeData?.entityId] },
             });
           },
           loading: isAddingNodesToCanvasPage,
