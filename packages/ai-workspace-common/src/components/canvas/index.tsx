@@ -64,6 +64,7 @@ import { useReflyPilotReset } from '@refly-packages/ai-workspace-common/hooks/ca
 import HelperLines from './common/helper-line/index';
 import { useListenNodeOperationEvents } from '@refly-packages/ai-workspace-common/hooks/canvas/use-listen-node-events';
 import { LibraryModal } from '@refly-packages/ai-workspace-common/components/workspace/library-modal';
+import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 
 const GRID_SIZE = 10;
 
@@ -162,6 +163,18 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
   );
   const selectedNodes = nodes.filter((node) => node.selected) || [];
 
+  const getPageByCanvasId = useCallback(async () => {
+    const res = await getClient().getPageByCanvasId({
+      path: { canvasId: canvasId || 'placeholder' },
+    });
+    if (res?.data?.success) {
+      const pageData = res.data.data;
+      if (pageData?.page?.pageId) {
+        setCanvasPage(canvasId, pageData.page.pageId);
+      }
+    }
+  }, [canvasId]);
+
   const {
     onNodesChange,
     truncateAllNodesContent,
@@ -181,10 +194,6 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
     }
   }, [canvasId, truncateAllNodesContent]);
 
-  const { showPreview } = useCanvasStoreShallow((state) => ({
-    showPreview: state.showPreview,
-  }));
-
   const { showCanvasListModal, setShowCanvasListModal } = useSiderStoreShallow((state) => ({
     showCanvasListModal: state.showCanvasListModal,
     showLibraryModal: state.showLibraryModal,
@@ -197,13 +206,25 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
   const { pendingNode, clearPendingNode } = useCanvasNodesStore();
   const { provider, readonly, shareNotFound, shareLoading } = useCanvasContext();
 
-  const { config, operatingNodeId, setOperatingNodeId, setInitialFitViewCompleted } =
-    useCanvasStoreShallow((state) => ({
-      config: state.config[canvasId],
-      operatingNodeId: state.operatingNodeId,
-      setOperatingNodeId: state.setOperatingNodeId,
-      setInitialFitViewCompleted: state.setInitialFitViewCompleted,
-    }));
+  const {
+    config,
+    operatingNodeId,
+    setOperatingNodeId,
+    setInitialFitViewCompleted,
+    showPreview,
+    setCanvasPage,
+    showSlideshow,
+    setShowSlideshow,
+  } = useCanvasStoreShallow((state) => ({
+    config: state.config[canvasId],
+    operatingNodeId: state.operatingNodeId,
+    setOperatingNodeId: state.setOperatingNodeId,
+    setInitialFitViewCompleted: state.setInitialFitViewCompleted,
+    showPreview: state.showPreview,
+    setCanvasPage: state.setCanvasPage,
+    showSlideshow: state.showSlideshow,
+    setShowSlideshow: state.setShowSlideshow,
+  }));
   const hasCanvasSynced = config?.localSyncedAt > 0 && config?.remoteSyncedAt > 0;
 
   const { handleNodePreview } = useNodePreviewControl({ canvasId });
@@ -443,6 +464,11 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
   }, [provider?.status]);
 
   useEffect(() => {
+    getPageByCanvasId();
+    if (showSlideshow) {
+      setShowSlideshow(false);
+    }
+
     const unsubscribe = locateToNodePreviewEmitter.on(
       'locateToNodePreview',
       ({ canvasId: emittedCanvasId, id }) => {

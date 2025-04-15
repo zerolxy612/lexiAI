@@ -3,17 +3,19 @@ import { useCanvasStoreShallow } from '@refly-packages/ai-workspace-common/store
 import SlideHeader from './slide-header';
 import NewSlide from './new-slide';
 import { SlideshowEdit } from '../../../../../../apps/web/src/pages/pages';
-
 export const Slideshow = memo(({ canvasId }: { canvasId: string }) => {
   // const pageId = 'page-oxlsifqiaw7d2bs3kstci94w';
-  const [pageId, setPageId] = useState<string | null>(null);
+
   const [isMaximized, setIsMaximized] = useState(false);
-  const [isWideMode, setIsWideMode] = useState(true);
+  const [isWideMode, setIsWideMode] = useState(false);
   const [showMinimap, setShowMinimap] = useState(true);
 
-  const { setShowSlideshow } = useCanvasStoreShallow((state) => ({
+  const { setShowSlideshow, canvasPage } = useCanvasStoreShallow((state) => ({
     setShowSlideshow: state.setShowSlideshow,
+    canvasPage: state.canvasPage,
   }));
+
+  const [pageId, setPageId] = useState<string | null>(canvasPage[canvasId] || null);
 
   const containerStyles = useMemo(
     () => ({

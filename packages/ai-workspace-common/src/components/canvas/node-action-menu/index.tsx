@@ -13,6 +13,7 @@ import {
   IconCopy,
   IconMemo,
   IconDeleteFile,
+  IconSlideshow,
 } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { RiFullscreenFill } from 'react-icons/ri';
 import { useCanvasStoreShallow } from '@refly-packages/ai-workspace-common/stores/canvas';
@@ -45,6 +46,7 @@ import { HoverCard, HoverContent } from '@refly-packages/ai-workspace-common/com
 import { useHoverCard } from '@refly-packages/ai-workspace-common/hooks/use-hover-card';
 import { useNodePreviewControl } from '@refly-packages/ai-workspace-common/hooks/canvas';
 import { useGetNodeContent } from '@refly-packages/ai-workspace-common/hooks/canvas/use-get-node-content';
+import { useAddNodesToCanvasPage } from '@refly-packages/ai-workspace-common/queries/queries';
 
 interface MenuItem {
   key?: string;
@@ -81,9 +83,14 @@ export const NodeActionMenu: FC<NodeActionMenuProps> = ({
   const { getNode } = useReactFlow();
   const { canvasId } = useCanvasContext();
   const { setNodeSizeMode } = useNodeOperations();
-  const { setShowPreview } = useCanvasStoreShallow((state) => ({
-    setShowPreview: state.setShowPreview,
-  }));
+  const { setShowPreview, showSlideshow, setShowSlideshow, setCanvasPage } = useCanvasStoreShallow(
+    (state) => ({
+      setShowPreview: state.setShowPreview,
+      showSlideshow: state.showSlideshow,
+      setShowSlideshow: state.setShowSlideshow,
+      setCanvasPage: state.setCanvasPage,
+    }),
+  );
   const { previewNode } = useNodePreviewControl({ canvasId });
 
   const { activeDocumentId } = useDocumentStoreShallow((state) => ({
@@ -102,6 +109,25 @@ export const NodeActionMenu: FC<NodeActionMenuProps> = ({
   const [beforeCopying, setBeforeCopying] = useState(false);
   const [beforeInserting, setBeforeInserting] = useState(false);
   const [beforeDuplicatingDocument, setBeforeDuplicatingDocument] = useState(false);
+
+  const { mutate: addNodesToCanvasPage, isPending: isAddingNodesToCanvasPage } =
+    useAddNodesToCanvasPage(undefined, {
+      onSuccess: (response: any) => {
+        const pageId = response?.data?.data?.page?.pageId;
+        if (pageId) {
+          message.success(t('common.putSuccess'));
+          if (!showSlideshow) {
+            setShowSlideshow(true);
+          }
+          setCanvasPage(canvasId, pageId);
+        }
+        onClose?.();
+      },
+      onError: (error) => {
+        console.error('Failed to add nodes to canvas page:', error);
+        message.error(t('common.putFailed'));
+      },
+    });
 
   useEffect(() => {
     setLocalSizeMode(nodeData?.metadata?.sizeMode || 'adaptive');
@@ -422,6 +448,19 @@ export const NodeActionMenu: FC<NodeActionMenuProps> = ({
             description: t('canvas.nodeActions.addToContextDescription'),
             videoUrl: 'https://static.refly.ai/onboarding/nodeAction/nodeAction-addToContext.webm',
           },
+        },
+        {
+          key: 'createSlideshow',
+          icon: IconSlideshow,
+          label: t('canvas.nodeActions.addToSlideshow'),
+          onClick: () => {
+            console.log('createSlideshow', canvasId, nodeId);
+            addNodesToCanvasPage({
+              path: { canvasId },
+              body: { nodeIds: [nodeId] },
+            });
+          },
+          loading: isAddingNodesToCanvasPage,
         },
       ];
 
@@ -774,6 +813,7 @@ export const NodeActionMenu: FC<NodeActionMenuProps> = ({
       handleUngroup,
       isMultiSelection,
       handleDuplicateDocument,
+      addNodesToCanvasPage,
     ],
   );
 

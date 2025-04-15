@@ -1,9 +1,11 @@
-import { useCreatePage } from '@refly-packages/ai-workspace-common/queries/queries';
+import { useAddNodesToCanvasPage } from '@refly-packages/ai-workspace-common/queries/queries';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, Checkbox, Form, Input, message, Typography } from 'antd';
 import { CheckboxChangeEvent } from 'antd/es/checkbox';
+import { useCanvasStoreShallow } from '@refly-packages/ai-workspace-common/stores/canvas';
+
 const { Text } = Typography;
 
 interface CreatePageFromCanvasProps {
@@ -17,9 +19,23 @@ export const CreatePageFromCanvas = memo(({ canvasId, afterCreate }: CreatePageF
   const [nodeIds, setNodeIds] = useState<string[]>([]);
   const [loadingCanvasData, setLoadingCanvasData] = useState(false);
   const [availableNodes, setAvailableNodes] = useState<any[]>([]);
-  const { mutate: createPage, isPending } = useCreatePage(undefined, {
+  const { setCanvasPage } = useCanvasStoreShallow((state) => ({
+    setCanvasPage: state.setCanvasPage,
+  }));
+
+  const { mutate: addNodes, isPending } = useAddNodesToCanvasPage(undefined, {
+    onSuccess: (response: any) => {
+      const pageId = response?.data?.data?.page?.pageId;
+      if (pageId) {
+        setTitle('');
+        setNodeIds([]);
+        setCanvasPage(canvasId, pageId);
+        message.success(t('pages.new.pageCreatedSuccess'));
+        afterCreate?.(pageId);
+      }
+    },
     onError: (error) => {
-      console.error('Failed to create page:', error);
+      console.error('Failed to add nodes:', error);
     },
   });
 
@@ -64,32 +80,12 @@ export const CreatePageFromCanvas = memo(({ canvasId, afterCreate }: CreatePageF
         return;
       }
 
-      createPage(
-        {
-          body: {
-            title: title?.trim() || t('pages.new.untitledPage'),
-            description: t('pages.new.createdFromCanvas', { canvasId }),
-            content: {
-              canvasId,
-              nodeIds,
-            },
-          },
-        },
-        {
-          onSuccess: (response: any) => {
-            const pageId = response?.data?.data?.pageId;
-            if (pageId) {
-              setTitle('');
-              setNodeIds([]);
-              afterCreate?.(pageId);
-            } else {
-              message.error(t('pages.new.createPageFailed'));
-            }
-          },
-        },
-      );
+      addNodes({
+        path: { canvasId },
+        body: { nodeIds },
+      });
     },
-    [canvasId, nodeIds, title, t, createPage, afterCreate],
+    [canvasId, nodeIds, t, addNodes],
   );
 
   const handleCheckAll = useCallback(

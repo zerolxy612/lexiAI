@@ -48,6 +48,7 @@ export interface CanvasState {
   showSlideshow: boolean;
   linearThreadMessages: LinearThreadMessage[];
   tplConfig: Record<string, any> | null;
+  canvasPage: Record<string, string>;
 
   setInitialFitViewCompleted: (completed: boolean) => void;
   deleteCanvasData: (canvasId: string) => void;
@@ -76,6 +77,7 @@ export interface CanvasState {
   clearLinearThreadMessages: () => void;
   setTplConfig: (config: Record<string, any> | null) => void;
   clearState: () => void;
+  setCanvasPage: (canvasId: string, pageId: string) => void;
 }
 
 const defaultCanvasConfig: () => CanvasConfig = () => ({
@@ -99,6 +101,7 @@ const defaultCanvasState = () => ({
   showSlideshow: false,
   linearThreadMessages: [],
   tplConfig: null,
+  canvasPage: {},
 });
 
 export const useCanvasStore = create<CanvasState>()(
@@ -285,6 +288,10 @@ export const useCanvasStore = create<CanvasState>()(
           state.tplConfig = config;
         }),
       clearState: () => set(defaultCanvasState()),
+      setCanvasPage: (canvasId, pageId) =>
+        set((state) => {
+          state.canvasPage[canvasId] = pageId;
+        }),
     })),
     {
       name: 'canvas-storage',
@@ -298,6 +305,7 @@ export const useCanvasStore = create<CanvasState>()(
         showReflyPilot: state.showReflyPilot,
         linearThreadMessages: state.linearThreadMessages,
         showSlideshow: state.showSlideshow,
+        canvasPage: state.canvasPage,
       }),
     },
   ),
