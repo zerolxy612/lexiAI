@@ -26,17 +26,6 @@ export interface Page {
   deletedAt: Date | null;
 }
 
-export interface PageVersion {
-  pk: number;
-  version_id: string;
-  page_id: string;
-  version: number;
-  title: string;
-  content_storage_key: string;
-  cover_storage_key: string | null;
-  created_at: Date;
-}
-
 // Service method return types
 export interface PageDetailResult {
   page: Page;
@@ -47,30 +36,9 @@ export interface PageDetailResult {
   };
 }
 
-export interface CreatePageResult {
-  page: Page;
-  nodeRelations: PageNodeRelation[];
-}
-
 export interface UpdatePageResult {
   page: Page;
   nodeRelations?: PageNodeRelation[];
-}
-
-export interface PublishPageResult {
-  page: Page;
-  version: PageVersion;
-}
-
-export interface PageVersionResult {
-  page: Page;
-  version: PageVersion;
-  content: any;
-}
-
-export interface PageVersionsResult {
-  page: Page;
-  versions: PageVersion[];
 }
 
 export interface SharePageResult {
@@ -81,15 +49,6 @@ export interface SharePageResult {
 
 export interface DeletePageResult {
   pageId: string;
-}
-
-export interface CreatePageDto {
-  title?: string;
-  description?: string;
-  content?: {
-    canvasId: string;
-    nodeIds: string[];
-  };
 }
 
 export interface UpdatePageDto {
@@ -111,11 +70,6 @@ export interface NodeRelationDto {
 export interface NodeRelationOrderDto {
   relationId: string;
   orderIndex: number;
-}
-
-export interface PageVersionParamDto {
-  pageId: string;
-  version?: number;
 }
 
 // DTO for adding nodes to canvas page
@@ -156,18 +110,5 @@ export const pageNodeRelationPO2DTO = (relation: any) => {
         ? JSON.parse(relation.node_data)
         : relation.node_data
       : {},
-  };
-};
-
-export const pageVersionPO2DTO = (version: any) => {
-  return {
-    versionId: version.version_id,
-    pageId: version.page_id,
-    version: version.version,
-    title: version.title,
-    coverUrl: version.cover_storage_key
-      ? `/api/v1/misc/file?key=${version.cover_storage_key}`
-      : undefined,
-    createdAt: version.created_at,
   };
 };

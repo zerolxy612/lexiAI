@@ -5,7 +5,6 @@ import { CommonModule } from '@/common/common.module';
 import { MiscModule } from '@/misc/misc.module';
 import { CanvasModule } from '@/canvas/canvas.module';
 import { KnowledgeModule } from '@/knowledge/knowledge.module';
-import { ActionModule } from '@/action/action.module';
 import { CodeArtifactModule } from '@/code-artifact/code-artifact.module';
 import { ShareModule } from '@/share/share.module';
 
@@ -15,7 +14,6 @@ import { ShareModule } from '@/share/share.module';
     MiscModule,
     CanvasModule,
     KnowledgeModule,
-    ActionModule,
     CodeArtifactModule,
     ShareModule, // Make sure ShareModule is correctly imported here
   ],

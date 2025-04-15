@@ -4,28 +4,21 @@ import { PrismaService } from '@/common/prisma.service';
 import { MiscService } from '@/misc/misc.service';
 import { CanvasService } from '@/canvas/canvas.service';
 import { KnowledgeService } from '@/knowledge/knowledge.service';
-import { ActionService } from '@/action/action.service';
 import { MinioService } from '@/common/minio.service';
 import { MINIO_INTERNAL } from '@/common/minio.service';
 import { streamToBuffer } from '@/utils';
-import { User, EntityType, CanvasNode } from '@refly-packages/openapi-schema';
+import { User, EntityType } from '@refly-packages/openapi-schema';
 import { ShareNotFoundError } from '@refly-packages/errors';
 import { CodeArtifactService } from '@/code-artifact/code-artifact.service';
 import { ShareService } from '@/share/share.service';
 import {
-  CreatePageDto,
   UpdatePageDto,
-  CreatePageResult,
   PageDetailResult,
   UpdatePageResult,
-  PublishPageResult,
-  PageVersionResult,
-  PageVersionsResult,
   SharePageResult,
   DeletePageResult,
   Page,
   PageNodeRelation,
-  PageVersion,
 } from './pages.dto';
 import { createId } from '@paralleldrive/cuid2';
 
@@ -49,7 +42,6 @@ class PageNotFoundError extends ShareNotFoundError {
 // Generate unique IDs
 const genPageId = (): string => `page-${createId()}`;
 const genPageNodeRelationId = (): string => `pnr-${createId()}`;
-const genPageVersionId = (): string => `pver-${createId()}`;
 
 @Injectable()
 export class PagesService {
@@ -60,7 +52,6 @@ export class PagesService {
     private miscService: MiscService,
     private canvasService: CanvasService,
     private knowledgeService: KnowledgeService,
-    private actionService: ActionService,
     private codeArtifactService: CodeArtifactService,
     private shareService: ShareService,
     @Inject(MINIO_INTERNAL) private minio: MinioService,
@@ -94,82 +85,6 @@ export class PagesService {
       total: Number(count.count),
       page,
       pageSize,
-    };
-  }
-
-  // Create a new page
-  async createPage(
-    user: User | ResolveUserResponse,
-    { title = 'Untitled', content }: CreatePageDto,
-  ): Promise<CreatePageResult> {
-    const { uid } = user as User;
-
-    // Generate pageId
-    const pageId = genPageId();
-    const stateStorageKey = `pages/${uid}/${pageId}/state.update`;
-
-    // Extract canvasId and nodeIds from content
-    const canvasId = content?.canvasId;
-    const nodeIds = content?.nodeIds || [];
-
-    if (!canvasId) {
-      throw new Error('Missing canvasId in content');
-    }
-
-    if (!nodeIds.length) {
-      throw new Error('No nodes selected');
-    }
-
-    // Get data from canvas
-    const canvasData = await this.canvasService.getCanvasRawData(user, canvasId);
-
-    // Filter specified nodes
-    const selectedNodes = (canvasData.nodes as CanvasNode[]).filter((node) =>
-      nodeIds.includes(node.data.entityId),
-    );
-
-    // Verify all required nodes exist
-    if (selectedNodes.length !== nodeIds.length) {
-      throw new Error('Some selected nodes cannot be found');
-    }
-
-    // Create new Page record
-    const [page] = await this.prisma.$queryRaw<Page[]>`
-      INSERT INTO "pages" ("page_id", "uid", "title", "state_storage_key", "status", "created_at", "updated_at")
-      VALUES (${pageId}, ${uid}, ${title || 'Untitled Page'}, ${stateStorageKey}, 'draft', NOW(), NOW())
-      RETURNING *
-    `;
-
-    // Create initial Y.doc to store page state
-    const doc = new Y.Doc();
-    doc.transact(() => {
-      doc.getText('title').insert(0, page.title);
-      doc.getArray('nodeIds').insert(0, nodeIds);
-      doc.getMap('pageConfig').set('layout', 'slides');
-      doc.getMap('pageConfig').set('theme', 'default');
-    });
-
-    // Upload Y.doc - Convert Y.Doc to Uint8Array, then to Buffer
-    const state = Y.encodeStateAsUpdate(doc);
-    await this.minio.client.putObject(stateStorageKey, Buffer.from(state));
-
-    // Create page-node relation records
-    const nodeRelationsPromises = selectedNodes.map(async (node, index) => {
-      const relationId = genPageNodeRelationId();
-      const [relation] = await this.prisma.$queryRaw<PageNodeRelation[]>`
-        INSERT INTO "page_node_relations" ("relation_id", "page_id", "node_id", "node_type", "entity_id", "order_index", "node_data", "created_at", "updated_at")
-        VALUES (${relationId}, ${pageId}, ${node.data.entityId}, ${node.type}, ${node.data.entityId}, ${index}, ${JSON.stringify(node.data)}, NOW(), NOW())
-        RETURNING *
-      `;
-
-      return relation;
-    });
-
-    const nodeRelations = await Promise.all(nodeRelationsPromises);
-
-    return {
-      page,
-      nodeRelations,
     };
   }
 
@@ -418,265 +333,6 @@ export class PagesService {
     });
   }
 
-  // Publish page - generate shareable version
-  async publishPage(user: User | ResolveUserResponse, pageId: string): Promise<PublishPageResult> {
-    const { uid } = user as User;
-
-    const [page] = await this.prisma.$queryRaw<Page[]>`
-      SELECT * FROM "pages"
-      WHERE "page_id" = ${pageId}
-      AND "uid" = ${uid}
-      AND "deleted_at" IS NULL
-    `;
-
-    if (!page) {
-      throw new PageNotFoundError();
-    }
-
-    // Get node relations
-    const nodeRelations = await this.prisma.$queryRaw<PageNodeRelation[]>`
-      SELECT * FROM "page_node_relations"
-      WHERE "page_id" = ${pageId}
-      AND "deleted_at" IS NULL
-      ORDER BY "order_index" ASC
-    `;
-
-    // Get page content, assuming it's from state_storage_key
-    let content: any = { nodes: [] };
-    let pageConfig = {
-      layout: 'slides',
-      theme: 'light',
-    };
-
-    try {
-      // Read page state from storage service
-      if (page.state_storage_key) {
-        const stateStream = await this.minio.client.getObject(page.state_storage_key);
-        const stateBuffer = await streamToBuffer(stateStream);
-
-        if (stateBuffer) {
-          const update = new Uint8Array(stateBuffer);
-          const ydoc = new Y.Doc();
-          Y.applyUpdate(ydoc, update);
-
-          // Get pageConfig
-          const pageConfigMap = ydoc.getMap('pageConfig');
-          pageConfig = {
-            layout: (pageConfigMap.get('layout') as string) || 'slides',
-            theme: (pageConfigMap.get('theme') as string) || 'light',
-          };
-        }
-      }
-
-      // Build content object
-      content = {
-        pageConfig,
-        nodes: await Promise.all(
-          nodeRelations.map(async (relation) => {
-            let nodeData = {};
-            try {
-              nodeData = relation.node_data
-                ? typeof relation.node_data === 'string'
-                  ? JSON.parse(relation.node_data)
-                  : relation.node_data
-                : {};
-            } catch (error) {
-              this.logger.error('Error parsing node data:', error);
-            }
-
-            // Add code content for code nodes
-            if (relation.node_type === 'code_artifact') {
-              try {
-                const codeArtifact = await this.codeArtifactService.getCodeArtifactDetail(
-                  user,
-                  relation.entity_id,
-                );
-                if (codeArtifact) {
-                  return {
-                    relationId: relation.relation_id,
-                    nodeId: relation.node_id,
-                    nodeType: relation.node_type,
-                    entityId: relation.entity_id,
-                    orderIndex: relation.order_index,
-                    nodeData: {
-                      ...nodeData,
-                      code: codeArtifact.content,
-                      language: codeArtifact.language,
-                    },
-                  };
-                }
-              } catch (error) {
-                this.logger.error('Error getting code artifact:', error);
-              }
-            }
-
-            // Add knowledge content for knowledge nodes
-            if (relation.node_type === 'knowledge') {
-              try {
-                const knowledge = await this.knowledgeService.getResourceDetail(user, {
-                  resourceId: relation.entity_id,
-                });
-                if (knowledge) {
-                  return {
-                    relationId: relation.relation_id,
-                    nodeId: relation.node_id,
-                    nodeType: relation.node_type,
-                    entityId: relation.entity_id,
-                    orderIndex: relation.order_index,
-                    nodeData: {
-                      ...nodeData,
-                      title: knowledge.title,
-                      content: knowledge.content,
-                    },
-                  };
-                }
-              } catch (error) {
-                this.logger.error('Error getting knowledge:', error);
-              }
-            }
-
-            return {
-              relationId: relation.relation_id,
-              nodeId: relation.node_id,
-              nodeType: relation.node_type,
-              entityId: relation.entity_id,
-              orderIndex: relation.order_index,
-              nodeData,
-            };
-          }),
-        ),
-      };
-    } catch (error) {
-      this.logger.error('Error building page content:', error);
-    }
-
-    // Get latest version number
-    const [latestVersion] = await this.prisma.$queryRaw<{ max_version: number }[]>`
-      SELECT COALESCE(MAX(version), 0) as max_version FROM "page_versions"
-      WHERE "page_id" = ${pageId}
-    `;
-
-    const nextVersion = latestVersion.max_version + 1;
-    const contentStorageKey = `pages/${page.uid}/${pageId}/versions/${nextVersion}.json`;
-
-    // Save content to storage
-    const contentString = JSON.stringify(content);
-    await this.minio.client.putObject(contentStorageKey, Buffer.from(contentString));
-
-    // Save latest version
-    const pageVersionId = genPageVersionId();
-    const [version] = await this.prisma.$queryRaw<PageVersion[]>`
-      INSERT INTO "page_versions" (
-        "version_id", "page_id", "version", "title", "cover_storage_key", "content_storage_key", "created_at"
-      )
-      VALUES (
-        ${pageVersionId}, ${pageId}, ${nextVersion}, ${page.title}, ${page.cover_storage_key}, ${contentStorageKey}, NOW()
-      )
-      RETURNING *
-    `;
-
-    // Update page status to published
-    const [updatedPage] = await this.prisma.$queryRaw<Page[]>`
-      UPDATE "pages"
-      SET "status" = 'published', "updated_at" = NOW()
-      WHERE "page_id" = ${pageId}
-      RETURNING *
-    `;
-
-    return {
-      page: updatedPage,
-      version,
-    };
-  }
-
-  // Get page version - can specify version, if not specified get latest version
-  async getPageVersion(pageId: string, version?: number): Promise<PageVersionResult> {
-    // Get page information
-    const [page] = await this.prisma.$queryRaw<Page[]>`
-      SELECT * FROM "pages"
-      WHERE "page_id" = ${pageId}
-      AND "deleted_at" IS NULL
-    `;
-
-    if (!page) {
-      throw new PageNotFoundError();
-    }
-
-    // Get version information
-    let versionQuery: Promise<PageVersion[]>;
-    if (version) {
-      versionQuery = this.prisma.$queryRaw<PageVersion[]>`
-        SELECT * FROM "page_versions"
-        WHERE "page_id" = ${pageId}
-        AND "version" = ${version}
-        ORDER BY "created_at" DESC
-        LIMIT 1
-      `;
-    } else {
-      versionQuery = this.prisma.$queryRaw<PageVersion[]>`
-        SELECT * FROM "page_versions"
-        WHERE "page_id" = ${pageId}
-        ORDER BY "version" DESC
-        LIMIT 1
-      `;
-    }
-
-    const [pageVersion] = await versionQuery;
-
-    if (!pageVersion) {
-      throw new PageNotFoundError();
-    }
-
-    // Get version content
-    let content: any = null;
-
-    try {
-      if (pageVersion.content_storage_key) {
-        const contentStream = await this.minio.client.getObject(pageVersion.content_storage_key);
-        const contentBuffer = await streamToBuffer(contentStream);
-
-        if (contentBuffer) {
-          content = JSON.parse(contentBuffer.toString());
-        }
-      }
-    } catch (error) {
-      this.logger.error('Error reading version content:', error);
-      content = { error: 'Failed to read content' };
-    }
-
-    return {
-      page,
-      version: pageVersion,
-      content,
-    };
-  }
-
-  // Get all versions of a page
-  async getPageVersions(pageId: string): Promise<PageVersionsResult> {
-    // Get page information
-    const [page] = await this.prisma.$queryRaw<Page[]>`
-      SELECT * FROM "pages"
-      WHERE "page_id" = ${pageId}
-      AND "deleted_at" IS NULL
-    `;
-
-    if (!page) {
-      throw new PageNotFoundError();
-    }
-
-    // Get all versions
-    const versions = await this.prisma.$queryRaw<PageVersion[]>`
-      SELECT * FROM "page_versions"
-      WHERE "page_id" = ${pageId}
-      ORDER BY "version" DESC
-    `;
-
-    return {
-      page,
-      versions,
-    };
-  }
-
   // Share page - create public share link
   async sharePage(user: User | ResolveUserResponse, pageId: string): Promise<SharePageResult> {
     const { uid } = user as User;
@@ -705,88 +361,6 @@ export class PagesService {
       pageId,
       shareId: shareRecord.shareId,
       shareUrl: `${process.env.FRONTEND_URL || 'https://refly.ai'}/share/pages/${shareRecord.shareId}`,
-    };
-  }
-
-  // Get shared page content
-  async getSharedPage(shareId: string, currentUser?: User) {
-    // Use ShareService to get share record
-    const shareRecord = await this.prisma.shareRecord.findFirst({
-      where: {
-        shareId,
-        entityType: 'page' as EntityType,
-        deletedAt: null,
-      },
-    });
-
-    if (!shareRecord) {
-      throw new ShareNotFoundError();
-    }
-
-    // Get shared content
-    const sharedContent = await this.shareService.getSharedData(shareRecord.storageKey);
-
-    // Determine if current user is owner
-    const isOwner = currentUser && currentUser.uid === shareRecord.uid;
-
-    // Parse extra data
-    let extraData = {};
-    if (shareRecord.extraData) {
-      try {
-        extraData = JSON.parse(shareRecord.extraData);
-      } catch (e) {
-        this.logger.error('Error parsing extraData:', e);
-      }
-    }
-
-    // Return shared content
-    return {
-      page: sharedContent.page,
-      content: sharedContent.content,
-      nodeRelations: sharedContent.nodeRelations,
-      pageConfig: sharedContent.pageConfig,
-      shareInfo: {
-        title: shareRecord.title,
-        allowDuplication: shareRecord.allowDuplication,
-        description: (extraData as any)?.description,
-        sharedAt: shareRecord.createdAt,
-        updatedAt: shareRecord.updatedAt,
-      },
-      isOwner,
-    };
-  }
-
-  // Delete page
-  async deletePage(user: User | ResolveUserResponse, pageId: string): Promise<DeletePageResult> {
-    const { uid } = user as User;
-
-    const [page] = await this.prisma.$queryRaw<Page[]>`
-      SELECT * FROM "pages"
-      WHERE "page_id" = ${pageId}
-      AND "uid" = ${uid}
-      AND "deleted_at" IS NULL
-    `;
-
-    if (!page) {
-      throw new PageNotFoundError();
-    }
-
-    // Soft delete page
-    await this.prisma.$queryRaw`
-      UPDATE "pages"
-      SET "deleted_at" = NOW()
-      WHERE "page_id" = ${pageId}
-    `;
-
-    // Soft delete page node relations
-    await this.prisma.$queryRaw`
-      UPDATE "page_node_relations"
-      SET "deleted_at" = NOW()
-      WHERE "page_id" = ${pageId}
-    `;
-
-    return {
-      pageId,
     };
   }
 
@@ -828,6 +402,40 @@ export class PagesService {
     return {
       pageId,
       nodeId,
+    };
+  }
+
+  // Delete page
+  async deletePage(user: User | ResolveUserResponse, pageId: string): Promise<DeletePageResult> {
+    const { uid } = user as User;
+
+    const [page] = await this.prisma.$queryRaw<Page[]>`
+      SELECT * FROM "pages"
+      WHERE "page_id" = ${pageId}
+      AND "uid" = ${uid}
+      AND "deleted_at" IS NULL
+    `;
+
+    if (!page) {
+      throw new PageNotFoundError();
+    }
+
+    // Soft delete page
+    await this.prisma.$queryRaw`
+      UPDATE "pages"
+      SET "deleted_at" = NOW()
+      WHERE "page_id" = ${pageId}
+    `;
+
+    // Soft delete page node relations
+    await this.prisma.$queryRaw`
+      UPDATE "page_node_relations"
+      SET "deleted_at" = NOW()
+      WHERE "page_id" = ${pageId}
+    `;
+
+    return {
+      pageId,
     };
   }
 
@@ -901,7 +509,7 @@ export class PagesService {
     user: User,
     canvasId: string,
     addNodesDto: { nodeIds: string[] },
-  ): Promise<CreatePageResult> {
+  ): Promise<{ page: Page; nodeRelations: PageNodeRelation[] }> {
     // Use transaction for all database operations
     return this.prisma.$transaction(async (tx) => {
       // Check if canvas exists and user has access
@@ -927,6 +535,18 @@ export class PagesService {
       });
 
       let page: Page;
+
+      // Add lock to prevent concurrent issues
+      if (canvasEntityRelation) {
+        // Add lock to relation record to ensure it's not modified during transaction
+        await tx.$executeRaw`
+          SELECT * FROM "canvas_entity_relations"
+          WHERE "canvas_id" = ${canvasId}
+          AND "entity_type" = 'page'
+          AND "deleted_at" IS NULL
+          FOR UPDATE
+        `;
+      }
 
       // If no page exists, create a new one
       if (!canvasEntityRelation) {
@@ -974,19 +594,110 @@ export class PagesService {
         `;
 
         if (!existingPage) {
-          throw new Error('Associated page not found');
-        }
+          // If associated page not found, create a new one instead of throwing error
+          this.logger.warn(`Associated page not found for canvas ${canvasId}, creating a new one`);
 
-        // Check ownership
-        if (existingPage.uid !== user.uid) {
-          throw new Error('You do not have permission to modify this page');
-        }
+          // Get canvas info to set page title
+          const pageId = genPageId();
+          const stateStorageKey = `pages/${user.uid}/${pageId}/state.update`;
 
-        page = existingPage;
+          // Create new Page record
+          await tx.$executeRaw`
+            INSERT INTO "pages" ("page_id", "uid", "title", "state_storage_key", "status", "created_at", "updated_at")
+            VALUES (${pageId}, ${user.uid}, ${canvas.title || 'Untitled Page'}, ${stateStorageKey}, 'draft', NOW(), NOW())
+          `;
+
+          // Get the newly created page
+          const [createdPage] = await tx.$queryRaw<Page[]>`
+            SELECT * FROM "pages"
+            WHERE "page_id" = ${pageId}
+          `;
+
+          page = createdPage;
+
+          // Update canvas-page relation
+          const updateResult = await tx.$executeRaw`
+            UPDATE "canvas_entity_relations" 
+            SET "entity_id" = ${pageId}
+            WHERE "canvas_id" = ${canvasId} 
+            AND "entity_type" = 'page'
+            AND "entity_id" = ${canvasEntityRelation.entityId}
+          `;
+
+          // Check if update was successful
+          if (updateResult === 0) {
+            this.logger.warn(
+              `Failed to update canvas-page relation for canvas ${canvasId}, relation may have been modified`,
+            );
+
+            // Query relation again to confirm current state
+            const currentRelation = await tx.canvasEntityRelation.findFirst({
+              where: {
+                canvasId,
+                entityType: 'page',
+                deletedAt: null,
+              },
+            });
+
+            if (currentRelation && currentRelation.entityId !== pageId) {
+              // Relation has been updated by another transaction, use current related page
+              const [currentPage] = await tx.$queryRaw<Page[]>`
+                SELECT * FROM "pages"
+                WHERE "page_id" = ${currentRelation.entityId}
+                AND "deleted_at" IS NULL
+              `;
+
+              if (currentPage) {
+                // Use existing page, abandon newly created page
+                this.logger.warn(
+                  `Using existing page ${currentRelation.entityId} instead of newly created page ${pageId}`,
+                );
+                page = currentPage;
+              } else {
+                // Even if current related page doesn't exist, use our newly created page
+                // Try to update relation again
+                await tx.$executeRaw`
+                  UPDATE "canvas_entity_relations" 
+                  SET "entity_id" = ${pageId}
+                  WHERE "canvas_id" = ${canvasId} 
+                  AND "entity_type" = 'page'
+                `;
+              }
+            }
+          }
+
+          // Create initial Y.doc to store page state
+          const doc = new Y.Doc();
+          doc.transact(() => {
+            doc.getText('title').insert(0, page.title);
+            doc.getMap('pageConfig').set('layout', 'slides');
+            doc.getMap('pageConfig').set('theme', 'default');
+          });
+
+          // Upload Y.doc - Convert Y.Doc to Uint8Array, then to Buffer
+          const state = Y.encodeStateAsUpdate(doc);
+          await this.minio.client.putObject(stateStorageKey, Buffer.from(state));
+        } else {
+          // Check ownership
+          if (existingPage.uid !== user.uid) {
+            throw new Error('You do not have permission to modify this page');
+          }
+
+          page = existingPage;
+        }
       }
 
       // Get raw Canvas data, including node information
       const canvasData = await this.canvasService.getCanvasRawData(user, canvasId);
+
+      // Handle case when canvas has no nodes
+      if (!canvasData || !canvasData.nodes || canvasData.nodes.length === 0) {
+        this.logger.warn(`Canvas ${canvasId} has no nodes, returning empty node relations`);
+        return {
+          page,
+          nodeRelations: [],
+        };
+      }
 
       // Get existing node relations for the current page
       const existingNodeRelations = await tx.$queryRaw<{ node_id: string }[]>`
@@ -1017,22 +728,43 @@ export class PagesService {
       }
 
       // Extract node information from Canvas data
-      const nodeInfos = newNodeIds.map((nodeId) => {
-        // Find matching node in Canvas nodes array
-        // Note: Canvas node ID may be stored in data.entityId
-        const node = canvasData.nodes.find((n) => n.data?.entityId === nodeId);
+      const validNodeIds: string[] = [];
+      const nodeInfos = newNodeIds
+        .map((nodeId) => {
+          // Find matching node in Canvas nodes array
+          // Note: Canvas node ID may be stored in data.entityId
+          const node = canvasData.nodes.find((n) => n.data?.entityId === nodeId);
 
-        if (!node) {
-          throw new Error(`Node ${nodeId} not found in canvas ${canvasId}`);
-        }
+          if (!node) {
+            this.logger.warn(`Node ${nodeId} not found in canvas ${canvasId}, skipping it`);
+            return null;
+          }
+
+          validNodeIds.push(nodeId);
+          return {
+            nodeId: nodeId,
+            nodeType: node.type || 'unknown',
+            entityId: node.data?.entityId || nodeId,
+            nodeData: node.data || {},
+          };
+        })
+        .filter((info): info is NonNullable<typeof info> => info !== null);
+
+      // If all nodes are invalid, return current page and node relations
+      if (nodeInfos.length === 0) {
+        this.logger.warn(`No valid nodes found for canvas ${canvasId}, returning current state`);
+        const currentNodeRelations = await tx.$queryRaw<PageNodeRelation[]>`
+          SELECT * FROM "page_node_relations"
+          WHERE "page_id" = ${page.page_id}
+          AND "deleted_at" IS NULL
+          ORDER BY "order_index" ASC
+        `;
 
         return {
-          nodeId: nodeId,
-          nodeType: node.type || 'unknown',
-          entityId: node.data?.entityId || nodeId,
-          nodeData: node.data || {},
+          page,
+          nodeRelations: currentNodeRelations,
         };
-      });
+      }
 
       // Get the current maximum order_index
       const [maxOrderResult] = await tx.$queryRaw<{ max_order: number }[]>`
