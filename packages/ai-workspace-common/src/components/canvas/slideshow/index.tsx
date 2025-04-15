@@ -4,6 +4,7 @@ import SlideHeader from './slide-header';
 import NewSlide from './new-slide';
 import { SlideshowEdit } from '../../../../../../apps/web/src/pages/pages';
 import { slideshowEmitter } from '@refly-packages/ai-workspace-common/events/slideshow';
+import './index.scss';
 
 export const Slideshow = memo(({ canvasId }: { canvasId: string }) => {
   // const pageId = 'page-oxlsifqiaw7d2bs3kstci94w';

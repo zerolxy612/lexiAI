@@ -14,7 +14,7 @@ const NewSlide = memo(
     const { t } = useTranslation();
 
     return (
-      <div className="w-full h-full flex flex-col overflow-hidden">
+      <div className="w-full h-full px-6 flex flex-col overflow-hidden">
         <Empty description={t('pages.slideshow.newSlideDescription')} />
 
         <div className="w-full flex-grow overflow-hidden">

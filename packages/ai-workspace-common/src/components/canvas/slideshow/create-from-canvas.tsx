@@ -2,7 +2,7 @@ import { useAddNodesToCanvasPage } from '@refly-packages/ai-workspace-common/que
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, Checkbox, Form, Input, message, Typography } from 'antd';
+import { Button, Checkbox, Form, message, Typography } from 'antd';
 import { CheckboxChangeEvent } from 'antd/es/checkbox';
 import { useCanvasStoreShallow } from '@refly-packages/ai-workspace-common/stores/canvas';
 
@@ -15,7 +15,7 @@ interface CreatePageFromCanvasProps {
 
 export const CreatePageFromCanvas = memo(({ canvasId, afterCreate }: CreatePageFromCanvasProps) => {
   const { t } = useTranslation();
-  const [title, setTitle] = useState('');
+  const [_title, setTitle] = useState('');
   const [nodeIds, setNodeIds] = useState<string[]>([]);
   const [loadingCanvasData, setLoadingCanvasData] = useState(false);
   const [availableNodes, setAvailableNodes] = useState<any[]>([]);
@@ -53,7 +53,11 @@ export const CreatePageFromCanvas = memo(({ canvasId, afterCreate }: CreatePageF
     setLoadingCanvasData(false);
 
     if (response?.data?.success) {
-      setAvailableNodes(response?.data?.data?.nodes || []);
+      setAvailableNodes(
+        (response?.data?.data?.nodes || []).filter(
+          (node: any) => !['skill', 'group'].includes(node?.type),
+        ),
+      );
     }
   }, [canvasId]);
 
@@ -112,17 +116,17 @@ export const CreatePageFromCanvas = memo(({ canvasId, afterCreate }: CreatePageF
   return (
     <div className="mx-auto flex flex-col w-full h-full max-w-3xl">
       {availableNodes?.length > 0 ? (
-        <Form className="flex flex-col flex-1 min-h-20 pt-6 px-6">
-          <div className="flex-1 overflow-y-auto">
-            <Form.Item label={t('pages.new.pageTitle')} name="title">
+        <Form className="flex flex-col flex-1 min-h-20 pt-6">
+          <div className="flex-1 overflow-hidden">
+            {/* <Form.Item label={t('pages.new.pageTitle')} name="title">
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder={t('pages.new.enterPageTitle')}
               />
-            </Form.Item>
+            </Form.Item> */}
             <Form.Item
-              className="flex-grow min-h-10 node-select-container"
+              className="page-node-list flex-grow h-full min-h-10"
               label={t('pages.new.selectNodesToInclude')}
               name="nodeIds"
               required={true}
@@ -136,19 +140,30 @@ export const CreatePageFromCanvas = memo(({ canvasId, afterCreate }: CreatePageF
                   {t('pages.new.selectAll')}
                 </Checkbox>
               </div>
-              <Checkbox.Group
-                className="w-full flex flex-col gap-2"
-                value={nodeIds}
-                onChange={handleNodeIdsChange}
-              >
-                {availableNodes?.map((node) => (
-                  <Checkbox key={node?.data?.entityId} value={node?.data?.entityId}>
-                    <Text ellipsis={{ tooltip: true }}>
-                      {node?.data?.title || t('common.untitled')}
-                    </Text>
-                  </Checkbox>
-                ))}
-              </Checkbox.Group>
+              <div className="list">
+                <Checkbox.Group
+                  className="w-full flex flex-col gap-2"
+                  value={nodeIds}
+                  onChange={handleNodeIdsChange}
+                >
+                  {availableNodes?.map((node) => (
+                    <Checkbox
+                      className="w-full node-option"
+                      key={node?.data?.entityId}
+                      value={node?.data?.entityId}
+                    >
+                      <div className="w-full flex items-center justify-between">
+                        <div className="text-[10px] text-gray-400 border border-solid border-1 border-gray-200 rounded-sm px-1 mr-2 whitespace-nowrap">
+                          {t(`canvas.nodeTypes.${node?.type}`)}
+                        </div>
+                        <Text ellipsis={{ tooltip: true }}>
+                          {node?.data?.title || t('common.untitled')}
+                        </Text>
+                      </div>
+                    </Checkbox>
+                  ))}
+                </Checkbox.Group>
+              </div>
             </Form.Item>
           </div>
           <div className="w-full flex gap-2 justify-end py-4 border-t">
