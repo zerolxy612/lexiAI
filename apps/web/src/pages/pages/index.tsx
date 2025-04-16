@@ -147,7 +147,7 @@ export function SlideshowEdit(props: PageEditProps) {
     return pageDetail.nodeRelations.map((node) => ({
       ...node,
     }));
-  }, [pageDetail]);
+  }, [pageDetail?.nodeRelations]);
 
   // Update local state when page data is loaded
   useEffect(() => {
@@ -312,12 +312,17 @@ export function SlideshowEdit(props: PageEditProps) {
   useEffect(() => {
     const handleUpdate = (data: { canvasId: string; pageId: string; entityId: string }) => {
       if (data.pageId === pageId) {
-        refetchPageDetail().then(() => {
+        refetchPageDetail().then(({ data: pageDetailResponse }) => {
+          const detail = pageDetailResponse?.data as PageDetailType;
+          const nodeRelations = detail?.nodeRelations || [];
+
           // After refetching, scroll to the interacted node
-          const index = nodes.findIndex((node) => node.entityId === data.entityId);
           setTimeout(() => {
-            const lastNodeElement = document.querySelector(`[id^="content-block-${index}"]`);
-            lastNodeElement?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            const index = nodeRelations.findIndex((node) => node.entityId === data.entityId);
+            const showNodeElement = document.querySelector(
+              index >= 0 ? `[id^="content-block-${index}"]` : '[id^="content-block-"]:last-child',
+            );
+            showNodeElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }, 100);
         });
       }
