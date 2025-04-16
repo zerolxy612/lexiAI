@@ -37,6 +37,24 @@ export const LazyImageRenderer = lazy(() =>
   })),
 );
 
+export const LazyMemoRenderer = lazy(() =>
+  import('./MemoRenderer').then((module) => ({
+    default: module.MemoRenderer,
+  })),
+);
+
+export const LazyResourceRenderer = lazy(() =>
+  import('./ResourceRenderer').then((module) => ({
+    default: module.ResourceRenderer,
+  })),
+);
+
+export const LazyWebsiteRenderer = lazy(() =>
+  import('./WebsiteRenderer').then((module) => ({
+    default: module.WebsiteRenderer,
+  })),
+);
+
 // Wrapper component with Suspense
 interface WithSuspenseProps {
   children: React.ReactNode;

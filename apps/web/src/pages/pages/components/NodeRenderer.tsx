@@ -7,6 +7,9 @@ import {
   LazySkillResponseRenderer,
   LazyImageRenderer,
   WithSuspense,
+  LazyMemoRenderer,
+  LazyResourceRenderer,
+  LazyWebsiteRenderer,
 } from './LazyComponents';
 import { useTranslation } from 'react-i18next';
 
@@ -123,6 +126,74 @@ const NodeRenderer = memo(
               <div className={`flex-1 overflow-auto ${!isFullscreen ? '' : 'h-full'}`}>
                 <WithSuspense>
                   <LazyImageRenderer
+                    node={node}
+                    isFullscreen={isFullscreen}
+                    isMinimap={isMinimap}
+                  />
+                </WithSuspense>
+              </div>
+            </div>
+          );
+        case 'memo':
+          return (
+            <div className="flex flex-col h-full">
+              {/* Only show header in regular editing mode (not full screen or modal) */}
+              {!isFullscreen && !isModal && (
+                <NodeBlockHeader
+                  node={node}
+                  isMinimap={isMinimap}
+                  onMaximize={() => onStartSlideshow?.(node.nodeId)}
+                  onWideMode={() => onWideMode?.(node.nodeId)}
+                  onDelete={onDelete}
+                />
+              )}
+              <div className={`flex-1 overflow-auto ${!isFullscreen ? '' : 'h-full'}`}>
+                <WithSuspense>
+                  <LazyMemoRenderer node={node} isFullscreen={isFullscreen} isMinimap={isMinimap} />
+                </WithSuspense>
+              </div>
+            </div>
+          );
+        case 'resource':
+          return (
+            <div className="flex flex-col h-full">
+              {/* Only show header in regular editing mode (not full screen or modal) */}
+              {!isFullscreen && !isModal && (
+                <NodeBlockHeader
+                  node={node}
+                  isMinimap={isMinimap}
+                  onMaximize={() => onStartSlideshow?.(node.nodeId)}
+                  onWideMode={() => onWideMode?.(node.nodeId)}
+                  onDelete={onDelete}
+                />
+              )}
+              <div className={`flex-1 overflow-auto ${!isFullscreen ? '' : 'h-full'}`}>
+                <WithSuspense>
+                  <LazyResourceRenderer
+                    node={node}
+                    isFullscreen={isFullscreen}
+                    isMinimap={isMinimap}
+                  />
+                </WithSuspense>
+              </div>
+            </div>
+          );
+        case 'website':
+          return (
+            <div className="flex flex-col h-full">
+              {/* Only show header in regular editing mode (not full screen or modal) */}
+              {!isFullscreen && !isModal && (
+                <NodeBlockHeader
+                  node={node}
+                  isMinimap={isMinimap}
+                  onMaximize={() => onStartSlideshow?.(node.nodeId)}
+                  onWideMode={() => onWideMode?.(node.nodeId)}
+                  onDelete={onDelete}
+                />
+              )}
+              <div className={`flex-1 overflow-auto ${!isFullscreen ? '' : 'h-full'}`}>
+                <WithSuspense>
+                  <LazyWebsiteRenderer
                     node={node}
                     isFullscreen={isFullscreen}
                     isMinimap={isMinimap}
