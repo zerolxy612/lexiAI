@@ -435,18 +435,8 @@ export function SlideshowEdit(props: PageEditProps) {
       <div>
         {/* Content section - using virtualized list for optimization */}
         {nodesList.length > 0 ? (
-          // (
-          //   <VirtualizedNodeList
-          //     nodes={nodesList}
-          //     activeNodeIndex={activeNodeIndex}
-          //     onNodeSelect={handleNodeSelect}
-          //     onDelete={handleDeleteNode}
-          //     onStartSlideshow={handleStartSlideshow}
-          //     onWideMode={handleWideMode}
-          //   />
-          // )
           <div className="space-y-6">
-            {nodes.map((node, index) => (
+            {nodesList.map((node, index) => (
               <div
                 key={node.relationId || `content-${index}`}
                 id={`content-block-${index}`}
