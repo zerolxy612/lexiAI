@@ -12,12 +12,11 @@ AND p."canvas_id" IS NULL;
 -- Set a default canvas ID for pages that don't have one
 -- This creates a new canvas for each page without a canvas
 WITH new_canvases AS (
-  INSERT INTO "canvases" ("canvas_id", "uid", "title", "description")
+  INSERT INTO "canvases" ("canvas_id", "uid", "title")
   SELECT 
     'canvas_' || substr(md5(random()::text), 1, 16),
     p."uid",
-    p."title" || ' Canvas',
-    'Auto-generated canvas for page migration'
+    p."title" || ' Canvas'
   FROM "pages" p
   WHERE p."canvas_id" IS NULL
   RETURNING "canvas_id", "uid"
