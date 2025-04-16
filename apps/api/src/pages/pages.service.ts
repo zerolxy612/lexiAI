@@ -35,7 +35,7 @@ class PageNotFoundError extends ShareNotFoundError {
   code = 'E1010'; // Custom error code
   messageDict = {
     en: 'Page not found',
-    'zh-CN': '页面未找到',
+    'zh-CN': 'Page not found', // Changed to English
   };
 }
 
@@ -462,39 +462,30 @@ export class PagesService {
       throw new Error('Canvas not found or access denied');
     }
 
-    // Find canvas-page relation
-    const canvasEntityRelation = await this.prisma.canvasEntityRelation.findFirst({
-      where: {
-        canvasId,
-        entityType: 'page',
-        deletedAt: null,
-      },
-    });
-
-    if (!canvasEntityRelation) {
-      return { page: null, nodeRelations: [] };
-    }
-
-    // Get page
-    const page = await this.prisma.$queryRaw<Page[]>`
+    // Find page associated with canvas using canvas_id field
+    // Ensure we only get one page (the most recent one)
+    const [page] = await this.prisma.$queryRaw<Page[]>`
       SELECT * FROM "pages"
-      WHERE "page_id" = ${canvasEntityRelation.entityId}
+      WHERE "canvas_id" = ${canvasId}
+      AND "uid" = ${user.uid}
       AND "deleted_at" IS NULL
+      ORDER BY "updated_at" DESC
+      LIMIT 1
     `;
 
-    if (!page || page.length === 0) {
+    if (!page) {
       return { page: null, nodeRelations: [] };
     }
 
     // Get page node relations
     const nodeRelations = await this.prisma.$queryRaw<PageNodeRelation[]>`
       SELECT * FROM "page_node_relations"
-      WHERE "page_id" = ${canvasEntityRelation.entityId}
+      WHERE "page_id" = ${page.page_id}
       AND "deleted_at" IS NULL
       ORDER BY "order_index" ASC
     `;
 
-    return { page: page[0], nodeRelations };
+    return { page, nodeRelations };
   }
 
   /**
@@ -525,39 +516,35 @@ export class PagesService {
         throw new Error('Canvas not found or access denied');
       }
 
-      // Find canvas-page relation
-      const canvasEntityRelation = await tx.canvasEntityRelation.findFirst({
-        where: {
-          canvasId,
-          entityType: 'page',
-          deletedAt: null,
-        },
-      });
+      // Find page associated with canvas using canvas_id field
+      // Ensure we only get one page (the most recent one)
+      const [existingPage] = await tx.$queryRaw<Page[]>`
+        SELECT * FROM "pages"
+        WHERE "canvas_id" = ${canvasId}
+        AND "uid" = ${user.uid}
+        AND "deleted_at" IS NULL
+        ORDER BY "updated_at" DESC
+        LIMIT 1
+      `;
 
       let page: Page;
 
-      // Add lock to prevent concurrent issues
-      if (canvasEntityRelation) {
-        // Add lock to relation record to ensure it's not modified during transaction
-        await tx.$executeRaw`
-          SELECT * FROM "canvas_entity_relations"
-          WHERE "canvas_id" = ${canvasId}
-          AND "entity_type" = 'page'
-          AND "deleted_at" IS NULL
-          FOR UPDATE
-        `;
-      }
-
       // If no page exists, create a new one
-      if (!canvasEntityRelation) {
+      if (!existingPage) {
         // Generate pageId
         const pageId = genPageId();
         const stateStorageKey = `pages/${user.uid}/${pageId}/state.update`;
 
-        // Create new Page record
+        // Create new Page record with canvas_id
         await tx.$executeRaw`
-          INSERT INTO "pages" ("page_id", "uid", "title", "state_storage_key", "status", "created_at", "updated_at")
-          VALUES (${pageId}, ${user.uid}, ${canvas.title || 'Untitled Page'}, ${stateStorageKey}, 'draft', NOW(), NOW())
+          INSERT INTO "pages" (
+            "page_id", "uid", "title", "state_storage_key", "status", 
+            "canvas_id", "created_at", "updated_at"
+          )
+          VALUES (
+            ${pageId}, ${user.uid}, ${canvas.title || 'Untitled Page'}, 
+            ${stateStorageKey}, 'draft', ${canvasId}, NOW(), NOW()
+          )
         `;
 
         // Get the newly created page
@@ -567,12 +554,6 @@ export class PagesService {
         `;
 
         page = createdPage;
-
-        // Create canvas-page relation
-        await tx.$executeRaw`
-          INSERT INTO "canvas_entity_relations" ("canvas_id", "entity_id", "entity_type", "is_public", "created_at")
-          VALUES (${canvasId}, ${pageId}, 'page', false, NOW())
-        `;
 
         // Create initial Y.doc to store page state
         const doc = new Y.Doc();
@@ -586,105 +567,7 @@ export class PagesService {
         const state = Y.encodeStateAsUpdate(doc);
         await this.minio.client.putObject(stateStorageKey, Buffer.from(state));
       } else {
-        // Get existing page
-        const [existingPage] = await tx.$queryRaw<Page[]>`
-          SELECT * FROM "pages"
-          WHERE "page_id" = ${canvasEntityRelation.entityId}
-          AND "deleted_at" IS NULL
-        `;
-
-        if (!existingPage) {
-          // If associated page not found, create a new one instead of throwing error
-          this.logger.warn(`Associated page not found for canvas ${canvasId}, creating a new one`);
-
-          // Get canvas info to set page title
-          const pageId = genPageId();
-          const stateStorageKey = `pages/${user.uid}/${pageId}/state.update`;
-
-          // Create new Page record
-          await tx.$executeRaw`
-            INSERT INTO "pages" ("page_id", "uid", "title", "state_storage_key", "status", "created_at", "updated_at")
-            VALUES (${pageId}, ${user.uid}, ${canvas.title || 'Untitled Page'}, ${stateStorageKey}, 'draft', NOW(), NOW())
-          `;
-
-          // Get the newly created page
-          const [createdPage] = await tx.$queryRaw<Page[]>`
-            SELECT * FROM "pages"
-            WHERE "page_id" = ${pageId}
-          `;
-
-          page = createdPage;
-
-          // Update canvas-page relation
-          const updateResult = await tx.$executeRaw`
-            UPDATE "canvas_entity_relations" 
-            SET "entity_id" = ${pageId}
-            WHERE "canvas_id" = ${canvasId} 
-            AND "entity_type" = 'page'
-            AND "entity_id" = ${canvasEntityRelation.entityId}
-          `;
-
-          // Check if update was successful
-          if (updateResult === 0) {
-            this.logger.warn(
-              `Failed to update canvas-page relation for canvas ${canvasId}, relation may have been modified`,
-            );
-
-            // Query relation again to confirm current state
-            const currentRelation = await tx.canvasEntityRelation.findFirst({
-              where: {
-                canvasId,
-                entityType: 'page',
-                deletedAt: null,
-              },
-            });
-
-            if (currentRelation && currentRelation.entityId !== pageId) {
-              // Relation has been updated by another transaction, use current related page
-              const [currentPage] = await tx.$queryRaw<Page[]>`
-                SELECT * FROM "pages"
-                WHERE "page_id" = ${currentRelation.entityId}
-                AND "deleted_at" IS NULL
-              `;
-
-              if (currentPage) {
-                // Use existing page, abandon newly created page
-                this.logger.warn(
-                  `Using existing page ${currentRelation.entityId} instead of newly created page ${pageId}`,
-                );
-                page = currentPage;
-              } else {
-                // Even if current related page doesn't exist, use our newly created page
-                // Try to update relation again
-                await tx.$executeRaw`
-                  UPDATE "canvas_entity_relations" 
-                  SET "entity_id" = ${pageId}
-                  WHERE "canvas_id" = ${canvasId} 
-                  AND "entity_type" = 'page'
-                `;
-              }
-            }
-          }
-
-          // Create initial Y.doc to store page state
-          const doc = new Y.Doc();
-          doc.transact(() => {
-            doc.getText('title').insert(0, page.title);
-            doc.getMap('pageConfig').set('layout', 'slides');
-            doc.getMap('pageConfig').set('theme', 'default');
-          });
-
-          // Upload Y.doc - Convert Y.Doc to Uint8Array, then to Buffer
-          const state = Y.encodeStateAsUpdate(doc);
-          await this.minio.client.putObject(stateStorageKey, Buffer.from(state));
-        } else {
-          // Check ownership
-          if (existingPage.uid !== user.uid) {
-            throw new Error('You do not have permission to modify this page');
-          }
-
-          page = existingPage;
-        }
+        page = existingPage;
       }
 
       // Get raw Canvas data, including node information
