@@ -31,6 +31,7 @@ import PreviewMode from './components/PreviewMode';
 import { usePreviewUI } from './hooks/usePreviewUI';
 import { useSlideshow } from './hooks/useSlideshow';
 import { getNodeTitle } from './utils/nodeUtils';
+import { slideshowEmitter } from '@refly-packages/ai-workspace-common/events/slideshow';
 
 interface PageDetailType {
   title: string;
@@ -124,6 +125,7 @@ export function SlideshowEdit(props: PageEditProps) {
     data: pageDetailResponse,
     isLoading: isLoadingPage,
     error: pageLoadError,
+    refetch: refetchPageDetail,
   } = useGetPageDetail({ path: { pageId: pageId || '' } }, undefined, {
     enabled: !!pageId,
   });
@@ -306,6 +308,27 @@ export function SlideshowEdit(props: PageEditProps) {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [wideMode.isActive, handleCloseWideMode]);
+
+  useEffect(() => {
+    const handleUpdate = (data: { canvasId: string; pageId: string; entityId: string }) => {
+      if (data.pageId === pageId) {
+        refetchPageDetail().then(() => {
+          // After refetching, scroll to the interacted node
+          const index = nodes.findIndex((node) => node.entityId === data.entityId);
+          setTimeout(() => {
+            const lastNodeElement = document.querySelector(`[id^="content-block-${index}"]`);
+            lastNodeElement?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+          }, 100);
+        });
+      }
+    };
+
+    slideshowEmitter.on('update', handleUpdate);
+
+    return () => {
+      slideshowEmitter.off('update', handleUpdate);
+    };
+  }, [pageId, refetchPageDetail]);
 
   // Handle sharing a page
   const handleShare = useCallback(() => {

@@ -121,7 +121,7 @@ export const NodeActionMenu: FC<NodeActionMenuProps> = ({
             setShowSlideshow(true);
           }
           setCanvasPage(canvasId, pageId);
-          slideshowEmitter.emit('update', { canvasId, pageId });
+          slideshowEmitter.emit('update', { canvasId, pageId, entityId: nodeData?.entityId });
         }
         onClose?.();
       },

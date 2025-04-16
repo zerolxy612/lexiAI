@@ -4,6 +4,7 @@ type Events = {
   update: {
     canvasId: string;
     pageId: string;
+    entityId: string;
   };
 };
 
