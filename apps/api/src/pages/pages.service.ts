@@ -17,6 +17,7 @@ import {
   UpdatePageResult,
   SharePageResult,
   DeletePageResult,
+  DeletePageNodeResult,
   Page,
   PageNodeRelation,
 } from './pages.dto';
@@ -359,6 +360,7 @@ export class PagesService {
 
     return {
       pageId,
+      canvasId: page.canvas_id,
       shareId: shareRecord.shareId,
       shareUrl: `${process.env.FRONTEND_URL || 'https://refly.ai'}/share/pages/${shareRecord.shareId}`,
     };
@@ -369,7 +371,7 @@ export class PagesService {
     user: User | ResolveUserResponse,
     pageId: string,
     nodeId: string,
-  ): Promise<{ pageId: string; nodeId: string }> {
+  ): Promise<DeletePageNodeResult> {
     const { uid } = user as User;
 
     // Check if page exists
@@ -401,6 +403,7 @@ export class PagesService {
 
     return {
       pageId,
+      canvasId: page[0]?.canvas_id,
       nodeId,
     };
   }
@@ -436,6 +439,7 @@ export class PagesService {
 
     return {
       pageId,
+      canvasId: page.canvas_id,
     };
   }
 

@@ -18,7 +18,6 @@ import {
   PlayCircleOutlined,
   CloseCircleOutlined,
   FileTextOutlined,
-  PlusOutlined,
 } from '@ant-design/icons';
 import { useSiderStoreShallow } from '@refly-packages/ai-workspace-common/stores/sider';
 import { NodeRenderer } from './components/NodeRenderer';
@@ -32,6 +31,7 @@ import { usePreviewUI } from './hooks/usePreviewUI';
 import { useSlideshow } from './hooks/useSlideshow';
 import { getNodeTitle } from './utils/nodeUtils';
 import { slideshowEmitter } from '@refly-packages/ai-workspace-common/events/slideshow';
+import EmptyContentPrompt from './components/EmptyContentPrompt';
 
 interface PageDetailType {
   title: string;
@@ -419,7 +419,7 @@ export function SlideshowEdit(props: PageEditProps) {
           <FileTextOutlined className="text-4xl text-red-500 mb-4" />
           <p className="text-lg text-gray-700 mb-2">{t('common.loadFailed')}</p>
           <p className="text-sm text-gray-500 mb-4">{t('common.loadFailedDesc')}</p>
-          <Button type="primary" onClick={() => navigate('/pages/list')}>
+          <Button type="primary" onClick={() => navigate('/pages')}>
             {t('common.returnToList')}
           </Button>
         </div>
@@ -432,7 +432,7 @@ export function SlideshowEdit(props: PageEditProps) {
           <FileTextOutlined className="text-4xl text-gray-400 mb-4" />
           <p className="text-lg text-gray-700 mb-2">{t('common.noPage')}</p>
           <p className="text-sm text-gray-500 mb-4">{t('common.noPageDesc')}</p>
-          <Button type="primary" onClick={() => navigate('/pages/list')}>
+          <Button type="primary" onClick={() => navigate('/pages')}>
             {t('common.returnToList')}
           </Button>
         </div>
@@ -485,18 +485,7 @@ export function SlideshowEdit(props: PageEditProps) {
             ))}
           </div>
         ) : (
-          <div className="text-center py-16 bg-white rounded-lg border border-dashed border-gray-300 shadow-sm">
-            <FileTextOutlined className="text-5xl text-gray-300 mb-4" />
-            <h3 className="text-xl text-gray-500 mb-2">{t('common.noContent')}</h3>
-            <p className="text-gray-400 mb-6">{t('common.noContentDesc')}</p>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => message.info(t('common.addContentInfo'))}
-            >
-              {t('common.addContent')}
-            </Button>
-          </div>
+          <EmptyContentPrompt pageId={pageId} onNodeAdded={() => refetchPageDetail()} />
         )}
       </div>
     );

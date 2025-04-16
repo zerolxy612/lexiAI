@@ -85,6 +85,7 @@ export class PagesController {
 
     return buildSuccessResponse({
       pageId: result.pageId,
+      canvasId: result.canvasId,
       shareId: result.shareId,
       shareUrl: result.shareUrl,
     });
@@ -103,6 +104,7 @@ export class PagesController {
 
     return buildSuccessResponse({
       pageId: result.pageId,
+      canvasId: result.canvasId,
       nodeId: result.nodeId,
     });
   }
@@ -150,6 +152,7 @@ export class PagesController {
 
     return buildSuccessResponse({
       pageId: result.pageId,
+      canvasId: result.canvasId,
     });
   }
 }

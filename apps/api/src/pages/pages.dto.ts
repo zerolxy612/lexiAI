@@ -21,6 +21,7 @@ export interface Page {
   state_storage_key: string;
   cover_storage_key: string | null;
   status: string;
+  canvas_id?: string;
   created_at: Date;
   updated_at: Date;
   deletedAt: Date | null;
@@ -43,12 +44,20 @@ export interface UpdatePageResult {
 
 export interface SharePageResult {
   pageId: string;
+  canvasId?: string;
   shareId: string;
   shareUrl: string;
 }
 
+export interface DeletePageNodeResult {
+  pageId: string;
+  canvasId?: string;
+  nodeId: string;
+}
+
 export interface DeletePageResult {
   pageId: string;
+  canvasId?: string;
 }
 
 export interface UpdatePageDto {
@@ -89,6 +98,7 @@ export const pagePO2DTO = (page: any) => {
     title: page.title,
     description: page.description,
     status: page.status,
+    canvasId: page.canvas_id,
     coverUrl: page.cover_storage_key
       ? `/api/v1/misc/file?key=${page.cover_storage_key}`
       : undefined,

@@ -36,6 +36,152 @@ tags:
   - name: misc
     description: Miscellaneous endpoints
 paths:
+  /pages:
+    get:
+      tags:
+        - pages
+      summary: List user pages
+      description: List all pages for a user
+      operationId: listPages
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: number
+            default: 1
+        - name: pageSize
+          in: query
+          description: Page size
+          schema:
+            type: number
+            default: 20
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListPagesResponse'
+
+  /pages/{pageId}:
+    get:
+      tags:
+        - pages
+      summary: Get page detail
+      description: Get detail of a specific page
+      operationId: getPageDetail
+      parameters:
+        - name: pageId
+          in: path
+          required: true
+          description: Page ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageDetailResponse'
+    put:
+      tags:
+        - pages
+      summary: Update a page
+      description: Update a specific page
+      operationId: updatePage
+      parameters:
+        - name: pageId
+          in: path
+          required: true
+          description: Page ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePageRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdatePageResponse'
+    delete:
+      tags:
+        - pages
+      summary: Delete a page
+      description: Delete a specific page
+      operationId: deletePage
+      parameters:
+        - name: pageId
+          in: path
+          required: true
+          description: Page ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletePageResponse'
+
+  /pages/{pageId}/share:
+    post:
+      tags:
+        - pages
+      summary: Share a page
+      description: Create a share link for a specific page
+      operationId: sharePage
+      parameters:
+        - name: pageId
+          in: path
+          required: true
+          description: Page ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SharePageResponse'
+
+  /pages/{pageId}/nodes/{nodeId}:
+    delete:
+      tags:
+        - pages
+      summary: Delete a node from a page
+      description: Remove a specific node from a page
+      operationId: deletePageNode
+      parameters:
+        - name: pageId
+          in: path
+          required: true
+          description: Page ID
+          schema:
+            type: string
+        - name: nodeId
+          in: path
+          required: true
+          description: Node ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletePageNodeResponse'
+
   /pages/canvas/{canvasId}:
     get:
       tags:
@@ -85,241 +231,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AddPageNodesResponse'
-  /pages/{pageId}/nodes/{nodeId}:
-    delete:
-      summary: Delete a node from a page
-      description: Removes a node from the specified page
-      operationId: deletePageNode
-      tags:
-        - Pages
-      parameters:
-        - name: pageId
-          in: path
-          description: ID of the page
-          required: true
-          schema:
-            type: string
-        - name: nodeId
-          in: path
-          description: ID of the node to delete
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Node successfully deleted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DeletePageResponse'
-  /pages:
-    get:
-      tags:
-        - pages
-      summary: List user pages
-      description: List all pages for a user
-      operationId: listPages
-      parameters:
-        - name: page
-          in: query
-          description: Page number
-          schema:
-            type: number
-            default: 1
-        - name: pageSize
-          in: query
-          description: Page size
-          schema:
-            type: number
-            default: 20
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ListPagesResponse'
-    post:
-      tags:
-        - pages
-      summary: Create a new page
-      description: Create a new page for a user
-      operationId: createPage
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreatePageRequest'
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CreatePageResponse'
-  
-  /pages/{pageId}:
-    get:
-      tags:
-        - pages
-      summary: Get page detail
-      description: Get detail of a specific page
-      operationId: getPageDetail
-      parameters:
-        - name: pageId
-          in: path
-          required: true
-          description: Page ID
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PageDetailResponse'
-    put:
-      tags:
-        - pages
-      summary: Update a page
-      description: Update information of a specific page
-      operationId: updatePage
-      parameters:
-        - name: pageId
-          in: path
-          required: true
-          description: Page ID
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdatePageRequest'
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UpdatePageResponse'
-    delete:
-      tags:
-        - pages
-      summary: Delete a page
-      description: Delete a specific page
-      operationId: deletePage
-      parameters:
-        - name: pageId
-          in: path
-          required: true
-          description: Page ID
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DeletePageResponse'
 
-  /pages/{pageId}/publish:
-    post:
-      tags:
-        - pages
-      summary: Publish a page
-      description: Publish a specific page
-      operationId: publishPage
-      parameters:
-        - name: pageId
-          in: path
-          required: true
-          description: Page ID
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PublishPageResponse'
 
-  /pages/{pageId}/share:
-    post:
-      tags:
-        - pages
-      summary: Share a page
-      description: Create a share link for a specific page
-      operationId: sharePage
-      parameters:
-        - name: pageId
-          in: path
-          required: true
-          description: Page ID
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SharePageResponse'
-
-  /pages/{pageId}/versions:
-    get:
-      tags:
-        - pages
-      summary: Get page versions
-      description: Get all versions of a specific page
-      operationId: getPageVersions
-      parameters:
-        - name: pageId
-          in: path
-          required: true
-          description: Page ID
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PageVersionsResponse'
-
-  /pages/{pageId}/versions/{versionId}:
-    get:
-      tags:
-        - pages
-      summary: Get specific page version
-      description: Get a specific version of a page
-      operationId: getPageVersion
-      parameters:
-        - name: pageId
-          in: path
-          required: true
-          description: Page ID
-          schema:
-            type: string
-        - name: versionId
-          in: path
-          required: true
-          description: Version ID
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PageVersionResponse'
   /auth/config:
     get:
       tags:
@@ -2334,81 +2247,7 @@ paths:
 
 components:
   schemas:
-    PageNodeRelation:
-      type: object
-      required:
-        - relationId
-        - pageId
-        - nodeId
-        - nodeType
-      properties:
-        relationId:
-          type: string
-          description: Relation ID
-        pageId:
-          type: string
-          description: Page ID
-        nodeId:
-          type: string
-          description: Node ID
-        nodeType:
-          type: string
-          description: Node type
-        entityId:
-          type: string
-          description: Entity ID
-        orderIndex:
-          type: integer
-          description: Order index
-        nodeData:
-          type: object
-          description: Node data
-          additionalProperties: true
 
-    AddPageNodesRequest:
-      type: object
-      required:
-        - nodeIds
-      properties:
-        nodeIds:
-          type: array
-          description: List of node IDs to add to the page
-          items:
-            type: string
-
-    CanvasPageResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-        - type: object
-          properties:
-            data:
-              type: object
-              properties:
-                page:
-                  type: object
-                  nullable: true
-                  $ref: '#/components/schemas/Page'
-                nodeRelations:
-                  type: array
-                  description: List of node relations
-                  items:
-                    $ref: '#/components/schemas/PageNodeRelation'
-
-    AddPageNodesResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-        - type: object
-          properties:
-            data:
-              type: object
-              properties:
-                page:
-                  $ref: '#/components/schemas/Page'
-                nodeRelations:
-                  type: array
-                  description: List of node relations
-                  items:
-                    $ref: '#/components/schemas/PageNodeRelation'
     Page:
       type: object
       required:
@@ -2434,6 +2273,10 @@ components:
           enum:
             - draft
             - published
+        canvasId:
+          type: string
+          description: Canvas ID associated with this page
+          example: cv-g30e1b80b5g1itbemc0g5jj3
         coverUrl:
           type: string
           description: Page cover URL
@@ -2446,53 +2289,51 @@ components:
           format: date-time
           description: Page last update time
 
+    PageNodeRelation:
+      type: object
+      required:
+        - relationId
+        - nodeId
+        - nodeType
+        - entityId
+        - orderIndex
+      properties:
+        relationId:
+          type: string
+          description: Relation ID
+        pageId:
+          type: string
+          description: Page ID
+        nodeId:
+          type: string
+          description: Node ID
+        nodeType:
+          type: string
+          description: Node type
+        entityId:
+          type: string
+          description: Entity ID
+        orderIndex:
+          type: integer
+          description: Order index
+        nodeData:
+          type: object
+          description: Node data
+
     PageDetail:
       type: object
       allOf:
         - $ref: '#/components/schemas/Page'
         - type: object
           properties:
-            content:
+            nodeRelations:
+              type: array
+              description: List of node relations
+              items:
+                $ref: '#/components/schemas/PageNodeRelation'
+            pageConfig:
               type: object
-              description: Page content
-            stateData:
-              type: object
-              description: Page state data
-
-    PageVersion:
-      type: object
-      required:
-        - versionId
-        - createdAt
-      properties:
-        versionId:
-          type: string
-          description: Version ID
-        description:
-          type: string
-          description: Version description
-        createdAt:
-          type: string
-          format: date-time
-          description: Version creation time
-
-    CreatePageRequest:
-      type: object
-      required:
-        - title
-      properties:
-        title:
-          type: string
-          description: Page title
-        description:
-          type: string
-          description: Page description
-        content:
-          type: object
-          description: Page initial content
-        coverData:
-          type: string
-          description: Base64 encoded cover image
+              description: Page configuration
 
     UpdatePageRequest:
       type: object
@@ -2503,58 +2344,18 @@ components:
         description:
           type: string
           description: Page description
-        content:
-          type: object
-          description: Page content
-        coverData:
-          type: string
-          description: Base64 encoded cover image
-
-    ListPagesResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-        - type: object
-          properties:
-            data:
-              type: object
-              required:
-                - pages
-                - total
-                - page
-                - pageSize
-              properties:
-                pages:
-                  type: array
-                  description: Pages list
-                  items:
-                    $ref: '#/components/schemas/Page'
-                total:
-                  type: number
-                  description: Total number of pages
-                page:
-                  type: number
-                  description: Current page number
-                pageSize:
-                  type: number
-                  description: Page size
-
-    CreatePageResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-        - type: object
-          properties:
-            data:
-              description: Created page
-              $ref: '#/components/schemas/Page'
-
-    PageDetailResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-        - type: object
-          properties:
-            data:
-              description: Page detail
-              $ref: '#/components/schemas/PageDetail'
+        nodeRelations:
+          type: array
+          description: List of node relations with updated order
+          items:
+            type: object
+            properties:
+              nodeId:
+                type: string
+                description: Node ID
+              orderIndex:
+                type: integer
+                description: New order index
 
     UpdatePageResponse:
       allOf:
@@ -2562,19 +2363,17 @@ components:
         - type: object
           properties:
             data:
-              description: Updated page
-              $ref: '#/components/schemas/Page'
+              allOf:
+                - $ref: '#/components/schemas/Page'
+                - type: object
+                  properties:
+                    nodeRelations:
+                      type: array
+                      description: List of node relations
+                      items:
+                        $ref: '#/components/schemas/PageNodeRelation'
 
     DeletePageResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-        - type: object
-          properties:
-            data:
-              type: object
-              description: Empty object
-
-    PublishPageResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
         - type: object
@@ -2584,10 +2383,10 @@ components:
               properties:
                 pageId:
                   type: string
-                  description: Page ID
-                versionId:
+                  description: ID of the deleted page
+                canvasId:
                   type: string
-                  description: Published version ID
+                  description: Canvas ID associated with the deleted page
 
     SharePageResponse:
       allOf:
@@ -2600,6 +2399,9 @@ components:
                 pageId:
                   type: string
                   description: Page ID
+                canvasId:
+                  type: string
+                  description: Canvas ID associated with the page
                 shareId:
                   type: string
                   description: Share ID
@@ -2607,25 +2409,92 @@ components:
                   type: string
                   description: Share URL
 
-    PageVersionResponse:
+    DeletePageNodeResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
         - type: object
           properties:
             data:
-              description: Page version detail
+              type: object
+              properties:
+                pageId:
+                  type: string
+                  description: Page ID
+                canvasId:
+                  type: string
+                  description: Canvas ID associated with the page
+                nodeId:
+                  type: string
+                  description: ID of the deleted node
+
+    ListPagesResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                total:
+                  type: integer
+                  description: Total number of pages
+                pages:
+                  type: array
+                  description: List of pages
+                  items:
+                    $ref: '#/components/schemas/Page'
+
+    PageDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
               $ref: '#/components/schemas/PageDetail'
 
-    PageVersionsResponse:
+    AddPageNodesRequest:
+      type: object
+      required:
+        - nodeIds
+      properties:
+        nodeIds:
+          type: array
+          description: List of node IDs to add to the page
+          items:
+            type: string
+
+    AddPageNodesResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
         - type: object
           properties:
             data:
-              type: array
-              description: Page versions list
-              items:
-                $ref: '#/components/schemas/PageVersion' 
+              type: object
+              properties:
+                page:
+                  $ref: '#/components/schemas/Page'
+                nodeRelations:
+                  type: array
+                  description: List of node relations
+                  items:
+                    $ref: '#/components/schemas/PageNodeRelation'
+
+    CanvasPageResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                page:
+                  $ref: '#/components/schemas/Page'
+                nodeRelations:
+                  type: array
+                  description: List of node relations
+                  items:
+                    $ref: '#/components/schemas/PageNodeRelation'
+
     User:
       type: object
       description: Refly user, used as JWT payload
