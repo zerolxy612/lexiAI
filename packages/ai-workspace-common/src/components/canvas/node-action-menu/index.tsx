@@ -46,8 +46,7 @@ import { HoverCard, HoverContent } from '@refly-packages/ai-workspace-common/com
 import { useHoverCard } from '@refly-packages/ai-workspace-common/hooks/use-hover-card';
 import { useNodePreviewControl } from '@refly-packages/ai-workspace-common/hooks/canvas';
 import { useGetNodeContent } from '@refly-packages/ai-workspace-common/hooks/canvas/use-get-node-content';
-import { useAddNodesToCanvasPage } from '@refly-packages/ai-workspace-common/queries/queries';
-import { slideshowEmitter } from '@refly-packages/ai-workspace-common/events/slideshow';
+import { useAddNodeToSlide } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-node-to-slide';
 
 interface MenuItem {
   key?: string;
@@ -73,6 +72,15 @@ interface NodeActionMenuProps {
   onHoverCardStateChange?: (isHovered: boolean) => void;
 }
 
+const getChildNodes = (id: string, nodes: CanvasNode[]) => {
+  const childNodes = nodes.filter((node) => {
+    const isInGroup = node.parentId === id;
+    return isInGroup && !['skill', 'group'].includes(node.type);
+  }) as CanvasNode[];
+
+  return childNodes;
+};
+
 export const NodeActionMenu: FC<NodeActionMenuProps> = ({
   nodeId,
   nodeType,
@@ -81,17 +89,12 @@ export const NodeActionMenu: FC<NodeActionMenuProps> = ({
   onHoverCardStateChange,
 }) => {
   const { t } = useTranslation();
-  const { getNode } = useReactFlow();
+  const { getNode, getNodes } = useReactFlow();
   const { canvasId } = useCanvasContext();
   const { setNodeSizeMode } = useNodeOperations();
-  const { setShowPreview, showSlideshow, setShowSlideshow, setCanvasPage } = useCanvasStoreShallow(
-    (state) => ({
-      setShowPreview: state.setShowPreview,
-      showSlideshow: state.showSlideshow,
-      setShowSlideshow: state.setShowSlideshow,
-      setCanvasPage: state.setCanvasPage,
-    }),
-  );
+  const { setShowPreview } = useCanvasStoreShallow((state) => ({
+    setShowPreview: state.setShowPreview,
+  }));
   const { previewNode } = useNodePreviewControl({ canvasId });
 
   const { activeDocumentId } = useDocumentStoreShallow((state) => ({
@@ -99,11 +102,19 @@ export const NodeActionMenu: FC<NodeActionMenuProps> = ({
   }));
 
   const node = useMemo(() => getNode(nodeId) as CanvasNode, [nodeId, getNode]);
+  const nodes = useMemo(() => getNodes(), [getNodes]);
   const nodeData = useMemo(() => node?.data, [node]);
   const { fetchNodeContent } = useGetNodeContent(node);
   const [localSizeMode, setLocalSizeMode] = useState(
     () => nodeData?.metadata?.sizeMode || 'adaptive',
   );
+
+  const nodesForSlide = useMemo(() => {
+    if (nodeType === 'group') {
+      return getChildNodes(nodeId, nodes as CanvasNode[]);
+    }
+    return [node];
+  }, [nodeType, nodes]);
 
   const [isCreatingDocument, setIsCreatingDocument] = useState(false);
   const [cloneAskAIRunning, setCloneAskAIRunning] = useState(false);
@@ -111,25 +122,13 @@ export const NodeActionMenu: FC<NodeActionMenuProps> = ({
   const [beforeInserting, setBeforeInserting] = useState(false);
   const [beforeDuplicatingDocument, setBeforeDuplicatingDocument] = useState(false);
 
-  const { mutate: addNodesToCanvasPage, isPending: isAddingNodesToCanvasPage } =
-    useAddNodesToCanvasPage(undefined, {
-      onSuccess: (response: any) => {
-        const pageId = response?.data?.data?.page?.pageId;
-        if (pageId) {
-          message.success(t('common.putSuccess'));
-          if (!showSlideshow) {
-            setShowSlideshow(true);
-          }
-          setCanvasPage(canvasId, pageId);
-          slideshowEmitter.emit('update', { canvasId, pageId, entityId: nodeData?.entityId });
-        }
-        onClose?.();
-      },
-      onError: (error) => {
-        console.error('Failed to add nodes to canvas page:', error);
-        message.error(t('common.putFailed'));
-      },
-    });
+  const { addNodesToSlide, isAddingNodesToSlide } = useAddNodeToSlide({
+    canvasId,
+    nodes: nodesForSlide,
+    onSuccess: () => {
+      onClose?.();
+    },
+  });
 
   useEffect(() => {
     setLocalSizeMode(nodeData?.metadata?.sizeMode || 'adaptive');
@@ -334,6 +333,11 @@ export const NodeActionMenu: FC<NodeActionMenuProps> = ({
     onClose?.();
   }, [nodeId, fetchNodeContent, onClose]);
 
+  const handleAddToSlideshow = useCallback(() => {
+    addNodesToSlide();
+    onClose?.();
+  }, [nodeData?.entityId, canvasId, addNodesToSlide, onClose, nodeType]);
+
   const getMenuItems = useCallback(
     (activeDocumentId: string): MenuItem[] => {
       if (isMultiSelection) {
@@ -452,16 +456,11 @@ export const NodeActionMenu: FC<NodeActionMenuProps> = ({
           },
         },
         {
-          key: 'createSlideshow',
+          key: 'addToSlideshow',
           icon: IconSlideshow,
           label: t('canvas.nodeActions.addToSlideshow'),
-          onClick: () => {
-            addNodesToCanvasPage({
-              path: { canvasId },
-              body: { nodeIds: [nodeData?.entityId] },
-            });
-          },
-          loading: isAddingNodesToCanvasPage,
+          onClick: handleAddToSlideshow,
+          loading: isAddingNodesToSlide,
         },
       ];
 
@@ -814,7 +813,7 @@ export const NodeActionMenu: FC<NodeActionMenuProps> = ({
       handleUngroup,
       isMultiSelection,
       handleDuplicateDocument,
-      addNodesToCanvasPage,
+      handleAddToSlideshow,
     ],
   );
 
