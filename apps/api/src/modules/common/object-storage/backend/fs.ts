@@ -35,7 +35,7 @@ export class FsStorageBackend implements ObjectStorageBackend {
       this.initialized = true;
       this.logger.log(`FS storage backend initialized at ${this.baseDir}`);
     } catch (error) {
-      this.logger.error('Failed to initialize FS storage backend', error);
+      this.logger.error(`Failed to initialize FS storage backend: ${error}`);
       throw error;
     }
   }

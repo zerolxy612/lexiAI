@@ -16,7 +16,6 @@ export interface MinioConfig {
 export class MinioStorageBackend implements ObjectStorageBackend {
   private readonly logger = new Logger(MinioStorageBackend.name);
   private client: Client;
-  private bucket: string;
   private initialized = false;
 
   constructor(private readonly config: MinioConfig) {}
@@ -39,7 +38,7 @@ export class MinioStorageBackend implements ObjectStorageBackend {
     });
 
     try {
-      const bucketExists = await this.client.bucketExists(this.bucket);
+      const bucketExists = await this.client.bucketExists(this.config.bucket);
 
       if (!bucketExists) {
         await this.client.makeBucket(this.config.bucket);
@@ -49,14 +48,14 @@ export class MinioStorageBackend implements ObjectStorageBackend {
       this.initialized = true;
       this.logger.log('Minio storage backend initialized');
     } catch (error) {
-      this.logger.error('Failed to initialize Minio storage backend', error);
+      this.logger.error(`Failed to initialize Minio storage backend: ${error}`);
       throw error;
     }
   }
 
   async getObject(key: string): Promise<Readable | null> {
     try {
-      return await this.client.getObject(this.bucket, key);
+      return await this.client.getObject(this.config.bucket, key);
     } catch (error) {
       if (error?.code === 'NoSuchKey') {
         return null;
@@ -68,7 +67,7 @@ export class MinioStorageBackend implements ObjectStorageBackend {
 
   async presignedGetObject(key: string, expiresIn: number): Promise<string | null> {
     try {
-      return await this.client.presignedGetObject(this.bucket, key, expiresIn);
+      return await this.client.presignedGetObject(this.config.bucket, key, expiresIn);
     } catch (error) {
       this.logger.error(`Failed to get presigned URL for object with key ${key}`, error);
       throw error;
@@ -81,9 +80,9 @@ export class MinioStorageBackend implements ObjectStorageBackend {
     metaData?: Record<string, string>,
   ): Promise<ObjectInfo> {
     try {
-      await this.client.putObject(this.bucket, key, stream, metaData);
+      await this.client.putObject(this.config.bucket, key, stream, metaData);
 
-      const stat = await this.client.statObject(this.bucket, key);
+      const stat = await this.client.statObject(this.config.bucket, key);
       return {
         size: stat.size,
         lastModified: stat.lastModified,
@@ -99,7 +98,7 @@ export class MinioStorageBackend implements ObjectStorageBackend {
     try {
       // Check if object exists before trying to remove
       try {
-        await this.client.statObject(this.bucket, key);
+        await this.client.statObject(this.config.bucket, key);
       } catch (error) {
         if (error?.code === 'NoSuchKey') {
           return false;
@@ -107,7 +106,7 @@ export class MinioStorageBackend implements ObjectStorageBackend {
         throw error;
       }
 
-      await this.client.removeObject(this.bucket, key);
+      await this.client.removeObject(this.config.bucket, key);
       return true;
     } catch (error) {
       this.logger.error(`Failed to remove object with key ${key}`, error);
@@ -117,7 +116,7 @@ export class MinioStorageBackend implements ObjectStorageBackend {
 
   async removeObjects(keys: string[]): Promise<boolean> {
     try {
-      await this.client.removeObjects(this.bucket, keys);
+      await this.client.removeObjects(this.config.bucket, keys);
       return true;
     } catch (error) {
       this.logger.error(`Failed to remove objects with keys ${keys}`, error);
@@ -127,7 +126,7 @@ export class MinioStorageBackend implements ObjectStorageBackend {
 
   async statObject(key: string): Promise<ObjectInfo | null> {
     try {
-      return await this.client.statObject(this.bucket, key);
+      return await this.client.statObject(this.config.bucket, key);
     } catch (error) {
       if (error?.code === 'NoSuchKey') {
         return null;
@@ -140,7 +139,7 @@ export class MinioStorageBackend implements ObjectStorageBackend {
 
   async duplicateFile(sourceKey: string, targetKey: string): Promise<ObjectInfo | null> {
     try {
-      const sourceStream = await this.client.getObject(this.bucket, sourceKey);
+      const sourceStream = await this.client.getObject(this.config.bucket, sourceKey);
 
       // Check if we got an empty stream from a non-existent object
       if (sourceStream instanceof Readable) {
@@ -159,14 +158,14 @@ export class MinioStorageBackend implements ObjectStorageBackend {
         }
 
         // If we have content, create a new stream from the buffer and upload it
-        await this.client.putObject(this.bucket, targetKey, Readable.from(buffer));
+        await this.client.putObject(this.config.bucket, targetKey, Readable.from(buffer));
       } else {
         // Normal case - put the stream directly
-        await this.client.putObject(this.bucket, targetKey, sourceStream);
+        await this.client.putObject(this.config.bucket, targetKey, sourceStream);
       }
 
       // Get the new object's info
-      const stat = await this.client.statObject(this.bucket, targetKey);
+      const stat = await this.client.statObject(this.config.bucket, targetKey);
       return {
         size: stat.size,
         lastModified: stat.lastModified,

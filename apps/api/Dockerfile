@@ -26,4 +26,4 @@ RUN pnpm install
 RUN pnpm build:api
 
 EXPOSE 3000
-CMD [ "node", "apps/api/dist/main.js" ]
+CMD [ "node", "apps/api/dist/server/main.js" ]
