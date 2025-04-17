@@ -18,6 +18,7 @@ import {
   PlayCircleOutlined,
   CloseCircleOutlined,
   FileTextOutlined,
+  PlusOutlined,
 } from '@ant-design/icons';
 import { useSiderStoreShallow } from '@refly-packages/ai-workspace-common/stores/sider';
 import { NodeRenderer } from './components/NodeRenderer';
@@ -34,9 +35,18 @@ import { slideshowEmitter } from '@refly-packages/ai-workspace-common/events/sli
 import EmptyContentPrompt from './components/EmptyContentPrompt';
 
 interface PageDetailType {
+  pageId: string;
   title: string;
-  description?: string;
-  nodeRelations?: NodeRelation[];
+  description: string | null;
+  status: string;
+  canvasId: string;
+  createdAt: string;
+  updatedAt: string;
+  nodeRelations: NodeRelation[];
+  pageConfig: {
+    layout: string;
+    theme: string;
+  };
 }
 
 interface PageEditProps {
@@ -68,6 +78,9 @@ export function SlideshowEdit(props: PageEditProps) {
   const [shareUrl, setShareUrl] = useState<string>('');
   const [isCopied, setIsCopied] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+
+  // Empty content modal state
+  const [emptyContentModalVisible, setEmptyContentModalVisible] = useState(false);
 
   // Get sidebar state
   const { collapse, setCollapse } = useSiderStoreShallow((state) => ({
@@ -138,6 +151,8 @@ export function SlideshowEdit(props: PageEditProps) {
 
   // Extract page data from response
   const pageDetail = pageDetailResponse?.data as PageDetailType | undefined;
+
+  console.log({ pageDetail });
 
   // Get node data
   const nodes = useMemo<NodeRelation[]>(() => {
@@ -403,6 +418,15 @@ export function SlideshowEdit(props: PageEditProps) {
     setShareModalVisible(false);
   }, []);
 
+  // Handle empty content modal
+  const handleOpenEmptyContentModal = useCallback(() => {
+    setEmptyContentModalVisible(true);
+  }, []);
+
+  const handleCloseEmptyContentModal = useCallback(() => {
+    setEmptyContentModalVisible(false);
+  }, []);
+
   // Render page content
   const renderPageContent = useMemo(() => {
     if (isLoadingPage) {
@@ -485,7 +509,16 @@ export function SlideshowEdit(props: PageEditProps) {
             ))}
           </div>
         ) : (
-          <EmptyContentPrompt pageId={pageId} onNodeAdded={() => refetchPageDetail()} />
+          <div
+            className="flex flex-col items-center justify-center h-[400px] bg-white rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-all shadow-sm hover:shadow-md"
+            onClick={handleOpenEmptyContentModal}
+          >
+            <div className="w-16 h-16 flex items-center justify-center rounded-full bg-gray-50 mb-4">
+              <FileTextOutlined style={{ fontSize: '28px', color: '#bfbfbf' }} />
+            </div>
+            <p className="text-gray-500 font-medium">{t('common.emptyContent', 'No content')}</p>
+            <p className="text-gray-400 text-sm mt-1">{t('common.clickToAdd', 'Click to add')}</p>
+          </div>
         )}
       </div>
     );
@@ -670,6 +703,7 @@ export function SlideshowEdit(props: PageEditProps) {
           maxHeight: 'calc(100vh - 100px)',
           padding: 0,
           overflow: 'hidden',
+          borderRadius: '8px',
         }}
         className="wide-mode-modal"
         closeIcon={<CloseCircleOutlined className="text-gray-500 hover:text-red-500" />}
@@ -696,6 +730,44 @@ export function SlideshowEdit(props: PageEditProps) {
               </div>
             )}
           </div>
+        </div>
+      </Modal>
+
+      {/* Empty Content Modal */}
+      <Modal
+        title={
+          <div className="flex items-center text-lg font-medium">
+            <PlusOutlined className="mr-2 text-blue-500" /> {t('common.addContent', 'Add Content')}
+          </div>
+        }
+        open={emptyContentModalVisible}
+        onCancel={handleCloseEmptyContentModal}
+        footer={null}
+        width={680}
+        bodyStyle={{
+          padding: 0,
+          maxHeight: '75vh',
+          overflow: 'hidden',
+          borderRadius: '0 0 8px 8px',
+        }}
+        style={{ top: 20 }}
+        className="empty-content-modal"
+        maskClosable={true}
+        centered={false}
+        destroyOnClose={true}
+        closeIcon={<CloseCircleOutlined className="text-gray-400 hover:text-gray-600" />}
+      >
+        <div className="flex flex-col" style={{ height: '75vh' }}>
+          <EmptyContentPrompt
+            canvasId={pageDetail?.canvasId}
+            pageId={pageId}
+            height="100%"
+            onNodeAdded={() => {
+              refetchPageDetail();
+              handleCloseEmptyContentModal();
+              message.success(t('common.contentAdded', 'Content added'));
+            }}
+          />
         </div>
       </Modal>
 

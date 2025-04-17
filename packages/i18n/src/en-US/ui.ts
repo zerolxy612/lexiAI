@@ -104,6 +104,17 @@ const translations = {
     saveSuccess: 'Saved successfully',
     saveFailed: 'Failed to save',
     copied: 'Copied',
+    searchNodes: 'Search nodes',
+    noMatchingNodes: 'No matching nodes',
+    selectedItems: 'Selected {{count}} items',
+    noItemsSelected: 'No items selected',
+    clear: 'Clear',
+    nodesAddedSuccess: 'Nodes added successfully',
+    nodesAddedFailed: 'Failed to add nodes',
+    canvasIdMissing: 'Canvas ID is missing',
+    contentAdded: 'Content added',
+    emptyContent: 'No content',
+    clickToAdd: 'Click to add',
   },
   pages: {
     share: {
@@ -864,8 +875,6 @@ const translations = {
       unbindSuccessful: 'Unbind successfully!',
       failed: 'Failed to delete',
       deleteConfirmForDocument: 'Are you sure you want to delete this document?',
-      deleteConfirmForCanvas:
-        'Canvas {{canvas}} will be deleted permanently, are you sure to continue?',
       deleteConfirmForResource: 'Are you sure you want to delete this resource?',
       deleteConfirmForResourceProject: 'Are you sure to remove this resource from the project?',
       delete: 'Delete',

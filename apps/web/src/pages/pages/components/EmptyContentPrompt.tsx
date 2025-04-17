@@ -1,65 +1,112 @@
-import { FC, useCallback, useState } from 'react';
-import { Button, message, Modal, Spin } from 'antd';
-import { FileTextOutlined, PlusOutlined } from '@ant-design/icons';
+import { FC, useCallback, useState, useMemo, useEffect, useRef, CSSProperties } from 'react';
+import { Button, Input, message, Checkbox } from 'antd';
+import { PlusOutlined, SearchOutlined, ClearOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import {
   useGetCanvasData,
   useAddNodesToCanvasPage,
 } from '@refly-packages/ai-workspace-common/queries/queries';
+import classNames from 'classnames';
+import { NodeRenderer } from '@/pages/pages/components/NodeRenderer';
+import { type NodeRelation } from './ArtifactRenderer';
+
+// Spinner component
+const Spinner: FC<{ size?: 'small' | 'default' | 'large' }> = ({ size = 'default' }) => (
+  <div
+    className={`animate-spin rounded-full border-t-2 border-blue-500 ${size === 'small' ? 'h-3 w-3' : 'h-5 w-5'}`}
+  />
+);
 
 interface EmptyContentPromptProps {
   pageId?: string;
   canvasId?: string;
   onNodeAdded?: () => void;
+  height?: string;
 }
 
 /**
- * A component that displays when there is no content available
+ * A component that displays available nodes when there is no content
  * and provides a way to add content by selecting from available nodes
  */
-const EmptyContentPrompt: FC<EmptyContentPromptProps> = ({ pageId, canvasId, onNodeAdded }) => {
+const EmptyContentPrompt: FC<EmptyContentPromptProps> = ({
+  pageId,
+  canvasId,
+  onNodeAdded,
+  height = '400px',
+}) => {
   const { t } = useTranslation();
-  const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const [isComposing, setIsComposing] = useState(false);
+  const listRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Get canvas data to find available nodes
-  const {
-    data: canvasData,
-    isLoading: isLoadingCanvas,
-    refetch: refetchCanvas,
-  } = useGetCanvasData(
+  const { data: canvasData, isLoading: isLoadingCanvas } = useGetCanvasData(
     {
       query: {
-        canvasId: canvasId || pageId || '',
+        canvasId: canvasId || '',
       },
     },
     undefined,
-    { enabled: !!(canvasId || pageId) },
+    { enabled: !!canvasId },
   );
 
   // Add nodes to page mutation
   const { mutate: addNodesToPage, isPending: isAddingNodes } = useAddNodesToCanvasPage();
 
-  // Function to handle adding content
-  const handleAddContent = useCallback(() => {
-    if (!pageId && !canvasId) {
-      message.error(t('common.pageIdMissing'));
-      return;
-    }
+  // Get available nodes from canvas data
+  const availableNodes = canvasData?.data?.nodes || [];
 
-    // Refetch canvas data to ensure we have the latest
-    refetchCanvas().then(() => {
-      setIsModalVisible(true);
+  // Filtered nodes based on search term
+  const filteredNodes = useMemo(() => {
+    if (!searchTerm.trim()) return availableNodes;
+
+    return availableNodes.filter((node) => {
+      const nodeTitle = (node.data?.title || '').toLowerCase();
+      const nodeId = (node.id || '').toLowerCase();
+      const entityId = (node.data?.entityId || '').toLowerCase();
+      const nodeType = (node.type || '').toLowerCase();
+      const searchLower = searchTerm.toLowerCase();
+
+      return (
+        nodeTitle.includes(searchLower) ||
+        entityId.includes(searchLower) ||
+        nodeId.includes(searchLower) ||
+        nodeType.includes(searchLower)
+      );
     });
-  }, [pageId, canvasId, refetchCanvas, t]);
+  }, [availableNodes, searchTerm]);
 
-  // Handle node selection in modal
-  const handleNodeSelect = useCallback((nodeId: string) => {
+  // Reset active index when filtered nodes change
+  useEffect(() => {
+    setActiveIndex(filteredNodes.length > 0 ? 0 : -1);
+  }, [filteredNodes.length]);
+
+  // Scroll active item into view
+  useEffect(() => {
+    if (activeIndex >= 0 && listRef.current) {
+      const activeItem = listRef.current.querySelector(`[data-index="${activeIndex}"]`);
+      if (activeItem) {
+        activeItem.scrollIntoView({ block: 'nearest' });
+      }
+    }
+  }, [activeIndex]);
+
+  // Focus input on mount
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+
+  // Handle node selection
+  const handleNodeToggle = useCallback((nodeId: string) => {
     setSelectedNodeIds((prev) => {
       if (prev.includes(nodeId)) {
         return prev.filter((id) => id !== nodeId);
       }
-
       return [...prev, nodeId];
     });
   }, []);
@@ -68,11 +115,10 @@ const EmptyContentPrompt: FC<EmptyContentPromptProps> = ({ pageId, canvasId, onN
   const handleAddNodes = useCallback(() => {
     if (!pageId || selectedNodeIds.length === 0) return;
 
-    // 注意：这里使用 canvasId 而不是 pageId，因为 API 需要 canvasId
     const targetCanvasId = canvasId || pageId;
 
     if (!targetCanvasId) {
-      message.error(t('common.canvasIdMissing'));
+      message.error(t('common.canvasIdMissing', 'Canvas ID is missing'));
       return;
     }
 
@@ -87,8 +133,7 @@ const EmptyContentPrompt: FC<EmptyContentPromptProps> = ({ pageId, canvasId, onN
       },
       {
         onSuccess: () => {
-          message.success(t('common.nodesAddedSuccess'));
-          setIsModalVisible(false);
+          message.success(t('common.nodesAddedSuccess', 'Nodes added successfully'));
           setSelectedNodeIds([]);
           if (onNodeAdded) {
             onNodeAdded();
@@ -96,77 +141,206 @@ const EmptyContentPrompt: FC<EmptyContentPromptProps> = ({ pageId, canvasId, onN
         },
         onError: (error) => {
           console.error('Failed to add nodes:', error);
-          message.error(t('common.nodesAddedFailed'));
+          message.error(t('common.nodesAddedFailed', 'Failed to add nodes'));
         },
       },
     );
   }, [pageId, canvasId, selectedNodeIds, addNodesToPage, onNodeAdded, t]);
 
-  // Get available nodes from canvas data
-  const availableNodes = canvasData?.data?.nodes || [];
+  // Clear all selections
+  const handleClearAll = useCallback(() => {
+    setSelectedNodeIds([]);
+  }, []);
+
+  // Keyboard navigation handler
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (isComposing) return;
+
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          setActiveIndex((prev) => (prev < filteredNodes.length - 1 ? prev + 1 : prev));
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          setActiveIndex((prev) => (prev > 0 ? prev - 1 : prev));
+          break;
+        case 'Enter':
+          e.preventDefault();
+          if (activeIndex >= 0 && activeIndex < filteredNodes.length) {
+            const node = filteredNodes[activeIndex];
+            handleNodeToggle(node.data?.entityId);
+          }
+          break;
+        case 'Escape':
+          e.preventDefault();
+          setSearchTerm('');
+          break;
+      }
+    },
+    [filteredNodes, activeIndex, handleNodeToggle, isComposing],
+  );
+
+  // Cache thumbnail card style
+  const thumbnailCardStyle: CSSProperties = useMemo(
+    () => ({
+      pointerEvents: 'none',
+      transform: 'scale(0.4)',
+      transformOrigin: 'top left',
+      width: '250%',
+      height: '250%',
+      overflow: 'hidden',
+    }),
+    [],
+  );
+
+  // Convert Canvas node data to NodeRelation format
+  const convertToNodeRelation = useCallback((node: any): NodeRelation => {
+    return {
+      relationId: node.id || '',
+      nodeId: node.id || '',
+      nodeType: node.type || 'document',
+      entityId: node.data?.entityId || '',
+      orderIndex: 0,
+      nodeData: {
+        title: node.data?.title || '',
+        entityId: node.data?.entityId || '',
+        metadata: {
+          content: node.data?.content || '',
+          status: 'finished',
+          type: node.type === 'codeArtifact' ? 'text/javascript' : 'text/markdown',
+        },
+      },
+    };
+  }, []);
 
   return (
-    <>
-      <div className="text-center py-16 bg-white rounded-lg border border-dashed border-gray-300 shadow-sm">
-        <FileTextOutlined className="text-5xl text-gray-300 mb-4" />
-        <h3 className="text-xl text-gray-500 mb-2">{t('common.noContent')}</h3>
-        <p className="text-gray-400 mb-6">{t('common.noContentDesc')}</p>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleAddContent}>
-          {t('common.addContent')}
-        </Button>
+    <div
+      className="refly-node-selector bg-white rounded-lg flex flex-col"
+      style={{ width: '100%', height, maxHeight: '80vh', maxWidth: '100%' }}
+    >
+      {/* Search bar */}
+      <div className="p-4 border-b border-gray-200 flex items-center gap-2 bg-white sticky top-0 z-10">
+        <Input
+          ref={inputRef}
+          placeholder={t('common.searchNodes', 'Search nodes')}
+          prefix={<SearchOutlined className="text-gray-400" />}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onCompositionStart={() => setIsComposing(true)}
+          onCompositionEnd={() => setIsComposing(false)}
+          className="w-full"
+          allowClear
+          size="large"
+        />
       </div>
 
-      <Modal
-        title={t('common.selectNodes')}
-        open={isModalVisible}
-        onCancel={() => setIsModalVisible(false)}
-        onOk={handleAddNodes}
-        okButtonProps={{ disabled: selectedNodeIds.length === 0 }}
-        okText={t('common.addSelected')}
-        width={600}
-      >
+      {/* Node list */}
+      <div className="flex-1 overflow-y-auto relative bg-gray-50" ref={listRef}>
         {isLoadingCanvas ? (
-          <div className="py-10 text-center">
-            <Spin />
-            <p className="mt-2 text-gray-500">{t('common.loading')}</p>
+          <div className="flex items-center justify-center h-full">
+            <Spinner size="large" />
+            <span className="ml-2 text-gray-500">{t('common.loading', 'Loading...')}</span>
           </div>
-        ) : availableNodes.length === 0 ? (
-          <div className="py-10 text-center">
-            <p className="text-gray-500">{t('common.noNodesAvailable')}</p>
-          </div>
-        ) : (
-          <div className="max-h-96 overflow-auto">
-            {availableNodes.map((node: any) => (
+        ) : filteredNodes.length > 0 ? (
+          <div className="p-4 grid grid-cols-1 gap-4 pb-20">
+            {filteredNodes.map((node, index) => (
               <div
                 key={node.id}
-                className={`p-4 mb-2 border rounded-lg cursor-pointer transition-colors ${
-                  selectedNodeIds.includes(node.id)
-                    ? 'bg-blue-50 border-blue-300'
-                    : 'bg-white border-gray-200 hover:bg-gray-50'
-                }`}
-                onClick={() => handleNodeSelect(node.id)}
+                data-index={index}
+                className={classNames(
+                  'relative rounded-lg transition overflow-hidden shadow-sm hover:shadow-md',
+                  'cursor-pointer',
+                  selectedNodeIds.includes(node.data?.entityId)
+                    ? 'bg-white shadow-md'
+                    : 'bg-white border border-gray-200 hover:border-blue-200',
+                )}
+                onClick={() => handleNodeToggle(node.data?.entityId)}
               >
-                <div className="font-medium">{node.title || node.id}</div>
-                {node.description && (
-                  <div className="text-gray-500 text-sm mt-1">{node.description}</div>
-                )}
-                {node.type && (
-                  <div className="text-xs text-gray-400 mt-1">
-                    {t('common.type')}: {node.type}
+                {/* Card title */}
+                <div
+                  className={classNames(
+                    'py-2 px-3 bg-white z-10 relative flex items-center justify-between',
+                    selectedNodeIds.includes(node.data?.entityId)
+                      ? 'border-b border-blue-100'
+                      : 'border-b border-gray-100',
+                  )}
+                >
+                  <div className="flex items-center gap-2 truncate">
+                    <span
+                      className={classNames(
+                        'flex items-center justify-center w-5 h-5 rounded-full text-xs',
+                        selectedNodeIds.includes(node.data?.entityId)
+                          ? 'bg-blue-50 text-blue-600'
+                          : 'bg-gray-100 text-gray-600',
+                      )}
+                    >
+                      {index + 1}
+                    </span>
+                    <span className="truncate text-sm font-medium text-gray-700">
+                      {node.data?.title || t('common.untitled', 'Untitled')}
+                    </span>
                   </div>
-                )}
+                  <Checkbox
+                    checked={selectedNodeIds.includes(node.data?.entityId)}
+                    onChange={() => handleNodeToggle(node.data?.entityId)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="ml-1"
+                  />
+                </div>
+
+                {/* Content preview area */}
+                <div className="h-24 overflow-hidden relative bg-gray-50">
+                  <div style={thumbnailCardStyle}>
+                    <NodeRenderer node={convertToNodeRelation(node)} isMinimap={true} />
+                  </div>
+
+                  {/* Gradient mask */}
+                  <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent" />
+                </div>
               </div>
             ))}
           </div>
-        )}
-        {isAddingNodes && (
-          <div className="mt-4 text-center text-gray-500">
-            <Spin size="small" className="mr-2" />
-            {t('common.addingNodes')}
+        ) : (
+          <div className="text-center p-6 text-gray-400 h-full flex items-center justify-center">
+            <div className="text-sm">{t('common.noMatchingNodes', 'No matching nodes')}</div>
           </div>
         )}
-      </Modal>
-    </>
+      </div>
+
+      {/* Action bar - fixed at bottom */}
+      <div className="p-4 border-t border-gray-200 flex justify-between items-center bg-white sticky bottom-0 left-0 right-0 z-10">
+        <div className="text-sm text-gray-500">
+          {selectedNodeIds.length > 0
+            ? t('common.selectedItems', `Selected ${selectedNodeIds.length} items`, {
+                count: selectedNodeIds.length,
+              })
+            : t('common.noItemsSelected', 'No items selected')}
+        </div>
+        <div className="flex gap-3">
+          <Button
+            size="middle"
+            icon={<ClearOutlined />}
+            onClick={handleClearAll}
+            disabled={selectedNodeIds.length === 0}
+          >
+            {t('common.clear', 'Clear')}
+          </Button>
+          <Button
+            type="primary"
+            size="middle"
+            icon={<PlusOutlined />}
+            onClick={handleAddNodes}
+            disabled={selectedNodeIds.length === 0}
+            loading={isAddingNodes}
+          >
+            {t('common.add', 'Add')}
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 };
 
