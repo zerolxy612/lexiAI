@@ -1,6 +1,12 @@
 import { useMemo, CSSProperties, useCallback } from 'react';
 import { Tooltip } from 'antd';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  DraggingStyle,
+  NotDraggingStyle,
+} from 'react-beautiful-dnd';
 import { type NodeRelation } from './ArtifactRenderer';
 import { NodeRenderer } from './NodeRenderer';
 import { getNodeTitle } from '../utils/nodeUtils';
@@ -74,6 +80,27 @@ function SidebarMinimap({
     [],
   );
 
+  // Custom drag style to ensure the dragged item stays under the cursor
+  const getItemStyle = (
+    isDragging: boolean,
+    draggableStyle: DraggingStyle | NotDraggingStyle | undefined,
+  ): React.CSSProperties => ({
+    // some basic styles to make the items look a bit nicer
+    userSelect: 'none',
+
+    // styles we need to apply on draggables
+    ...draggableStyle,
+
+    // When dragging, ensure the item stays positioned correctly relative to cursor
+    ...(isDragging && {
+      position: 'relative',
+      // These adjustments help position the item under the cursor
+      left: 0,
+      top: 0,
+      margin: 0,
+    }),
+  });
+
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-between p-2 border-b border-gray-200">
@@ -99,16 +126,17 @@ function SidebarMinimap({
                       index={index}
                       isDragDisabled={readonly}
                     >
-                      {(provided) => (
+                      {(provided, snapshot) => (
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
+                          style={getItemStyle(snapshot.isDragging, provided.draggableProps.style)}
                           className={`relative rounded ${!readonly ? 'cursor-grab' : 'cursor-pointer'} transition border overflow-hidden shadow-sm hover:shadow-md ${
                             activeNodeIndex === index
                               ? 'ring-2 ring-purple-500 bg-purple-50'
                               : 'border-gray-200 hover:border-purple-300'
-                          }`}
+                          } ${snapshot.isDragging ? 'z-50' : ''}`}
                           onClick={() => handleNodeSelect(index)}
                         >
                           {/* Card title */}
