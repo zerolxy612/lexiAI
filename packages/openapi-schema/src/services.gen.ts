@@ -256,30 +256,30 @@ import type {
   MultiLingualWebSearchData,
   MultiLingualWebSearchError,
   MultiLingualWebSearchResponse2,
-  ListModelProvidersData,
-  ListModelProvidersError,
-  ListModelProvidersResponse2,
-  CreateModelProviderData,
-  CreateModelProviderError,
-  CreateModelProviderResponse,
-  UpdateModelProviderData,
-  UpdateModelProviderError,
-  UpdateModelProviderResponse,
-  DeleteModelProviderData,
-  DeleteModelProviderError,
-  DeleteModelProviderResponse,
-  ListModelItemsData,
-  ListModelItemsError,
-  ListModelItemsResponse2,
-  CreateModelItemData,
-  CreateModelItemError,
-  CreateModelItemResponse,
-  UpdateModelItemData,
-  UpdateModelItemError,
-  UpdateModelItemResponse,
-  DeleteModelItemData,
-  DeleteModelItemError,
-  DeleteModelItemResponse,
+  ListProvidersData,
+  ListProvidersError,
+  ListProvidersResponse2,
+  CreateProviderData,
+  CreateProviderError,
+  CreateProviderResponse,
+  UpdateProviderData,
+  UpdateProviderError,
+  UpdateProviderResponse,
+  DeleteProviderData,
+  DeleteProviderError,
+  DeleteProviderResponse,
+  ListProviderItemsData,
+  ListProviderItemsError,
+  ListProviderItemsResponse2,
+  CreateProviderItemData,
+  CreateProviderItemError,
+  CreateProviderItemResponse,
+  UpdateProviderItemData,
+  UpdateProviderItemError,
+  UpdateProviderItemResponse,
+  DeleteProviderItemData,
+  DeleteProviderItemError,
+  DeleteProviderItemResponse,
   ScrapeData,
   ScrapeError,
   ScrapeResponse,
@@ -1668,87 +1668,83 @@ export const multiLingualWebSearch = <ThrowOnError extends boolean = false>(
 };
 
 /**
- * List model providers
- * List all available model providers
+ * List providers
+ * List all available providers
  */
-export const listModelProviders = <ThrowOnError extends boolean = false>(
-  options?: Options<ListModelProvidersData, ThrowOnError>,
+export const listProviders = <ThrowOnError extends boolean = false>(
+  options?: Options<ListProvidersData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).get<ListProvidersResponse2, ListProvidersError, ThrowOnError>({
+    ...options,
+    url: '/provider/list',
+  });
+};
+
+/**
+ * Create provider
+ * Create a new provider
+ */
+export const createProvider = <ThrowOnError extends boolean = false>(
+  options: Options<CreateProviderData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).post<
+    CreateProviderResponse,
+    CreateProviderError,
+    ThrowOnError
+  >({
+    ...options,
+    url: '/provider/create',
+  });
+};
+
+/**
+ * Update provider
+ * Update an existing provider
+ */
+export const updateProvider = <ThrowOnError extends boolean = false>(
+  options: Options<UpdateProviderData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).post<
+    UpdateProviderResponse,
+    UpdateProviderError,
+    ThrowOnError
+  >({
+    ...options,
+    url: '/provider/update',
+  });
+};
+
+/**
+ * Delete provider
+ * Delete an existing provider
+ */
+export const deleteProvider = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteProviderData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).post<
+    DeleteProviderResponse,
+    DeleteProviderError,
+    ThrowOnError
+  >({
+    ...options,
+    url: '/provider/delete',
+  });
+};
+
+/**
+ * List provider items
+ * List all available provider items
+ */
+export const listProviderItems = <ThrowOnError extends boolean = false>(
+  options?: Options<ListProviderItemsData, ThrowOnError>,
 ) => {
   return (options?.client ?? client).get<
-    ListModelProvidersResponse2,
-    ListModelProvidersError,
+    ListProviderItemsResponse2,
+    ListProviderItemsError,
     ThrowOnError
   >({
     ...options,
-    url: '/model/provider/list',
-  });
-};
-
-/**
- * Create model provider
- * Create a new model provider
- */
-export const createModelProvider = <ThrowOnError extends boolean = false>(
-  options: Options<CreateModelProviderData, ThrowOnError>,
-) => {
-  return (options?.client ?? client).post<
-    CreateModelProviderResponse,
-    CreateModelProviderError,
-    ThrowOnError
-  >({
-    ...options,
-    url: '/model/provider/create',
-  });
-};
-
-/**
- * Update model provider
- * Update an existing model provider
- */
-export const updateModelProvider = <ThrowOnError extends boolean = false>(
-  options: Options<UpdateModelProviderData, ThrowOnError>,
-) => {
-  return (options?.client ?? client).post<
-    UpdateModelProviderResponse,
-    UpdateModelProviderError,
-    ThrowOnError
-  >({
-    ...options,
-    url: '/model/provider/update',
-  });
-};
-
-/**
- * Delete model provider
- * Delete an existing model provider
- */
-export const deleteModelProvider = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteModelProviderData, ThrowOnError>,
-) => {
-  return (options?.client ?? client).post<
-    DeleteModelProviderResponse,
-    DeleteModelProviderError,
-    ThrowOnError
-  >({
-    ...options,
-    url: '/model/provider/delete',
-  });
-};
-
-/**
- * List model items
- * List all available model items
- */
-export const listModelItems = <ThrowOnError extends boolean = false>(
-  options?: Options<ListModelItemsData, ThrowOnError>,
-) => {
-  return (options?.client ?? client).get<
-    ListModelItemsResponse2,
-    ListModelItemsError,
-    ThrowOnError
-  >({
-    ...options,
-    url: '/model/item/list',
+    url: '/provider/item/list',
   });
 };
 
@@ -1756,16 +1752,16 @@ export const listModelItems = <ThrowOnError extends boolean = false>(
  * Create model item
  * Create a new model item
  */
-export const createModelItem = <ThrowOnError extends boolean = false>(
-  options: Options<CreateModelItemData, ThrowOnError>,
+export const createProviderItem = <ThrowOnError extends boolean = false>(
+  options: Options<CreateProviderItemData, ThrowOnError>,
 ) => {
   return (options?.client ?? client).post<
-    CreateModelItemResponse,
-    CreateModelItemError,
+    CreateProviderItemResponse,
+    CreateProviderItemError,
     ThrowOnError
   >({
     ...options,
-    url: '/model/item/create',
+    url: '/provider/item/create',
   });
 };
 
@@ -1773,33 +1769,33 @@ export const createModelItem = <ThrowOnError extends boolean = false>(
  * Update model item
  * Update an existing model item
  */
-export const updateModelItem = <ThrowOnError extends boolean = false>(
-  options: Options<UpdateModelItemData, ThrowOnError>,
+export const updateProviderItem = <ThrowOnError extends boolean = false>(
+  options: Options<UpdateProviderItemData, ThrowOnError>,
 ) => {
   return (options?.client ?? client).post<
-    UpdateModelItemResponse,
-    UpdateModelItemError,
+    UpdateProviderItemResponse,
+    UpdateProviderItemError,
     ThrowOnError
   >({
     ...options,
-    url: '/model/item/update',
+    url: '/provider/item/update',
   });
 };
 
 /**
- * Delete model item
+ * Delete provider item
  * Delete an existing model item
  */
-export const deleteModelItem = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteModelItemData, ThrowOnError>,
+export const deleteProviderItem = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteProviderItemData, ThrowOnError>,
 ) => {
   return (options?.client ?? client).post<
-    DeleteModelItemResponse,
-    DeleteModelItemError,
+    DeleteProviderItemResponse,
+    DeleteProviderItemError,
     ThrowOnError
   >({
     ...options,
-    url: '/model/item/delete',
+    url: '/provider/item/delete',
   });
 };
 

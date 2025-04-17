@@ -4986,98 +4986,150 @@ export const ListModelsResponseSchema = {
   ],
 } as const;
 
-export const ModelProviderSchema = {
+export const ProviderCategorySchema = {
+  type: 'string',
+  enum: ['llm', 'embedding', 'reranker', 'webSearch', 'parser'],
+} as const;
+
+export const ProviderSchema = {
   type: 'object',
-  required: ['providerId', 'providerKey', 'name', 'apiKey', 'baseUrl', 'enabled'],
+  description: 'General provider info',
+  required: ['providerId', 'providerKey', 'name', 'category', 'apiKey', 'baseUrl', 'enabled'],
   properties: {
     providerId: {
       type: 'string',
-      description: 'Model provider ID',
+      description: 'Provider ID',
     },
     providerKey: {
       type: 'string',
-      description: 'Model provider key',
+      description: 'Provider key',
     },
     name: {
       type: 'string',
-      description: 'Model provider name',
+      description: 'Provider name',
+    },
+    category: {
+      type: 'string',
+      description: 'Provider category',
+      $ref: '#/components/schemas/ProviderCategory',
     },
     apiKey: {
       type: 'string',
-      description: 'Model provider API key',
+      description: 'Provider API key',
     },
     baseUrl: {
       type: 'string',
-      description: 'Model provider base URL',
+      description: 'Provider base URL',
     },
     enabled: {
       type: 'boolean',
-      description: 'Whether the model provider is enabled',
+      description: 'Whether the provider is enabled',
     },
-    createdAt: {
-      type: 'string',
-      format: 'date-time',
-      description: 'Model provider creation time',
-    },
-    updatedAt: {
-      type: 'string',
-      format: 'date-time',
-      description: 'Model provider update time',
+    isGlobal: {
+      type: 'boolean',
+      description: 'Whether the provider is global',
     },
   },
 } as const;
 
-export const ModelTypeSchema = {
-  type: 'string',
-  enum: ['llm', 'embedding', 'reranker'],
-} as const;
-
-export const ModelItemSchema = {
+export const LLMModelConfigSchema = {
   type: 'object',
-  required: ['itemId', 'providerId', 'modelId', 'modelType', 'name', 'enabled'],
+  description: 'Provider config for LLMs',
   properties: {
-    itemId: {
-      type: 'string',
-      description: 'Model item ID',
-    },
     modelId: {
       type: 'string',
       description: 'Model ID',
     },
-    modelType: {
-      description: 'Model type',
-      $ref: '#/components/schemas/ModelType',
-    },
-    name: {
+    modelName: {
       type: 'string',
       description: 'Model name',
     },
-    enabled: {
-      type: 'boolean',
-      description: 'Whether the model item is enabled',
+    contextLimit: {
+      type: 'number',
+      description: 'Model context limit (in tokens)',
     },
-    providerId: {
-      type: 'string',
-      description: 'Model provider ID',
-    },
-    provider: {
-      type: 'object',
-      $ref: '#/components/schemas/ModelProvider',
-    },
-    createdAt: {
-      type: 'string',
-      format: 'date-time',
-      description: 'Model item creation time',
-    },
-    updatedAt: {
-      type: 'string',
-      format: 'date-time',
-      description: 'Model item update time',
+    maxOutput: {
+      type: 'number',
+      description: 'Model max output length (in tokens)',
     },
   },
 } as const;
 
-export const ListModelProvidersResponseSchema = {
+export const EmbeddingModelConfigSchema = {
+  type: 'object',
+  description: 'Provider config for embeddings',
+  properties: {
+    modelId: {
+      type: 'string',
+      description: 'Embedding model ID',
+    },
+    modelName: {
+      type: 'string',
+      description: 'Embedding model name',
+    },
+    batchSize: {
+      type: 'number',
+      description: 'Embedding model batch size',
+    },
+    dimensionsFixed: {
+      type: 'boolean',
+      description: 'Whether the embedding model has fixed dimensions',
+    },
+    dimensions: {
+      type: 'number',
+      description: 'Embedding model dimensions',
+    },
+  },
+} as const;
+
+export const ProviderItemConfigSchema = {
+  oneOf: [
+    {
+      $ref: '#/components/schemas/LLMModelConfig',
+    },
+    {
+      $ref: '#/components/schemas/EmbeddingModelConfig',
+    },
+  ],
+} as const;
+
+export const ProviderItemSchema = {
+  type: 'object',
+  required: ['itemId', 'name', 'providerId', 'category', 'enabled'],
+  properties: {
+    itemId: {
+      type: 'string',
+      description: 'Provider item ID',
+    },
+    name: {
+      type: 'string',
+      description: 'Provider item name',
+    },
+    enabled: {
+      type: 'boolean',
+      description: 'Whether the provider item is enabled',
+    },
+    category: {
+      description: 'Provider category',
+      $ref: '#/components/schemas/ProviderCategory',
+    },
+    providerId: {
+      type: 'string',
+      description: 'Provider ID',
+    },
+    provider: {
+      type: 'object',
+      description: 'Provider detail info',
+      $ref: '#/components/schemas/Provider',
+    },
+    config: {
+      description: 'Provider item config',
+      $ref: '#/components/schemas/ProviderItemConfig',
+    },
+  },
+} as const;
+
+export const ListProvidersResponseSchema = {
   allOf: [
     {
       $ref: '#/components/schemas/BaseResponse',
@@ -5088,7 +5140,7 @@ export const ListModelProvidersResponseSchema = {
         data: {
           type: 'array',
           items: {
-            $ref: '#/components/schemas/ModelProvider',
+            $ref: '#/components/schemas/Provider',
           },
         },
       },
@@ -5096,37 +5148,41 @@ export const ListModelProvidersResponseSchema = {
   ],
 } as const;
 
-export const UpsertModelProviderRequestSchema = {
+export const UpsertProviderRequestSchema = {
   type: 'object',
   properties: {
     providerId: {
       type: 'string',
-      description: 'Model provider ID (only for update)',
+      description: 'Provider ID (only for update)',
     },
     providerKey: {
       type: 'string',
-      description: 'Model provider key',
+      description: 'Provider key',
     },
     name: {
       type: 'string',
-      description: 'Model provider name',
+      description: 'Provider name',
+    },
+    category: {
+      description: 'Provider category',
+      $ref: '#/components/schemas/ProviderCategory',
     },
     apiKey: {
       type: 'string',
-      description: 'Model provider API key',
+      description: 'Provider API key',
     },
     baseUrl: {
       type: 'string',
-      description: 'Model provider base URL',
+      description: 'Provider base URL',
     },
     enabled: {
       type: 'boolean',
-      description: 'Whether the model provider is enabled',
+      description: 'Whether the provider is enabled',
     },
   },
 } as const;
 
-export const UpsertModelProviderResponseSchema = {
+export const UpsertProviderResponseSchema = {
   allOf: [
     {
       $ref: '#/components/schemas/BaseResponse',
@@ -5135,25 +5191,25 @@ export const UpsertModelProviderResponseSchema = {
       type: 'object',
       properties: {
         data: {
-          $ref: '#/components/schemas/ModelProvider',
+          $ref: '#/components/schemas/Provider',
         },
       },
     },
   ],
 } as const;
 
-export const DeleteModelProviderRequestSchema = {
+export const DeleteProviderRequestSchema = {
   type: 'object',
   required: ['providerId'],
   properties: {
     providerId: {
       type: 'string',
-      description: 'Model provider ID',
+      description: 'Provider ID',
     },
   },
 } as const;
 
-export const ListModelItemsResponseSchema = {
+export const ListProviderItemsResponseSchema = {
   allOf: [
     {
       $ref: '#/components/schemas/BaseResponse',
@@ -5164,7 +5220,7 @@ export const ListModelItemsResponseSchema = {
         data: {
           type: 'array',
           items: {
-            $ref: '#/components/schemas/ModelItem',
+            $ref: '#/components/schemas/ProviderItem',
           },
         },
       },
@@ -5172,38 +5228,33 @@ export const ListModelItemsResponseSchema = {
   ],
 } as const;
 
-export const UpsertModelItemRequestSchema = {
+export const UpsertProviderItemRequestSchema = {
   type: 'object',
-  required: ['providerId', 'modelId', 'modelType', 'name'],
   properties: {
     itemId: {
       type: 'string',
-      description: 'Model item ID (only for update)',
-    },
-    providerId: {
-      type: 'string',
-      description: 'Model provider ID',
-    },
-    modelId: {
-      type: 'string',
-      description: 'Model ID',
-    },
-    modelType: {
-      description: 'Model type',
-      $ref: '#/components/schemas/ModelType',
+      description: 'Provider item ID (only for update)',
     },
     name: {
       type: 'string',
-      description: 'Model name',
+      description: 'Provider item name',
+    },
+    providerId: {
+      type: 'string',
+      description: 'Provider ID',
     },
     enabled: {
       type: 'boolean',
-      description: 'Whether the model item is enabled',
+      description: 'Whether the provider item is enabled',
+    },
+    config: {
+      description: 'Provider item config',
+      $ref: '#/components/schemas/ProviderItemConfig',
     },
   },
 } as const;
 
-export const UpsertModelItemResponseSchema = {
+export const UpsertProviderItemResponseSchema = {
   allOf: [
     {
       $ref: '#/components/schemas/BaseResponse',
@@ -5212,20 +5263,20 @@ export const UpsertModelItemResponseSchema = {
       type: 'object',
       properties: {
         data: {
-          $ref: '#/components/schemas/ModelItem',
+          $ref: '#/components/schemas/ProviderItem',
         },
       },
     },
   ],
 } as const;
 
-export const DeleteModelItemRequestSchema = {
+export const DeleteProviderItemRequestSchema = {
   type: 'object',
   required: ['itemId'],
   properties: {
     itemId: {
       type: 'string',
-      description: 'Model item ID',
+      description: 'Provider item ID',
     },
   },
 } as const;

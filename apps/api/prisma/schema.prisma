@@ -757,64 +757,70 @@ model LabelInstance {
   @@map("label_instances")
 }
 
-model ModelProvider {
+model Provider {
   /// Primary key
-  pk          Int         @id @default(autoincrement())
+  pk          Int            @id @default(autoincrement())
   /// Provider id
-  providerId  String      @unique @map("provider_id")
+  providerId  String         @unique @map("provider_id")
   /// Provider key
-  providerKey String      @map("provider_key")
+  providerKey String         @map("provider_key")
   /// Provider name
-  name        String      @map("name")
+  name        String         @map("name")
+  /// Whether the provider is global
+  isGlobal    Boolean        @default(false) @map("is_global")
+  /// Provider category
+  category    String         @map("category")
   /// UID
-  uid         String      @map("uid")
+  uid         String         @map("uid")
   /// Provider API key
-  apiKey      String      @map("api_key")
+  apiKey      String         @map("api_key")
   /// Provider base URL
-  baseUrl     String?     @map("base_url")
+  baseUrl     String?        @map("base_url")
   /// Whether the provider is enabled
-  enabled     Boolean     @default(true) @map("enabled")
+  enabled     Boolean        @default(true) @map("enabled")
   /// Create timestamp
-  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz()
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz()
   /// Update timestamp
-  updatedAt   DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+  updatedAt   DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
   /// Deletion timestamp
-  deletedAt   DateTime?   @map("deleted_at") @db.Timestamptz()
+  deletedAt   DateTime?      @map("deleted_at") @db.Timestamptz()
   /// Model items
-  modelItems  ModelItem[]
+  items       ProviderItem[]
 
   @@index([uid, deletedAt])
-  @@map("model_providers")
+  @@index([isGlobal])
+  @@map("providers")
 }
 
-model ModelItem {
+model ProviderItem {
   /// Primary key
-  pk         Int           @id @default(autoincrement())
-  /// Model provider ID
-  providerId String        @map("provider_id")
-  /// Model item ID
-  itemId     String        @unique @map("item_id")
-  /// Model ID
-  modelId    String        @map("model_id")
-  /// Model item type
-  modelType  String        @map("model_type")
-  /// Model item name
-  name       String        @map("name")
+  pk         Int       @id @default(autoincrement())
+  /// Provider ID
+  providerId String    @map("provider_id")
+  /// Provider item ID
+  itemId     String    @unique @map("item_id")
+  /// Provider category
+  category   String    @map("category")
+  /// Provider item name
+  name       String    @map("name")
   /// UID
-  uid        String        @map("uid")
+  uid        String    @map("uid")
   /// Whether the model item is enabled
-  enabled    Boolean       @default(true) @map("enabled")
+  enabled    Boolean   @default(true) @map("enabled")
+  /// Provider item config (JSON)
+  config     String?   @map("config")
   /// Create timestamp
-  createdAt  DateTime      @default(now()) @map("created_at") @db.Timestamptz()
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz()
   /// Update timestamp
-  updatedAt  DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+  updatedAt  DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
   /// Deletion timestamp
-  deletedAt  DateTime?     @map("deleted_at") @db.Timestamptz()
+  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz()
   /// Provider
-  provider   ModelProvider @relation(fields: [providerId], references: [providerId])
+  provider   Provider  @relation(fields: [providerId], references: [providerId])
 
   @@index([providerId])
-  @@map("model_items")
+  @@index([uid, deletedAt])
+  @@map("provider_items")
 }
 
 model SubscriptionPlan {

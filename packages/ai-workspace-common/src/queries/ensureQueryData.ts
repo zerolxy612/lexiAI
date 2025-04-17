@@ -24,10 +24,10 @@ import {
   listDocuments,
   listLabelClasses,
   listLabelInstances,
-  listModelItems,
-  listModelProviders,
   listModels,
   listProjects,
+  listProviderItems,
+  listProviders,
   listResources,
   listShares,
   listSkillInstances,
@@ -50,9 +50,9 @@ import {
   ListDocumentsData,
   ListLabelClassesData,
   ListLabelInstancesData,
-  ListModelItemsData,
-  ListModelProvidersData,
   ListProjectsData,
+  ListProviderItemsData,
+  ListProvidersData,
   ListResourcesData,
   ListSharesData,
   ListSkillInstancesData,
@@ -284,21 +284,21 @@ export const ensureUseListModelsData = (
     queryKey: Common.UseListModelsKeyFn(clientOptions),
     queryFn: () => listModels({ ...clientOptions }).then((response) => response.data),
   });
-export const ensureUseListModelProvidersData = (
+export const ensureUseListProvidersData = (
   queryClient: QueryClient,
-  clientOptions: Options<ListModelProvidersData, true> = {},
+  clientOptions: Options<ListProvidersData, true> = {},
 ) =>
   queryClient.ensureQueryData({
-    queryKey: Common.UseListModelProvidersKeyFn(clientOptions),
-    queryFn: () => listModelProviders({ ...clientOptions }).then((response) => response.data),
+    queryKey: Common.UseListProvidersKeyFn(clientOptions),
+    queryFn: () => listProviders({ ...clientOptions }).then((response) => response.data),
   });
-export const ensureUseListModelItemsData = (
+export const ensureUseListProviderItemsData = (
   queryClient: QueryClient,
-  clientOptions: Options<ListModelItemsData, true> = {},
+  clientOptions: Options<ListProviderItemsData, true> = {},
 ) =>
   queryClient.ensureQueryData({
-    queryKey: Common.UseListModelItemsKeyFn(clientOptions),
-    queryFn: () => listModelItems({ ...clientOptions }).then((response) => response.data),
+    queryKey: Common.UseListProviderItemsKeyFn(clientOptions),
+    queryFn: () => listProviderItems({ ...clientOptions }).then((response) => response.data),
   });
 export const ensureUseServeStaticData = (
   queryClient: QueryClient,
