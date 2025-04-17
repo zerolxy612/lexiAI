@@ -258,7 +258,7 @@ const SharePage = () => {
                   icon={<PlayCircleOutlined />}
                   className="flex items-center mx-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                 >
-                  {t('common.preview')}
+                  {t('pages.share.slideshow')}
                 </Button>
               )}
             </div>

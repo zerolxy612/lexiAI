@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Form, Input, Button, Spin, message, Modal, Select } from 'antd';
+import { Form, Input, Button, Spin, message, Modal, Select, Tooltip } from 'antd';
 import { useTranslation } from 'react-i18next';
 import {
   useGetPageDetail,
@@ -694,56 +694,56 @@ export function SlideshowEdit(props: PageEditProps) {
       toggleSidebar={toggleSidebar}
       headerContent={
         <div className="flex justify-between items-center w-full">
-          <div className="flex items-center">
+          <div className="flex items-center flex-1 min-w-0">
             {source === 'page' && (
               <Button
                 onClick={handleBack}
                 icon={<ArrowLeftOutlined />}
                 type="text"
-                className="mr-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                className="mr-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 flex-shrink-0"
               />
             )}
 
-            <div className="text-xl font-semibold text-gray-800 mr-2">
+            <div className="text-xl font-semibold text-gray-800 mr-2 truncate">
               {pageDetail?.title || t('common.untitled')}
             </div>
           </div>
 
-          <div className="flex items-center">
-            <Button
-              type="text"
-              size={minimalMode ? 'small' : 'middle'}
-              onClick={handleAddNode}
-              icon={<PlusOutlined />}
-              className={`flex items-center text-gray-600 hover:!text-green-600 hover:bg-gray-50 ${
-                minimalMode ? 'text-xs' : ''
-              }`}
-            >
-              {t('common.addNode')}
-            </Button>
-            <Button
-              type="text"
-              size={minimalMode ? 'small' : 'middle'}
-              onClick={handleShare}
-              icon={<ShareAltOutlined />}
-              className={`flex items-center mr-2 text-gray-600 hover:!text-green-600 hover:bg-gray-50 ${
-                minimalMode ? 'text-xs' : ''
-              }`}
-            >
-              {t('common.shareLink')}
-            </Button>
-            {nodesList.length > 0 && (
+          <div className="flex items-center flex-shrink-0 ml-2">
+            <Tooltip title={t('common.addNode')}>
               <Button
                 type="text"
                 size={minimalMode ? 'small' : 'middle'}
-                onClick={togglePreviewMode}
-                icon={<PlayCircleOutlined />}
+                onClick={handleAddNode}
+                icon={<PlusOutlined />}
                 className={`flex items-center text-gray-600 hover:!text-green-600 hover:bg-gray-50 ${
                   minimalMode ? 'text-xs' : ''
                 }`}
-              >
-                {t('common.preview')}
-              </Button>
+              />
+            </Tooltip>
+            <Tooltip title={t('common.shareLink')}>
+              <Button
+                type="text"
+                size={minimalMode ? 'small' : 'middle'}
+                onClick={handleShare}
+                icon={<ShareAltOutlined />}
+                className={`flex items-center mr-2 text-gray-600 hover:!text-green-600 hover:bg-gray-50 ${
+                  minimalMode ? 'text-xs' : ''
+                }`}
+              />
+            </Tooltip>
+            {nodesList.length > 0 && (
+              <Tooltip title={t('pages.share.slideshow')}>
+                <Button
+                  type="text"
+                  size={minimalMode ? 'small' : 'middle'}
+                  onClick={togglePreviewMode}
+                  icon={<PlayCircleOutlined />}
+                  className={`flex items-center text-gray-600 hover:!text-green-600 hover:bg-gray-50 ${
+                    minimalMode ? 'text-xs' : ''
+                  }`}
+                />
+              </Tooltip>
             )}
           </div>
         </div>
