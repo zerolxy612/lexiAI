@@ -3,6 +3,8 @@ import { useCanvasStoreShallow } from '@refly-packages/ai-workspace-common/store
 import SlideHeader from './slide-header';
 import NewSlide from './new-slide';
 import { SlideshowEdit } from '../../../../../../apps/web/src/pages/pages';
+import { slideshowEmitter } from '@refly-packages/ai-workspace-common/events/slideshow';
+
 import './index.scss';
 
 export const Slideshow = memo(({ canvasId }: { canvasId: string }) => {
@@ -65,6 +67,16 @@ export const Slideshow = memo(({ canvasId }: { canvasId: string }) => {
   useEffect(() => {
     setShowMinimap(isMaximized || isWideMode);
   }, [isMaximized, isWideMode]);
+
+  useEffect(() => {
+    const handleUpdate = (data: { canvasId: string; pageId: string; entityId: string }) => {
+      setPageId(data.pageId);
+    };
+    slideshowEmitter.on('update', handleUpdate);
+    return () => {
+      slideshowEmitter.off('update', handleUpdate);
+    };
+  }, []);
 
   return (
     <div
