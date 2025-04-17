@@ -27,8 +27,6 @@ const SkillResponseSharePage = lazy(() => import('@/pages/skill-response-share')
 const DocumentSharePage = lazy(() => import('@/pages/document-share'));
 const ArtifactGalleryPage = lazy(() => import('@/pages/artifact-gallery'));
 const UseCasesGalleryPage = lazy(() => import('@/pages/use-cases-gallery'));
-const PagesListPage = lazy(() => import('@/pages/pages/list'));
-const PageEditPage = lazy(() => import('@/pages/pages'));
 const ProjectPage = lazy(() => import('@/pages/project'));
 
 const prefetchRoutes = () => {
@@ -113,23 +111,6 @@ export const AppRouter = (props: { layout?: any }) => {
           <Route
             path="/request-access"
             element={<RequestAccessRoute hasBetaAccess={hasBetaAccess} />}
-          />
-          <Route
-            path="/pages/list"
-            element={<BetaProtectedRoute component={PagesListPage} hasBetaAccess={true} />}
-          />
-          <Route
-            path="/pages/:pageId"
-            element={<BetaProtectedRoute component={PageEditPage} hasBetaAccess={true} />}
-          />
-          <Route
-            path="/pages/new"
-            element={
-              <BetaProtectedRoute
-                component={lazy(() => import('../pages/pages/new'))}
-                hasBetaAccess={true}
-              />
-            }
           />
         </Routes>
       </Layout>
