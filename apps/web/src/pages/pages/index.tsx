@@ -439,26 +439,26 @@ export function SlideshowEdit(props: PageEditProps) {
 
     if (pageLoadError) {
       return (
-        <div className="flex flex-col items-center justify-center py-20">
-          <FileTextOutlined className="text-4xl text-red-500 mb-4" />
-          <p className="text-lg text-gray-700 mb-2">{t('common.loadFailed')}</p>
-          <p className="text-sm text-gray-500 mb-4">{t('common.loadFailedDesc')}</p>
-          <Button type="primary" onClick={() => navigate('/pages')}>
-            {t('common.returnToList')}
-          </Button>
+        <div className="flex flex-col items-center justify-center h-[400px] bg-white rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-all shadow-sm hover:shadow-md">
+          <div className="w-16 h-16 flex items-center justify-center rounded-full bg-gray-50 mb-4">
+            <FileTextOutlined style={{ fontSize: '28px', color: '#bfbfbf' }} />
+          </div>
+          <p className="text-gray-500 font-medium">{t('common.emptyContent', 'No content')}</p>
         </div>
       );
     }
 
     if (!pageDetail) {
       return (
-        <div className="flex flex-col items-center justify-center py-20">
-          <FileTextOutlined className="text-4xl text-gray-400 mb-4" />
-          <p className="text-lg text-gray-700 mb-2">{t('common.noPage')}</p>
-          <p className="text-sm text-gray-500 mb-4">{t('common.noPageDesc')}</p>
-          <Button type="primary" onClick={() => navigate('/pages')}>
-            {t('common.returnToList')}
-          </Button>
+        <div
+          className="flex flex-col items-center justify-center h-[400px] bg-white rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-all shadow-sm hover:shadow-md"
+          onClick={handleOpenEmptyContentModal}
+        >
+          <div className="w-16 h-16 flex items-center justify-center rounded-full bg-gray-50 mb-4">
+            <FileTextOutlined style={{ fontSize: '28px', color: '#bfbfbf' }} />
+          </div>
+          <p className="text-gray-500 font-medium">{t('common.emptyContent', 'No content')}</p>
+          <p className="text-gray-400 text-sm mt-1">{t('common.clickToAdd', 'Click to add')}</p>
         </div>
       );
     }
@@ -563,20 +563,6 @@ export function SlideshowEdit(props: PageEditProps) {
     );
   }
 
-  // Error state
-  if (pageLoadError || !pageDetail) {
-    return (
-      <div className="p-6">
-        <div className="text-center">
-          <p className="text-red-500 mb-4">{t('common.loadFailed')}</p>
-          <Button onClick={handleBack} icon={<ArrowLeftOutlined />}>
-            {t('common.returnToList')}
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   // Preview mode rendering
   if (isPreviewMode) {
     return (
@@ -641,7 +627,7 @@ export function SlideshowEdit(props: PageEditProps) {
             )}
 
             <div className="text-xl font-semibold text-gray-800 mr-2">
-              {pageDetail.title || t('common.untitled')}
+              {pageDetail?.title || t('common.untitled')}
             </div>
           </div>
 
