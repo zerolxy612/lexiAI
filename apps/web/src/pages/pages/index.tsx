@@ -186,15 +186,24 @@ export function SlideshowEdit(props: PageEditProps) {
     }
   }, [form, pageDetail, nodes]);
 
-  // Form submission handler
-  const handleSubmit = useCallback(
-    (values: any) => {
+  // Prepare node relations with updated order
+  const prepareNodeRelations = useCallback((nodes: NodeRelation[]) => {
+    return nodes.map((node, index) => ({
+      nodeId: node.nodeId,
+      nodeType: node.nodeType,
+      entityId: node.entityId,
+      nodeData: node.nodeData,
+      orderIndex: index,
+    }));
+  }, []);
+
+  // Update page API call
+  const updatePageApi = useCallback(
+    (title: string, description: string | undefined, nodeRelations: NodeRelation[]) => {
       if (!pageId) return;
 
-      const { title, description } = values;
-
-      // Prepare node relations with updated order
-      const nodeRelations = nodesList.map((node, index) => ({
+      // Convert NodeRelation to NodeRelationDto format
+      const nodeRelationsDto = nodeRelations.map((node, index) => ({
         nodeId: node.nodeId,
         nodeType: node.nodeType,
         entityId: node.entityId,
@@ -202,16 +211,13 @@ export function SlideshowEdit(props: PageEditProps) {
         orderIndex: index,
       }));
 
-      setFormChanged(false);
-
-      // Call update API
       updatePage(
         {
           path: { pageId },
           body: {
             title,
             description,
-            nodeRelations,
+            nodeRelations: nodeRelationsDto,
           },
         },
         {
@@ -225,7 +231,23 @@ export function SlideshowEdit(props: PageEditProps) {
         },
       );
     },
-    [pageId, nodesList, updatePage, t],
+    [pageId, updatePage, t],
+  );
+
+  // Form submission handler
+  const handleSubmit = useCallback(
+    (values: any) => {
+      if (!pageId) return;
+
+      const { title, description } = values;
+
+      const nodeRelations = prepareNodeRelations(nodesList);
+
+      setFormChanged(false);
+
+      updatePageApi(title, description, nodeRelations);
+    },
+    [pageId, nodesList, prepareNodeRelations, updatePageApi],
   );
 
   // Form and navigation handling
@@ -246,10 +268,43 @@ export function SlideshowEdit(props: PageEditProps) {
   );
 
   // Handle node reordering
-  const handleReorderNodes = useCallback((newOrder: NodeRelation[]) => {
-    setNodes(newOrder);
-    setFormChanged(true);
-  }, []);
+  const handleReorderNodes = useCallback(
+    (newOrder: NodeRelation[]) => {
+      setNodes(newOrder);
+      setFormChanged(true);
+
+      if (pageId) {
+        const { title, description } = form.getFieldsValue();
+        // Immediately call API to update node order
+        updatePage(
+          {
+            path: { pageId },
+            body: {
+              title,
+              description,
+              nodeRelations: newOrder.map((node, index) => ({
+                nodeId: node.nodeId,
+                nodeType: node.nodeType,
+                entityId: node.entityId,
+                nodeData: node.nodeData,
+                orderIndex: index,
+              })),
+            },
+          },
+          {
+            onSuccess: () => {
+              message.success(t('pages.edit.saveSuccess'));
+            },
+            onError: (error) => {
+              console.error('Failed to reorder nodes:', error);
+              message.error(t('pages.edit.saveFailed'));
+            },
+          },
+        );
+      }
+    },
+    [form, pageId, updatePage, t],
+  );
 
   // Handle deleting a node
   const deletePageNodeMutation = useDeletePageNode();
@@ -690,21 +745,6 @@ export function SlideshowEdit(props: PageEditProps) {
                 {t('common.preview')}
               </Button>
             )}
-            {/* {formChanged && (
-              <Button
-                type="primary"
-                size={minimalMode ? 'small' : 'middle'}
-                htmlType="submit"
-                onClick={() => form.submit()}
-                loading={isUpdating}
-                icon={<SaveOutlined />}
-                className={`flex items-center bg-green-600 hover:bg-green-700 border-none ${
-                  minimalMode ? 'text-xs' : ''
-                }`}
-              >
-                {isUpdating ? t('common.saving') : t('common.savePage')}
-              </Button>
-            )} */}
           </div>
         </div>
       }

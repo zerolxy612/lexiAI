@@ -1,6 +1,5 @@
 import { useMemo, CSSProperties, useCallback } from 'react';
-import { Button, message, Tooltip } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Tooltip } from 'antd';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { type NodeRelation } from './ArtifactRenderer';
 import { NodeRenderer } from './NodeRenderer';
@@ -62,10 +61,6 @@ function SidebarMinimap({
     handleNodeSelect(destinationIndex);
   };
 
-  const addNewSlide = () => {
-    message.info(t('pages.sidebar.addNewSlideInDevelopment'));
-  };
-
   // Cache thumbnail card style
   const thumbnailCardStyle = useMemo(
     (): CSSProperties => ({
@@ -85,9 +80,6 @@ function SidebarMinimap({
         <span className="text-sm font-medium text-gray-600">
           {t('pages.components.navigationDirectory')}
         </span>
-        {!readonly && (
-          <Button type="text" size="small" icon={<PlusOutlined />} onClick={addNewSlide} />
-        )}
       </div>
 
       <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
