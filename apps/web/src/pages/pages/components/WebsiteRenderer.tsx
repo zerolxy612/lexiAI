@@ -19,7 +19,7 @@ const WebsiteRenderer = memo(
           isMinimap ? 'p-1' : ''
         }`}
       >
-        <div className="h-full w-full overflow-hidden flex flex-col">
+        <div className="h-full w-full overflow-auto p-4">
           <iframe
             key={url}
             src={url}

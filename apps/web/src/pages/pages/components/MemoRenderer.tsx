@@ -18,10 +18,8 @@ const MemoRenderer = memo(
           isMinimap ? 'p-1' : ''
         }`}
       >
-        <div className="h-full w-full overflow-hidden flex flex-col">
-          <div className="flex-1 overflow-auto p-4">
-            <Markdown content={node.nodeData?.contentPreview} />
-          </div>
+        <div className="h-full w-full overflow-auto">
+          <Markdown content={node.nodeData?.contentPreview} className="p-4" />
         </div>
       </div>
     );
