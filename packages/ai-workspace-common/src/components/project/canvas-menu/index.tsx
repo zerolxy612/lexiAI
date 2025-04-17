@@ -152,23 +152,30 @@ export const CanvasMenu = ({
     setHoveredCanvasId(null);
   }, []);
 
-  const deleteSelectedCanvases = useCallback(async () => {
-    const { data } = await getClient().deleteProjectItems({
-      body: {
-        projectId,
-        items: selectedCanvases.map((item) => ({
-          entityType: 'canvas',
-          entityId: item.id,
-        })),
-      },
-    });
-    if (data?.success) {
-      onRemoveCanvases?.(selectedCanvases.map((item) => item.id));
-      setSelectedCanvases([]);
-      setHoveredCanvasId(null);
-      message.success(t('project.action.deleteItemsSuccess'));
-    }
-  }, [selectedCanvases, exitMultiSelectMode, onRemoveCanvases]);
+  const [isDeleteLoading, setIsDeleteLoading] = useState(false);
+  const deleteSelectedCanvases = useCallback(
+    async (afterDelete?: () => void) => {
+      setIsDeleteLoading(true);
+      const { data } = await getClient().deleteProjectItems({
+        body: {
+          projectId,
+          items: selectedCanvases.map((item) => ({
+            entityType: 'canvas',
+            entityId: item.id,
+          })),
+        },
+      });
+      if (data?.success) {
+        onRemoveCanvases?.(selectedCanvases.map((item) => item.id));
+        setSelectedCanvases([]);
+        setHoveredCanvasId(null);
+        message.success(t('project.action.deleteItemsSuccess'));
+        afterDelete?.();
+      }
+      setIsDeleteLoading(false);
+    },
+    [selectedCanvases, exitMultiSelectMode, onRemoveCanvases, t],
+  );
 
   const removeSelectedCanvasesFromProject = useCallback(async () => {
     const res = await getClient().updateProjectItems({
@@ -247,6 +254,7 @@ export const CanvasMenu = ({
           children: (
             <div className="flex flex-col">
               <HeaderActions
+                source="canvas"
                 isSearchMode={isSearchMode}
                 isMultiSelectMode={isMultiSelectMode}
                 searchValue={searchValue}
@@ -255,6 +263,7 @@ export const CanvasMenu = ({
                 onToggleSearchMode={toggleSearchMode}
                 onExitMultiSelectMode={exitMultiSelectMode}
                 onDeleteSelected={deleteSelectedCanvases}
+                isDeleteLoading={isDeleteLoading}
                 onRemoveSelected={removeSelectedCanvasesFromProject}
                 addButtonNode={addButtonNode}
                 itemCountText={itemCountText}
@@ -299,19 +308,25 @@ export const CanvasMenu = ({
                         onMouseLeave={() => handleCanvasHover(null)}
                         onClick={() => handleCanvasClick(item.id, item)}
                       >
-                        <div className="flex items-center justify-between w-full">
+                        <div className="w-full relative">
                           <div className="flex items-center gap-2">
                             <IconCanvas className={cn(iconClassName, 'text-gray-500')} />
-                            <Text className="w-[120px] text-[13px] text-gray-700 truncate">
+                            <Text
+                              className="text-[13px] text-gray-700"
+                              ellipsis={{
+                                tooltip: { placement: 'right' },
+                              }}
+                            >
                               {item.name || t('common.untitled')}
                             </Text>
                           </div>
                           <div
                             className={cn(
-                              'flex items-center gap-1 transition-opacity duration-200',
+                              'absolute -right-1 top-1/2 -translate-y-1/2 flex items-center gap-1 transition-opacity duration-200 z-10 px-1',
                               isMultiSelectMode || hoveredCanvasId === item.id
                                 ? 'opacity-100'
                                 : 'opacity-0',
+                              isMultiSelectMode ? '' : 'bg-gray-50',
                             )}
                           >
                             <Checkbox

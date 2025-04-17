@@ -22,6 +22,7 @@ import {
   IconMoreHorizontal,
   IconDelete,
   IconDownloadFile,
+  IconRemove,
 } from '@refly-packages/ai-workspace-common/components/common/icon';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 import { sourceObject } from '@refly-packages/ai-workspace-common/components/project/project-directory';
@@ -213,7 +214,7 @@ const SourceItemActionDropdown = memo(
       {
         label: (
           <div className="flex items-center flex-grow">
-            <IconDelete size={16} className="mr-2 text-gray-600" />
+            <IconRemove size={16} className="mr-2 text-gray-600" />
             {t('project.action.remove', 'Remove from Project')}
           </div>
         ),
@@ -338,22 +339,29 @@ export const SourcesMenu = ({
     setIsMultiSelectMode(false);
   }, []);
 
-  const deleteSelectedSources = useCallback(async () => {
-    const { data } = await getClient().deleteProjectItems({
-      body: {
-        projectId,
-        items: selectedSources.map((item) => ({
-          entityType: item.entityType,
-          entityId: item.entityId,
-        })),
-      },
-    });
-    if (data?.success) {
-      exitSearchMode();
-      message.success(t('project.action.deleteItemsSuccess'));
-      onUpdatedItems?.();
-    }
-  }, [selectedSources, exitMultiSelectMode, projectId, t, onUpdatedItems]);
+  const [isDeleteLoading, setIsDeleteLoading] = useState(false);
+  const deleteSelectedSources = useCallback(
+    async (afterDelete?: () => void) => {
+      setIsDeleteLoading(true);
+      const { data } = await getClient().deleteProjectItems({
+        body: {
+          projectId,
+          items: selectedSources.map((item) => ({
+            entityType: item.entityType,
+            entityId: item.entityId,
+          })),
+        },
+      });
+      if (data?.success) {
+        exitSearchMode();
+        message.success(t('project.action.deleteItemsSuccess'));
+        onUpdatedItems?.();
+        afterDelete?.();
+      }
+      setIsDeleteLoading(false);
+    },
+    [selectedSources, exitMultiSelectMode, projectId, t, onUpdatedItems, exitSearchMode],
+  );
 
   const removeSelectedSourcesFromProject = useCallback(async () => {
     const res = await getClient().updateProjectItems({
@@ -484,7 +492,7 @@ export const SourcesMenu = ({
               </div>
             ),
             children: (
-              <div className="h-full flex flex-col">
+              <div className="h-full flex flex-col overflow-hidden">
                 <HeaderActions
                   source="source"
                   isSearchMode={isSearchMode}
@@ -495,13 +503,16 @@ export const SourcesMenu = ({
                   onToggleSearchMode={toggleSearchMode}
                   onExitMultiSelectMode={exitMultiSelectMode}
                   onDeleteSelected={deleteSelectedSources}
+                  isDeleteLoading={isDeleteLoading}
                   onRemoveSelected={removeSelectedSourcesFromProject}
                   onAddItem={handleAddSource}
                   onAddSelectedSourcesToCanvas={addSelectedSourcesToCanvas}
                   itemCountText={itemCountText}
                   addButtonNode={addButtonNode}
+                  useAffix={true}
+                  target={() => document.querySelector('.project-directory-content') as HTMLElement}
                 />
-                <div className="flex-grow overflow-y-auto px-3">
+                <div className="flex-grow overflow-y-auto px-3 source-list-container">
                   {isFetching ? (
                     <div className="flex justify-center h-full pt-4">
                       <Skeleton active paragraph={{ rows: 8 }} title={false} />
@@ -547,7 +558,7 @@ export const SourcesMenu = ({
                                 <Text
                                   className="text-[13px] text-gray-700 truncate"
                                   ellipsis={{
-                                    tooltip: true,
+                                    tooltip: { placement: 'right' },
                                   }}
                                 >
                                   {item.title || t('common.untitled')}
@@ -555,10 +566,11 @@ export const SourcesMenu = ({
                               </div>
                               <div
                                 className={cn(
-                                  'absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-1 transition-opacity duration-200 z-10 bg-gray-50 px-1',
+                                  'absolute -right-1 top-1/2 -translate-y-1/2 flex items-center gap-1 transition-opacity duration-200 z-10 px-1',
                                   isMultiSelectMode || hoveredSourceId === item.entityId
                                     ? 'opacity-100'
                                     : 'opacity-0',
+                                  isMultiSelectMode ? '' : 'bg-gray-50',
                                 )}
                               >
                                 <Checkbox

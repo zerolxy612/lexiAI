@@ -85,6 +85,7 @@ import QwenIcon from '@refly-packages/ai-workspace-common/assets/qwen.svg';
 import MetaLlamaIcon from '@refly-packages/ai-workspace-common/assets/meta.svg';
 import DeepSeekIcon from '@refly-packages/ai-workspace-common/assets/deepseek.svg';
 import MistralIcon from '@refly-packages/ai-workspace-common/assets/mistral.svg';
+import GrokIcon from '@refly-packages/ai-workspace-common/assets/grok.svg';
 import ChromeIcon from '@refly-packages/ai-workspace-common/assets/chrome.svg';
 import { MdOutlineMouse, MdOutlineRemoveCircleOutline } from 'react-icons/md';
 
@@ -179,6 +180,7 @@ export const ModelProviderIcons = {
   'meta-llama': MetaLlamaIcon,
   deepseek: DeepSeekIcon,
   mistral: MistralIcon,
+  xai: GrokIcon,
 } as const;
 
 const iconCache = new Map<string, string>();

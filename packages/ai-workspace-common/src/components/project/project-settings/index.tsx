@@ -9,11 +9,11 @@ import { useState } from 'react';
 import { AiOutlineMenuFold } from 'react-icons/ai';
 import { CreateProjectModal } from '@refly-packages/ai-workspace-common/components/project/project-create';
 import { ActionDropdown } from '@refly-packages/ai-workspace-common/components/workspace/project-list';
-import { useSiderStoreShallow } from '@refly-packages/ai-workspace-common/stores/sider';
 import { SlPicture } from 'react-icons/sl';
 import { IconDown } from '@arco-design/web-react/icon';
+import { LibraryModal } from '@refly-packages/ai-workspace-common/components/workspace/library-modal';
 
-const { Paragraph } = Typography;
+const { Paragraph, Text } = Typography;
 export const ProjectSettings = ({
   source,
   setCollapse,
@@ -28,9 +28,7 @@ export const ProjectSettings = ({
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [createProjectModalVisible, setCreateProjectModalVisible] = useState(false);
-  const { setShowLibraryModal } = useSiderStoreShallow((state) => ({
-    setShowLibraryModal: state.setShowLibraryModal,
-  }));
+  const [showLibraryModal, setShowLibraryModal] = useState(false);
 
   const handleEditSettings = () => {
     setCreateProjectModalVisible(true);
@@ -72,16 +70,24 @@ export const ProjectSettings = ({
           {data?.coverUrl ? (
             <img src={data?.coverUrl} alt="Refly" className="w-10 h-10 rounded-md" />
           ) : (
-            <div className="w-10 h-10 rounded-md bg-gray-100 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-md bg-gray-100 flex items-center justify-center flex-shrink-0">
               <SlPicture size={24} className="text-gray-500" />
             </div>
           )}
 
-          <div className="flex flex-col">
-            <span className="text-sm">{data?.name || t('common.untitled')}</span>
-          </div>
+          <Text
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowLibraryModal(true);
+            }}
+            className="text-sm"
+            ellipsis={{ tooltip: { placement: 'right', align: { offset: [40, 0] } } }}
+          >
+            {data?.name || t('common.untitled')}
+          </Text>
           <Tooltip title={t('project.viewAllProjects')}>
             <Button
+              className="flex-shrink-0"
               type="text"
               size="small"
               icon={<IconDown className={cn(iconClassName, 'text-gray-500')} />}
@@ -131,6 +137,8 @@ export const ProjectSettings = ({
           onUpdate(data);
         }}
       />
+
+      <LibraryModal visible={showLibraryModal} setVisible={setShowLibraryModal} />
     </div>
   );
 };

@@ -105,14 +105,18 @@ export class CodeArtifacts extends BaseSkill {
 
   commonPreprocess = async (state: GraphState, config: SkillRunnableConfig) => {
     const { messages = [], images = [] } = state;
-    const { locale = 'en', modelInfo, tplConfig, project } = config.configurable;
+    const { locale = 'en', modelInfo, tplConfig, project, runtimeConfig } = config.configurable;
 
     // Get project-specific customInstructions if available
     const customInstructions = project?.customInstructions;
 
-    // process projectId based knowledge base search
+    // Only enable knowledge base search if both projectId AND runtimeConfig.enabledKnowledgeBase are true
     const projectId = project?.projectId;
-    const enableKnowledgeBaseSearch = !!projectId;
+    const enableKnowledgeBaseSearch = !!projectId && !!runtimeConfig?.enabledKnowledgeBase;
+
+    this.engine.logger.log(
+      `ProjectId: ${projectId}, Enable KB Search: ${enableKnowledgeBaseSearch}`,
+    );
 
     // Get configuration values
     const artifactType = tplConfig?.artifactType?.value ?? 'auto';

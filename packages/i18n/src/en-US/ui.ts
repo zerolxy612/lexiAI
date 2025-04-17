@@ -77,6 +77,7 @@ const translations = {
     readonlyWarning: 'Read-Only Mode',
     readonlyDragDescription: 'Canvas is in read-only mode, modifications are not allowed.',
     preview: 'Preview',
+    viewAll: 'View All',
   },
   verifyRules: {
     emailRequired: 'Email cannot be empty',
@@ -188,8 +189,8 @@ const translations = {
         'Powered by multi-threaded dialogue, artifacts, knowledge integration, context memory, and intelligent search, ',
       second: 'Refly is the best way to transform ideas into quality content.',
     },
-    messageText: 'v0.4.2 Released: Canvas template, document table, and more 🚀',
-    simpleMessageText: 'v0.4.2: Canvas template 🚀',
+    messageText: 'v0.5.0 Released: Project, Linear conversation and more 🚀',
+    simpleMessageText: 'v0.5.0: Ask Project 🚀',
     tryForFree: 'Get Started',
     tryItNow: 'Try It Now',
     creationEngine: 'Creation Engine',
@@ -2295,7 +2296,7 @@ const translations = {
       disabledDesc:
         'Ask Project is currently disabled. Knowledge from files in "{{projectName}}" will not be used as reference when asking questions.',
     },
-    selectProject: 'Select project',
+    selectProject: 'Select Project',
     switchProject: 'Switch Project',
     createModal: {
       createTitle: 'Create Project',
@@ -2326,6 +2327,11 @@ const translations = {
       remove: 'Remove from project',
       addToCanvas: 'Add to Canvas',
       exit: 'Exit',
+      addSource: 'Add File',
+      addExistingSource: 'Add Existing File',
+      importResource: 'Import Resource',
+      onlyImageAllowed: 'Only {{type}} images are allowed',
+      imageSizeLimited: 'Image size limited to {{size}} MB',
     },
     addSources: {
       title: 'Add Files',
@@ -2334,7 +2340,7 @@ const translations = {
     sourceList: {
       selectedCount: 'Selected {{count}} items',
       removeConfirm: 'Are you sure you want to remove the selected items from the project?',
-      deleteConfirm: 'Will remove the selected items from the knowledge base, are you sure?',
+      deleteConfirm: 'The selected {{count}} items will be permanently deleted, continue?',
       searchPlaceholder: 'Search Sources...',
       sourceCount: '{{resourceCount}} resources · {{documentCount}} documents',
     },

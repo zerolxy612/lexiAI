@@ -2826,6 +2826,9 @@ components:
         disableLinkParsing:
           type: boolean
           description: Whether to disable link parsing for input query
+        enabledKnowledgeBase:
+          type: boolean
+          description: Whether to enable knowledge base for input query
     SkillTemplateConfig:
       type: object
       description: Skill template config (key is config item key, value is config value)

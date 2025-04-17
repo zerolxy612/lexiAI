@@ -61,7 +61,7 @@ export class CommonQnA extends BaseSkill {
     customInstructions?: string,
   ) => {
     const { messages = [], images = [] } = state;
-    const { locale = 'en', modelInfo, project } = config.configurable;
+    const { locale = 'en', modelInfo, project, runtimeConfig } = config.configurable;
 
     config.metadata.step = { name: 'analyzeQuery' };
 
@@ -81,9 +81,15 @@ export class CommonQnA extends BaseSkill {
       shouldSkipAnalysis: true, // For common QnA, we can skip analysis when there's no context and chat history
     });
 
-    // process projectId based knowledge base search
+    // Extract custom instructions only if project ID exists
     const projectId = project?.projectId;
-    const enableKnowledgeBaseSearch = !!projectId;
+
+    // Only enable knowledge base search if both projectId AND runtimeConfig.enabledKnowledgeBase are true
+    const enableKnowledgeBaseSearch = !!projectId && !!runtimeConfig?.enabledKnowledgeBase;
+
+    this.engine.logger.log(
+      `ProjectId: ${projectId}, Enable KB Search: ${enableKnowledgeBaseSearch}`,
+    );
 
     // Process URLs from context first (frontend)
     const contextUrls = config.configurable?.urls || [];
@@ -185,11 +191,13 @@ export class CommonQnA extends BaseSkill {
   ): Promise<Partial<GraphState>> => {
     const { currentSkill } = config.configurable;
 
-    // Extract customInstructions from project if available
+    // Extract projectId and customInstructions from project
     const project = config.configurable?.project as
       | { projectId: string; customInstructions?: string }
       | undefined;
-    const customInstructions = project?.customInstructions;
+
+    // Use customInstructions only if projectId exists (regardless of knowledge base search status)
+    const customInstructions = project?.projectId ? project?.customInstructions : undefined;
 
     // common preprocess
     const module = {

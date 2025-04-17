@@ -45,7 +45,14 @@ export const LibraryModal = (props: LibraryModalProps) => {
             </span>
           </div>
         ),
-        children: <ProjectList refresh={refreshProjectList} setRefresh={setRefreshProjectList} />,
+        children: (
+          <ProjectList
+            showLibraryModal={visible}
+            setShowLibraryModal={setVisible}
+            refresh={refreshProjectList}
+            setRefresh={setRefreshProjectList}
+          />
+        ),
       },
       !projectId && {
         key: 'document',
@@ -68,7 +75,7 @@ export const LibraryModal = (props: LibraryModalProps) => {
         children: <ResourceList />,
       },
     ],
-    [activeKey, t, refreshProjectList, projectId],
+    [activeKey, t, refreshProjectList, projectId, visible, setVisible],
   );
 
   return (

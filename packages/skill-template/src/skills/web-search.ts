@@ -57,7 +57,7 @@ export class WebSearch extends BaseSkill {
     config: SkillRunnableConfig,
   ): Promise<Partial<GraphState>> => {
     const { messages = [], images = [] } = state;
-    const { locale = 'en', currentSkill, project } = config.configurable;
+    const { locale = 'en', currentSkill, project, runtimeConfig } = config.configurable;
 
     // Extract customInstructions from project if available
     const customInstructions = project?.customInstructions;
@@ -65,9 +65,13 @@ export class WebSearch extends BaseSkill {
     // Set current step
     config.metadata.step = { name: 'analyzeQuery' };
 
-    // process projectId based knowledge base search
+    // Only enable knowledge base search if both projectId AND runtimeConfig.enabledKnowledgeBase are true
     const projectId = project?.projectId;
-    const enableKnowledgeBaseSearch = !!projectId;
+    const enableKnowledgeBaseSearch = !!projectId && !!runtimeConfig?.enabledKnowledgeBase;
+
+    this.engine.logger.log(
+      `ProjectId: ${projectId}, Enable KB Search: ${enableKnowledgeBaseSearch}`,
+    );
 
     // Force enable web search
     config.configurable.tplConfig = {

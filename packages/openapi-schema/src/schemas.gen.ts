@@ -981,6 +981,10 @@ export const SkillRuntimeConfigSchema = {
       type: 'boolean',
       description: 'Whether to disable link parsing for input query',
     },
+    enabledKnowledgeBase: {
+      type: 'boolean',
+      description: 'Whether to enable knowledge base for input query',
+    },
   },
 } as const;
 

@@ -71,9 +71,7 @@ export const TemplateCard = ({
             <div className="font-light truncate text-xs text-gray-500">{`@${template.shareUser?.name}`}</div>
           </div>
         </div>
-      ) : (
-        <div className="mx-2 mb-2 px-2 h-[26px]" />
-      )}
+      ) : null}
 
       <div className="mx-2 px-2 h-[50px]">
         <Typography.Paragraph

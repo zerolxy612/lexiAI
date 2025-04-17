@@ -11,6 +11,7 @@ import { genActionResultID, genUniqueId } from '@refly/utils/id';
 import { ChatPanel } from '@refly-packages/ai-workspace-common/components/canvas/node-chat-panel';
 import {
   IContextItem,
+  useContextPanelStore,
   useContextPanelStoreShallow,
 } from '@refly-packages/ai-workspace-common/stores/context-panel';
 import {
@@ -257,6 +258,7 @@ export const EnhancedSkillResponse = memo(
       const newNodeId = genUniqueId();
 
       const finalProjectId = getFinalProjectId();
+      const { runtimeConfig = {} } = useContextPanelStore.getState();
 
       // Create message object for the thread
       const newMessage: LinearThreadMessage = {
