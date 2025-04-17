@@ -8,8 +8,8 @@
   "main": "dist-electron/electron/main.js",
   "scripts": {
     "copy-env": "ncp .env.example .env",
-    "build": "prisma generate && tsc --build --verbose && ncp prisma/ dist/prisma/",
-    "build:electron": "prisma generate --schema=prisma/sqlite-schema.prisma && tsc --build tsconfig.electron.json && cp -r src/generated dist-electron/generated",
+    "build": "prisma generate && tsc --build --verbose && ncp prisma/ dist/prisma/ && ncp src/generated dist/generated",
+    "build:electron": "prisma generate --schema=prisma/sqlite-schema.prisma && tsc --build tsconfig.electron.json && ncp src/generated dist-electron/generated",
     "prisma:generate": "prisma format && prisma generate",
     "sync-db-schema": "prisma format && prisma generate && node -r ts-node/register --env-file=.env src/scripts/sync-db-schema.ts",
     "dev": "nodemon",
