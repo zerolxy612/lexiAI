@@ -596,11 +596,14 @@ export class PagesService {
       // Extract the set of existing node IDs
       const existingNodeIds = new Set(existingNodeRelations.map((relation) => relation.node_id));
 
-      // Filter out node IDs that already exist
+      // Filter out node IDs that already exist and those that need to be added
       const newNodeIds = addNodesDto.nodeIds.filter((nodeId) => !existingNodeIds.has(nodeId));
+      const existingNodeIdsToUpdate = addNodesDto.nodeIds.filter((nodeId) =>
+        existingNodeIds.has(nodeId),
+      );
 
-      // If there are no new nodes to add, directly return the current page and node relations
-      if (newNodeIds.length === 0) {
+      // If there are no new nodes to add and no existing nodes to update, directly return the current page and node relations
+      if (newNodeIds.length === 0 && existingNodeIdsToUpdate.length === 0) {
         const currentNodeRelations = await tx.$queryRaw<PageNodeRelation[]>`
           SELECT * FROM "page_node_relations"
           WHERE "page_id" = ${page.page_id}
@@ -633,12 +636,37 @@ export class PagesService {
             nodeType: node.type || 'unknown',
             entityId: node.data?.entityId || nodeId,
             nodeData: node.data || {},
+            isNew: true,
           };
         })
         .filter((info): info is NonNullable<typeof info> => info !== null);
 
+      // Extract information for existing nodes that need to be updated
+      const existingNodeInfos = existingNodeIdsToUpdate
+        .map((nodeId) => {
+          // Find matching node in Canvas nodes array
+          const node = canvasData.nodes.find((n) => n.data?.entityId === nodeId);
+
+          if (!node) {
+            this.logger.warn(`Node ${nodeId} not found in canvas ${canvasId}, skipping update`);
+            return null;
+          }
+
+          return {
+            nodeId: nodeId,
+            nodeType: node.type || 'unknown',
+            entityId: node.data?.entityId || nodeId,
+            nodeData: node.data || {},
+            isNew: false,
+          };
+        })
+        .filter((info): info is NonNullable<typeof info> => info !== null);
+
+      // Combine new and existing node infos
+      const allNodeInfos = [...nodeInfos, ...existingNodeInfos];
+
       // If all nodes are invalid, return current page and node relations
-      if (nodeInfos.length === 0) {
+      if (allNodeInfos.length === 0) {
         this.logger.warn(`No valid nodes found for canvas ${canvasId}, returning current state`);
         const currentNodeRelations = await tx.$queryRaw<PageNodeRelation[]>`
           SELECT * FROM "page_node_relations"
@@ -653,7 +681,7 @@ export class PagesService {
         };
       }
 
-      // Get the current maximum order_index
+      // Get the current maximum order_index (only needed for new nodes)
       const [maxOrderResult] = await tx.$queryRaw<{ max_order: number }[]>`
         SELECT COALESCE(MAX("order_index"), -1) as max_order FROM "page_node_relations"
         WHERE "page_id" = ${page.page_id}
@@ -662,22 +690,43 @@ export class PagesService {
 
       const startOrderIndex = (maxOrderResult?.max_order ?? -1) + 1;
 
-      // Create page-node relation records
-      const nodeRelationsPromises = nodeInfos.map(async (node, index) => {
-        const relationId = genPageNodeRelationId();
-        const orderIndex = startOrderIndex + index;
+      // Process all node relations (both new and existing)
+      const nodeRelationsPromises = allNodeInfos.map(async (node, index) => {
         const nodeData =
           typeof node.nodeData === 'string' ? node.nodeData : JSON.stringify(node.nodeData || {});
 
+        // For new nodes, create new relations
+        if (node.isNew) {
+          const relationId = genPageNodeRelationId();
+          const orderIndex = startOrderIndex + index;
+
+          const [relation] = await tx.$queryRaw<PageNodeRelation[]>`
+            INSERT INTO "page_node_relations" (
+              "relation_id", "page_id", "node_id", "node_type", "entity_id", 
+              "order_index", "node_data", "created_at", "updated_at"
+            )
+            VALUES (
+              ${relationId}, ${page.page_id}, ${node.nodeId}, ${node.nodeType}, ${node.entityId}, 
+              ${orderIndex}, ${nodeData}, NOW(), NOW()
+            )
+            RETURNING *
+          `;
+
+          return relation;
+        }
+
+        // For existing nodes, update their data
         const [relation] = await tx.$queryRaw<PageNodeRelation[]>`
-          INSERT INTO "page_node_relations" (
-            "relation_id", "page_id", "node_id", "node_type", "entity_id", 
-            "order_index", "node_data", "created_at", "updated_at"
-          )
-          VALUES (
-            ${relationId}, ${page.page_id}, ${node.nodeId}, ${node.nodeType}, ${node.entityId}, 
-            ${orderIndex}, ${nodeData}, NOW(), NOW()
-          )
+          UPDATE "page_node_relations"
+          SET 
+            "node_type" = ${node.nodeType},
+            "entity_id" = ${node.entityId},
+            "node_data" = ${nodeData},
+            "updated_at" = NOW()
+          WHERE 
+            "page_id" = ${page.page_id} 
+            AND "node_id" = ${node.nodeId}
+            AND "deleted_at" IS NULL
           RETURNING *
         `;
 

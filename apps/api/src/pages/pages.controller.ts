@@ -142,17 +142,4 @@ export class PagesController {
         : [],
     });
   }
-
-  @ApiOperation({ summary: 'Delete page' })
-  @ApiResponse({ status: 200, description: 'Page deleted successfully' })
-  @UseGuards(JwtAuthGuard)
-  @Delete(':pageId')
-  async deletePage(@LoginedUser() user: User, @Param('pageId') pageId: string) {
-    const result = await this.pagesService.deletePage(user, pageId);
-
-    return buildSuccessResponse({
-      pageId: result.pageId,
-      canvasId: result.canvasId,
-    });
-  }
 }
