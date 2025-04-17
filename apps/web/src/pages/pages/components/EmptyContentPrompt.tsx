@@ -111,6 +111,20 @@ const EmptyContentPrompt: FC<EmptyContentPromptProps> = ({
     });
   }, []);
 
+  // Handle select all nodes
+  const handleSelectAll = useCallback(() => {
+    if (selectedNodeIds.length === filteredNodes.length) {
+      // If all nodes are selected, deselect all
+      setSelectedNodeIds([]);
+    } else {
+      // Otherwise, select all filtered nodes
+      const allEntityIds = filteredNodes
+        .map((node) => node.data?.entityId)
+        .filter(Boolean) as string[];
+      setSelectedNodeIds(allEntityIds);
+    }
+  }, [filteredNodes, selectedNodeIds]);
+
   // Handle adding selected nodes to the page
   const handleAddNodes = useCallback(() => {
     if (!pageId || selectedNodeIds.length === 0) return;
@@ -320,6 +334,11 @@ const EmptyContentPrompt: FC<EmptyContentPromptProps> = ({
             : t('common.noItemsSelected', 'No items selected')}
         </div>
         <div className="flex gap-3">
+          <Button size="middle" onClick={handleSelectAll}>
+            {selectedNodeIds.length === filteredNodes.length && filteredNodes.length > 0
+              ? t('common.deselectAll', 'Deselect All')
+              : t('common.selectAll', 'Select All')}
+          </Button>
           <Button
             size="middle"
             icon={<ClearOutlined />}

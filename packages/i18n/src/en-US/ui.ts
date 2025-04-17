@@ -115,6 +115,8 @@ const translations = {
     contentAdded: 'Content added',
     emptyContent: 'No content',
     clickToAdd: 'Click to add',
+    selectAll: 'Select All',
+    deselectAll: 'Deselect All',
   },
   pages: {
     share: {

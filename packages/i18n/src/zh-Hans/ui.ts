@@ -123,6 +123,8 @@ const translations = {
     contentAdded: '内容已添加',
     emptyContent: '暂无内容',
     clickToAdd: '点击添加',
+    selectAll: '全选',
+    deselectAll: '取消全选',
   },
   verifyRules: {
     emailRequired: '邮箱地址不能为空',
