@@ -22,8 +22,11 @@ WORKDIR /app
 RUN npm install -g pnpm@8.15.8
 
 COPY . .
-RUN pnpm install
-RUN pnpm build:api
+# Install dependencies, build the app, then clean up all node_modules across the monorepo and install only production dependencies
+RUN pnpm install && \
+    pnpm build:api && \
+    find . -name "node_modules" -type d -prune -exec rm -rf {} \; || true && \
+    pnpm install --prod
 
 EXPOSE 3000
 CMD [ "node", "apps/api/dist/server/main.js" ]
