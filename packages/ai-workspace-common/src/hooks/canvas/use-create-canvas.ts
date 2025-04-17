@@ -5,8 +5,7 @@ import { useDebouncedCallback } from 'use-debounce';
 import { useNavigate } from 'react-router-dom';
 import { useSiderStore } from '@refly-packages/ai-workspace-common/stores/sider';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
-
-const CANVAS_NUM = 4;
+import { DATA_NUM } from '@refly-packages/ai-workspace-common/hooks/use-handle-sider-data';
 
 export const useCreateCanvas = ({
   projectId,
@@ -50,7 +49,7 @@ export const useCreateCanvas = ({
             type: 'canvas' as const,
           },
           ...canvasList,
-        ].slice(0, CANVAS_NUM),
+        ].slice(0, DATA_NUM),
       );
 
       message.success(t('canvas.action.addSuccess'));

@@ -280,6 +280,7 @@ const translations = {
       newSlide: 'Click to create slideshow',
       newSlideDescription: 'No slideshow? Click to create one',
     },
+    viewAll: 'View All',
   },
   verifyRules: {
     emailRequired: 'Email cannot be empty',

@@ -306,7 +306,7 @@ const ResourceList = () => {
             dataLength={dataList.length}
             next={handleLoadMore}
             hasMore={hasMore}
-            loader={<Spinner />}
+            loader={isRequesting ? <Spinner /> : null}
             endMessage={<EndMessage />}
             scrollableTarget="resourceScrollableDiv"
           >

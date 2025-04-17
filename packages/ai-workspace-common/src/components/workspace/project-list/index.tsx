@@ -28,7 +28,7 @@ import { useGetProjectCanvasId } from '@refly-packages/ai-workspace-common/hooks
 import { SlPicture } from 'react-icons/sl';
 import { useProjectSelectorStoreShallow } from '@refly-packages/ai-workspace-common/stores/project-selector';
 import { useSiderStoreShallow } from '@refly-packages/ai-workspace-common/stores/sider';
-
+import { DATA_NUM } from '@refly-packages/ai-workspace-common/hooks/use-handle-sider-data';
 export const ActionDropdown = ({
   project,
   afterDelete,
@@ -321,7 +321,7 @@ const ProjectList = ({
         coverUrl: project.coverUrl,
         type: 'project' as const,
       }))
-      .slice(0, 4);
+      .slice(0, DATA_NUM);
     updateProjectsList(formattedProjects);
   }, [dataList]);
 
@@ -351,15 +351,15 @@ const ProjectList = ({
 
   return (
     <Spin className="w-full h-full" spinning={isRequesting && dataList.length === 0}>
-      <div id="resourceScrollableDiv" className="w-full h-[calc(60vh-60px)] overflow-y-auto">
+      <div id="projectScrollableDiv" className="w-full h-[calc(60vh-60px)] overflow-y-auto">
         {dataList.length > 0 ? (
           <InfiniteScroll
             dataLength={dataList.length}
             next={handleLoadMore}
             hasMore={hasMore}
-            loader={<Spinner />}
+            loader={isRequesting ? <Spinner /> : null}
             endMessage={<EndMessage />}
-            scrollableTarget="resourceScrollableDiv"
+            scrollableTarget="projectScrollableDiv"
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
               <CreateCard reload={reload} setVisible={setShowLibraryModal} />
