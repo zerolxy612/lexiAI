@@ -63,6 +63,7 @@ export function SlideshowEdit(props: PageEditProps) {
   const { t } = useTranslation();
   const [_formChanged, setFormChanged] = useState(false);
   const [activeNodeIndex, setActiveNodeIndex] = useState(0);
+  const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null);
   const [nodesList, setNodes] = useState<NodeRelation[]>([]);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [_isDeletingNode, setIsDeletingNode] = useState(false);
@@ -70,6 +71,16 @@ export function SlideshowEdit(props: PageEditProps) {
     isActive: false,
     nodeId: null,
   });
+
+  // Handle node focus function
+  const handleNodeFocus = useCallback((nodeId: string) => {
+    setFocusedNodeId(nodeId);
+  }, []);
+
+  // Handle click outside to clear focus
+  const handleClickOutside = useCallback(() => {
+    setFocusedNodeId(null);
+  }, []);
 
   // Share related states
   const [shareModalVisible, setShareModalVisible] = useState(false);
@@ -488,7 +499,7 @@ export function SlideshowEdit(props: PageEditProps) {
     }
 
     return (
-      <div>
+      <div onClick={handleClickOutside}>
         {/* Content section - using virtualized list for optimization */}
         {nodesList.length > 0 ? (
           <div className="space-y-6">
@@ -496,7 +507,11 @@ export function SlideshowEdit(props: PageEditProps) {
               <div
                 key={node.relationId || `content-${index}`}
                 id={`content-block-${index}`}
-                onClick={() => setActiveNodeIndex(index)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveNodeIndex(index);
+                  handleNodeFocus(node.nodeId);
+                }}
                 className={`transition-all duration-300 h-[400px] rounded-lg bg-white ${
                   activeNodeIndex === index
                     ? 'shadow-[0_10px_30px_rgba(0,0,0,0.15)] transform -translate-y-1 border border-blue-400'
@@ -508,6 +523,7 @@ export function SlideshowEdit(props: PageEditProps) {
                   onStartSlideshow={handleStartSlideshow}
                   onWideMode={handleWideMode}
                   node={node}
+                  isFocused={focusedNodeId === node.nodeId}
                 />
               </div>
             ))}
@@ -554,8 +570,11 @@ export function SlideshowEdit(props: PageEditProps) {
     handleNodeSelect,
     handleDeleteNode,
     handleStartSlideshow,
-    handleWideMode,
     navigate,
+    focusedNodeId,
+    // Remove dependencies on functions that don't change
+    // handleNodeFocus,
+    // handleClickOutside,
   ]);
 
   // Loading state
@@ -693,47 +712,6 @@ export function SlideshowEdit(props: PageEditProps) {
       {/* Content module */}
       {renderPageContent}
 
-      {/* Wide mode modal */}
-      <Modal
-        open={wideMode.isActive}
-        footer={null}
-        onCancel={handleCloseWideMode}
-        width="85%"
-        style={{ top: 20 }}
-        bodyStyle={{
-          maxHeight: 'calc(100vh - 100px)',
-          padding: 0,
-          overflow: 'hidden',
-          borderRadius: '8px',
-        }}
-        className="wide-mode-modal"
-        closeIcon={<CloseCircleOutlined className="text-gray-500 hover:text-red-500" />}
-        maskStyle={{ background: 'rgba(0, 0, 0, 0.65)' }}
-      >
-        <div className="bg-white h-full w-full flex flex-col rounded-lg overflow-hidden">
-          {/* Wide mode content */}
-          <div className="flex-1 overflow-auto">
-            {wideMode.nodeId && nodesList.find((n) => n.nodeId === wideMode.nodeId) ? (
-              <div className="h-[calc(100vh-160px)]">
-                <NodeRenderer
-                  node={nodesList.find((n) => n.nodeId === wideMode.nodeId)!}
-                  isFullscreen={false}
-                  isModal={true}
-                  isMinimap={false}
-                  onDelete={handleDeleteNode}
-                  onStartSlideshow={handleStartSlideshow}
-                  onWideMode={handleWideMode}
-                />
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <p className="text-gray-500">{t('common.wideModeLoadFailed')}</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </Modal>
-
       {/* Empty Content Modal */}
       <Modal
         title={
@@ -848,6 +826,47 @@ export function SlideshowEdit(props: PageEditProps) {
               <div className="mt-4 text-gray-500 text-sm">{t('common.shareUrlDesc')}</div>
             </div>
           )}
+        </div>
+      </Modal>
+
+      {/* Wide mode modal */}
+      <Modal
+        open={wideMode.isActive}
+        footer={null}
+        onCancel={handleCloseWideMode}
+        width="85%"
+        style={{ top: 20 }}
+        bodyStyle={{
+          maxHeight: 'calc(100vh - 100px)',
+          padding: 0,
+          overflow: 'hidden',
+          borderRadius: '8px',
+        }}
+        className="wide-mode-modal"
+        closeIcon={<CloseCircleOutlined className="text-gray-500 hover:text-red-500" />}
+        maskStyle={{ background: 'rgba(0, 0, 0, 0.65)' }}
+      >
+        <div className="bg-white h-full w-full flex flex-col rounded-lg overflow-hidden">
+          {/* Wide mode content */}
+          <div className="flex-1 overflow-auto">
+            {wideMode.nodeId && nodesList.find((n) => n.nodeId === wideMode.nodeId) ? (
+              <div className="h-[calc(100vh-160px)]">
+                <NodeRenderer
+                  node={nodesList.find((n) => n.nodeId === wideMode.nodeId)!}
+                  isFullscreen={false}
+                  isModal={true}
+                  isMinimap={false}
+                  onDelete={handleDeleteNode}
+                  onStartSlideshow={handleStartSlideshow}
+                  onWideMode={handleWideMode}
+                />
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-gray-500">{t('common.wideModeLoadFailed')}</p>
+              </div>
+            )}
+          </div>
         </div>
       </Modal>
     </PageLayout>
