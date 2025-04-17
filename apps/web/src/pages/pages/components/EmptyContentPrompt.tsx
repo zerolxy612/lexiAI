@@ -22,6 +22,7 @@ interface EmptyContentPromptProps {
   canvasId?: string;
   onNodeAdded?: () => void;
   height?: string;
+  excludeNodeIds?: string[];
 }
 
 /**
@@ -33,6 +34,7 @@ const EmptyContentPrompt: FC<EmptyContentPromptProps> = ({
   canvasId,
   onNodeAdded,
   height = '400px',
+  excludeNodeIds = [],
 }) => {
   const { t } = useTranslation();
   const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([]);
@@ -59,11 +61,17 @@ const EmptyContentPrompt: FC<EmptyContentPromptProps> = ({
   // Get available nodes from canvas data
   const availableNodes = canvasData?.data?.nodes || [];
 
+  // Filter out already existing nodes
+  const filteredAvailableNodes = useMemo(() => {
+    if (!excludeNodeIds.length) return availableNodes;
+    return availableNodes.filter((node) => !excludeNodeIds.includes(node.data?.entityId));
+  }, [availableNodes, excludeNodeIds]);
+
   // Filtered nodes based on search term
   const filteredNodes = useMemo(() => {
-    if (!searchTerm.trim()) return availableNodes;
+    if (!searchTerm.trim()) return filteredAvailableNodes;
 
-    return availableNodes.filter((node) => {
+    return filteredAvailableNodes.filter((node) => {
       const nodeTitle = (node.data?.title || '').toLowerCase();
       const nodeId = (node.id || '').toLowerCase();
       const entityId = (node.data?.entityId || '').toLowerCase();
@@ -77,7 +85,7 @@ const EmptyContentPrompt: FC<EmptyContentPromptProps> = ({
         nodeType.includes(searchLower)
       );
     });
-  }, [availableNodes, searchTerm]);
+  }, [filteredAvailableNodes, searchTerm]);
 
   // Reset active index when filtered nodes change
   useEffect(() => {

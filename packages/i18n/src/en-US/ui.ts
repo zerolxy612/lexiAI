@@ -117,6 +117,7 @@ const translations = {
     clickToAdd: 'Click to add',
     selectAll: 'Select All',
     deselectAll: 'Deselect All',
+    addNode: 'Add Node',
   },
   pages: {
     share: {

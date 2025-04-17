@@ -125,6 +125,7 @@ const translations = {
     clickToAdd: '点击添加',
     selectAll: '全选',
     deselectAll: '取消全选',
+    addNode: '添加节点',
   },
   verifyRules: {
     emailRequired: '邮箱地址不能为空',

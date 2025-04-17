@@ -10,7 +10,6 @@ import {
 } from '@refly-packages/ai-workspace-common/queries/queries';
 import {
   ArrowLeftOutlined,
-  SaveOutlined,
   ShareAltOutlined,
   CopyOutlined,
   GlobalOutlined,
@@ -62,7 +61,7 @@ export function SlideshowEdit(props: PageEditProps) {
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const { t } = useTranslation();
-  const [formChanged, setFormChanged] = useState(false);
+  const [_formChanged, setFormChanged] = useState(false);
   const [activeNodeIndex, setActiveNodeIndex] = useState(0);
   const [nodesList, setNodes] = useState<NodeRelation[]>([]);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
@@ -427,6 +426,11 @@ export function SlideshowEdit(props: PageEditProps) {
     setEmptyContentModalVisible(false);
   }, []);
 
+  // Handle adding new node
+  const handleAddNode = useCallback(() => {
+    setEmptyContentModalVisible(true);
+  }, []);
+
   // Render page content
   const renderPageContent = useMemo(() => {
     if (isLoadingPage) {
@@ -632,6 +636,28 @@ export function SlideshowEdit(props: PageEditProps) {
           </div>
 
           <div className="flex items-center">
+            <Button
+              type="text"
+              size={minimalMode ? 'small' : 'middle'}
+              onClick={handleAddNode}
+              icon={<PlusOutlined />}
+              className={`flex items-center text-gray-600 hover:!text-green-600 hover:bg-gray-50 ${
+                minimalMode ? 'text-xs' : ''
+              }`}
+            >
+              {t('common.addNode')}
+            </Button>
+            <Button
+              type="text"
+              size={minimalMode ? 'small' : 'middle'}
+              onClick={handleShare}
+              icon={<ShareAltOutlined />}
+              className={`flex items-center mr-2 text-gray-600 hover:!text-green-600 hover:bg-gray-50 ${
+                minimalMode ? 'text-xs' : ''
+              }`}
+            >
+              {t('common.shareLink')}
+            </Button>
             {nodesList.length > 0 && (
               <Button
                 type="text"
@@ -645,18 +671,7 @@ export function SlideshowEdit(props: PageEditProps) {
                 {t('common.preview')}
               </Button>
             )}
-            <Button
-              type="text"
-              size={minimalMode ? 'small' : 'middle'}
-              onClick={handleShare}
-              icon={<ShareAltOutlined />}
-              className={`flex items-center mr-2 text-gray-600 hover:!text-green-600 hover:bg-gray-50 ${
-                minimalMode ? 'text-xs' : ''
-              }`}
-            >
-              {t('common.shareLink')}
-            </Button>
-            {formChanged && (
+            {/* {formChanged && (
               <Button
                 type="primary"
                 size={minimalMode ? 'small' : 'middle'}
@@ -670,7 +685,7 @@ export function SlideshowEdit(props: PageEditProps) {
               >
                 {isUpdating ? t('common.saving') : t('common.savePage')}
               </Button>
-            )}
+            )} */}
           </div>
         </div>
       }
@@ -748,6 +763,7 @@ export function SlideshowEdit(props: PageEditProps) {
             canvasId={pageDetail?.canvasId}
             pageId={pageId}
             height="100%"
+            excludeNodeIds={nodesList.map((node) => node.entityId).filter(Boolean) as string[]}
             onNodeAdded={() => {
               refetchPageDetail();
               handleCloseEmptyContentModal();
