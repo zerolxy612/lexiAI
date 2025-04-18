@@ -1,0 +1,37 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# Web Application Structure
+
+The frontend web application is built with React and follows a modular structure.
+
+## Entry Point
+- [apps/web/src/main.tsx](mdc:apps/web/src/main.tsx) - Main application bootstrap
+
+## Pages and Routing
+- [apps/web/src/pages](mdc:apps/web/src/pages) - Top-level page components
+- [apps/web/src/routes](mdc:apps/web/src/routes) - Application routing configuration
+
+## Components
+- [apps/web/src/components](mdc:apps/web/src/components) - Reusable UI components
+
+## Styles
+- [apps/web/src/styles](mdc:apps/web/src/styles) - Global styles and theming
+- [apps/web/src/index.css](mdc:apps/web/src/index.css) - Main stylesheet with Tailwind imports
+
+## Utilities
+- [apps/web/src/utils](mdc:apps/web/src/utils) - Shared utility functions
+- [apps/web/src/lib](mdc:apps/web/src/lib) - Libraries and helpers
+
+## Types
+- [apps/web/src/types](mdc:apps/web/src/types) - TypeScript type definitions
+- [apps/web/src/@types](mdc:apps/web/src/@types) - Global type augmentations
+
+## Best Practices
+- Use React hooks for state management
+- Follow the code style guidelines
+- Optimize components for performance
+- Implement proper error boundaries
+- Keep components small and focused on a single responsibility

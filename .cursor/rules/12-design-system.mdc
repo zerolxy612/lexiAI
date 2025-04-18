@@ -1,0 +1,25 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# Design System
+
+## Color Palette
+
+- Primary: `#155EEF` - Main brand color for buttons, links, and accents
+- Error: `#F04438` - Used for error states and destructive actions
+- Success: `#12B76A` - Used for success states and confirmations
+- Warning: `#F79009` - Used for warnings and important notifications
+- Info: `#0BA5EC` - Used for informational elements
+
+## Typography
+
+- Font Family: Inter, system-ui, sans-serif
+- Headings: `font-semibold` with appropriate text sizes:
+  - H1: `text-3xl`
+  - H2: `text-2xl`
+  - H3: `text-xl`
+  - H4: `text-lg`
+- Body: `text-base` for regular text
+- Small: `text-sm` for less important information

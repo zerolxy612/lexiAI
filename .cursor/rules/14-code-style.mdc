@@ -1,0 +1,47 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Code Style Guidelines
+
+## JavaScript/TypeScript Style
+
+- Use single quotes for string literals in JavaScript/TypeScript code
+- Always use optional chaining (`?.`) when accessing object properties
+- Always use nullish coalescing (`??`) or default values for potentially undefined values
+- Always check array existence before using array methods
+- Always validate object properties before destructuring
+- Use ES6+ features like arrow functions, destructuring, and spread operators
+- Keep functions small and focused on a single responsibility
+- Avoid magic numbers and strings - use named constants
+- Use async/await instead of raw promises for asynchronous code
+
+## React Performance Optimization
+
+- Always wrap pure components with React.memo to prevent unnecessary re-renders
+- Always use useMemo for expensive computations or complex object creation
+- Always use useCallback for function props to maintain referential equality
+- Always specify proper dependency arrays in useEffect to prevent infinite loops
+- Always avoid inline object/array creation in render to prevent unnecessary re-renders
+- Always use proper key props when rendering lists (avoid using index when possible)
+- Always split nested components with closures into separate components
+- Use lazy loading for components that are not immediately needed
+- Debounce handlers for events that fire rapidly (resize, scroll, input)
+
+## Error Handling
+
+- Always handle potential errors in asynchronous operations
+- Provide meaningful error messages that help with debugging
+- Implement fallback UI for components that might fail
+- Use error boundaries to catch and handle runtime errors
+- Avoid silent failures - log errors appropriately
+
+## TypeScript Best Practices
+
+- Define explicit return types for functions
+- Use interface for object types that will be extended
+- Use type for unions, intersections, and simple object types
+- Avoid using 'any' type - use 'unknown' for truly unknown values
+- Leverage generics for reusable components and functions
+- Use discriminated unions for handling different states

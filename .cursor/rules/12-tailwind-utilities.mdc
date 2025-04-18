@@ -1,0 +1,45 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# Tailwind CSS Utilities
+
+## Common Utility Patterns
+
+### Flexbox Layouts
+- `flex items-center`: Center items vertically
+- `flex justify-between`: Space items evenly with space between
+- `flex-col`: Stack items vertically
+- `flex-wrap`: Allow items to wrap to next line
+
+### Spacing
+- `px-4 py-2`: Horizontal padding of 16px, vertical padding of 8px
+- `my-4 mx-2`: Vertical margin of 16px, horizontal margin of 8px
+- `space-x-4`: Add horizontal space between child elements
+- `space-y-2`: Add vertical space between child elements
+
+### Typography
+- `text-sm text-gray-500`: Small, gray text for secondary information
+- `font-medium`: Medium font weight for slightly emphasized text
+- `truncate`: Truncate text with ellipsis when it overflows
+- `leading-tight`: Tighter line height for headings
+
+### Containers
+- `container mx-auto`: Centered container with responsive width
+- `max-w-md`: Maximum width constraints for elements
+- `w-full`: Full width of parent container
+- `h-screen`: Full viewport height
+
+### Responsive Design
+- `md:flex-row sm:flex-col`: Row layout on medium screens, column on small screens
+- `lg:block md:hidden`: Show on large screens, hide on medium screens
+- `sm:text-lg`: Larger text on small screens and up
+
+## Best Practices
+
+- Group related utilities by category (layout, spacing, typography)
+- Keep class names organized in a consistent order
+- Avoid extremely long chains of utility classes
+- Extract commonly used patterns to components
+- Use responsive utilities consistently across similar components
