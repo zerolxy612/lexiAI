@@ -78,6 +78,7 @@ const translations = {
     readonlyDragDescription: 'Canvas is in read-only mode, modifications are not allowed.',
     preview: 'Preview',
     viewAll: 'View All',
+    noMore: 'No more~',
   },
   verifyRules: {
     emailRequired: 'Email cannot be empty',
@@ -1616,6 +1617,10 @@ const translations = {
       description: "👋 Welcome to Refly! Let's proceed with some necessary configurations.",
     },
     tabs: {
+      modelProviders: 'Model Providers',
+      modelConfig: 'Model Config',
+      searchConfig: 'Search Config',
+      resourceParser: 'Resource Parser',
       account: 'Account',
       language: 'Language',
       subscription: 'Subscription',
@@ -1779,6 +1784,24 @@ const translations = {
       payCancelNotify: 'Payment canceled!',
       payCancelDescription:
         'We were unable to successfully receive your payment. If you have any questions, please contact support@refly.ai',
+    },
+
+    modelProviders: {
+      addProvider: 'Add Provider',
+      editProvider: 'Edit Provider',
+      apiKey: 'API Key',
+      baseUrl: 'Base URL',
+      enabled: 'Enabled',
+      name: 'Name',
+      namePlaceholder: 'Please enter the name of the provider',
+      apiKeyPlaceholder: 'Please enter the API Key of the provider',
+      baseUrlPlaceholder: 'Please enter the Base URL of the provider',
+      enabledPlaceholder: 'Please select the enabled status of the provider',
+      searchPlaceholder: 'Search for provider',
+      tryDifferentSearch: 'Try different search',
+      noSearchResults: 'No search results',
+      noProviders: 'No providers',
+      addFirstProvider: 'Add the first provider',
     },
   },
   contentDetail: {

@@ -21,7 +21,7 @@ export const LanguageSetting = () => {
   const outputLocale = localSettings?.outputLocale;
 
   return (
-    <div className="language-setting">
+    <div className="language-setting h-full overflow-y-auto">
       <div className="language-setting-content">
         <div className="language-setting-content-item">
           <Typography.Title level={5}>{t('settings.language.uiLocale.title')}</Typography.Title>

@@ -86,6 +86,7 @@ const translations = {
     readonlyDragDescription: '当前画布为只读模式，不支持修改',
     preview: '预览',
     viewAll: '查看全部',
+    noMore: '已经到底啦~',
   },
   verifyRules: {
     emailRequired: '邮箱地址不能为空',
@@ -1576,6 +1577,10 @@ const translations = {
   settings: {
     title: '设置',
     tabs: {
+      modelProviders: '供应方',
+      modelConfig: '模型配置',
+      searchConfig: '搜索配置',
+      resourceParser: '资源解析',
       account: '账号',
       language: '语言',
       subscription: '订阅',
@@ -1735,6 +1740,23 @@ const translations = {
         '感谢您对 Refly 的大力支持，我们会持续迭代，让产品变得更好！如有任何问题，请联系 support@refly.ai',
       payCancelNotify: '支付取消！',
       payCancelDescription: '我们未能成功收到您的付款，如有任何问题，请联系 support@refly.ai',
+    },
+    modelProviders: {
+      addProvider: '添加供应方',
+      editProvider: '编辑供应方',
+      apiKey: 'API Key',
+      baseUrl: 'Base URL',
+      enabled: '启用',
+      name: '名称',
+      namePlaceholder: '请输入供应方名称',
+      apiKeyPlaceholder: '请输入供应方 API Key',
+      baseUrlPlaceholder: '请输入供应方 Base URL',
+      enabledPlaceholder: '请选择是否启用',
+      searchPlaceholder: '搜索供应方',
+      tryDifferentSearch: '尝试不同的搜索',
+      noSearchResults: '没有找到任何供应方',
+      noProviders: '暂无供应方',
+      addFirstProvider: '添加第一个供应方',
     },
   },
   contentDetail: {

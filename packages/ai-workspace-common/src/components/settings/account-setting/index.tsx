@@ -145,7 +145,7 @@ export const AccountSetting = () => {
   }, [showSettingModal]);
 
   return (
-    <div className="w-full">
+    <div className="w-full h-full pb-10 box-border overflow-y-auto">
       <div className="max-w-[600px] mx-auto">
         <Form form={form} layout="vertical">
           <Form.Item label={t('settings.account.avatar')} name="avatar">
