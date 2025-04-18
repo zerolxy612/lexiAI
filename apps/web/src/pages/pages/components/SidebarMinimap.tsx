@@ -134,8 +134,8 @@ function SidebarMinimap({
                           style={getItemStyle(snapshot.isDragging, provided.draggableProps.style)}
                           className={`relative rounded ${!readonly ? 'cursor-grab' : 'cursor-pointer'} transition border overflow-hidden shadow-sm hover:shadow-md ${
                             activeNodeIndex === index
-                              ? 'ring-2 ring-purple-500 bg-purple-50'
-                              : 'border-gray-200 hover:border-purple-300'
+                              ? 'ring-2 ring-green-600 bg-green-50'
+                              : 'border-gray-200 hover:border-green-300'
                           } ${snapshot.isDragging ? 'z-50' : ''}`}
                           onClick={() => handleNodeSelect(index)}
                         >

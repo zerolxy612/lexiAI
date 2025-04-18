@@ -82,6 +82,26 @@ export function SlideshowEdit(props: PageEditProps) {
     setFocusedNodeId(null);
   }, []);
 
+  // Add event listener for clicks outside
+  useEffect(() => {
+    const handleDocumentClick = (e: MouseEvent) => {
+      // Check if click is outside of any node
+      const isOutsideNode =
+        !e.target || !(e.target as HTMLElement).closest('[id^="content-block-"]');
+      if (isOutsideNode) {
+        handleClickOutside();
+      }
+    };
+
+    // Add event listener to document
+    document.addEventListener('click', handleDocumentClick);
+
+    // Remove event listener on component unmount
+    return () => {
+      document.removeEventListener('click', handleDocumentClick);
+    };
+  }, [handleClickOutside]);
+
   // Share related states
   const [shareModalVisible, setShareModalVisible] = useState(false);
   const [shareOption, setShareOption] = useState<'internet' | 'notEnabled'>('internet');
