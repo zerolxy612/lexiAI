@@ -353,7 +353,6 @@ export class PagesService {
       pageId,
       canvasId: page.canvas_id,
       shareId: shareRecord.shareId,
-      shareUrl: `${process.env.FRONTEND_URL || 'https://refly.ai'}/share/pages/${shareRecord.shareId}`,
     };
   }
 

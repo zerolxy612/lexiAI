@@ -46,7 +46,6 @@ export interface SharePageResult {
   pageId: string;
   canvasId?: string;
   shareId: string;
-  shareUrl: string;
 }
 
 export interface DeletePageNodeResult {

@@ -87,7 +87,6 @@ export class PagesController {
       pageId: result.pageId,
       canvasId: result.canvasId,
       shareId: result.shareId,
-      shareUrl: result.shareUrl,
     });
   }
 

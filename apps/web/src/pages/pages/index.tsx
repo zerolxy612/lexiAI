@@ -182,8 +182,6 @@ export function SlideshowEdit(props: PageEditProps) {
   // Extract page data from response
   const pageDetail = pageDetailResponse?.data as PageDetailType | undefined;
 
-  console.log({ pageDetail });
-
   // Get node data
   const nodes = useMemo<NodeRelation[]>(() => {
     if (!pageDetail?.nodeRelations) return [];
@@ -451,12 +449,16 @@ export function SlideshowEdit(props: PageEditProps) {
       {
         onSuccess: (response) => {
           const shareData = response?.data?.data;
-          if (shareData?.shareId && shareData?.shareUrl) {
-            setShareUrl(shareData.shareUrl);
+          if (shareData?.shareId) {
+            // Construct share URL in frontend to decouple from backend
+            // Use environment variable or fallback to current origin
+            const baseUrl = process.env.REACT_APP_FRONTEND_URL || window.location.origin;
+            const shareUrl = `${baseUrl}/share/pages/${shareData.shareId}`;
+            setShareUrl(shareUrl);
 
-            // Try to copy to clipboard automatically
+            // Try to copy to clipboard automatically using Clipboard API
             try {
-              navigator.clipboard.writeText(shareData.shareUrl).then(
+              navigator.clipboard.writeText(shareUrl).then(
                 () => {
                   setIsCopied(true);
                   message.success(t('common.copy.success'));
