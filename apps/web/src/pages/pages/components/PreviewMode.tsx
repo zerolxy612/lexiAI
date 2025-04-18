@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { NodeRenderer } from './NodeRenderer';
 import { type NodeRelation } from './ArtifactRenderer';
 import '../styles/preview-mode.css';
+import Logo from '@/assets/logo.svg';
 
 interface PreviewModeProps {
   nodes: NodeRelation[];
@@ -138,13 +139,7 @@ const PreviewMode: React.FC<PreviewModeProps> = ({
                     userSelect: 'none',
                   }}
                 >
-                  <NodeRenderer
-                    node={node}
-                    isActive={false}
-                    isFullscreen={false}
-                    isModal={true}
-                    isMinimap={true}
-                  />
+                  <NodeRenderer node={node} isFullscreen={false} isModal={true} isMinimap={true} />
                 </div>
                 {/* Transparent mask layer */}
                 <div className="absolute inset-0 bg-transparent" />
@@ -166,12 +161,7 @@ const PreviewMode: React.FC<PreviewModeProps> = ({
             animationFillMode: 'forwards',
           }}
         >
-          <NodeRenderer
-            node={nodes[currentSlideIndex]}
-            isActive={true}
-            isFullscreen={true}
-            isModal={true}
-          />
+          <NodeRenderer node={nodes[currentSlideIndex]} isFullscreen={true} isModal={true} />
         </div>
       </div>
 
@@ -200,6 +190,39 @@ const PreviewMode: React.FC<PreviewModeProps> = ({
           </div>
         </div>
       )}
+
+      {/* Refly Logo in bottom right corner */}
+      <div
+        className="fixed bottom-4 right-4 z-40 opacity-80 hover:opacity-100 cursor-pointer transition-all duration-300 hover:scale-105 transform-gpu"
+        onClick={() => window.open('/', '_blank')}
+        style={{
+          filter: 'drop-shadow(0 0 4px rgba(0, 0, 0, 0.2))',
+          backdropFilter: 'blur(2px)',
+          background: 'rgba(255, 255, 255, 0.15)',
+          borderRadius: '30px',
+          padding: '5px 10px',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+        }}
+      >
+        <div className="flex items-center gap-2">
+          <img
+            src={Logo}
+            alt="Refly"
+            className="h-6 w-6"
+            style={{ filter: 'saturate(1.2) brightness(1.05)' }}
+          />
+          <span
+            className="text-sm font-bold"
+            translate="no"
+            style={{
+              color: '#333',
+              textShadow: '0 1px 1px rgba(255, 255, 255, 0.5)',
+            }}
+          >
+            Refly
+          </span>
+        </div>
+      </div>
     </div>
   );
 };
