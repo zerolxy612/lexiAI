@@ -483,6 +483,259 @@ export class PagesService {
   }
 
   /**
+   * Check if the user has permission to access the specified canvas
+   * @param tx Prisma transaction object
+   * @param canvasId Canvas ID
+   * @param uid User ID
+   * @returns Found canvas or null
+   */
+  private async getCanvasWithAccess(tx: any, canvasId: string, uid: string) {
+    return tx.canvas.findFirst({
+      where: {
+        canvasId,
+        uid,
+        deletedAt: null,
+      },
+    });
+  }
+
+  /**
+   * Find the page associated with a canvas
+   * @param tx Prisma transaction object
+   * @param canvasId Canvas ID
+   * @param uid User ID
+   * @returns Found page or undefined
+   */
+  private async findCanvasPage(tx: any, canvasId: string, uid: string): Promise<Page | undefined> {
+    const [existingPage] = await tx.$queryRaw<Page[]>`
+      SELECT * FROM "pages"
+      WHERE "canvas_id" = ${canvasId}
+      AND "uid" = ${uid}
+      AND "deleted_at" IS NULL
+      ORDER BY "updated_at" DESC
+      LIMIT 1
+    `;
+
+    return existingPage;
+  }
+
+  /**
+   * Create a new canvas page
+   * @param tx Prisma transaction object
+   * @param uid User ID
+   * @param canvasTitle Canvas title
+   * @param canvasId Canvas ID
+   * @returns Newly created page
+   */
+  private async createNewCanvasPage(
+    tx: any,
+    uid: string,
+    canvasTitle: string,
+    canvasId: string,
+  ): Promise<Page> {
+    // Generate pageId
+    const pageId = genPageId();
+    const stateStorageKey = `pages/${uid}/${pageId}/state.update`;
+    const title = canvasTitle || 'Untitled Page';
+
+    // Create new Page record
+    await tx.$executeRaw`
+      INSERT INTO "pages" (
+        "page_id", "uid", "title", "state_storage_key", "status", 
+        "canvas_id", "created_at", "updated_at"
+      )
+      VALUES (
+        ${pageId}, ${uid}, ${title}, 
+        ${stateStorageKey}, 'draft', ${canvasId}, NOW(), NOW()
+      )
+    `;
+
+    // Get the newly created page
+    const [createdPage] = await tx.$queryRaw<Page[]>`
+      SELECT * FROM "pages"
+      WHERE "page_id" = ${pageId}
+    `;
+
+    // Create initial Y.doc to store page state
+    const doc = new Y.Doc();
+    doc.transact(() => {
+      doc.getText('title').insert(0, title);
+      doc.getMap('pageConfig').set('layout', 'slides');
+      doc.getMap('pageConfig').set('theme', 'default');
+    });
+
+    // Upload Y.doc - Convert Y.Doc to Uint8Array, then to Buffer
+    const state = Y.encodeStateAsUpdate(doc);
+    await this.minio.client.putObject(stateStorageKey, Buffer.from(state));
+
+    return createdPage;
+  }
+
+  /**
+   * Get existing node relations for a page
+   * @param tx Prisma transaction object
+   * @param pageId Page ID
+   * @returns Set of node IDs
+   */
+  private async getExistingNodeRelations(tx: any, pageId: string): Promise<Set<string>> {
+    const existingNodeRelations = await tx.$queryRaw<{ node_id: string }[]>`
+      SELECT "node_id" FROM "page_node_relations"
+      WHERE "page_id" = ${pageId}
+      AND "deleted_at" IS NULL
+    `;
+
+    return new Set(existingNodeRelations.map((relation) => relation.node_id));
+  }
+
+  /**
+   * Get the current maximum order index for a page
+   * @param tx Prisma transaction object
+   * @param pageId Page ID
+   * @returns Maximum order index
+   */
+  private async getMaxOrderIndex(tx: any, pageId: string): Promise<number> {
+    const [maxOrderResult] = await tx.$queryRaw<{ max_order: number }[]>`
+      SELECT COALESCE(MAX("order_index"), -1) as max_order FROM "page_node_relations"
+      WHERE "page_id" = ${pageId}
+      AND "deleted_at" IS NULL
+    `;
+
+    return maxOrderResult?.max_order ?? -1;
+  }
+
+  /**
+   * Create a new node relation
+   * @param tx Prisma transaction object
+   * @param pageId Page ID
+   * @param node Node information
+   * @param orderIndex Order index
+   * @returns Created node relation
+   */
+  private async createNodeRelation(
+    tx: any,
+    pageId: string,
+    node: {
+      nodeId: string;
+      nodeType: string;
+      entityId: string;
+      nodeData: any;
+    },
+    orderIndex: number,
+  ): Promise<PageNodeRelation> {
+    const relationId = genPageNodeRelationId();
+    const nodeData =
+      typeof node.nodeData === 'string' ? node.nodeData : JSON.stringify(node.nodeData || {});
+
+    const [relation] = await tx.$queryRaw<PageNodeRelation[]>`
+      INSERT INTO "page_node_relations" (
+        "relation_id", "page_id", "node_id", "node_type", "entity_id", 
+        "order_index", "node_data", "created_at", "updated_at"
+      )
+      VALUES (
+        ${relationId}, ${pageId}, ${node.nodeId}, ${node.nodeType}, ${node.entityId}, 
+        ${orderIndex}, ${nodeData}, NOW(), NOW()
+      )
+      RETURNING *
+    `;
+
+    return relation;
+  }
+
+  /**
+   * Update an existing node relation
+   * @param tx Prisma transaction object
+   * @param pageId Page ID
+   * @param node Node information
+   * @returns Updated node relation
+   */
+  private async updateNodeRelation(
+    tx: any,
+    pageId: string,
+    node: {
+      nodeId: string;
+      nodeType: string;
+      entityId: string;
+      nodeData: any;
+    },
+  ): Promise<PageNodeRelation> {
+    const nodeData =
+      typeof node.nodeData === 'string' ? node.nodeData : JSON.stringify(node.nodeData || {});
+
+    const [relation] = await tx.$queryRaw<PageNodeRelation[]>`
+      UPDATE "page_node_relations"
+      SET 
+        "node_type" = ${node.nodeType},
+        "entity_id" = ${node.entityId},
+        "node_data" = ${nodeData},
+        "updated_at" = NOW()
+      WHERE 
+        "page_id" = ${pageId} 
+        AND "node_id" = ${node.nodeId}
+        AND "deleted_at" IS NULL
+      RETURNING *
+    `;
+
+    return relation;
+  }
+
+  /**
+   * Get all node relations for a page
+   * @param tx Prisma transaction object
+   * @param pageId Page ID
+   * @returns All node relations
+   */
+  private async getAllNodeRelations(tx: any, pageId: string): Promise<PageNodeRelation[]> {
+    return tx.$queryRaw<PageNodeRelation[]>`
+      SELECT * FROM "page_node_relations"
+      WHERE "page_id" = ${pageId}
+      AND "deleted_at" IS NULL
+      ORDER BY "order_index" ASC
+    `;
+  }
+
+  /**
+   * Extract node information from canvas data
+   * @param canvasData Canvas data
+   * @param nodeIds Array of node IDs to extract
+   * @returns Array of node information
+   */
+  private extractNodeInfoFromCanvas(
+    canvasData: any,
+    nodeIds: string[],
+  ): Array<{
+    nodeId: string;
+    nodeType: string;
+    entityId: string;
+    nodeData: any;
+    isNew: boolean;
+  }> {
+    if (!canvasData || !canvasData.nodes || canvasData.nodes.length === 0) {
+      return [];
+    }
+
+    return nodeIds
+      .map((nodeId) => {
+        // Find matching node in Canvas nodes array
+        // Note: Canvas node ID may be stored in data.entityId
+        const node = canvasData.nodes.find((n: any) => n.data?.entityId === nodeId);
+
+        if (!node) {
+          this.logger.warn(`Node ${nodeId} not found in canvas, skipping it`);
+          return null;
+        }
+
+        return {
+          nodeId: nodeId,
+          nodeType: node.type || 'unknown',
+          entityId: node.data?.entityId || nodeId,
+          nodeData: node.data || {},
+          isNew: true,
+        };
+      })
+      .filter((info): info is NonNullable<typeof info> => info !== null);
+  }
+
+  /**
    * Add nodes to a canvas page
    * If page doesn't exist, create a new one
    * @param user Current user
@@ -497,77 +750,24 @@ export class PagesService {
   ): Promise<{ page: Page; nodeRelations: PageNodeRelation[] }> {
     // Use transaction for all database operations
     return this.prisma.$transaction(async (tx) => {
-      // Check if canvas exists and user has access
-      const canvas = await tx.canvas.findFirst({
-        where: {
-          canvasId,
-          uid: user.uid,
-          deletedAt: null,
-        },
-      });
-
+      // 1. Check if canvas exists and user has access
+      const canvas = await this.getCanvasWithAccess(tx, canvasId, user.uid);
       if (!canvas) {
         throw new Error('Canvas not found or access denied');
       }
 
-      // Find page associated with canvas using canvas_id field
-      // Ensure we only get one page (the most recent one)
-      const [existingPage] = await tx.$queryRaw<Page[]>`
-        SELECT * FROM "pages"
-        WHERE "canvas_id" = ${canvasId}
-        AND "uid" = ${user.uid}
-        AND "deleted_at" IS NULL
-        ORDER BY "updated_at" DESC
-        LIMIT 1
-      `;
+      // 2. Find page associated with canvas
+      let page = await this.findCanvasPage(tx, canvasId, user.uid);
 
-      let page: Page;
-
-      // If no page exists, create a new one
-      if (!existingPage) {
-        // Generate pageId
-        const pageId = genPageId();
-        const stateStorageKey = `pages/${user.uid}/${pageId}/state.update`;
-
-        // Create new Page record with canvas_id
-        await tx.$executeRaw`
-          INSERT INTO "pages" (
-            "page_id", "uid", "title", "state_storage_key", "status", 
-            "canvas_id", "created_at", "updated_at"
-          )
-          VALUES (
-            ${pageId}, ${user.uid}, ${canvas.title || 'Untitled Page'}, 
-            ${stateStorageKey}, 'draft', ${canvasId}, NOW(), NOW()
-          )
-        `;
-
-        // Get the newly created page
-        const [createdPage] = await tx.$queryRaw<Page[]>`
-          SELECT * FROM "pages"
-          WHERE "page_id" = ${pageId}
-        `;
-
-        page = createdPage;
-
-        // Create initial Y.doc to store page state
-        const doc = new Y.Doc();
-        doc.transact(() => {
-          doc.getText('title').insert(0, page.title);
-          doc.getMap('pageConfig').set('layout', 'slides');
-          doc.getMap('pageConfig').set('theme', 'default');
-        });
-
-        // Upload Y.doc - Convert Y.Doc to Uint8Array, then to Buffer
-        const state = Y.encodeStateAsUpdate(doc);
-        await this.minio.client.putObject(stateStorageKey, Buffer.from(state));
-      } else {
-        page = existingPage;
+      // 3. If no page exists, create a new one
+      if (!page) {
+        page = await this.createNewCanvasPage(tx, user.uid, canvas.title, canvasId);
       }
 
-      // Get raw Canvas data, including node information
+      // 4. Get raw Canvas data, including node information
       const canvasData = await this.canvasService.getCanvasRawData(user, canvasId);
 
-      // Handle case when canvas has no nodes
+      // 5. Handle case when canvas has no nodes
       if (!canvasData || !canvasData.nodes || canvasData.nodes.length === 0) {
         this.logger.warn(`Canvas ${canvasId} has no nodes, returning empty node relations`);
         return {
@@ -576,162 +776,65 @@ export class PagesService {
         };
       }
 
-      // Get existing node relations for the current page
-      const existingNodeRelations = await tx.$queryRaw<{ node_id: string }[]>`
-        SELECT "node_id" FROM "page_node_relations"
-        WHERE "page_id" = ${page.page_id}
-        AND "deleted_at" IS NULL
-      `;
+      // 6. Get existing node relations for the current page
+      const existingNodeIds = await this.getExistingNodeRelations(tx, page.page_id);
 
-      // Extract the set of existing node IDs
-      const existingNodeIds = new Set(existingNodeRelations.map((relation) => relation.node_id));
-
-      // Filter out node IDs that already exist and those that need to be added
+      // 7. Filter out node IDs that already exist and those that need to be added
       const newNodeIds = addNodesDto.nodeIds.filter((nodeId) => !existingNodeIds.has(nodeId));
       const existingNodeIdsToUpdate = addNodesDto.nodeIds.filter((nodeId) =>
         existingNodeIds.has(nodeId),
       );
 
-      // If there are no new nodes to add and no existing nodes to update, directly return the current page and node relations
+      // 8. If there are no new nodes to add and no existing nodes to update, directly return the current page and node relations
       if (newNodeIds.length === 0 && existingNodeIdsToUpdate.length === 0) {
-        const currentNodeRelations = await tx.$queryRaw<PageNodeRelation[]>`
-          SELECT * FROM "page_node_relations"
-          WHERE "page_id" = ${page.page_id}
-          AND "deleted_at" IS NULL
-          ORDER BY "order_index" ASC
-        `;
-
+        const currentNodeRelations = await this.getAllNodeRelations(tx, page.page_id);
         return {
           page,
           nodeRelations: currentNodeRelations,
         };
       }
 
-      // Extract node information from Canvas data
-      const validNodeIds: string[] = [];
-      const nodeInfos = newNodeIds
-        .map((nodeId) => {
-          // Find matching node in Canvas nodes array
-          // Note: Canvas node ID may be stored in data.entityId
-          const node = canvasData.nodes.find((n) => n.data?.entityId === nodeId);
+      // 9. Extract node information from Canvas data
+      const nodeInfos = this.extractNodeInfoFromCanvas(canvasData, newNodeIds);
 
-          if (!node) {
-            this.logger.warn(`Node ${nodeId} not found in canvas ${canvasId}, skipping it`);
-            return null;
-          }
+      // 10. Extract information for existing nodes that need to be updated
+      const existingNodeInfos = this.extractNodeInfoFromCanvas(
+        canvasData,
+        existingNodeIdsToUpdate,
+      ).map((info) => ({ ...info, isNew: false }));
 
-          validNodeIds.push(nodeId);
-          return {
-            nodeId: nodeId,
-            nodeType: node.type || 'unknown',
-            entityId: node.data?.entityId || nodeId,
-            nodeData: node.data || {},
-            isNew: true,
-          };
-        })
-        .filter((info): info is NonNullable<typeof info> => info !== null);
-
-      // Extract information for existing nodes that need to be updated
-      const existingNodeInfos = existingNodeIdsToUpdate
-        .map((nodeId) => {
-          // Find matching node in Canvas nodes array
-          const node = canvasData.nodes.find((n) => n.data?.entityId === nodeId);
-
-          if (!node) {
-            this.logger.warn(`Node ${nodeId} not found in canvas ${canvasId}, skipping update`);
-            return null;
-          }
-
-          return {
-            nodeId: nodeId,
-            nodeType: node.type || 'unknown',
-            entityId: node.data?.entityId || nodeId,
-            nodeData: node.data || {},
-            isNew: false,
-          };
-        })
-        .filter((info): info is NonNullable<typeof info> => info !== null);
-
-      // Combine new and existing node infos
+      // 11. Combine new and existing node infos
       const allNodeInfos = [...nodeInfos, ...existingNodeInfos];
 
-      // If all nodes are invalid, return current page and node relations
+      // 12. If all nodes are invalid, return current page and node relations
       if (allNodeInfos.length === 0) {
         this.logger.warn(`No valid nodes found for canvas ${canvasId}, returning current state`);
-        const currentNodeRelations = await tx.$queryRaw<PageNodeRelation[]>`
-          SELECT * FROM "page_node_relations"
-          WHERE "page_id" = ${page.page_id}
-          AND "deleted_at" IS NULL
-          ORDER BY "order_index" ASC
-        `;
-
+        const currentNodeRelations = await this.getAllNodeRelations(tx, page.page_id);
         return {
           page,
           nodeRelations: currentNodeRelations,
         };
       }
 
-      // Get the current maximum order_index (only needed for new nodes)
-      const [maxOrderResult] = await tx.$queryRaw<{ max_order: number }[]>`
-        SELECT COALESCE(MAX("order_index"), -1) as max_order FROM "page_node_relations"
-        WHERE "page_id" = ${page.page_id}
-        AND "deleted_at" IS NULL
-      `;
+      // 13. Get the current maximum order_index (only needed for new nodes)
+      const startOrderIndex = (await this.getMaxOrderIndex(tx, page.page_id)) + 1;
 
-      const startOrderIndex = (maxOrderResult?.max_order ?? -1) + 1;
-
-      // Process all node relations (both new and existing)
-      const nodeRelationsPromises = allNodeInfos.map(async (node, index) => {
-        const nodeData =
-          typeof node.nodeData === 'string' ? node.nodeData : JSON.stringify(node.nodeData || {});
-
-        // For new nodes, create new relations
+      // 14. Process all node relations (both new and existing) in parallel
+      const nodeRelationsPromises = allNodeInfos.map((node, index) => {
         if (node.isNew) {
-          const relationId = genPageNodeRelationId();
-          const orderIndex = startOrderIndex + index;
-
-          const [relation] = await tx.$queryRaw<PageNodeRelation[]>`
-            INSERT INTO "page_node_relations" (
-              "relation_id", "page_id", "node_id", "node_type", "entity_id", 
-              "order_index", "node_data", "created_at", "updated_at"
-            )
-            VALUES (
-              ${relationId}, ${page.page_id}, ${node.nodeId}, ${node.nodeType}, ${node.entityId}, 
-              ${orderIndex}, ${nodeData}, NOW(), NOW()
-            )
-            RETURNING *
-          `;
-
-          return relation;
+          // For new nodes, create new relations
+          return this.createNodeRelation(tx, page.page_id, node, startOrderIndex + index);
         }
 
         // For existing nodes, update their data
-        const [relation] = await tx.$queryRaw<PageNodeRelation[]>`
-          UPDATE "page_node_relations"
-          SET 
-            "node_type" = ${node.nodeType},
-            "entity_id" = ${node.entityId},
-            "node_data" = ${nodeData},
-            "updated_at" = NOW()
-          WHERE 
-            "page_id" = ${page.page_id} 
-            AND "node_id" = ${node.nodeId}
-            AND "deleted_at" IS NULL
-          RETURNING *
-        `;
-
-        return relation;
+        return this.updateNodeRelation(tx, page.page_id, node);
       });
 
+      // Wait for all operations to complete
       await Promise.all(nodeRelationsPromises);
 
-      // Get all node relations (including both new and existing ones)
-      const allNodeRelations = await tx.$queryRaw<PageNodeRelation[]>`
-        SELECT * FROM "page_node_relations"
-        WHERE "page_id" = ${page.page_id}
-        AND "deleted_at" IS NULL
-        ORDER BY "order_index" ASC
-      `;
+      // 15. Get all node relations (including both new and existing ones)
+      const allNodeRelations = await this.getAllNodeRelations(tx, page.page_id);
 
       return {
         page,
