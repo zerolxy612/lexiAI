@@ -95,14 +95,18 @@ export class CustomPrompt extends BaseSkill {
     config: SkillRunnableConfig,
   ): Promise<Partial<GraphState>> => {
     const { messages = [], images = [] } = state;
-    const { currentSkill, tplConfig, locale = 'en', project } = config.configurable;
+    const { currentSkill, tplConfig, locale = 'en', project, runtimeConfig } = config.configurable;
 
     // Set current step
     config.metadata.step = { name: 'analyzeQuery' };
 
-    // process projectId based knowledge base search
+    // Only enable knowledge base search if both projectId AND runtimeConfig.enabledKnowledgeBase are true
     const projectId = project?.projectId;
-    const enableKnowledgeBaseSearch = !!projectId;
+    const enableKnowledgeBaseSearch = !!projectId && !!runtimeConfig?.enabledKnowledgeBase;
+
+    this.engine.logger.log(
+      `ProjectId: ${projectId}, Enable KB Search: ${enableKnowledgeBaseSearch}`,
+    );
 
     // Get custom system prompt and instructions
     let customSystemPrompt = (tplConfig?.customSystemPrompt?.value as string) || '';

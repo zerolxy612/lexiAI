@@ -150,7 +150,7 @@ export const ProjectDirectory = ({ projectId, source }: ProjectDirectoryProps) =
         source === 'sider' ? 'h-[calc(100vh)]' : 'h-[calc(100vh-100px)] rounded-r-lg',
       )}
     >
-      <div className="project-directory flex h-full flex-col py-3 pb-0 overflow-y-auto">
+      <div className="project-directory flex h-full flex-col py-3 pb-0 overflow-y-auto overflow-x-hidden">
         <ProjectSettings
           source={source}
           setCollapse={setCollapse}
@@ -162,25 +162,23 @@ export const ProjectDirectory = ({ projectId, source }: ProjectDirectoryProps) =
 
         <Divider className="my-2" />
 
-        <div className="flex-1 overflow-y-auto">
-          <CanvasMenu
-            isFetching={isLoadingCanvas}
-            canvasList={canvasList}
-            projectId={projectId}
-            onAddCanvasesSuccess={handleAddCanvases}
-            onRemoveCanvases={handleRemoveCanvases}
-          />
-          <SourcesMenu
-            isFetching={loadingSource}
-            sourceList={sourceList}
-            projectId={projectId}
-            documentCount={sourceList.filter((item) => item.entityType === 'document').length || 0}
-            resourceCount={sourceList.filter((item) => item.entityType === 'resource').length || 0}
-            onUpdatedItems={() => {
-              getSourceList();
-            }}
-          />
-        </div>
+        <CanvasMenu
+          isFetching={isLoadingCanvas}
+          canvasList={canvasList}
+          projectId={projectId}
+          onAddCanvasesSuccess={handleAddCanvases}
+          onRemoveCanvases={handleRemoveCanvases}
+        />
+        <SourcesMenu
+          isFetching={loadingSource}
+          sourceList={sourceList}
+          projectId={projectId}
+          documentCount={sourceList.filter((item) => item.entityType === 'document').length || 0}
+          resourceCount={sourceList.filter((item) => item.entityType === 'resource').length || 0}
+          onUpdatedItems={() => {
+            getSourceList();
+          }}
+        />
 
         {/* Combined Project Knowledge Base Toggle */}
         {internalProjectId ? (

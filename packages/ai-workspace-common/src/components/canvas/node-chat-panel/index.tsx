@@ -36,11 +36,11 @@ const PremiumBanner = memo(() => {
     (state) => state.setSubscribeModalVisible,
   );
 
-  if (!showPremiumBanner) return null;
-
   const handleUpgrade = useCallback(() => {
     setSubscribeModalVisible(true);
   }, [setSubscribeModalVisible]);
+
+  if (!showPremiumBanner) return null;
 
   return (
     <div className="flex items-center justify-between px-2 py-0.5 bg-gray-100 border-b">

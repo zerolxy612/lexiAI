@@ -21,14 +21,14 @@ import { useTranslation } from 'react-i18next';
 
 import { useFetchDataList } from '@refly-packages/ai-workspace-common/hooks/use-fetch-data-list';
 import { Spin } from '@refly-packages/ai-workspace-common/components/common/spin';
-import { useSiderStoreShallow } from '@refly-packages/ai-workspace-common/stores/sider';
 import { Project } from '@refly/openapi-schema';
 import { CreateProjectModal } from '@refly-packages/ai-workspace-common/components/project/project-create';
 import { useNavigate } from 'react-router-dom';
 import { useGetProjectCanvasId } from '@refly-packages/ai-workspace-common/hooks/use-get-project-canvasId';
 import { SlPicture } from 'react-icons/sl';
 import { useProjectSelectorStoreShallow } from '@refly-packages/ai-workspace-common/stores/project-selector';
-
+import { useSiderStoreShallow } from '@refly-packages/ai-workspace-common/stores/sider';
+import { DATA_NUM } from '@refly-packages/ai-workspace-common/hooks/use-handle-sider-data';
 export const ActionDropdown = ({
   project,
   afterDelete,
@@ -54,7 +54,6 @@ export const ActionDropdown = ({
   };
 
   const handleEdit = () => {
-    console.log('handleEdit');
     setEditProjectModalVisible(true);
   };
 
@@ -146,7 +145,11 @@ const ProjectCard = ({
     >
       <div className="h-36 px-4 py-3 overflow-hidden">
         {project?.coverUrl ? (
-          <Image src={project?.coverUrl} alt={project?.name || t('common.untitled')} />
+          <Image
+            src={project?.coverUrl}
+            alt={project?.name || t('common.untitled')}
+            preview={false}
+          />
         ) : (
           <div className="flex items-center justify-center h-full flex-col">
             <SlPicture size={48} className="text-gray-300" />
@@ -194,7 +197,13 @@ const ProjectCard = ({
   );
 };
 
-const CreateCard = ({ reload }: { reload: () => void }) => {
+const CreateCard = ({
+  reload,
+  setVisible,
+}: {
+  reload: () => void;
+  setVisible: (visible: boolean) => void;
+}) => {
   const { t } = useTranslation();
   const [createProjectModalVisible, setCreateProjectModalVisible] = useState(false);
   return (
@@ -214,6 +223,7 @@ const CreateCard = ({ reload }: { reload: () => void }) => {
         setVisible={setCreateProjectModalVisible}
         onSuccess={() => {
           reload();
+          setVisible(false);
         }}
       />
     </div>
@@ -223,20 +233,28 @@ const CreateCard = ({ reload }: { reload: () => void }) => {
 interface ProjectListProps {
   refresh: boolean;
   setRefresh: (refresh: boolean) => void;
+  setShowLibraryModal: (showLibraryModal: boolean) => void;
+  showLibraryModal: boolean;
 }
-const ProjectList = ({ refresh, setRefresh }: ProjectListProps) => {
+const ProjectList = ({
+  refresh,
+  setRefresh,
+  showLibraryModal,
+  setShowLibraryModal,
+}: ProjectListProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [createProjectModalVisible, setCreateProjectModalVisible] = useState(false);
-  const { showLibraryModal, setShowLibraryModal } = useSiderStoreShallow((state) => ({
-    showLibraryModal: state.showLibraryModal,
-    setShowLibraryModal: state.setShowLibraryModal,
-  }));
   const { projectId } = useGetProjectCanvasId();
+
   // Get selectedProjectId from store for initial value only
   const { setSelectedProjectId } = useProjectSelectorStoreShallow((state) => ({
     selectedProjectId: state.selectedProjectId,
     setSelectedProjectId: state.setSelectedProjectId,
+  }));
+
+  const { updateProjectsList } = useSiderStoreShallow((state) => ({
+    updateProjectsList: state.setProjectsList,
   }));
 
   const { dataList, loadMore, reload, hasMore, isRequesting, setDataList } = useFetchDataList({
@@ -249,17 +267,9 @@ const ProjectList = ({ refresh, setRefresh }: ProjectListProps) => {
     pageSize: 12,
   });
 
-  const getProjectCanvases = async (projectId: string) => {
-    const res = await getClient().listCanvases({
-      query: { projectId, page: 1, pageSize: 1000 },
-    });
-    return res?.data?.data || [];
-  };
-
   const handleCardClick = async (project: Project) => {
-    const canvases = await getProjectCanvases(project.projectId);
     setShowLibraryModal(false);
-    navigate(`/project/${project.projectId}?canvasId=${canvases?.[0]?.canvasId || 'empty'}`);
+    navigate(`/project/${project.projectId}?canvasId=empty`);
   };
 
   const projectCards = useMemo(() => {
@@ -301,6 +311,20 @@ const ProjectList = ({ refresh, setRefresh }: ProjectListProps) => {
     }
   }, [refresh]);
 
+  useEffect(() => {
+    const formattedProjects = dataList
+      .map((project) => ({
+        id: project.projectId,
+        name: project.name,
+        description: project.description,
+        updatedAt: project.updatedAt,
+        coverUrl: project.coverUrl,
+        type: 'project' as const,
+      }))
+      .slice(0, DATA_NUM);
+    updateProjectsList(formattedProjects);
+  }, [dataList]);
+
   const emptyState = (
     <div className="h-full flex items-center justify-center">
       <Empty description={t('common.empty')}>
@@ -319,6 +343,7 @@ const ProjectList = ({ refresh, setRefresh }: ProjectListProps) => {
         setVisible={setCreateProjectModalVisible}
         onSuccess={() => {
           reload();
+          setShowLibraryModal(false);
         }}
       />
     </div>
@@ -326,18 +351,18 @@ const ProjectList = ({ refresh, setRefresh }: ProjectListProps) => {
 
   return (
     <Spin className="w-full h-full" spinning={isRequesting && dataList.length === 0}>
-      <div id="resourceScrollableDiv" className="w-full h-[calc(60vh-60px)] overflow-y-auto">
+      <div id="projectScrollableDiv" className="w-full h-[calc(60vh-60px)] overflow-y-auto">
         {dataList.length > 0 ? (
           <InfiniteScroll
             dataLength={dataList.length}
             next={handleLoadMore}
             hasMore={hasMore}
-            loader={<Spinner />}
+            loader={isRequesting ? <Spinner /> : null}
             endMessage={<EndMessage />}
-            scrollableTarget="resourceScrollableDiv"
+            scrollableTarget="projectScrollableDiv"
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
-              <CreateCard reload={reload} />
+              <CreateCard reload={reload} setVisible={setShowLibraryModal} />
               {projectCards}
             </div>
           </InfiniteScroll>

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useProjectSelectorStoreShallow } from '@refly-packages/ai-workspace-common/stores/project-selector';
-import { useKnowledgeBaseStore } from '@refly-packages/ai-workspace-common/stores/knowledge-base';
 
 export const useAskProject = () => {
   const { selectedProjectId, setSelectedProjectId } = useProjectSelectorStoreShallow((state) => ({
@@ -27,12 +26,7 @@ export const useAskProject = () => {
 
   const getFinalProjectId = useCallback(
     (comingProjectId?: string) => {
-      const { isKnowledgeBaseEnabled } = useKnowledgeBaseStore.getState();
-      if (isKnowledgeBaseEnabled) {
-        return comingProjectId || projectId;
-      }
-
-      return undefined;
+      return comingProjectId || projectId;
     },
     [projectId, selectedProjectId],
   );

@@ -160,7 +160,7 @@ export class ElasticsearchFulltextSearchBackend implements FulltextSearchBackend
 
       this.initialized = true;
     } catch (error) {
-      this.logger.error(`Failed to initialize Elasticsearch: ${error?.message}`, error);
+      this.logger.error(`Failed to initialize Elasticsearch: ${error}`);
       throw error;
     }
   }

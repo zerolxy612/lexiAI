@@ -4,7 +4,7 @@ import getClient from '@refly-packages/ai-workspace-common/requests/proxiedReque
 import { useGetProjectCanvasId } from '@refly-packages/ai-workspace-common/hooks/use-get-project-canvasId';
 import { sourceObject } from '@refly-packages/ai-workspace-common/components/project/project-directory';
 
-const DATA_NUM = 6;
+export const DATA_NUM = 100;
 const DATA_NUM_CANVAS_FOR_PROJECT = 1000;
 
 export const useHandleSiderData = (initData?: boolean) => {

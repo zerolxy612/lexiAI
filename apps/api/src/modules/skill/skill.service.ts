@@ -790,16 +790,16 @@ export class SkillService {
     this.skillEngine.setOptions({ defaultModel: defaultModel?.name });
 
     try {
-      await this.timeoutCheckQueue.add(
-        `execution_timeout_check:${resultId}`,
-        {
-          uid: user.uid,
-          resultId,
-          version,
-          type: 'execution',
-        },
-        { delay: this.config.get('skill.executionTimeout') },
-      );
+      // await this.timeoutCheckQueue.add(
+      //   `execution_timeout_check:${resultId}`,
+      //   {
+      //     uid: user.uid,
+      //     resultId,
+      //     version,
+      //     type: 'execution',
+      //   },
+      //   { delay: this.config.get('skill.executionTimeout') },
+      // );
 
       await this._invokeSkill(user, data, res);
     } catch (err) {
@@ -869,34 +869,34 @@ export class SkillService {
       });
     }
 
-    const job = await this.timeoutCheckQueue.add(
-      `idle_timeout_check:${resultId}`,
-      {
-        uid: user.uid,
-        resultId,
-        version,
-        type: 'idle',
-      },
-      { delay: Number.parseInt(this.config.get('skill.idleTimeout')) },
-    );
+    // const job = await this.timeoutCheckQueue.add(
+    //   `idle_timeout_check:${resultId}`,
+    //   {
+    //     uid: user.uid,
+    //     resultId,
+    //     version,
+    //     type: 'idle',
+    //   },
+    //   { delay: Number.parseInt(this.config.get('skill.idleTimeout')) },
+    // );
 
-    const throttledResetIdleTimeout = throttle(
-      async () => {
-        try {
-          // Get current job state
-          const jobState = await job.getState();
+    // const throttledResetIdleTimeout = throttle(
+    //   async () => {
+    //     try {
+    //       // Get current job state
+    //       const jobState = await job.getState();
 
-          // Only attempt to change delay if job is in delayed state
-          if (jobState === 'delayed') {
-            await job.changeDelay(this.config.get('skill.idleTimeout'));
-          }
-        } catch (err) {
-          this.logger.warn(`Failed to reset idle timeout: ${err.message}`);
-        }
-      },
-      100,
-      { leading: true, trailing: true },
-    );
+    //       // Only attempt to change delay if job is in delayed state
+    //       if (jobState === 'delayed') {
+    //         await job.changeDelay(this.config.get('skill.idleTimeout'));
+    //       }
+    //     } catch (err) {
+    //       this.logger.warn(`Failed to reset idle timeout: ${err.message}`);
+    //     }
+    //   },
+    //   100,
+    //   { leading: true, trailing: true },
+    // );
 
     const resultAggregator = new ResultAggregator();
 
@@ -915,7 +915,7 @@ export class SkillService {
           return;
         }
 
-        await throttledResetIdleTimeout();
+        // await throttledResetIdleTimeout();
 
         if (res) {
           writeSSEResponse(res, { ...data, resultId, version });
@@ -1033,7 +1033,7 @@ export class SkillService {
         }
 
         // reset idle timeout check when events are received
-        await throttledResetIdleTimeout();
+        // await throttledResetIdleTimeout();
 
         runMeta = event.metadata as SkillRunnableMeta;
         const chunk: AIMessageChunk = event.data?.chunk ?? event.data?.output;

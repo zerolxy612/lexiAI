@@ -20,8 +20,6 @@ const CanvasPage = () => {
     setCollapse: state.setCollapse,
   }));
 
-  console.log('empty', canvasId);
-
   useEffect(() => {
     if (canvasId === 'empty' && canvasList.length > 0) {
       navigate(`/canvas/${canvasList[0].id}`, { replace: true });
