@@ -4998,7 +4998,7 @@ export const ProviderCategorySchema = {
 export const ProviderSchema = {
   type: 'object',
   description: 'General provider info',
-  required: ['providerId', 'providerKey', 'name', 'category', 'apiKey', 'baseUrl', 'enabled'],
+  required: ['providerId', 'providerKey', 'name', 'apiKey', 'baseUrl', 'enabled'],
   properties: {
     providerId: {
       type: 'string',
@@ -5011,11 +5011,6 @@ export const ProviderSchema = {
     name: {
       type: 'string',
       description: 'Provider name',
-    },
-    category: {
-      type: 'string',
-      description: 'Provider category',
-      $ref: '#/components/schemas/ProviderCategory',
     },
     apiKey: {
       type: 'string',
@@ -5167,10 +5162,6 @@ export const UpsertProviderRequestSchema = {
       type: 'string',
       description: 'Provider name',
     },
-    category: {
-      description: 'Provider category',
-      $ref: '#/components/schemas/ProviderCategory',
-    },
     apiKey: {
       type: 'string',
       description: 'Provider API key',
@@ -5246,6 +5237,10 @@ export const UpsertProviderItemRequestSchema = {
     providerId: {
       type: 'string',
       description: 'Provider ID',
+    },
+    category: {
+      description: 'Provider category',
+      $ref: '#/components/schemas/ProviderCategory',
     },
     enabled: {
       type: 'boolean',

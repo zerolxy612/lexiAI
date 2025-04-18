@@ -5807,7 +5807,6 @@ components:
         - providerId
         - providerKey
         - name
-        - category
         - apiKey
         - baseUrl
         - enabled
@@ -5821,10 +5820,6 @@ components:
         name:
           type: string
           description: Provider name
-        category:
-          type: string
-          description: Provider category
-          $ref: '#/components/schemas/ProviderCategory'
         apiKey:
           type: string
           description: Provider API key
@@ -5928,9 +5923,6 @@ components:
         name:
           type: string
           description: Provider name
-        category:
-          description: Provider category
-          $ref: '#/components/schemas/ProviderCategory'
         apiKey:
           type: string
           description: Provider API key
@@ -5976,6 +5968,9 @@ components:
         providerId:
           type: string
           description: Provider ID
+        category:
+          description: Provider category
+          $ref: '#/components/schemas/ProviderCategory'
         enabled:
           type: boolean
           description: Whether the provider item is enabled

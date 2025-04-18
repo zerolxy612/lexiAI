@@ -768,8 +768,6 @@ model Provider {
   name        String         @map("name")
   /// Whether the provider is global
   isGlobal    Boolean        @default(false) @map("is_global")
-  /// Provider category
-  category    String         @map("category")
   /// UID
   uid         String         @map("uid")
   /// Provider API key

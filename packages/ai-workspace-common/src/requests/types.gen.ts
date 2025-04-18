@@ -3533,10 +3533,6 @@ export type Provider = {
    */
   name: string;
   /**
-   * Provider category
-   */
-  category: ProviderCategory;
-  /**
    * Provider API key
    */
   apiKey: string;
@@ -3653,10 +3649,6 @@ export type UpsertProviderRequest = {
    */
   name?: string;
   /**
-   * Provider category
-   */
-  category?: ProviderCategory;
-  /**
    * Provider API key
    */
   apiKey?: string;
@@ -3698,6 +3690,10 @@ export type UpsertProviderItemRequest = {
    * Provider ID
    */
   providerId?: string;
+  /**
+   * Provider category
+   */
+  category?: ProviderCategory;
   /**
    * Whether the provider item is enabled
    */

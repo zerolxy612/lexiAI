@@ -48,13 +48,12 @@ export class ProviderService {
   }
 
   async listProviders(user: User, param: ListProvidersData['query']) {
-    const { enabled, providerKey, category } = param;
+    const { enabled, providerKey } = param;
     const providers = await this.prisma.provider.findMany({
       where: {
         uid: user.uid,
         enabled,
         providerKey,
-        category,
         deletedAt: null,
       },
     });
@@ -63,18 +62,10 @@ export class ProviderService {
   }
 
   async createProvider(user: User, param: UpsertProviderRequest) {
-    const { providerKey, name, category, apiKey, baseUrl, enabled } = param;
+    const { providerKey, name, apiKey, baseUrl, enabled } = param;
 
-    if (!providerKey) {
-      throw new ParamsError('Provider key is required');
-    }
-
-    if (!name) {
-      throw new ParamsError('Provider name is required');
-    }
-
-    if (!apiKey) {
-      throw new ParamsError('API key is required');
+    if (!providerKey || !name || !apiKey) {
+      throw new ParamsError('Invalid provider parameters');
     }
 
     const providerId = genProviderID();
@@ -83,7 +74,6 @@ export class ProviderService {
       data: {
         providerId,
         providerKey,
-        category,
         name,
         apiKey,
         baseUrl,
@@ -94,7 +84,7 @@ export class ProviderService {
   }
 
   async updateProvider(user: User, param: UpsertProviderRequest) {
-    const { providerId, providerKey, name, category, apiKey, baseUrl, enabled } = param;
+    const { providerId, providerKey, name, apiKey, baseUrl, enabled } = param;
 
     if (!providerId) {
       throw new ParamsError('Provider ID is required');
@@ -122,7 +112,6 @@ export class ProviderService {
       data: {
         providerKey,
         name,
-        category,
         apiKey,
         baseUrl,
         enabled,
@@ -180,9 +169,9 @@ export class ProviderService {
   }
 
   async createProviderItem(user: User, param: UpsertProviderItemRequest) {
-    const { providerId, name, enabled } = param;
+    const { providerId, name, category, enabled } = param;
 
-    if (!providerId || !name) {
+    if (!providerId || !category || !name) {
       throw new ParamsError('Invalid model item parameters');
     }
 
@@ -203,7 +192,7 @@ export class ProviderService {
     return this.prisma.providerItem.create({
       data: {
         itemId,
-        category: provider.category,
+        category,
         name,
         providerId,
         enabled,
