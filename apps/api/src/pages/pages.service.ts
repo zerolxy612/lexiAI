@@ -8,7 +8,7 @@ import { MinioService } from '@/common/minio.service';
 import { MINIO_INTERNAL } from '@/common/minio.service';
 import { streamToBuffer } from '@/utils';
 import { User, EntityType } from '@refly-packages/openapi-schema';
-import { ShareNotFoundError } from '@refly-packages/errors';
+import { PageNotFoundError } from '@refly-packages/errors';
 import { CodeArtifactService } from '@/code-artifact/code-artifact.service';
 import { ShareService } from '@/share/share.service';
 import {
@@ -28,15 +28,6 @@ interface ResolveUserResponse {
   uid: string;
   userInfo?: {
     name?: string;
-  };
-}
-
-// Custom error class for page not found
-class PageNotFoundError extends ShareNotFoundError {
-  code = 'E1010'; // Custom error code
-  messageDict = {
-    en: 'Page not found',
-    'zh-CN': 'Page not found', // Changed to English
   };
 }
 
