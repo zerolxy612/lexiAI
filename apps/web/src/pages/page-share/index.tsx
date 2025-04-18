@@ -15,6 +15,7 @@ import PreviewMode from '../pages/components/PreviewMode';
 import { usePreviewUI } from '../pages/hooks/usePreviewUI';
 import { useSlideshow } from '../pages/hooks/useSlideshow';
 import { getNodeTitle } from '../pages/utils/nodeUtils';
+import { useCardScroll } from '../hooks/useCardScroll';
 
 const SharePage = () => {
   const { shareId = '' } = useParams();
@@ -34,6 +35,9 @@ const SharePage = () => {
     nodeId: null,
   });
 
+  // Use the card scroll hook for managing card interaction
+  const { activeCardId, handleCardClick } = useCardScroll();
+
   // Extract page data and node relations
   const pageData = useMemo(() => {
     if (!shareData) return null;
@@ -52,6 +56,14 @@ const SharePage = () => {
     if (!pageData?.nodeRelations) return [];
     return pageData.nodeRelations;
   }, [pageData?.nodeRelations]);
+
+  // Set the initial card as scrollable when nodes are loaded
+  useEffect(() => {
+    if (nodes.length > 0) {
+      // Activate the first card for scrolling by default
+      handleCardClick('content-block-0');
+    }
+  }, [nodes, handleCardClick]);
 
   // Use abstract UI state management hook
   const {
@@ -106,15 +118,20 @@ const SharePage = () => {
   const toggleMinimap = useCallback(() => setShowMinimap(!showMinimap), [showMinimap]);
 
   // Handle node selection
-  const handleNodeSelect = useCallback((index: number) => {
-    setActiveNodeIndex(index);
+  const handleNodeSelect = useCallback(
+    (index: number) => {
+      setActiveNodeIndex(index);
 
-    // Scroll to the corresponding content block
-    const element = document.getElementById(`content-block-${index}`);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, []);
+      // Scroll to the corresponding content block
+      const element = document.getElementById(`content-block-${index}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Also enable scrolling for this card
+        handleCardClick(`content-block-${index}`);
+      }
+    },
+    [handleCardClick],
+  );
 
   // Handle starting a slideshow from a specific node
   const handleStartSlideshow = useCallback(
@@ -185,7 +202,7 @@ const SharePage = () => {
   }
 
   // Data loading failed or invalid share link
-  if (!shareData || !pageData.page) {
+  if (!shareData || !pageData?.page) {
     return (
       <div className="flex flex-col items-center justify-center h-screen">
         <div className="text-2xl font-medium mb-4 text-gray-700">
@@ -228,6 +245,7 @@ const SharePage = () => {
   return (
     <>
       <PageLayout
+        source="page"
         showMinimap={showMinimap}
         collapse={collapse}
         nodes={nodes}
@@ -275,24 +293,42 @@ const SharePage = () => {
         {/* Content modules */}
         {nodes.length > 0 ? (
           <div className="space-y-6">
-            {nodes.map((node, index) => (
-              <div
-                key={node.relationId || `content-${index}`}
-                id={`content-block-${index}`}
-                onClick={() => setActiveNodeIndex(index)}
-                className={`transition-all duration-300 h-[400px] rounded-lg bg-white ${
-                  activeNodeIndex === index
-                    ? 'shadow-[0_10px_30px_rgba(0,0,0,0.15)] transform -translate-y-1 border border-blue-400'
-                    : 'shadow-md hover:shadow-lg'
-                }`}
-              >
-                <NodeRenderer
-                  node={node}
-                  onStartSlideshow={handleStartSlideshow}
-                  onWideMode={handleWideMode}
-                />
-              </div>
-            ))}
+            {nodes.map((node, index) => {
+              // Add debug output
+              console.log(
+                `Card ${index}: activeCardId=${activeCardId}, compare=${activeCardId === `content-block-${index}`}`,
+              );
+
+              return (
+                <div
+                  key={node.relationId || `content-${index}`}
+                  id={`content-block-${index}`}
+                  onClick={(e) => {
+                    // Prevent event propagation to document
+                    e.stopPropagation();
+                    setActiveNodeIndex(index);
+                    // Add debug output
+                    console.log(
+                      `Clicking card ${index}, setting activeCardId to content-block-${index}`,
+                    );
+                    // Enable scrolling for this specific card
+                    handleCardClick(`content-block-${index}`);
+                  }}
+                  className={`transition-all duration-300 h-[400px] rounded-lg bg-white ${
+                    activeNodeIndex === index
+                      ? 'shadow-[0_10px_30px_rgba(0,0,0,0.15)] transform -translate-y-1 border border-blue-400'
+                      : 'shadow-md hover:shadow-lg'
+                  }`}
+                >
+                  <NodeRenderer
+                    node={node}
+                    onStartSlideshow={handleStartSlideshow}
+                    onWideMode={handleWideMode}
+                    isFocused={activeCardId === `content-block-${index}`}
+                  />
+                </div>
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-16 bg-white rounded-lg border border-dashed border-gray-300 shadow-sm">
@@ -331,10 +367,10 @@ const SharePage = () => {
                 <div className="h-[calc(100vh-160px)]">
                   <NodeRenderer
                     node={nodes.find((n) => n.nodeId === wideMode.nodeId)!}
-                    isActive={true}
                     isFullscreen={false}
                     isModal={true}
                     isMinimap={false}
+                    isFocused={true}
                     onStartSlideshow={handleStartSlideshow}
                     onWideMode={handleWideMode}
                   />

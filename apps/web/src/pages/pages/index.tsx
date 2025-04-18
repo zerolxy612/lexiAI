@@ -32,6 +32,7 @@ import { useSlideshow } from './hooks/useSlideshow';
 import { getNodeTitle } from './utils/nodeUtils';
 import { slideshowEmitter } from '@refly-packages/ai-workspace-common/events/slideshow';
 import EmptyContentPrompt from './components/EmptyContentPrompt';
+import { useCardScroll } from './hooks/useCardScroll';
 
 interface PageDetailType {
   pageId: string;
@@ -63,7 +64,6 @@ export function SlideshowEdit(props: PageEditProps) {
   const { t } = useTranslation();
   const [_formChanged, setFormChanged] = useState(false);
   const [activeNodeIndex, setActiveNodeIndex] = useState(0);
-  const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null);
   const [nodesList, setNodes] = useState<NodeRelation[]>([]);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [_isDeletingNode, setIsDeletingNode] = useState(false);
@@ -72,35 +72,8 @@ export function SlideshowEdit(props: PageEditProps) {
     nodeId: null,
   });
 
-  // Handle node focus function
-  const handleNodeFocus = useCallback((nodeId: string) => {
-    setFocusedNodeId(nodeId);
-  }, []);
-
-  // Handle click outside to clear focus
-  const handleClickOutside = useCallback(() => {
-    setFocusedNodeId(null);
-  }, []);
-
-  // Add event listener for clicks outside
-  useEffect(() => {
-    const handleDocumentClick = (e: MouseEvent) => {
-      // Check if click is outside of any node
-      const isOutsideNode =
-        !e.target || !(e.target as HTMLElement).closest('[id^="content-block-"]');
-      if (isOutsideNode) {
-        handleClickOutside();
-      }
-    };
-
-    // Add event listener to document
-    document.addEventListener('click', handleDocumentClick);
-
-    // Remove event listener on component unmount
-    return () => {
-      document.removeEventListener('click', handleDocumentClick);
-    };
-  }, [handleClickOutside]);
+  // Use the card scroll hook for managing card interaction
+  const { activeCardId, handleCardClick } = useCardScroll();
 
   // Share related states
   const [shareModalVisible, setShareModalVisible] = useState(false);
@@ -279,10 +252,18 @@ export function SlideshowEdit(props: PageEditProps) {
         setActiveNodeIndex(index);
         if (isPreviewMode) {
           setCurrentSlideIndex(index);
+        } else {
+          // Scroll to the corresponding content block
+          const element = document.getElementById(`content-block-${index}`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Enable scrolling for this card
+            handleCardClick(`content-block-${index}`);
+          }
         }
       }
     },
-    [nodesList.length, isPreviewMode, setCurrentSlideIndex],
+    [nodesList.length, isPreviewMode, setCurrentSlideIndex, handleCardClick],
   );
 
   // Handle node reordering
@@ -559,24 +540,27 @@ export function SlideshowEdit(props: PageEditProps) {
       return (
         <PreviewMode
           nodes={nodesList}
-          currentIndex={currentSlideIndex}
+          currentSlideIndex={currentSlideIndex}
+          showPreviewMinimap={showPreviewMinimap}
+          uiState={uiState}
+          title={form.getFieldValue('title')}
           onNext={nextSlide}
           onPrev={prevSlide}
           onClose={togglePreviewMode}
           onMouseMove={handlePreviewMouseMove}
-          showUI={uiState.showUI}
-          showMinimap={showPreviewMinimap}
+          onSideHintClick={handleSideHintClick}
+          onUiInteraction={handleUiInteraction}
+          onPreviewSlideSelect={handlePreviewSlideSelect}
           onMinimapMouseEnter={handleMinimapMouseEnter}
           onMinimapMouseLeave={handleMinimapMouseLeave}
-          onSlideSelect={handlePreviewSlideSelect}
-          onSideHintClick={handleSideHintClick}
-          contentRef={previewContentRef}
+          getNodeTitle={getNodeTitle}
+          previewContentRef={previewContentRef}
         />
       );
     }
 
     return (
-      <div onClick={handleClickOutside}>
+      <div>
         {/* Content section - using virtualized list for optimization */}
         {nodesList.length > 0 ? (
           <div className="space-y-6">
@@ -587,7 +571,8 @@ export function SlideshowEdit(props: PageEditProps) {
                 onClick={(e) => {
                   e.stopPropagation();
                   setActiveNodeIndex(index);
-                  handleNodeFocus(node.nodeId);
+                  // Use content-block-ID for consistency
+                  handleCardClick(`content-block-${index}`);
                 }}
                 className={`transition-all duration-300 h-[400px] rounded-lg bg-white ${
                   activeNodeIndex === index
@@ -600,7 +585,7 @@ export function SlideshowEdit(props: PageEditProps) {
                   onStartSlideshow={handleStartSlideshow}
                   onWideMode={handleWideMode}
                   node={node}
-                  isFocused={focusedNodeId === node.nodeId}
+                  isFocused={activeCardId === `content-block-${index}`}
                 />
               </div>
             ))}
@@ -630,7 +615,7 @@ export function SlideshowEdit(props: PageEditProps) {
     prevSlide,
     togglePreviewMode,
     handlePreviewMouseMove,
-    uiState.showUI,
+    uiState,
     showPreviewMinimap,
     handleMinimapMouseEnter,
     handleMinimapMouseLeave,
@@ -648,10 +633,10 @@ export function SlideshowEdit(props: PageEditProps) {
     handleDeleteNode,
     handleStartSlideshow,
     navigate,
-    focusedNodeId,
-    // Remove dependencies on functions that don't change
-    // handleNodeFocus,
-    // handleClickOutside,
+    handleOpenEmptyContentModal,
+    activeCardId,
+    handleCardClick,
+    t,
   ]);
 
   // Loading state
