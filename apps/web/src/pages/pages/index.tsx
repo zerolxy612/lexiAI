@@ -739,7 +739,9 @@ export function SlideshowEdit(props: PageEditProps) {
                 className={`flex items-center text-gray-600 hover:!text-green-600 hover:bg-gray-50 ${
                   minimalMode ? 'text-xs' : ''
                 }`}
-              />
+              >
+                {!minimalMode && t('common.addNode')}
+              </Button>
             </Tooltip>
             <Tooltip title={t('common.shareLink')}>
               <Button
@@ -750,7 +752,9 @@ export function SlideshowEdit(props: PageEditProps) {
                 className={`flex items-center mr-2 text-gray-600 hover:!text-green-600 hover:bg-gray-50 ${
                   minimalMode ? 'text-xs' : ''
                 }`}
-              />
+              >
+                {!minimalMode && t('common.shareLink')}
+              </Button>
             </Tooltip>
             {nodesList.length > 0 && (
               <Tooltip title={t('pages.share.slideshow')}>
@@ -762,7 +766,9 @@ export function SlideshowEdit(props: PageEditProps) {
                   className={`flex items-center text-gray-600 hover:!text-green-600 hover:bg-gray-50 ${
                     minimalMode ? 'text-xs' : ''
                   }`}
-                />
+                >
+                  {!minimalMode && t('pages.share.slideshow')}
+                </Button>
               </Tooltip>
             )}
           </div>
