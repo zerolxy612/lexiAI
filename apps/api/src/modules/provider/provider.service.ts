@@ -168,6 +168,21 @@ export class ProviderService {
     return [...globalItems, ...items];
   }
 
+  async findProviderItem(user: User, itemId: string) {
+    const item = await this.prisma.providerItem.findUnique({
+      where: { itemId, uid: user.uid, deletedAt: null },
+      include: {
+        provider: true,
+      },
+    });
+
+    if (!item) {
+      return null;
+    }
+
+    return item;
+  }
+
   async createProviderItem(user: User, param: UpsertProviderItemRequest) {
     const { providerId, name, category, enabled } = param;
 

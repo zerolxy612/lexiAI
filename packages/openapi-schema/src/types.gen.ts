@@ -2905,8 +2905,13 @@ export type InvokeSkillRequest = {
   locale?: string;
   /**
    * Selected model
+   * @deprecated
    */
   modelName?: string;
+  /**
+   * Selected model item ID
+   */
+  modelItemId?: string;
   /**
    * Skill ID
    */
@@ -3488,7 +3493,7 @@ export type ModelInfo = {
   /**
    * Model tier
    */
-  tier: ModelTier;
+  tier?: ModelTier;
   /**
    * Model context limit (in tokens)
    */
@@ -3570,6 +3575,10 @@ export type LLMModelConfig = {
    * Model max output length (in tokens)
    */
   maxOutput?: number;
+  /**
+   * Model capabilities
+   */
+  capabilities?: ModelCapabilities;
 };
 
 /**

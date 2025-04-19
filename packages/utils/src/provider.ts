@@ -2,11 +2,11 @@ import { ProviderCategory } from '@refly/openapi-schema';
 
 export enum ProviderKey {
   OPENAI = 'openai',
-  ANTHROPIC = 'anthropic',
-  OPENROUTER = 'openrouter',
+  OLLAMA = 'ollama',
   JINA = 'jina',
   FIREWORKS = 'fireworks',
-  SILICON_FLOW = 'siliconflow',
+  SERPER = 'serper',
+  TAVILY = 'tavily',
 }
 
 export interface ProviderInfo {
@@ -22,14 +22,9 @@ export const providerInfoList: ProviderInfo[] = [
     categories: ['llm', 'embedding'],
   },
   {
-    key: ProviderKey.ANTHROPIC,
-    name: 'Anthropic',
-    categories: ['llm'],
-  },
-  {
-    key: ProviderKey.OPENROUTER,
-    name: 'Groq',
-    categories: ['llm'],
+    key: ProviderKey.OLLAMA,
+    name: 'Ollama',
+    categories: ['llm', 'embedding'],
   },
   {
     key: ProviderKey.JINA,
@@ -42,8 +37,13 @@ export const providerInfoList: ProviderInfo[] = [
     categories: ['llm', 'embedding'],
   },
   {
-    key: ProviderKey.FIREWORKS,
-    name: 'Fireworks',
-    categories: ['llm', 'embedding'],
+    key: ProviderKey.SERPER,
+    name: 'Serper',
+    categories: ['webSearch'],
+  },
+  {
+    key: ProviderKey.TAVILY,
+    name: 'Tavily',
+    categories: ['webSearch'],
   },
 ];

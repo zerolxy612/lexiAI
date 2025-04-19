@@ -32,7 +32,7 @@
     "@hocuspocus/server": "~2.15.0",
     "@langchain/community": "0.3.29",
     "@langchain/core": "0.3.29",
-    "@langchain/openai": "0.4.3",
+    "@langchain/openai": "0.5.6",
     "@nest-lab/throttler-storage-redis": "^1.0.0",
     "@nestjs/bullmq": "~10.2.3",
     "@nestjs/common": "~10.3.9",

@@ -21,6 +21,7 @@ import {
   ActionStepMeta,
   ModelInfo,
   Project,
+  Provider,
 } from '@refly/openapi-schema';
 import { EventEmitter } from 'node:stream';
 
@@ -243,6 +244,7 @@ export interface SkillRunnableConfig extends RunnableConfig {
     locale?: string;
     uiLocale?: string;
     modelInfo?: ModelInfo;
+    provider?: Provider;
     project?: Project;
     currentSkill?: SkillMeta;
     currentStep?: ActionStepMeta;

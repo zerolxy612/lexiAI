@@ -5163,6 +5163,10 @@ components:
         modelName:
           type: string
           description: Selected model
+          deprecated: true
+        modelItemId:
+          type: string
+          description: Selected model item ID
         skillId:
           type: string
           description: Skill ID
@@ -5753,7 +5757,6 @@ components:
         - name
         - label
         - provider
-        - tier
         - contextLimit
         - maxOutput
       properties:
@@ -5848,6 +5851,9 @@ components:
         maxOutput:
           type: number
           description: Model max output length (in tokens)
+        capabilities:
+          description: Model capabilities
+          $ref: '#/components/schemas/ModelCapabilities'
     EmbeddingModelConfig:
       type: object
       description: Provider config for embeddings

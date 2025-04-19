@@ -80,10 +80,10 @@ import { labelClassPO2DTO, labelPO2DTO } from '../label/label.dto';
 import { SyncRequestUsageJobData, SyncTokenUsageJobData } from '../subscription/subscription.dto';
 import { SubscriptionService } from '../subscription/subscription.service';
 import {
-  ModelNotSupportedError,
   ModelUsageQuotaExceeded,
   ParamsError,
   ProjectNotFoundError,
+  ProviderItemNotFoundError,
   SkillNotFoundError,
 } from '@refly/errors';
 import { genBaseRespDataFromError } from '../../utils/exception';
@@ -95,12 +95,13 @@ import { throttle } from 'lodash';
 import { ResultAggregator } from '../../utils/result';
 import { CollabContext } from '../collab/collab.dto';
 import { DirectConnection } from '@hocuspocus/server';
-import { modelInfoPO2DTO } from '../misc/misc.dto';
 import { MiscService } from '../misc/misc.service';
 import { AutoNameCanvasJobData } from '../canvas/canvas.dto';
 import { ParserFactory } from '../knowledge/parsers/factory';
 import { CodeArtifactService } from '../code-artifact/code-artifact.service';
 import { projectPO2DTO } from '@/modules/project/project.dto';
+import { ProviderService } from '@/modules/provider/provider.service';
+import { providerItem2ModelInfo } from '@/modules/provider/provider.dto';
 
 function validateSkillTriggerCreateParam(param: SkillTriggerCreateParam) {
   if (param.triggerType === 'simpleEvent') {
@@ -132,6 +133,7 @@ export class SkillService {
     private collabService: CollabService,
     private misc: MiscService,
     private codeArtifact: CodeArtifactService,
+    private provider: ProviderService,
     @InjectQueue(QUEUE_SKILL) private skillQueue: Queue<InvokeSkillJobData>,
     @InjectQueue(QUEUE_SKILL_TIMEOUT_CHECK)
     private timeoutCheckQueue: Queue<SkillTimeoutCheckJobData>,
@@ -424,16 +426,18 @@ export class SkillService {
     // Check for usage quota
     const usageResult = await this.subscription.checkRequestUsage(user);
 
-    const modelName = param.modelName;
-    const modelInfo = await this.prisma.modelInfo.findUnique({ where: { name: modelName } });
+    const modelItemId = param.modelItemId;
+    const providerItem = await this.provider.findProviderItem(user, modelItemId);
 
-    if (!modelInfo) {
-      throw new ModelNotSupportedError(`model ${modelName} not supported`);
+    if (!providerItem || providerItem.category !== 'llm' || !providerItem.enabled) {
+      throw new ProviderItemNotFoundError(`provider item ${modelItemId} not valid`);
     }
+
+    const modelInfo = providerItem2ModelInfo(providerItem);
 
     if (!usageResult[modelInfo.tier]) {
       throw new ModelUsageQuotaExceeded(
-        `model ${modelName} (${modelInfo.tier}) not available for current plan`,
+        `model ${modelInfo.name} (${modelInfo.tier}) not available for current plan`,
       );
     }
 
@@ -487,7 +491,7 @@ export class SkillService {
       ...param,
       uid,
       rawParam: JSON.stringify(param),
-      modelInfo: modelInfoPO2DTO(modelInfo),
+      modelInfo,
     };
 
     if (existingResult) {
@@ -503,7 +507,7 @@ export class SkillService {
             title: param.input.query,
             targetId: param.target?.entityId,
             targetType: param.target?.entityType,
-            modelName,
+            modelName: modelInfo.name,
             projectId: param.projectId ?? null,
             actionMeta: JSON.stringify({
               type: 'skill',
@@ -516,6 +520,7 @@ export class SkillService {
             tplConfig: JSON.stringify(param.tplConfig),
             runtimeConfig: JSON.stringify(param.runtimeConfig),
             history: JSON.stringify(purgeResultHistory(param.resultHistory)),
+            providerItemId: providerItem.itemId,
           },
         }),
         // Delete existing step data
@@ -535,7 +540,7 @@ export class SkillService {
           targetId: param.target?.entityId,
           targetType: param.target?.entityType,
           title: param.input?.query,
-          modelName,
+          modelName: modelInfo.name,
           type: 'skill',
           status: 'executing',
           actionMeta: JSON.stringify({
@@ -549,6 +554,7 @@ export class SkillService {
           tplConfig: JSON.stringify(param.tplConfig),
           runtimeConfig: JSON.stringify(param.runtimeConfig),
           history: JSON.stringify(purgeResultHistory(param.resultHistory)),
+          providerItemId: providerItem.itemId,
         },
       });
       data.result = actionResultPO2DTO(result);

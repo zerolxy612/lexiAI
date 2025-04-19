@@ -4040,6 +4040,11 @@ export const InvokeSkillRequestSchema = {
     modelName: {
       type: 'string',
       description: 'Selected model',
+      deprecated: true,
+    },
+    modelItemId: {
+      type: 'string',
+      description: 'Selected model item ID',
     },
     skillId: {
       type: 'string',
@@ -4932,7 +4937,7 @@ export const ModelCapabilitiesSchema = {
 
 export const ModelInfoSchema = {
   type: 'object',
-  required: ['name', 'label', 'provider', 'tier', 'contextLimit', 'maxOutput'],
+  required: ['name', 'label', 'provider', 'contextLimit', 'maxOutput'],
   properties: {
     name: {
       type: 'string',
@@ -5050,6 +5055,10 @@ export const LLMModelConfigSchema = {
     maxOutput: {
       type: 'number',
       description: 'Model max output length (in tokens)',
+    },
+    capabilities: {
+      description: 'Model capabilities',
+      $ref: '#/components/schemas/ModelCapabilities',
     },
   },
 } as const;

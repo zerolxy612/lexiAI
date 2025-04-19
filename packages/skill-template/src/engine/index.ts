@@ -1,6 +1,9 @@
 import { SkillRunnableConfig } from '../base';
 import { FakeListChatModel } from '@langchain/core/utils/testing';
-import { ChatDeepSeek, ChatDeepSeekInput } from './chat-deepseek';
+import { ChatOpenAI, OpenAIBaseInput } from '@langchain/openai';
+import { ChatOllama } from '@langchain/ollama';
+import { ChatFireworks } from '@langchain/community/chat_models/fireworks';
+import { ChatDeepSeek } from './chat-deepseek';
 import { Document } from '@langchain/core/documents';
 import {
   CreateLabelClassRequest,
@@ -43,7 +46,7 @@ import {
   DeleteDocumentResponse,
   DeleteDocumentRequest,
 } from '@refly/openapi-schema';
-import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
+import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 
 // TODO: unify with frontend
 export type ContentNodeType =
@@ -167,7 +170,7 @@ export class SkillEngine {
     this.config = config;
   }
 
-  chatModel(params?: Partial<ChatDeepSeekInput>, useDefaultChatModel = false): BaseChatModel {
+  chatModel(params?: Partial<OpenAIBaseInput>, useDefaultChatModel = false): BaseChatModel {
     if (process.env.MOCK_LLM_RESPONSE) {
       return new FakeListChatModel({
         responses: ['This is a test'],
@@ -176,21 +179,42 @@ export class SkillEngine {
     }
 
     const config = this.config?.configurable;
+    const provider = config?.provider;
+    const model = useDefaultChatModel
+      ? this.options.defaultModel
+      : config.modelInfo?.name || this.options.defaultModel;
 
-    return new ChatDeepSeek({
-      model: useDefaultChatModel
-        ? this.options.defaultModel
-        : config.modelInfo?.name || this.options.defaultModel,
-      apiKey: process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY,
-      configuration: {
-        baseURL: process.env.OPENROUTER_API_KEY && 'https://openrouter.ai/api/v1',
-        defaultHeaders: {
-          'HTTP-Referer': 'https://refly.ai',
-          'X-Title': 'Refly',
-        },
-      },
-      ...params,
-      include_reasoning: config?.modelInfo?.capabilities?.reasoning,
-    });
+    switch (provider?.providerKey) {
+      case 'openai':
+        return new ChatOpenAI({
+          model,
+          apiKey: provider.apiKey,
+          configuration: {
+            baseURL: provider.baseUrl,
+          },
+          reasoningEffort: 'high',
+          ...params,
+        });
+      case 'ollama':
+        return new ChatOllama({
+          model,
+          baseUrl: provider.baseUrl,
+          ...params,
+        });
+      case 'fireworks':
+        return new ChatFireworks({
+          model,
+          apiKey: provider.apiKey,
+          ...params,
+        });
+      case 'deepseek':
+        return new ChatDeepSeek({
+          model,
+          apiKey: provider.apiKey,
+          ...params,
+        });
+      default:
+        throw new Error(`Unsupported provider: ${provider?.providerKey}`);
+    }
   }
 }
