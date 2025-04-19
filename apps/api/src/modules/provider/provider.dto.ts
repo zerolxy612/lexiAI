@@ -4,8 +4,15 @@ import { Provider, ProviderItem, ProviderCategory } from '@refly/openapi-schema'
 
 export const providerPO2DTO = (provider: ProviderModel): Provider => {
   return {
-    ...pick(provider, ['providerId', 'providerKey', 'name', 'uid', 'apiKey', 'baseUrl', 'enabled']),
-    category: provider.category as ProviderCategory,
+    ...pick(provider, [
+      'providerId',
+      'providerKey',
+      'name',
+      'apiKey',
+      'baseUrl',
+      'enabled',
+      'isGlobal',
+    ]),
   };
 };
 
