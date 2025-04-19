@@ -1,0 +1,27 @@
+.node-option {
+  span {
+    &:last-child {
+      flex-grow: 1;
+      overflow: hidden;
+    }
+  }
+}
+
+.page-node-list {
+  .ant-row {
+    height: 100%;
+    .ant-col {
+      height: 100%;
+      .ant-form-item-control-input {
+        height: 100%;
+        .ant-form-item-control-input-content {
+          height: 100%;
+          .list {
+            height: calc(100% - 32px);
+            overflow-y: auto;
+          }
+        }
+      }
+    }
+  }
+}

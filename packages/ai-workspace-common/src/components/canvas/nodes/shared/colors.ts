@@ -8,7 +8,7 @@ export const NODE_COLORS: Record<CanvasNodeType | 'threadHistory', string> = {
   toolResponse: '#F79009',
   skill: '#6172F3',
   tool: '#2E90FA',
-  memo: '#6172F3',
+  memo: '#f2eb0e',
   group: '#6172F3',
   threadHistory: '#64748b',
   image: '#02b0c7',

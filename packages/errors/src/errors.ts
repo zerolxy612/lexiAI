@@ -184,6 +184,14 @@ export class ShareNotFoundError extends BaseError {
   };
 }
 
+export class PageNotFoundError extends ShareNotFoundError {
+  code = 'E1010';
+  messageDict = {
+    en: 'Page not found',
+    'zh-CN': '页面不存在',
+  };
+}
+
 export class ActionResultNotFoundError extends BaseError {
   code = 'E1011';
   messageDict = {
@@ -287,6 +295,7 @@ const errorMap = {
   E1007: LabelClassNotFoundError,
   E1008: LabelInstanceNotFoundError,
   E1009: ShareNotFoundError,
+  E1010: PageNotFoundError,
   E1011: ActionResultNotFoundError,
   E1012: StaticFileNotFoundError,
   E1013: CodeArtifactNotFoundError,

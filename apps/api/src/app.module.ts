@@ -29,6 +29,7 @@ import { RedisService } from '@/common/redis.service';
 import { ShareModule } from './share/share.module';
 import { TemplateModule } from './template/template.module';
 import { CodeArtifactModule } from './code-artifact/code-artifact.module';
+import { PagesModule } from './pages/pages.module';
 import { ProjectModule } from './project/project.module';
 
 class CustomThrottlerGuard extends ThrottlerGuard {
@@ -128,6 +129,7 @@ class CustomThrottlerGuard extends ThrottlerGuard {
     ShareModule,
     TemplateModule,
     CodeArtifactModule,
+    PagesModule,
     ProjectModule,
   ],
   controllers: [AppController],
