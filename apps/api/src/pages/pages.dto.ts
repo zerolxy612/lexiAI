@@ -1,123 +1,87 @@
-// Page entity type interface definitions
-export interface PageNodeRelation {
-  relation_id: string;
-  page_id: string;
-  node_id: string;
-  node_type: string;
-  entity_id: string;
-  order_index: number;
-  node_data: string;
-  created_at: Date;
-  updated_at: Date;
-  deletedAt: Date | null;
-}
+import { Page as PageModel, PageNodeRelation as PageNodeRelationModel } from '@prisma/client';
+import { Page, PageDetail, PageNodeRelation } from '@refly-packages/openapi-schema';
+import { pick } from 'lodash';
 
-export interface Page {
-  pk: number;
-  page_id: string;
+// User resolution response type
+export interface ResolveUserResponse {
   uid: string;
-  title: string;
-  description: string | null;
-  state_storage_key: string;
-  cover_storage_key: string | null;
-  status: string;
-  canvas_id?: string;
-  created_at: Date;
-  updated_at: Date;
-  deletedAt: Date | null;
-}
-
-// Service method return types
-export interface PageDetailResult {
-  page: Page;
-  nodeRelations: PageNodeRelation[];
-  pageConfig: {
-    layout: string;
-    theme: string;
+  userInfo?: {
+    name?: string;
   };
 }
 
-export interface UpdatePageResult {
-  page: Page;
-  nodeRelations?: PageNodeRelation[];
-}
-
-export interface SharePageResult {
-  pageId: string;
-  canvasId?: string;
-  shareId: string;
-}
-
-export interface DeletePageNodeResult {
-  pageId: string;
-  canvasId?: string;
+// Node info type for canvas operations
+export interface NodeInfo {
   nodeId: string;
+  nodeType: string;
+  entityId: string;
+  nodeData: Record<string, unknown>;
+  orderIndex?: number;
+  isNew: boolean;
 }
 
-export interface DeletePageResult {
-  pageId: string;
-  canvasId?: string;
+// Define NodeData type for canvas nodes
+export interface CanvasNode {
+  type?: string;
+  data?: {
+    entityId?: string;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
+// Canvas data type
+export interface CanvasData {
+  nodes?: CanvasNode[];
+  [key: string]: unknown;
+}
+
+export function pagePO2DTO(page: PageModel): Page {
+  return {
+    ...pick(page, ['pageId', 'title', 'description']),
+    status: page.status === 'draft' || page.status === 'published' ? page.status : 'draft',
+    canvasId: page.canvasId,
+    coverUrl: page.coverStorageKey,
+    createdAt: page.createdAt.toJSON(),
+    updatedAt: page.updatedAt.toJSON(),
+  };
+}
+
+export function pageNodeRelationPO2DTO(relation: PageNodeRelationModel): PageNodeRelation {
+  return {
+    ...pick(relation, ['relationId', 'pageId', 'nodeId', 'nodeType', 'entityId', 'orderIndex']),
+    nodeData: relation.nodeData ? JSON.parse(relation.nodeData) : {},
+  };
 }
 
 export interface UpdatePageDto {
   title?: string;
-  nodeRelations?: NodeRelationDto[];
-  nodeRelationOrders?: NodeRelationOrderDto[];
-  pageConfig?: Record<string, any>;
+  description?: string;
+  nodeRelations?: {
+    nodeId: string;
+    nodeType?: string;
+    entityId?: string;
+    nodeData?: unknown;
+    orderIndex?: number;
+  }[];
+  nodeRelationOrders?: {
+    relationId: string;
+    orderIndex: number;
+  }[];
+  pageConfig?: Record<string, unknown>;
 }
 
-export interface NodeRelationDto {
-  nodeId: string;
-  nodeType: string;
-  entityId: string;
-  nodeData?: any;
-  orderIndex?: number;
-}
-
-// DTO specifically for updating node order
-export interface NodeRelationOrderDto {
-  relationId: string;
-  orderIndex: number;
-}
-
-// DTO for adding nodes to canvas page
 export interface AddPageNodesDto {
   nodeIds: string[];
 }
 
-// Result type for canvas page query
-export interface CanvasPageResult {
-  page: Page | null;
-  nodeRelations: PageNodeRelation[];
+export function pageDetailPO2DTO(pageDetail: {
+  page: PageModel;
+  nodeRelations: PageNodeRelationModel[];
+}): PageDetail {
+  return {
+    ...pagePO2DTO(pageDetail.page),
+    nodeRelations: pageDetail.nodeRelations?.map(pageNodeRelationPO2DTO) || [],
+    pageConfig: {},
+  };
 }
-
-export const pagePO2DTO = (page: any) => {
-  return {
-    pageId: page.page_id,
-    title: page.title,
-    description: page.description,
-    status: page.status,
-    canvasId: page.canvas_id,
-    coverUrl: page.cover_storage_key
-      ? `/api/v1/misc/file?key=${page.cover_storage_key}`
-      : undefined,
-    createdAt: page.created_at,
-    updatedAt: page.updated_at,
-  };
-};
-
-export const pageNodeRelationPO2DTO = (relation: any) => {
-  return {
-    relationId: relation.relation_id,
-    pageId: relation.page_id,
-    nodeId: relation.node_id,
-    nodeType: relation.node_type,
-    entityId: relation.entity_id,
-    orderIndex: relation.order_index,
-    nodeData: relation.node_data
-      ? typeof relation.node_data === 'string'
-        ? JSON.parse(relation.node_data)
-        : relation.node_data
-      : {},
-  };
-};

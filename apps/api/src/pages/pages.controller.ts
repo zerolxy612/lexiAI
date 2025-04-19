@@ -16,7 +16,13 @@ import { JwtAuthGuard } from '@/auth/guard/jwt-auth.guard';
 import { LoginedUser } from '@/utils/decorators/user.decorator';
 import { User } from '@refly-packages/openapi-schema';
 import { buildSuccessResponse } from '@/utils';
-import { UpdatePageDto, pagePO2DTO, pageNodeRelationPO2DTO, AddPageNodesDto } from './pages.dto';
+import {
+  UpdatePageDto,
+  pagePO2DTO,
+  pageNodeRelationPO2DTO,
+  AddPageNodesDto,
+  pageDetailPO2DTO,
+} from './pages.dto';
 import { LoggingInterceptor } from '@/common/interceptors/logging.interceptor';
 
 @ApiTags('Pages')
@@ -36,7 +42,9 @@ export class PagesController {
   ) {
     const result = await this.pagesService.listPages(user, page, pageSize);
     return buildSuccessResponse({
-      ...result,
+      total: result.total,
+      page: result.page,
+      pageSize: result.pageSize,
       pages: result.pages.map((page) => pagePO2DTO(page)),
     });
   }
@@ -49,11 +57,7 @@ export class PagesController {
     const result = await this.pagesService.getPageDetail(user, pageId);
 
     return buildSuccessResponse({
-      ...pagePO2DTO(result.page),
-      nodeRelations: Array.isArray(result.nodeRelations)
-        ? result.nodeRelations.map(pageNodeRelationPO2DTO)
-        : [],
-      pageConfig: result.pageConfig,
+      ...pageDetailPO2DTO(result),
     });
   }
 
