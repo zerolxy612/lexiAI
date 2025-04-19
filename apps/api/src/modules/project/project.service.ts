@@ -8,7 +8,7 @@ import {
   UpsertProjectRequest,
   User,
   ListProjectsData,
-} from '@refly-packages/openapi-schema';
+} from '@refly/openapi-schema';
 import { ParamsError, ProjectNotFoundError } from '@refly/errors';
 import { genProjectID } from '@refly/utils';
 import { MiscService } from '../misc/misc.service';

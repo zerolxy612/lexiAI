@@ -1,5 +1,5 @@
 import { Page as PageModel, PageNodeRelation as PageNodeRelationModel } from '@/generated/client';
-import { Page, PageDetail, PageNodeRelation } from '@refly-packages/openapi-schema';
+import { Page, PageDetail, PageNodeRelation } from '@refly/openapi-schema';
 import { pick } from 'lodash';
 
 // User resolution response type

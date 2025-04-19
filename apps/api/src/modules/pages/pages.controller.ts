@@ -14,7 +14,7 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { PagesService } from './pages.service';
 import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
 import { LoginedUser } from '@/utils/decorators/user.decorator';
-import { User } from '@refly-packages/openapi-schema';
+import { User } from '@refly/openapi-schema';
 import { buildSuccessResponse } from '@/utils';
 import {
   UpdatePageDto,
