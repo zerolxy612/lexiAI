@@ -5,13 +5,13 @@ alwaysApply: true
 ---
 # Code Style Guidelines
 
-## JavaScript/TypeScript Style
+## TypeScript/JavaScript Style
 
-- Use single quotes for string literals in JavaScript/TypeScript code
+- Use single quotes for string literals
 - Always use optional chaining (`?.`) when accessing object properties
 - Always use nullish coalescing (`??`) or default values for potentially undefined values
 - Always check array existence before using array methods
-- Always validate object properties before destructuring
+- Validate object properties before destructuring
 - Use ES6+ features like arrow functions, destructuring, and spread operators
 - Keep functions small and focused on a single responsibility
 - Avoid magic numbers and strings - use named constants
@@ -27,7 +27,7 @@ alwaysApply: true
 - Always use proper key props when rendering lists (avoid using index when possible)
 - Always split nested components with closures into separate components
 - Use lazy loading for components that are not immediately needed
-- Debounce handlers for events that fire rapidly (resize, scroll, input)
+- Debounce handlers for events that might fire rapidly (resize, scroll, input)
 
 ## Error Handling
 
@@ -37,11 +37,10 @@ alwaysApply: true
 - Use error boundaries to catch and handle runtime errors
 - Avoid silent failures - log errors appropriately
 
-## TypeScript Best Practices
+## CSS Guidelines
 
-- Define explicit return types for functions
-- Use interface for object types that will be extended
-- Use type for unions, intersections, and simple object types
-- Avoid using 'any' type - use 'unknown' for truly unknown values
-- Leverage generics for reusable components and functions
-- Use discriminated unions for handling different states
+- Use Tailwind CSS for styling components
+- Follow the utility-first approach
+- Group related utility classes together
+- Prefer Tailwind utilities over custom CSS when possible
+- For custom CSS, use kebab-case for class names and properties

@@ -5,14 +5,17 @@ alwaysApply: true
 ---
 # Language Guidelines
 
-## English Usage Requirements
+## Chinese for User Communication
 
-- All code comments must be written in English
-- All documentation (READMEs, API docs, wikis) must be in English
-- Git commit messages must always be in English
-- Variable names, function names and class names must use English words
-- Pull request descriptions and issue reports should be in English
-- UI text should default to English (with i18n support for other languages)
+- Use Chinese for all user-facing communication
+- Maintain a professional tone in Chinese content
+- English technical terms may be used when necessary in technical discussions
+- Ensure clarity and accuracy in translations
+
+## English for Technical Content
+
+- All code-related content must follow the critical English requirements in [00-language-priority.mdc](mdc:.cursor/rules/00-language-priority.mdc)
+- UI text should default to English with i18n support for Chinese
 
 ## Commit Message Standards
 

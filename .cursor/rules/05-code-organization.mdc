@@ -1,6 +1,6 @@
 ---
-description: 
-globs: 
+description:
+globs:
 alwaysApply: true
 ---
 # Code Organization Guidelines
@@ -63,12 +63,3 @@ alwaysApply: true
 - Avoid overusing global state
 - Consider adopting a predictable state container for complex applications
 - Document the structure of shared state
-
-## Directory Organization
-
-### Project Level Structure
-- Organize by feature rather than technical role
-- Group related files together
-- Keep directory nesting to a reasonable depth
-- Use consistent naming conventions across the project
-- Place shared utilities in a common directory
