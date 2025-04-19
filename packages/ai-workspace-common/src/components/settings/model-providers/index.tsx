@@ -148,8 +148,8 @@ const ProviderItem = React.memo(
             <Tooltip
               title={
                 provider.enabled
-                  ? t('settings.modelProviders.disabled')
-                  : t('settings.modelProviders.enabled')
+                  ? t('settings.modelProviders.disable')
+                  : t('settings.modelProviders.enable')
               }
             >
               <div onClick={handleSwitchWrapperClick} className="flex items-center">
@@ -306,7 +306,7 @@ const ProviderModal = React.memo(
 
           <Form.Item
             name="enabled"
-            label={t('settings.modelProviders.enabled')}
+            label={t('settings.modelProviders.enableSetting')}
             valuePropName="checked"
           >
             <Switch />
@@ -394,7 +394,7 @@ export const ModelProviders = () => {
       {/* Providers List */}
       <div
         className={cn(
-          'min-h-[300px] flex-1 overflow-auto',
+          'flex-1 overflow-auto',
           isLoading || filteredProviders.length === 0 ? 'flex items-center justify-center' : '',
           filteredProviders.length === 0 ? 'border-dashed border-gray-200 rounded-md' : '',
         )}
@@ -428,7 +428,7 @@ export const ModelProviders = () => {
             )}
           </Empty>
         ) : (
-          <>
+          <div>
             <div>
               {filteredProviders?.map((provider) => (
                 <ProviderItem
@@ -441,8 +441,8 @@ export const ModelProviders = () => {
                 />
               ))}
             </div>
-            <div className="text-center text-gray-400 text-sm">{t('common.noMore')}</div>
-          </>
+            <div className="text-center text-gray-400 text-sm mt-4">{t('common.noMore')}</div>
+          </div>
         )}
       </div>
 

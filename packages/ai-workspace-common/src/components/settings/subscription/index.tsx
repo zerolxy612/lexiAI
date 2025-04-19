@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import dayjs from 'dayjs';
-import { Button, Progress, Tooltip, Tag } from 'antd';
+import { Button, Progress, Tooltip, Tag, Typography } from 'antd';
 import { HiOutlineQuestionMarkCircle } from 'react-icons/hi2';
 import { Spin } from '@refly-packages/ai-workspace-common/components/common/spin';
 
@@ -17,6 +17,7 @@ import { IconSubscription } from '@refly-packages/ai-workspace-common/components
 import { useSiderStoreShallow } from '@refly-packages/ai-workspace-common/stores/sider';
 import { useSubscriptionUsage } from '@refly-packages/ai-workspace-common/hooks/use-subscription-usage';
 
+const { Title } = Typography;
 const formatDate = (date: string) => {
   return dayjs(date).format('YYYY-MM-DD');
 };
@@ -139,87 +140,92 @@ export const Subscription = () => {
   }, [t, planType, subscription?.interval, subscription?.cancelAt]);
 
   return (
-    <div className="subscription h-full overflow-y-auto">
-      {isUsageLoading ? (
-        <Spin
-          spinning={isUsageLoading}
-          style={{
-            height: '100%',
-            width: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        />
-      ) : (
-        <>
-          <div className={`subscription-plan ${planType === 'free' ? 'free' : ''}`}>
-            <div className="subscription-plan-info">
-              <div className="subscription-plan-info-title">
-                {t('settings.subscription.currentPlan')}
+    <div className="p-4 pt-0 h-full overflow-hidden flex flex-col">
+      <Title level={4} className="pb-4">
+        {t('settings.tabs.subscription')}
+      </Title>
+      <div className="subscription h-full overflow-y-auto">
+        {isUsageLoading ? (
+          <Spin
+            spinning={isUsageLoading}
+            style={{
+              height: '100%',
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          />
+        ) : (
+          <>
+            <div className={`subscription-plan ${planType === 'free' ? 'free' : ''}`}>
+              <div className="subscription-plan-info">
+                <div className="subscription-plan-info-title">
+                  {t('settings.subscription.currentPlan')}
+                </div>
+                <div className="subscription-plan-info-status">
+                  {t(`settings.subscription.subscriptionStatus.${planType}`)}
+                  {hintTag}
+                </div>
               </div>
-              <div className="subscription-plan-info-status">
-                {t(`settings.subscription.subscriptionStatus.${planType}`)}
-                {hintTag}
-              </div>
-            </div>
-            {planType === 'free' || subscription?.isTrial ? (
-              <Button
-                type={subscription?.isTrial ? 'default' : 'primary'}
-                icon={<IconSubscription className="flex items-center justify-center text-base" />}
-                onClick={() => {
-                  setShowSettingModal(false);
-                  setSubscribeModalVisible(true);
-                }}
-              >
-                {t('settings.subscription.subscribeNow')}
-              </Button>
-            ) : (
-              customerId && (
+              {planType === 'free' || subscription?.isTrial ? (
                 <Button
-                  type="default"
-                  className="text-gray-500 font-medium border-none shadow-lg"
-                  loading={portalLoading}
-                  onClick={createPortalSession}
-                  icon={<PiInvoiceBold className="flex items-center justify-center text-base" />}
+                  type={subscription?.isTrial ? 'default' : 'primary'}
+                  icon={<IconSubscription className="flex items-center justify-center text-base" />}
+                  onClick={() => {
+                    setShowSettingModal(false);
+                    setSubscribeModalVisible(true);
+                  }}
                 >
-                  {t('settings.subscription.manage')}
+                  {t('settings.subscription.subscribeNow')}
                 </Button>
-              )
-            )}
-          </div>
+              ) : (
+                customerId && (
+                  <Button
+                    type="default"
+                    className="text-gray-500 font-medium border-none shadow-lg"
+                    loading={portalLoading}
+                    onClick={createPortalSession}
+                    icon={<PiInvoiceBold className="flex items-center justify-center text-base" />}
+                  >
+                    {t('settings.subscription.manage')}
+                  </Button>
+                )
+              )}
+            </div>
 
-          <div className="subscription-usage">
-            <UsageItem
-              title={t('settings.subscription.t1Requests')}
-              description={t('settings.subscription.t1RequestsDescription')}
-              used={tokenUsage?.t1CountUsed}
-              quota={tokenUsage?.t1CountQuota}
-              endAt={tokenUsage?.endAt}
-            />
-            <UsageItem
-              title={t('settings.subscription.t2Requests')}
-              description={t('settings.subscription.t2RequestsDescription')}
-              used={tokenUsage?.t2CountUsed}
-              quota={tokenUsage?.t2CountQuota}
-              endAt={tokenUsage?.endAt}
-            />
-            <UsageItem
-              title={t('settings.subscription.libraryStorage')}
-              description={t('settings.subscription.libraryStorageDescription')}
-              used={storageUsage?.fileCountUsed}
-              quota={storageUsage?.fileCountQuota}
-            />
-            <UsageItem
-              title={t('settings.subscription.advancedFileParsing')}
-              description={t('settings.subscription.advancedFileParsingDescription')}
-              used={fileParsingUsage?.pagesParsed}
-              quota={fileParsingUsage?.pagesLimit}
-              endAt={new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()}
-            />
-          </div>
-        </>
-      )}
+            <div className="subscription-usage">
+              <UsageItem
+                title={t('settings.subscription.t1Requests')}
+                description={t('settings.subscription.t1RequestsDescription')}
+                used={tokenUsage?.t1CountUsed}
+                quota={tokenUsage?.t1CountQuota}
+                endAt={tokenUsage?.endAt}
+              />
+              <UsageItem
+                title={t('settings.subscription.t2Requests')}
+                description={t('settings.subscription.t2RequestsDescription')}
+                used={tokenUsage?.t2CountUsed}
+                quota={tokenUsage?.t2CountQuota}
+                endAt={tokenUsage?.endAt}
+              />
+              <UsageItem
+                title={t('settings.subscription.libraryStorage')}
+                description={t('settings.subscription.libraryStorageDescription')}
+                used={storageUsage?.fileCountUsed}
+                quota={storageUsage?.fileCountQuota}
+              />
+              <UsageItem
+                title={t('settings.subscription.advancedFileParsing')}
+                description={t('settings.subscription.advancedFileParsingDescription')}
+                used={fileParsingUsage?.pagesParsed}
+                quota={fileParsingUsage?.pagesLimit}
+                endAt={new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()}
+              />
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 };
