@@ -1,4 +1,4 @@
-import { Page as PageModel, PageNodeRelation as PageNodeRelationModel } from '@prisma/client';
+import { Page as PageModel, PageNodeRelation as PageNodeRelationModel } from '@/generated/client';
 import { Page, PageDetail, PageNodeRelation } from '@refly-packages/openapi-schema';
 import { pick } from 'lodash';
 

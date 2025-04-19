@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { PagesService } from './pages.service';
-import { JwtAuthGuard } from '@/auth/guard/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
 import { LoginedUser } from '@/utils/decorators/user.decorator';
 import { User } from '@refly-packages/openapi-schema';
 import { buildSuccessResponse } from '@/utils';
@@ -23,7 +23,7 @@ import {
   AddPageNodesDto,
   pageDetailPO2DTO,
 } from './pages.dto';
-import { LoggingInterceptor } from '@/common/interceptors/logging.interceptor';
+import { LoggingInterceptor } from '@/utils/interceptors/logging.interceptor';
 
 @ApiTags('Pages')
 @Controller('v1/pages')
