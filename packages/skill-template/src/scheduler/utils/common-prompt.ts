@@ -18,3 +18,19 @@ export const buildQueryIntentAnalysisInstruction = () => {
    - Fill gaps with reliable common knowledge when needed
    - Maintain focus on user's primary goal`;
 };
+
+/**
+ * Provides the current time information to be included in system prompts
+ * @returns A string with current time information in various formats
+ */
+export const buildCurrentTimeInfo = () => {
+  const now = new Date();
+
+  // Format: YYYY-MM-DD HH:MM:SS in UTC and local time
+  const utcTimeString = now.toISOString();
+  const localTimeString = now.toString();
+
+  return `## Current Time Information
+Current UTC time: ${utcTimeString}
+Current local time: ${localTimeString}`;
+};
