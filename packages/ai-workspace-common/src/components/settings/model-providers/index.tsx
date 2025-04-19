@@ -3,10 +3,100 @@ import { useListProviders } from '@refly-packages/ai-workspace-common/queries';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 import React, { useCallback, useState, useMemo, useEffect } from 'react';
 import { Spin } from '@refly-packages/ai-workspace-common/components/common/spin';
-import { Button, Input, Modal, Empty, Form, Switch, Tooltip } from 'antd';
-import { LuSettings, LuPlus, LuSearch } from 'react-icons/lu';
+import {
+  Button,
+  Input,
+  Modal,
+  Empty,
+  Form,
+  Switch,
+  Tooltip,
+  Dropdown,
+  DropdownProps,
+  Popconfirm,
+  MenuProps,
+  message,
+} from 'antd';
+import { LuPlus, LuSearch } from 'react-icons/lu';
 import { cn } from '@refly-packages/ai-workspace-common/utils/cn';
 import { Provider } from '@refly-packages/ai-workspace-common/requests/types.gen';
+import {
+  IconDelete,
+  IconEdit,
+  IconMoreHorizontal,
+} from '@refly-packages/ai-workspace-common/components/common/icon';
+
+const ActionDropdown = ({
+  provider,
+  handleEdit,
+  refetch,
+}: { provider: Provider; handleEdit: () => void; refetch: () => void }) => {
+  const { t } = useTranslation();
+  const [visible, setVisible] = useState(false);
+
+  const handleDelete = useCallback(
+    async (provider: Provider) => {
+      try {
+        const res = await getClient().deleteProvider({
+          body: { providerId: provider.providerId },
+        });
+        if (res.data.success) {
+          refetch();
+          message.success(t('common.deleteSuccess'));
+        }
+      } catch (error) {
+        console.error('Failed to delete provider', error);
+      }
+    },
+    [refetch],
+  );
+
+  const items: MenuProps['items'] = [
+    {
+      label: (
+        <div className="flex items-center flex-grow">
+          <IconEdit size={16} className="mr-2" />
+          {t('common.edit')}
+        </div>
+      ),
+      key: 'edit',
+      onClick: () => handleEdit(),
+    },
+    {
+      label: (
+        <Popconfirm
+          placement="bottomLeft"
+          title={t('settings.modelProviders.deleteConfirm', {
+            name: provider.name || t('common.untitled'),
+          })}
+          onConfirm={() => handleDelete(provider)}
+          onCancel={() => setVisible(false)}
+          okText={t('common.confirm')}
+          cancelText={t('common.cancel')}
+          overlayStyle={{ maxWidth: '300px' }}
+        >
+          <div className="flex items-center text-red-600 flex-grow">
+            <IconDelete size={16} className="mr-2" />
+            {t('common.delete')}
+          </div>
+        </Popconfirm>
+      ),
+      key: 'delete',
+    },
+  ];
+
+  const handleOpenChange: DropdownProps['onOpenChange'] = (open: boolean, info: any) => {
+    if (info.source === 'trigger') {
+      setVisible(open);
+    }
+  };
+
+  return (
+    <Dropdown trigger={['click']} open={visible} onOpenChange={handleOpenChange} menu={{ items }}>
+      <Button type="text" icon={<IconMoreHorizontal />} />
+    </Dropdown>
+  );
+};
 
 const ProviderItem = React.memo(
   ({
@@ -14,11 +104,13 @@ const ProviderItem = React.memo(
     onSettingsClick,
     onToggleEnabled,
     isSubmitting,
+    refetch,
   }: {
     provider: Provider;
     onSettingsClick: (provider: Provider) => void;
     onToggleEnabled: (provider: Provider, enabled: boolean) => void;
     isSubmitting: boolean;
+    refetch: () => void;
   }) => {
     const { t } = useTranslation();
     const handleToggleChange = useCallback(
@@ -46,10 +138,10 @@ const ProviderItem = React.memo(
           </div>
 
           <div className="flex items-center gap-2">
-            <Button
-              type="text"
-              icon={<LuSettings size={18} className="text-gray-500" />}
-              onClick={() => onSettingsClick(provider)}
+            <ActionDropdown
+              provider={provider}
+              handleEdit={() => onSettingsClick(provider)}
+              refetch={refetch}
             />
 
             <Tooltip
@@ -127,6 +219,7 @@ const ProviderModal = React.memo(
             },
           });
           if (res.data.success) {
+            message.success(t('common.saveSuccess'));
             onSuccess?.();
             form.resetFields();
             onClose();
@@ -142,6 +235,7 @@ const ProviderModal = React.memo(
             },
           });
           if (res.data.success) {
+            message.success(t('common.addSuccess'));
             onSuccess?.();
             form.resetFields();
             onClose();
@@ -188,11 +282,24 @@ const ProviderModal = React.memo(
             <Input placeholder={t('settings.modelProviders.namePlaceholder')} />
           </Form.Item>
 
-          <Form.Item name="apiKey" label={t('settings.modelProviders.apiKey')}>
+          <Form.Item
+            name="apiKey"
+            label={t('settings.modelProviders.apiKey')}
+            rules={[
+              {
+                required: true,
+                message: t('settings.modelProviders.apiKeyPlaceholder'),
+              },
+            ]}
+          >
             <Input placeholder={t('settings.modelProviders.apiKeyPlaceholder')} />
           </Form.Item>
 
-          <Form.Item name="baseUrl" label={t('settings.modelProviders.baseUrl')}>
+          <Form.Item
+            name="baseUrl"
+            label={t('settings.modelProviders.baseUrl')}
+            rules={[{ required: true, message: t('settings.modelProviders.baseUrlPlaceholder') }]}
+          >
             <Input placeholder={t('settings.modelProviders.baseUrlPlaceholder')} />
           </Form.Item>
 
@@ -323,6 +430,7 @@ export const ModelProviders = () => {
                 <ProviderItem
                   key={provider.providerId}
                   provider={provider}
+                  refetch={refetch}
                   onSettingsClick={handleSettingsClick}
                   onToggleEnabled={handleToggleEnabled}
                   isSubmitting={isSubmitting}
