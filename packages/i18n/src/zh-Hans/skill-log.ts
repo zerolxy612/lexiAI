@@ -1,7 +1,7 @@
 const translations = {
   generateTitle: {
     title: '生成标题',
-    description: '成功生成标题：{{title}}',
+    description: '成功生成标题：{{title}}, 耗时 {{duration}} 毫秒',
   },
   generateTitleFailed: {
     title: '生成标题',
