@@ -35,6 +35,8 @@ export const ImageNode = memo(
   ({ id, data, isPreview, selected, hideActions, hideHandles, onNodeClick }: ImageNodeProps) => {
     const { metadata } = data ?? {};
     const imageUrl = metadata?.imageUrl;
+    const showBorder = metadata?.showBorder ?? false;
+    const showTitle = metadata?.showTitle ?? true;
     const [isHovered, setIsHovered] = useState(false);
     const [isPreviewModalVisible, setIsPreviewModalVisible] = useState(false);
     const { handleMouseEnter: onHoverStart, handleMouseLeave: onHoverEnd } = useNodeHoverEffect(id);
@@ -210,7 +212,7 @@ export const ImageNode = memo(
             className={`
                 w-full
                 h-full
-                ${getNodeCommonStyles({ selected: !isPreview && selected, isHovered })}
+                ${showBorder ? getNodeCommonStyles({ selected: !isPreview && selected, isHovered }) : ''}
               `}
           >
             {!isPreview && !hideHandles && (
@@ -235,15 +237,21 @@ export const ImageNode = memo(
             )}
 
             <div className={cn('flex flex-col h-full relative p-3 box-border', MAX_HEIGHT_CLASS)}>
-              <NodeHeader
-                title={data.title}
-                Icon={IconImage}
-                iconBgColor="#02b0c7"
-                canEdit={!readonly}
-                updateTitle={onTitleChange}
-              />
-
-              <div className="w-full rounded-lg overflow-y-auto">
+              <div className="relative w-full rounded-lg overflow-y-auto">
+                {showTitle && isHovered && (
+                  <div
+                    className="absolute top-0 left-0 right-0 z-10 rounded-t-lg px-1"
+                    style={{ textShadow: '0px 0px 3px #ffffff' }}
+                  >
+                    <NodeHeader
+                      title={data.title}
+                      Icon={IconImage}
+                      iconBgColor="#02b0c7"
+                      canEdit={!readonly}
+                      updateTitle={onTitleChange}
+                    />
+                  </div>
+                )}
                 <img
                   onClick={readonly ? handlePreview : undefined}
                   src={imageUrl}

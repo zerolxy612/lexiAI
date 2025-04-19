@@ -7,6 +7,30 @@ import {
   formDataBodySerializer,
 } from '@hey-api/client-fetch';
 import type {
+  ListPagesData,
+  ListPagesError,
+  ListPagesResponse2,
+  GetPageDetailData,
+  GetPageDetailError,
+  GetPageDetailResponse,
+  UpdatePageData,
+  UpdatePageError,
+  UpdatePageResponse2,
+  DeletePageData,
+  DeletePageError,
+  DeletePageResponse2,
+  SharePageData,
+  SharePageError,
+  SharePageResponse2,
+  DeletePageNodeData,
+  DeletePageNodeError,
+  DeletePageNodeResponse2,
+  GetPageByCanvasIdData,
+  GetPageByCanvasIdError,
+  GetPageByCanvasIdResponse,
+  AddNodesToCanvasPageData,
+  AddNodesToCanvasPageError,
+  AddNodesToCanvasPageResponse,
   GetAuthConfigError,
   GetAuthConfigResponse,
   RefreshTokenError,
@@ -270,6 +294,122 @@ import type {
 } from './types.gen';
 
 export const client = createClient(createConfig());
+
+/**
+ * List user pages
+ * List all pages for a user
+ */
+export const listPages = <ThrowOnError extends boolean = false>(
+  options?: Options<ListPagesData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).get<ListPagesResponse2, ListPagesError, ThrowOnError>({
+    ...options,
+    url: '/pages',
+  });
+};
+
+/**
+ * Get page detail
+ * Get detail of a specific page
+ */
+export const getPageDetail = <ThrowOnError extends boolean = false>(
+  options: Options<GetPageDetailData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).get<GetPageDetailResponse, GetPageDetailError, ThrowOnError>({
+    ...options,
+    url: '/pages/{pageId}',
+  });
+};
+
+/**
+ * Update a page
+ * Update a specific page
+ */
+export const updatePage = <ThrowOnError extends boolean = false>(
+  options: Options<UpdatePageData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).put<UpdatePageResponse2, UpdatePageError, ThrowOnError>({
+    ...options,
+    url: '/pages/{pageId}',
+  });
+};
+
+/**
+ * Delete a page
+ * Delete a specific page
+ */
+export const deletePage = <ThrowOnError extends boolean = false>(
+  options: Options<DeletePageData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).delete<DeletePageResponse2, DeletePageError, ThrowOnError>({
+    ...options,
+    url: '/pages/{pageId}',
+  });
+};
+
+/**
+ * Share a page
+ * Create a share link for a specific page
+ */
+export const sharePage = <ThrowOnError extends boolean = false>(
+  options: Options<SharePageData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).post<SharePageResponse2, SharePageError, ThrowOnError>({
+    ...options,
+    url: '/pages/{pageId}/share',
+  });
+};
+
+/**
+ * Delete a node from a page
+ * Remove a specific node from a page
+ */
+export const deletePageNode = <ThrowOnError extends boolean = false>(
+  options: Options<DeletePageNodeData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).delete<
+    DeletePageNodeResponse2,
+    DeletePageNodeError,
+    ThrowOnError
+  >({
+    ...options,
+    url: '/pages/{pageId}/nodes/{nodeId}',
+  });
+};
+
+/**
+ * Get page by canvas ID
+ * Retrieve the page associated with a specific canvas
+ */
+export const getPageByCanvasId = <ThrowOnError extends boolean = false>(
+  options: Options<GetPageByCanvasIdData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).get<
+    GetPageByCanvasIdResponse,
+    GetPageByCanvasIdError,
+    ThrowOnError
+  >({
+    ...options,
+    url: '/pages/canvas/{canvasId}',
+  });
+};
+
+/**
+ * Add nodes to canvas page
+ * Add nodes to a page associated with a specific canvas. If no page exists, a new one will be created.
+ */
+export const addNodesToCanvasPage = <ThrowOnError extends boolean = false>(
+  options: Options<AddNodesToCanvasPageData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).post<
+    AddNodesToCanvasPageResponse,
+    AddNodesToCanvasPageError,
+    ThrowOnError
+  >({
+    ...options,
+    url: '/pages/canvas/{canvasId}/nodes',
+  });
+};
 
 /**
  * Get auth config

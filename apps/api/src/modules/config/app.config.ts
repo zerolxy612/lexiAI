@@ -29,7 +29,8 @@ export default () => ({
   redis: {
     host: process.env.REDIS_HOST || 'localhost',
     port: Number.parseInt(process.env.REDIS_PORT) || 6379,
-    password: process.env.REDIS_PASSWORD || '',
+    username: process.env.REDIS_USERNAME,
+    password: process.env.REDIS_PASSWORD,
   },
   objectStorage: {
     backend: process.env.OBJECT_STORAGE_BACKEND || 'minio',

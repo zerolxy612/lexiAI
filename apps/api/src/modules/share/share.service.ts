@@ -11,6 +11,7 @@ import {
   Document,
   DuplicateShareRequest,
   Entity,
+  EntityType,
   ListSharesData,
   RawCanvasData,
   Resource,
@@ -42,12 +43,16 @@ import { ObjectStorageService, OSS_INTERNAL } from '../common/object-storage';
 import { CodeArtifactService } from '../code-artifact/code-artifact.service';
 import { codeArtifactPO2DTO } from '../code-artifact/code-artifact.dto';
 
-const SHARE_CODE_PREFIX = {
+const SHARE_CODE_PREFIX: Record<EntityType, string> = {
   document: 'doc-',
   canvas: 'can-',
   resource: 'res-',
   skillResponse: 'skr-',
   codeArtifact: 'cod-',
+  page: 'pag-',
+  share: 'sha-',
+  user: 'usr-',
+  project: 'prj-',
 };
 
 function genShareId(entityType: keyof typeof SHARE_CODE_PREFIX): string {
@@ -739,73 +744,175 @@ export class ShareService {
     return { shareRecord };
   }
 
-  /**
-   * Process content images and replace them with public URLs
-   * @param content - The content to process
-   * @returns The processed content with public URLs
-   */
-  async processContentImages(content: string) {
-    // Extract all markdown image references: ![alt](url)
-    const images = content?.match(/!\[.*?\]\((.*?)\)/g);
-    if (!images?.length) {
-      return content;
-    }
+  async createShareForPage(user: User, param: CreateShareRequest) {
+    const { entityId: pageId, title, parentShareId, allowDuplication } = param;
 
-    // Set up concurrency limit for image processing
-    const limit = pLimit(5); // Limit to 5 concurrent operations
-
-    const privateStaticEndpoint = this.config.get('static.private.endpoint')?.replace(/\/$/, '');
-
-    // Create an array to store all image processing operations and their results
-    const imageProcessingTasks = images.map((imageRef) => {
-      return limit(async () => {
-        // Extract the URL from the markdown image syntax
-        const urlMatch = imageRef.match(/!\[.*?\]\((.*?)\)/);
-        if (!urlMatch?.[1]) return null;
-
-        const originalUrl = urlMatch[1];
-
-        // Extract the storage key only if private
-        if (!originalUrl.startsWith(privateStaticEndpoint)) return null;
-
-        const storageKey = originalUrl.replace(`${privateStaticEndpoint}/`, '');
-        if (!storageKey) return null;
-
-        try {
-          // Publish the file to public bucket
-          const publicUrl = await this.miscService.publishFile(storageKey);
-
-          // Return info needed for replacement
-          return {
-            originalImageRef: imageRef,
-            originalUrl,
-            publicUrl,
-          };
-        } catch (error) {
-          this.logger.error(`Failed to publish image for storageKey: ${storageKey}`, error);
-          return null;
-        }
-      });
+    // 检查分享记录是否已存在
+    const existingShareRecord = await this.prisma.shareRecord.findFirst({
+      where: {
+        entityId: pageId,
+        entityType: 'page' as EntityType,
+        uid: user.uid,
+        deletedAt: null,
+      },
     });
 
-    // Wait for all image processing tasks to complete
-    const processedImages = await Promise.all(imageProcessingTasks);
+    // 生成分享ID (如果还没有)
+    const shareId =
+      existingShareRecord?.shareId ?? genShareId('page' as keyof typeof SHARE_CODE_PREFIX);
 
-    // Apply all replacements to the content
-    let updatedContent = content;
-    for (const result of processedImages) {
-      if (result) {
-        const { originalImageRef, originalUrl, publicUrl } = result;
-        const newImageRef = originalImageRef.replace(originalUrl, publicUrl);
-        updatedContent = updatedContent.replace(originalImageRef, newImageRef);
-      }
+    // 获取页面详情
+    const [page] = await this.prisma.$queryRawUnsafe<any[]>(
+      `
+      SELECT * FROM "pages"
+      WHERE "page_id" = $1
+      AND "uid" = $2
+      AND "deleted_at" IS NULL
+    `,
+      pageId,
+      user.uid,
+    );
+
+    if (!page) {
+      throw new ShareNotFoundError();
     }
 
-    return updatedContent;
+    // 获取页面节点关联
+    const nodeRelations = await this.prisma.$queryRawUnsafe<any[]>(
+      `
+      SELECT * FROM "page_node_relations"
+      WHERE "page_id" = $1
+      AND "deleted_at" IS NULL
+      ORDER BY "order_index" ASC
+    `,
+      pageId,
+    );
+
+    // 读取页面当前状态
+    let pageContent = {};
+    let pageConfig = {
+      layout: 'slides',
+      theme: 'light',
+    };
+
+    try {
+      // 从存储服务读取页面状态
+      if (page.state_storage_key) {
+        const stateBuffer = await this.miscService.downloadFile({
+          storageKey: page.state_storage_key,
+          visibility: 'private',
+        });
+
+        if (stateBuffer) {
+          const update = new Uint8Array(stateBuffer);
+          const ydoc = new Y.Doc();
+          Y.applyUpdate(ydoc, update);
+
+          // 提取页面内容
+          const title = ydoc.getText('title').toString();
+          const nodeIds = Array.from(ydoc.getArray('nodeIds').toArray());
+
+          pageContent = {
+            title,
+            nodeIds,
+          };
+
+          // 提取页面配置
+          const pageConfigMap = ydoc.getMap('pageConfig');
+          if (pageConfigMap.size > 0) {
+            pageConfig = {
+              layout: (pageConfigMap.get('layout') as string) || 'slides',
+              theme: (pageConfigMap.get('theme') as string) || 'light',
+            };
+          }
+        }
+      }
+    } catch (error) {
+      this.logger.error('Error reading page state:', error);
+    }
+
+    // 创建页面数据对象
+    const pageData = {
+      page: {
+        pageId: page.page_id,
+        title: title || page.title,
+        description: page.description,
+        status: page.status,
+        createdAt: page.created_at,
+        updatedAt: page.updated_at,
+      },
+      content: pageContent,
+      nodeRelations: nodeRelations.map((relation) => ({
+        relationId: relation.relation_id,
+        pageId: relation.page_id,
+        nodeId: relation.node_id,
+        nodeType: relation.node_type,
+        entityId: relation.entity_id,
+        orderIndex: relation.order_index,
+        nodeData: relation.node_data
+          ? typeof relation.node_data === 'string'
+            ? JSON.parse(relation.node_data)
+            : relation.node_data
+          : {},
+      })),
+      pageConfig,
+      snapshotTime: new Date(),
+    };
+
+    // 上传页面内容到存储服务
+    const { storageKey } = await this.miscService.uploadBuffer(user, {
+      fpath: 'page.json',
+      buf: Buffer.from(JSON.stringify(pageData)),
+      entityId: pageId,
+      entityType: 'page' as EntityType,
+      visibility: 'public',
+      storageKey: `share/${shareId}.json`,
+    });
+
+    let shareRecord: ShareRecord;
+
+    if (existingShareRecord) {
+      // 更新现有分享记录
+      shareRecord = await this.prisma.shareRecord.update({
+        where: {
+          pk: existingShareRecord.pk,
+        },
+        data: {
+          title: pageData.page.title,
+          storageKey,
+          parentShareId,
+          allowDuplication,
+          updatedAt: new Date(),
+        },
+      });
+      this.logger.log(`Updated existing share record: ${shareRecord.shareId} for page: ${pageId}`);
+    } else {
+      // 创建新的分享记录
+      shareRecord = await this.prisma.shareRecord.create({
+        data: {
+          shareId,
+          title: pageData.page.title,
+          uid: user.uid,
+          entityId: pageId,
+          entityType: 'page' as EntityType,
+          storageKey,
+          parentShareId,
+          allowDuplication,
+          extraData: JSON.stringify({
+            description: page.description,
+          }),
+        },
+      });
+      this.logger.log(`Created new share record: ${shareRecord.shareId} for page: ${pageId}`);
+    }
+
+    return { shareRecord, pageData };
   }
 
   async createShare(user: User, req: CreateShareRequest): Promise<ShareRecord> {
-    switch (req.entityType) {
+    const entityType = req.entityType as EntityType;
+
+    switch (entityType) {
       case 'canvas':
         return (await this.createShareForCanvas(user, req)).shareRecord;
       case 'document':
@@ -816,6 +923,8 @@ export class ShareService {
         return (await this.createShareForSkillResponse(user, req)).shareRecord;
       case 'codeArtifact':
         return (await this.createShareForCodeArtifact(user, req)).shareRecord;
+      case 'page':
+        return (await this.createShareForPage(user, req)).shareRecord;
       default:
         throw new ParamsError(`Unsupported entity type ${req.entityType} for sharing`);
     }
@@ -1331,6 +1440,100 @@ export class ShareService {
     return { entityId: newCanvasId, entityType: 'canvas' };
   }
 
+  async duplicateSharedPage(user: User, shareId: string): Promise<Entity> {
+    // 查找分享记录
+    const record = await this.prisma.shareRecord.findFirst({
+      where: { shareId, deletedAt: null },
+    });
+
+    if (!record) {
+      throw new ShareNotFoundError();
+    }
+
+    // 生成新的页面ID (使用PagesService的生成方式)
+    const newPageId = `page-${createId()}`;
+    const stateStorageKey = `pages/${user.uid}/${newPageId}/state.update`;
+
+    // 下载分享的页面数据
+    const pageData = JSON.parse(
+      (
+        await this.miscService.downloadFile({
+          storageKey: record.storageKey,
+          visibility: 'public',
+        })
+      ).toString(),
+    );
+
+    // 创建新的页面记录
+    await this.prisma.$queryRawUnsafe(
+      `
+      INSERT INTO "pages" ("page_id", "uid", "title", "description", "state_storage_key", "status", "created_at", "updated_at")
+      VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+    `,
+      newPageId,
+      user.uid,
+      pageData.page.title,
+      pageData.page.description,
+      stateStorageKey,
+      'draft',
+    );
+
+    // 创建Y.doc存储页面状态
+    const doc = new Y.Doc();
+    doc.transact(() => {
+      doc.getText('title').insert(0, pageData.page.title);
+      const nodeIds = Array.isArray(pageData.content.nodeIds) ? pageData.content.nodeIds : [];
+      doc.getArray('nodeIds').insert(0, nodeIds);
+      doc.getMap('pageConfig').set('layout', pageData.pageConfig.layout || 'slides');
+      doc.getMap('pageConfig').set('theme', pageData.pageConfig.theme || 'light');
+    });
+
+    // 上传状态
+    const state = Y.encodeStateAsUpdate(doc);
+    await this.miscService.uploadBuffer(user, {
+      fpath: 'page-state.update',
+      buf: Buffer.from(state),
+      entityId: newPageId,
+      entityType: 'page' as EntityType,
+      visibility: 'private',
+      storageKey: stateStorageKey,
+    });
+
+    // 复制页面节点关联
+    if (Array.isArray(pageData.nodeRelations) && pageData.nodeRelations.length > 0) {
+      for (const relation of pageData.nodeRelations) {
+        const relationId = `pnr-${createId()}`;
+        await this.prisma.$queryRawUnsafe(
+          `
+          INSERT INTO "page_node_relations" ("relation_id", "page_id", "node_id", "node_type", "entity_id", "order_index", "node_data", "created_at", "updated_at")
+          VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+        `,
+          relationId,
+          newPageId,
+          relation.nodeId,
+          relation.nodeType,
+          relation.entityId,
+          relation.orderIndex,
+          JSON.stringify(relation.nodeData || {}),
+        );
+      }
+    }
+
+    // 创建复制记录
+    await this.prisma.duplicateRecord.create({
+      data: {
+        sourceId: record.entityId,
+        targetId: newPageId,
+        entityType: 'page' as any,
+        uid: user.uid,
+        shareId,
+        status: 'finish',
+      },
+    });
+
+    return { entityId: newPageId, entityType: 'page' as EntityType };
+  }
+
   async duplicateShare(user: User, body: DuplicateShareRequest): Promise<Entity> {
     const { shareId } = body;
 
@@ -1338,6 +1541,7 @@ export class ShareService {
       throw new ParamsError('Share ID is required');
     }
 
+    // 根据shareId前缀确定类型
     if (shareId.startsWith(SHARE_CODE_PREFIX.canvas)) {
       return this.duplicateSharedCanvas(user, shareId);
     }
@@ -1358,6 +1562,94 @@ export class ShareService {
       return this.duplicateSharedCodeArtifact(user, shareId);
     }
 
+    if (shareId.startsWith(SHARE_CODE_PREFIX.page)) {
+      return this.duplicateSharedPage(user, shareId);
+    }
+
     throw new ParamsError(`Unsupported share type ${shareId}`);
+  }
+
+  /**
+   * Process content images and replace them with public URLs
+   * @param content - The content to process
+   * @returns The processed content with public URLs
+   */
+  async processContentImages(content: string) {
+    // Extract all markdown image references: ![alt](url)
+    const images = content?.match(/!\[.*?\]\((.*?)\)/g);
+    if (!images?.length) {
+      return content;
+    }
+
+    // Set up concurrency limit for image processing
+    const limit = pLimit(5); // Limit to 5 concurrent operations
+
+    const privateStaticEndpoint = this.config.get('static.private.endpoint')?.replace(/\/$/, '');
+
+    // Create an array to store all image processing operations and their results
+    const imageProcessingTasks = images.map((imageRef) => {
+      return limit(async () => {
+        // Extract the URL from the markdown image syntax
+        const urlMatch = imageRef.match(/!\[.*?\]\((.*?)\)/);
+        if (!urlMatch?.[1]) return null;
+
+        const originalUrl = urlMatch[1];
+
+        // Extract the storage key only if private
+        if (!originalUrl.startsWith(privateStaticEndpoint)) return null;
+
+        const storageKey = originalUrl.replace(`${privateStaticEndpoint}/`, '');
+        if (!storageKey) return null;
+
+        try {
+          // Publish the file to public bucket
+          const publicUrl = await this.miscService.publishFile(storageKey);
+
+          // Return info needed for replacement
+          return {
+            originalImageRef: imageRef,
+            originalUrl,
+            publicUrl,
+          };
+        } catch (error) {
+          this.logger.error(`Failed to publish image for storageKey: ${storageKey}`, error);
+          return null;
+        }
+      });
+    });
+
+    // Wait for all image processing tasks to complete
+    const processedImages = await Promise.all(imageProcessingTasks);
+
+    // Apply all replacements to the content
+    let updatedContent = content;
+    for (const result of processedImages) {
+      if (result) {
+        const { originalImageRef, originalUrl, publicUrl } = result;
+        const newImageRef = originalImageRef.replace(originalUrl, publicUrl);
+        updatedContent = updatedContent.replace(originalImageRef, newImageRef);
+      }
+    }
+
+    return updatedContent;
+  }
+
+  /**
+   * 获取分享数据的通用方法
+   * @param storageKey 存储键
+   * @returns 分享内容对象
+   */
+  async getSharedData(storageKey: string): Promise<any> {
+    try {
+      const contentBuffer = await this.miscService.downloadFile({
+        storageKey,
+        visibility: 'public',
+      });
+
+      return JSON.parse(contentBuffer.toString());
+    } catch (error) {
+      this.logger.error(`Error reading shared content from ${storageKey}:`, error);
+      throw new Error('无法读取分享内容');
+    }
   }
 }

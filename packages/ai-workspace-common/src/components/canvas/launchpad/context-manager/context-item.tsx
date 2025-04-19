@@ -91,7 +91,6 @@ export const ContextItem = ({
             'border-green-500': isActive,
             'border-red-300 bg-red-50 text-red-500': isLimit,
             'bg-gray-100 border-gray-200': disabled,
-            'border-dashed': item?.isPreview,
           },
         )}
         onClick={() => handleItemClick()}

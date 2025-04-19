@@ -5,6 +5,7 @@ import { MdOutlineImage } from 'react-icons/md';
 import {
   IconDownloadFile,
   IconSearch,
+  IconSlideshow,
 } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { NodeSelector } from '../common/node-selector';
 import { useNodePosition } from '@refly-packages/ai-workspace-common/hooks/canvas/use-node-position';
@@ -35,10 +36,13 @@ export const ToolbarButtons = memo(
     const { getNodes } = useReactFlow();
     const { hoverCardEnabled } = useHoverCard();
 
-    const { showReflyPilot, setShowReflyPilot } = useCanvasStoreShallow((state) => ({
-      showReflyPilot: state.showReflyPilot,
-      setShowReflyPilot: state.setShowReflyPilot,
-    }));
+    const { showReflyPilot, setShowReflyPilot, showSlideshow, setShowSlideshow } =
+      useCanvasStoreShallow((state) => ({
+        showReflyPilot: state.showReflyPilot,
+        setShowReflyPilot: state.setShowReflyPilot,
+        showSlideshow: state.showSlideshow,
+        setShowSlideshow: state.setShowSlideshow,
+      }));
 
     const handleNodeSelect = useCallback(
       (item: IContextItem) => {
@@ -72,7 +76,13 @@ export const ToolbarButtons = memo(
     const previewButton = (
       <Button
         type="text"
-        icon={<MdOutlineImage style={{ color: showPreview ? '#000' : '#9CA3AF' }} />}
+        icon={
+          <MdOutlineImage
+            size={16}
+            className="flex items-center justify-center"
+            style={{ color: showPreview ? '#000' : '#9CA3AF' }}
+          />
+        }
         onClick={() => setShowPreview(!showPreview)}
         className="w-8 h-6 flex items-center justify-center mr-1"
       />
@@ -100,22 +110,38 @@ export const ToolbarButtons = memo(
       <Button
         type="text"
         loading={isLoading}
-        icon={<IconDownloadFile size={16} className="#000" />}
+        icon={<IconDownloadFile size={16} className="#000 flex items-center justify-center " />}
         onClick={() => exportCanvasAsImage(canvasTitle)}
         className="w-8 h-6 flex items-center justify-center"
+      />
+    );
+
+    const slideshowButton = (
+      <Button
+        type="text"
+        icon={
+          <IconSlideshow
+            size={16}
+            className={`flex items-center justify-center ${showSlideshow ? 'text-green-600' : '#000'}`}
+          />
+        }
+        className="w-8 h-6 flex items-center justify-center"
+        onClick={() => setShowSlideshow(!showSlideshow)}
       />
     );
 
     return (
       <>
         <div className="flex items-center h-9 bg-[#ffffff] rounded-lg px-2 border border-solid border-1 border-[#EAECF0] box-shadow-[0px_2px_6px_0px_rgba(0,0,0,0.1)]">
-          {hoverCardEnabled ? (
+          {!hoverCardEnabled ? (
             <HoverCard {...pilotButtonConfig}>{pilotButton}</HoverCard>
           ) : (
             <Tooltip title={pilotButtonConfig.title}>{pilotButton}</Tooltip>
           )}
         </div>
         <div className="flex items-center h-9 bg-[#ffffff] rounded-lg px-2 border border-solid border-1 border-[#EAECF0] box-shadow-[0px_2px_6px_0px_rgba(0,0,0,0.1)]">
+          <Tooltip title={t('canvas.toolbar.slideshow')}>{slideshowButton}</Tooltip>
+
           <Popover
             open={searchOpen}
             onOpenChange={setSearchOpen}
@@ -134,7 +160,13 @@ export const ToolbarButtons = memo(
             <Tooltip title={t('canvas.toolbar.searchNode')}>
               <Button
                 type="text"
-                icon={<IconSearch style={{ color: '#000' }} />}
+                icon={
+                  <IconSearch
+                    size={16}
+                    className="flex items-center justify-center"
+                    style={{ color: '#000' }}
+                  />
+                }
                 className="w-8 h-6 flex items-center justify-center mr-1"
               />
             </Tooltip>

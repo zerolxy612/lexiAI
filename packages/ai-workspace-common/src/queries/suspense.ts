@@ -12,6 +12,10 @@ import {
   getCodeArtifactDetail,
   getCollabToken,
   getDocumentDetail,
+  getPageByCanvasId,
+  getPageDetail,
+  getPageVersion,
+  getPageVersions,
   getProjectDetail,
   getResourceDetail,
   getSettings,
@@ -25,6 +29,7 @@ import {
   listLabelClasses,
   listLabelInstances,
   listModels,
+  listPages,
   listProjects,
   listResources,
   listShares,
@@ -50,6 +55,14 @@ import {
   GetCollabTokenError,
   GetDocumentDetailData,
   GetDocumentDetailError,
+  GetPageByCanvasIdData,
+  GetPageByCanvasIdError,
+  GetPageDetailData,
+  GetPageDetailError,
+  GetPageVersionData,
+  GetPageVersionError,
+  GetPageVersionsData,
+  GetPageVersionsError,
   GetProjectDetailData,
   GetProjectDetailError,
   GetResourceDetailData,
@@ -70,6 +83,8 @@ import {
   ListLabelInstancesData,
   ListLabelInstancesError,
   ListModelsError,
+  ListPagesData,
+  ListPagesError,
   ListProjectsData,
   ListProjectsError,
   ListResourcesData,
@@ -84,6 +99,81 @@ import {
   ServeStaticError,
 } from '../requests/types.gen';
 import * as Common from './common';
+export const useGetPageByCanvasIdSuspense = <
+  TData = Common.GetPageByCanvasIdDefaultResponse,
+  TError = GetPageByCanvasIdError,
+  TQueryKey extends Array<unknown> = unknown[],
+>(
+  clientOptions: Options<GetPageByCanvasIdData, true>,
+  queryKey?: TQueryKey,
+  options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
+) =>
+  useSuspenseQuery<TData, TError>({
+    queryKey: Common.UseGetPageByCanvasIdKeyFn(clientOptions, queryKey),
+    queryFn: () =>
+      getPageByCanvasId({ ...clientOptions }).then((response) => response.data as TData) as TData,
+    ...options,
+  });
+export const useListPagesSuspense = <
+  TData = Common.ListPagesDefaultResponse,
+  TError = ListPagesError,
+  TQueryKey extends Array<unknown> = unknown[],
+>(
+  clientOptions: Options<ListPagesData, true> = {},
+  queryKey?: TQueryKey,
+  options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
+) =>
+  useSuspenseQuery<TData, TError>({
+    queryKey: Common.UseListPagesKeyFn(clientOptions, queryKey),
+    queryFn: () =>
+      listPages({ ...clientOptions }).then((response) => response.data as TData) as TData,
+    ...options,
+  });
+export const useGetPageDetailSuspense = <
+  TData = Common.GetPageDetailDefaultResponse,
+  TError = GetPageDetailError,
+  TQueryKey extends Array<unknown> = unknown[],
+>(
+  clientOptions: Options<GetPageDetailData, true>,
+  queryKey?: TQueryKey,
+  options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
+) =>
+  useSuspenseQuery<TData, TError>({
+    queryKey: Common.UseGetPageDetailKeyFn(clientOptions, queryKey),
+    queryFn: () =>
+      getPageDetail({ ...clientOptions }).then((response) => response.data as TData) as TData,
+    ...options,
+  });
+export const useGetPageVersionsSuspense = <
+  TData = Common.GetPageVersionsDefaultResponse,
+  TError = GetPageVersionsError,
+  TQueryKey extends Array<unknown> = unknown[],
+>(
+  clientOptions: Options<GetPageVersionsData, true>,
+  queryKey?: TQueryKey,
+  options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
+) =>
+  useSuspenseQuery<TData, TError>({
+    queryKey: Common.UseGetPageVersionsKeyFn(clientOptions, queryKey),
+    queryFn: () =>
+      getPageVersions({ ...clientOptions }).then((response) => response.data as TData) as TData,
+    ...options,
+  });
+export const useGetPageVersionSuspense = <
+  TData = Common.GetPageVersionDefaultResponse,
+  TError = GetPageVersionError,
+  TQueryKey extends Array<unknown> = unknown[],
+>(
+  clientOptions: Options<GetPageVersionData, true>,
+  queryKey?: TQueryKey,
+  options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
+) =>
+  useSuspenseQuery<TData, TError>({
+    queryKey: Common.UseGetPageVersionKeyFn(clientOptions, queryKey),
+    queryFn: () =>
+      getPageVersion({ ...clientOptions }).then((response) => response.data as TData) as TData,
+    ...options,
+  });
 export const useGetAuthConfigSuspense = <
   TData = Common.GetAuthConfigDefaultResponse,
   TError = GetAuthConfigError,

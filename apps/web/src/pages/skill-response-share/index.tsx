@@ -82,23 +82,15 @@ const SimpleReasoningContent = memo(
 );
 
 // Simplified version of ActualContent
-const SimpleActualContent = memo(
-  ({
-    content,
-    sources,
-  }: {
-    content: string;
-    sources: Source[];
-  }) => {
-    if (!content) return null;
+const SimpleActualContent = memo(({ content, sources }: { content: string; sources: Source[] }) => {
+  if (!content) return null;
 
-    return (
-      <div className="my-3 text-gray-600 text-base">
-        <Markdown content={content} sources={sources} mode="readonly" />
-      </div>
-    );
-  },
-);
+  return (
+    <div className="my-3 text-gray-600 text-base">
+      <Markdown content={content} sources={sources} mode="readonly" />
+    </div>
+  );
+});
 
 // Parse structured data helper
 const parseStructuredData = (
@@ -112,39 +104,31 @@ const parseStructuredData = (
 };
 
 // Simplified step card
-const SimpleStepCard = memo(
-  ({
-    step,
-    index,
-  }: {
-    step: ActionStep;
-    index: number;
-  }) => {
-    const { t } = useTranslation();
-    const sources = useMemo(
-      () => parseStructuredData(step?.structuredData, 'sources') as Source[],
-      [step?.structuredData],
-    );
+export const SimpleStepCard = memo(({ step, index }: { step: ActionStep; index: number }) => {
+  const { t } = useTranslation();
+  const sources = useMemo(
+    () => parseStructuredData(step?.structuredData, 'sources') as Source[],
+    [step?.structuredData],
+  );
 
-    const skillName = 'commonQnA'; // Default skill name
+  const skillName = 'commonQnA'; // Default skill name
 
-    return (
-      <div className="flex flex-col gap-3 mb-6">
-        <div className="text-gray-600 text-sm flex items-center gap-2 font-medium border-b pb-2">
-          <IconCheck className="h-4 w-4 text-green-500" />
-          {t('canvas.skillResponse.stepTitle', { index })}{' '}
-          {` · ${t(`${skillName}.steps.${step.name}.name`, { ns: 'skill', defaultValue: step.name })}`}
-        </div>
-
-        {step.reasoningContent && (
-          <SimpleReasoningContent reasoningContent={step.reasoningContent} sources={sources} />
-        )}
-
-        {step.content && <SimpleActualContent content={step.content} sources={sources} />}
+  return (
+    <div className="flex flex-col gap-3 mb-6">
+      <div className="text-gray-600 text-sm flex items-center gap-2 font-medium border-b pb-2">
+        <IconCheck className="h-4 w-4 text-green-500" />
+        {t('canvas.skillResponse.stepTitle', { index })}{' '}
+        {` · ${t(`${skillName}.steps.${step.name}.name`, { ns: 'skill', defaultValue: step.name })}`}
       </div>
-    );
-  },
-);
+
+      {step.reasoningContent && (
+        <SimpleReasoningContent reasoningContent={step.reasoningContent} sources={sources} />
+      )}
+
+      {step.content && <SimpleActualContent content={step.content} sources={sources} />}
+    </div>
+  );
+});
 
 const SkillResponseSharePage = () => {
   const { shareId = '' } = useParams();
