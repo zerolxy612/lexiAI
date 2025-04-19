@@ -3,20 +3,37 @@ import { useListProviders } from '@refly-packages/ai-workspace-common/queries';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 import React, { useCallback, useState, useMemo, useEffect } from 'react';
 import { Spin } from '@refly-packages/ai-workspace-common/components/common/spin';
-import { Button, Input, Modal, Empty, Form, Switch } from 'antd';
+import { Button, Input, Modal, Empty, Form, Switch, Tooltip } from 'antd';
 import { LuSettings, LuPlus, LuSearch } from 'react-icons/lu';
 import { cn } from '@refly-packages/ai-workspace-common/utils/cn';
 import { Provider } from '@refly-packages/ai-workspace-common/requests/types.gen';
+
 const ProviderItem = React.memo(
   ({
     provider,
     onSettingsClick,
-  }: { provider: Provider; onSettingsClick: (provider: Provider) => void }) => {
+    onToggleEnabled,
+    isSubmitting,
+  }: {
+    provider: Provider;
+    onSettingsClick: (provider: Provider) => void;
+    onToggleEnabled: (provider: Provider, enabled: boolean) => void;
+    isSubmitting: boolean;
+  }) => {
+    const { t } = useTranslation();
+    const handleToggleChange = useCallback(
+      (checked: boolean) => {
+        onToggleEnabled(provider, checked);
+      },
+      [provider, onToggleEnabled],
+    );
+
+    const handleSwitchWrapperClick = useCallback((e: React.MouseEvent) => {
+      e.stopPropagation();
+    }, []);
+
     return (
-      <div
-        className="mb-3 p-4 hover:bg-gray-50 rounded-md cursor-pointer border border-solid border-gray-100"
-        onClick={() => onSettingsClick(provider)}
-      >
+      <div className="mb-3 p-4 hover:bg-gray-50 rounded-md cursor-pointer border border-solid border-gray-100">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex-1 flex items-center">
             <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center mr-3">
@@ -28,11 +45,30 @@ const ProviderItem = React.memo(
             </div>
           </div>
 
-          <Button
-            type="text"
-            icon={<LuSettings size={18} className="text-gray-500" />}
-            onClick={() => onSettingsClick(provider)}
-          />
+          <div className="flex items-center gap-2">
+            <Button
+              type="text"
+              icon={<LuSettings size={18} className="text-gray-500" />}
+              onClick={() => onSettingsClick(provider)}
+            />
+
+            <Tooltip
+              title={
+                provider.enabled
+                  ? t('settings.modelProviders.disabled')
+                  : t('settings.modelProviders.enabled')
+              }
+            >
+              <div onClick={handleSwitchWrapperClick} className="flex items-center">
+                <Switch
+                  size="small"
+                  checked={provider.enabled ?? false}
+                  onChange={handleToggleChange}
+                  loading={isSubmitting}
+                />
+              </div>
+            </Tooltip>
+          </div>
         </div>
       </div>
     );
@@ -103,8 +139,6 @@ const ProviderModal = React.memo(
               apiKey: values.apiKey,
               baseUrl: values.baseUrl,
               providerKey: 'openai',
-              category: 'llm',
-              // TODO: add category and providerKey
             },
           });
           if (res.data.success) {
@@ -140,7 +174,7 @@ const ProviderModal = React.memo(
           </Button>,
         ]}
       >
-        <Form form={form} layout="vertical">
+        <Form form={form} className="mt-6">
           <Form.Item
             name="name"
             label={t('settings.modelProviders.name')}
@@ -186,6 +220,30 @@ export const ModelProviders = () => {
   const handleSettingsClick = useCallback((provider: Provider) => {
     setEditProvider(provider);
   }, []);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleToggleEnabled = useCallback(
+    async (provider: Provider, enabled: boolean) => {
+      setIsSubmitting(true);
+      try {
+        const res = await getClient().updateProvider({
+          body: {
+            ...provider,
+            enabled,
+          },
+        });
+        if (res.data.success) {
+          refetch();
+        }
+      } catch (error) {
+        console.error('Failed to update provider status', error);
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [refetch],
+  );
 
   const filteredProviders = useMemo(() => {
     if (!data?.data) return [];
@@ -266,6 +324,8 @@ export const ModelProviders = () => {
                   key={provider.providerId}
                   provider={provider}
                   onSettingsClick={handleSettingsClick}
+                  onToggleEnabled={handleToggleEnabled}
+                  isSubmitting={isSubmitting}
                 />
               ))}
             </div>

@@ -1747,6 +1747,7 @@ const translations = {
       apiKey: 'API Key',
       baseUrl: 'Base URL',
       enabled: '启用',
+      disabled: '禁用',
       name: '名称',
       namePlaceholder: '请输入供应方名称',
       apiKeyPlaceholder: '请输入供应方 API Key',

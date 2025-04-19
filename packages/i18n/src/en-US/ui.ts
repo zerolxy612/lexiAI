@@ -1792,6 +1792,7 @@ const translations = {
       apiKey: 'API Key',
       baseUrl: 'Base URL',
       enabled: 'Enabled',
+      disabled: 'Disabled',
       name: 'Name',
       namePlaceholder: 'Please enter the name of the provider',
       apiKeyPlaceholder: 'Please enter the API Key of the provider',
