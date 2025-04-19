@@ -1764,6 +1764,19 @@ const translations = {
       addFirstProvider: '添加第一个供应方',
       deleteConfirm: '确定删除供应方 {{name}} 吗？',
     },
+    modelConfig: {
+      title: '模型配置',
+      addModel: '添加模型',
+      editModel: '编辑模型',
+      update: '更新',
+      add: '添加',
+      deleteModel: '删除模型',
+      deleteConfirm: '确定删除模型 {{name}} 吗？',
+      modelId: '模型ID',
+      modelIdPlaceholder: '请输入模型ID',
+      name: '名称',
+      namePlaceholder: '请输入模型名称',
+    },
   },
   contentDetail: {
     breadcrumb: {

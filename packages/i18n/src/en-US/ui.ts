@@ -1809,6 +1809,20 @@ const translations = {
       addFirstProvider: 'Add the first provider',
       deleteConfirm: 'Are you sure you want to delete the provider {{name}}?',
     },
+
+    modelConfig: {
+      addModel: 'Add Model',
+      editModel: 'Edit Model',
+      update: 'Update',
+      add: 'Add',
+      provider: 'Provider',
+      actions: 'Actions',
+      deleteConfirm: 'Are you sure you want to delete the model {{name}}?',
+      name: 'Name',
+      namePlaceholder: 'Please enter the name of the model',
+      modelId: 'Model ID',
+      modelIdPlaceholder: 'Please enter the model ID',
+    },
   },
   contentDetail: {
     breadcrumb: {

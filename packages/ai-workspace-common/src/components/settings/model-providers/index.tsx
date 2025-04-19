@@ -15,6 +15,7 @@ import {
   DropdownProps,
   Popconfirm,
   MenuProps,
+  Typography,
   message,
 } from 'antd';
 import { LuPlus, LuSearch } from 'react-icons/lu';
@@ -25,7 +26,7 @@ import {
   IconEdit,
   IconMoreHorizontal,
 } from '@refly-packages/ai-workspace-common/components/common/icon';
-
+const { Title } = Typography;
 const ActionDropdown = ({
   provider,
   handleEdit,
@@ -366,7 +367,10 @@ export const ModelProviders = () => {
   }, [data?.data, searchQuery]);
 
   return (
-    <div className="p-4 h-full overflow-hidden flex flex-col">
+    <div className="p-4 pt-0 h-full overflow-hidden flex flex-col">
+      <Title level={4} className="pb-4">
+        {t('settings.tabs.modelProviders')}
+      </Title>
       {/* Search and Add Bar */}
       <div className="flex items-center justify-between mb-6">
         <div className="relative flex-1 max-w-xs">
