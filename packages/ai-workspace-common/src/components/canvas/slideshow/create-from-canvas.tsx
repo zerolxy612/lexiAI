@@ -114,80 +114,79 @@ export const CreatePageFromCanvas = memo(({ canvasId, afterCreate }: CreatePageF
   }, [canvasId]);
 
   return (
-    <div className="mx-auto flex flex-col w-full h-full max-w-3xl">
-      {availableNodes?.length > 0 ? (
-        <Form className="flex flex-col flex-1 min-h-20 pt-6">
-          <div className="flex-1 overflow-hidden">
-            {/* <Form.Item label={t('pages.new.pageTitle')} name="title">
-              <Input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder={t('pages.new.enterPageTitle')}
-              />
-            </Form.Item> */}
-            <Form.Item
-              className="page-node-list flex-grow h-full min-h-10"
-              label={t('pages.new.selectNodesToInclude')}
-              name="nodeIds"
-              required={true}
-            >
-              <div className="mb-2 pt-1">
-                <Checkbox
-                  checked={checkedAll}
-                  indeterminate={indeterminate}
-                  onChange={handleCheckAll}
-                >
-                  {t('pages.new.selectAll')}
-                </Checkbox>
+    <div className={`w-full overflow-hidden ${availableNodes?.length > 0 ? 'flex-grow' : ''}`}>
+      <div className="mx-auto flex flex-col w-full h-full max-w-3xl">
+        {availableNodes?.length > 0 ? (
+          <Form className="flex flex-col flex-1 min-h-20 pt-6">
+            <div className="flex-1 overflow-hidden px-6">
+              <div className="flex items-center h-6">
+                <span className="text-red-500 mr-1">*</span>
+                {t('pages.new.selectNodesToInclude')}
               </div>
-              <div className="list">
-                <Checkbox.Group
-                  className="w-full flex flex-col gap-2"
-                  value={nodeIds}
-                  onChange={handleNodeIdsChange}
-                >
-                  {availableNodes?.map((node) => (
-                    <Checkbox
-                      className="w-full node-option"
-                      key={node?.data?.entityId}
-                      value={node?.data?.entityId}
-                    >
-                      <div className="w-full flex items-center justify-between">
-                        <div className="text-[10px] text-gray-400 border border-solid border-1 border-gray-200 rounded-sm px-1 mr-2 whitespace-nowrap">
-                          {t(`canvas.nodeTypes.${node?.type}`)}
+
+              <Form.Item
+                className="page-node-list flex-grow h-full min-h-10"
+                name="nodeIds"
+                required={true}
+              >
+                <div className="mb-2 pt-1">
+                  <Checkbox
+                    checked={checkedAll}
+                    indeterminate={indeterminate}
+                    onChange={handleCheckAll}
+                  >
+                    {t('pages.new.selectAll')}
+                  </Checkbox>
+                </div>
+                <div className="list">
+                  <Checkbox.Group
+                    className="w-full flex flex-col gap-2"
+                    value={nodeIds}
+                    onChange={handleNodeIdsChange}
+                  >
+                    {availableNodes?.map((node) => (
+                      <Checkbox
+                        className="w-full node-option"
+                        key={node?.data?.entityId}
+                        value={node?.data?.entityId}
+                      >
+                        <div className="w-full flex items-center justify-between">
+                          <div className="text-[10px] text-gray-400 border border-solid border-1 border-gray-200 rounded-sm px-1 mr-2 whitespace-nowrap">
+                            {t(`canvas.nodeTypes.${node?.type}`)}
+                          </div>
+                          <Text ellipsis={{ tooltip: true }}>
+                            {node?.data?.title || t('common.untitled')}
+                          </Text>
                         </div>
-                        <Text ellipsis={{ tooltip: true }}>
-                          {node?.data?.title || t('common.untitled')}
-                        </Text>
-                      </div>
-                    </Checkbox>
-                  ))}
-                </Checkbox.Group>
-              </div>
-            </Form.Item>
-          </div>
-          <div className="w-full flex gap-2 justify-end py-4 border-t">
-            <Button type="default" onClick={() => getCanvasData()} loading={loadingCanvasData}>
+                      </Checkbox>
+                    ))}
+                  </Checkbox.Group>
+                </div>
+              </Form.Item>
+            </div>
+            <div className="w-full flex gap-2 justify-end py-4 border-t">
+              <Button type="default" onClick={() => getCanvasData()} loading={loadingCanvasData}>
+                {t('pages.new.refresh')}
+              </Button>
+              <Button
+                type="primary"
+                onClick={handleSubmit}
+                loading={isPending}
+                disabled={nodeIds?.length === 0}
+              >
+                {t('pages.new.createPage')}
+              </Button>
+            </div>
+          </Form>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-[200px] px-12">
+            <Text className="text-gray-400">{t('pages.new.noNodesFound')}</Text>
+            <Button className="mt-4" onClick={() => getCanvasData()} loading={loadingCanvasData}>
               {t('pages.new.refresh')}
             </Button>
-            <Button
-              type="primary"
-              onClick={handleSubmit}
-              loading={isPending}
-              disabled={nodeIds?.length === 0}
-            >
-              {t('pages.new.createPage')}
-            </Button>
           </div>
-        </Form>
-      ) : (
-        <div className="flex flex-col items-center justify-center h-[200px] px-12">
-          <Text className="text-gray-400">{t('pages.new.noNodesFound')}</Text>
-          <Button className="mt-4" onClick={() => getCanvasData()} loading={loadingCanvasData}>
-            {t('pages.new.refresh')}
-          </Button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 });
