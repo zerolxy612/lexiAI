@@ -2489,7 +2489,7 @@ const translations = {
       pageCreatedSuccess: '页面创建成功',
       pageId: '页面ID',
       unknown: '未知',
-      refresh: '重载节点',
+      refresh: '刷新节点',
     },
     slideshow: {
       title: '幻灯片',

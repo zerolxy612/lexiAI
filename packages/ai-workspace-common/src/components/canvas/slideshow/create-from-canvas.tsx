@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { Button, Checkbox, Form, message, Typography } from 'antd';
 import { CheckboxChangeEvent } from 'antd/es/checkbox';
 import { useCanvasStoreShallow } from '@refly-packages/ai-workspace-common/stores/canvas';
+import { getContextItemIcon } from '@refly-packages/ai-workspace-common/components/canvas/launchpad/context-manager/utils/icon';
+import React from 'react';
 
 const { Text } = Typography;
 
@@ -114,12 +116,12 @@ export const CreatePageFromCanvas = memo(({ canvasId, afterCreate }: CreatePageF
   }, [canvasId]);
 
   return (
-    <div className={`w-full overflow-hidden ${availableNodes?.length > 0 ? 'flex-grow' : ''}`}>
+    <div className="w-full h-[60vh] overflow-hidden">
       <div className="mx-auto flex flex-col w-full h-full max-w-3xl">
         {availableNodes?.length > 0 ? (
           <Form className="flex flex-col flex-1 min-h-20 pt-6">
-            <div className="flex-1 overflow-hidden px-6">
-              <div className="flex items-center h-6">
+            <div className="flex-1 overflow-hidden px-6 border border-dashed border-gray-200 rounded-md">
+              <div className="flex items-center h-8">
                 <span className="text-red-500 mr-1">*</span>
                 {t('pages.new.selectNodesToInclude')}
               </div>
@@ -151,8 +153,13 @@ export const CreatePageFromCanvas = memo(({ canvasId, afterCreate }: CreatePageF
                         value={node?.data?.entityId}
                       >
                         <div className="w-full flex items-center justify-between">
-                          <div className="text-[10px] text-gray-400 border border-solid border-1 border-gray-200 rounded-sm px-1 mr-2 whitespace-nowrap">
-                            {t(`canvas.nodeTypes.${node?.type}`)}
+                          <div className="flex-shrink-0 mr-2">
+                            {getContextItemIcon(node?.type, {
+                              display: 'flex',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              transform: 'translateY(1px)',
+                            })}
                           </div>
                           <Text ellipsis={{ tooltip: true }}>
                             {node?.data?.title || t('common.untitled')}
