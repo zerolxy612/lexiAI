@@ -15,7 +15,7 @@ const makeSSERequest = async (
     headers: {
       'Content-Type': 'application/json',
     },
-    credentials: isDesktop ? 'omit' : 'include',
+    credentials: isDesktop() ? 'omit' : 'include',
     signal: controller.signal,
     body: JSON.stringify(payload),
   });
