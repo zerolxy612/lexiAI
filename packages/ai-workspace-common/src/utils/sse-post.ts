@@ -10,12 +10,13 @@ const makeSSERequest = async (
   controller: AbortController,
   isRetry = false,
 ): Promise<Response> => {
+  console.log('isDesktop', isDesktop());
   const response = await fetch(`${serverOrigin}/v1/skill/streamInvoke`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    credentials: isDesktop ? 'omit' : 'include',
+    credentials: isDesktop() ? 'omit' : 'include',
     signal: controller.signal,
     body: JSON.stringify(payload),
   });

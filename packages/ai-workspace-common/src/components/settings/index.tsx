@@ -45,7 +45,7 @@ export const SettingModal = (props: SettingModalProps) => {
   const tabs = [
     {
       key: 'modelProviders',
-      label: t('settings.tabs.modelProviders'),
+      label: t('settings.tabs.providers'),
       icon: <IconCloud style={iconStyle} />,
       children: <ModelProviders />,
     },

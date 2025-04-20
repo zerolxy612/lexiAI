@@ -162,6 +162,9 @@ export class ProviderService {
         enabled,
         deletedAt: null,
       },
+      include: {
+        provider: true,
+      },
     });
 
     const { items: globalItems } = await this.globalProviderCache.get();
@@ -184,7 +187,7 @@ export class ProviderService {
   }
 
   async createProviderItem(user: User, param: UpsertProviderItemRequest) {
-    const { providerId, name, category, enabled } = param;
+    const { providerId, name, category, enabled, config } = param;
 
     if (!providerId || !category || !name) {
       throw new ParamsError('Invalid model item parameters');
@@ -212,6 +215,7 @@ export class ProviderService {
         providerId,
         enabled,
         uid: user.uid,
+        config: JSON.stringify(config),
       },
     });
   }

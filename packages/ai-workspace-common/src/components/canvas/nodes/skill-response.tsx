@@ -21,7 +21,6 @@ import {
   IconResponse,
   IconSearch,
   IconToken,
-  preloadModelIcons,
 } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { time } from '@refly-packages/ai-workspace-common/utils/time';
 import { LOCALE } from '@refly/common-types';
@@ -30,7 +29,6 @@ import { useKnowledgeBaseStoreShallow } from '@refly-packages/ai-workspace-commo
 import { useCanvasStoreShallow } from '@refly-packages/ai-workspace-common/stores/canvas';
 import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/canvas';
 import { SelectedSkillHeader } from '@refly-packages/ai-workspace-common/components/canvas/launchpad/selected-skill-header';
-import { ModelProviderIcons } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { nodeActionEmitter } from '@refly-packages/ai-workspace-common/events/nodeActions';
 import {
   createNodeEventName,
@@ -56,6 +54,7 @@ import { useUpdateNodeTitle } from '@refly-packages/ai-workspace-common/hooks/us
 import { truncateContent } from '@refly-packages/ai-workspace-common/utils/content';
 import { useNodeData } from '@refly-packages/ai-workspace-common/hooks/canvas';
 import { useSkillError } from '@refly-packages/ai-workspace-common/hooks/use-skill-error';
+import { ModelIcon } from '@lobehub/icons';
 
 const POLLING_WAIT_TIME = 15000;
 
@@ -153,12 +152,6 @@ export const NodeHeader = memo(
   },
 );
 
-const ModelIcon = memo(({ provider }: { provider: string }) => {
-  return <img className="w-3 h-3" src={ModelProviderIcons[provider]} alt={provider} />;
-});
-
-ModelIcon.displayName = 'ModelIcon';
-
 const NodeFooter = memo(
   ({
     model,
@@ -178,7 +171,7 @@ const NodeFooter = memo(
         <div className="flex flex-wrap items-center gap-1 max-w-[70%]">
           {model && (
             <div className="flex items-center gap-1 overflow-hidden">
-              <ModelIcon provider={modelInfo?.provider} />
+              <ModelIcon model={modelInfo?.name} size={16} type={'color'} />
               <span className="truncate">{model}</span>
             </div>
           )}
@@ -629,10 +622,6 @@ export const SkillResponseNode = memo(
       handleAskAI,
       handleCloneAskAI,
     ]);
-
-    useEffect(() => {
-      preloadModelIcons();
-    }, []);
 
     return (
       <div

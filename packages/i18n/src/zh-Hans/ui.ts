@@ -1581,7 +1581,7 @@ const translations = {
   settings: {
     title: '设置',
     tabs: {
-      modelProviders: '供应商',
+      providers: '供应商',
       modelConfig: '模型配置',
       searchConfig: '搜索配置',
       resourceParser: '资源解析',
@@ -1748,10 +1748,11 @@ const translations = {
     modelProviders: {
       addProvider: '添加供应商',
       editProvider: '编辑供应商',
+      providerType: '类型',
       apiKey: 'API Key',
       baseUrl: 'Base URL',
       enable: '启用',
-      enableSetting: '启用设置',
+      enabled: '是否启用',
       disable: '禁用',
       name: '名称',
       namePlaceholder: '请输入供应商名称',
@@ -1777,7 +1778,7 @@ const translations = {
       modelId: '模型ID',
       modelIdPlaceholder: '请输入模型ID',
       enable: '启用',
-      enableSetting: '启用设置',
+      enabled: '是否启用',
       disable: '禁用',
       searchPlaceholder: '搜索模型',
       noSearchResults: '没有找到任何模型',

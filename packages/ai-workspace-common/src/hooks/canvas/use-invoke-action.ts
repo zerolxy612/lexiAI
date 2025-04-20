@@ -474,6 +474,7 @@ export const useInvokeAction = () => {
         },
         target,
         modelName: modelInfo?.name,
+        modelItemId: modelInfo?.providerItemId,
         context,
         resultHistory,
         skillName: selectedSkill?.name,

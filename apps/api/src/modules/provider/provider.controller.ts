@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, ParseBoolPipe, Post, Query, UseGuards } from '@nestjs/common';
 import { ProviderService } from './provider.service';
 import { JwtAuthGuard } from '@/modules/auth/guard/jwt-auth.guard';
 import { LoginedUser } from '@/utils/decorators/user.decorator';
@@ -27,8 +27,8 @@ export class ProviderController {
   @Get('/list')
   async listProviders(
     @LoginedUser() user: UserModel,
-    @Query('enabled') enabled: boolean,
     @Query('providerKey') providerKey: string,
+    @Query('enabled', new ParseBoolPipe({ optional: true })) enabled: boolean,
   ): Promise<ListProvidersResponse> {
     const providers = await this.providerService.listProviders(user, { enabled, providerKey });
     return buildSuccessResponse(providers.map(providerPO2DTO));
@@ -70,7 +70,7 @@ export class ProviderController {
     @LoginedUser() user: UserModel,
     @Query('providerId') providerId: string,
     @Query('category') category: ProviderCategory,
-    @Query('enabled') enabled: boolean,
+    @Query('enabled', new ParseBoolPipe({ optional: true })) enabled: boolean,
   ): Promise<ListProviderItemsResponse> {
     const items = await this.providerService.listProviderItems(user, {
       providerId,

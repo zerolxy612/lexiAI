@@ -2,17 +2,14 @@ import { useTranslation } from 'react-i18next';
 import {
   useListProviderItems,
   useDeleteProviderItem,
-  useListProviders,
 } from '@refly-packages/ai-workspace-common/queries';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   Button,
   Input,
-  Modal,
   Empty,
-  Form,
   Switch,
   Tooltip,
   Dropdown,
@@ -20,7 +17,6 @@ import {
   Typography,
   message,
   MenuProps,
-  Select,
 } from 'antd';
 import { Spin } from '@refly-packages/ai-workspace-common/components/common/spin';
 import { LuPlus, LuSearch } from 'react-icons/lu';
@@ -30,7 +26,9 @@ import {
   IconEdit,
   IconMoreHorizontal,
 } from '@refly-packages/ai-workspace-common/components/common/icon';
-import { ProviderItem } from '@refly-packages/ai-workspace-common/requests/types.gen';
+import { ProviderItem } from '@refly/openapi-schema';
+import { ModelIcon } from '@lobehub/icons';
+import { ModelFormModal } from './model-form';
 
 const { Title } = Typography;
 
@@ -102,7 +100,7 @@ const ModelItem = ({
 }: {
   model: ProviderItem;
   onEdit: (model: ProviderItem) => void;
-  onDelete: (id: string) => void;
+  onDelete: (itemId: string) => void;
   onToggleEnabled: (model: ProviderItem, enabled: boolean) => void;
   isSubmitting: boolean;
 }) => {
@@ -130,10 +128,8 @@ const ModelItem = ({
   return (
     <div className="mb-3 px-4 py-2 hover:bg-gray-50 rounded-md cursor-pointer border border-solid border-gray-100">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex-1 flex items-center">
-          <div className="flex-shrink-0 h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center mr-3">
-            {model.name?.[0]?.toUpperCase()}
-          </div>
+        <div className="flex-1 flex items-center gap-2">
+          <ModelIcon model={model.config?.modelId || model.name} size={18} type={'color'} />
           <div className="font-medium">{model.name}</div>
         </div>
 
@@ -160,118 +156,6 @@ const ModelItem = ({
   );
 };
 
-const ModelFormModal = ({
-  isOpen,
-  onClose,
-  model,
-  onSave,
-  isSubmitting,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  model?: ProviderItem | null;
-  onSave: (values: any) => void;
-  isSubmitting: boolean;
-}) => {
-  const { t } = useTranslation();
-  const [form] = Form.useForm();
-  const isEditMode = !!model;
-  const { data: providersResponse, isLoading: isProvidersLoading } = useListProviders();
-
-  // Reset form when modal opens or model changes
-  useEffect(() => {
-    if (isOpen) {
-      if (model) {
-        form.setFieldsValue({
-          name: model?.name,
-          modelId: model?.config?.modelId,
-          providerId: model?.providerId,
-          enabled: model?.enabled ?? true,
-          // Set other fields as needed
-        });
-      } else {
-        form.resetFields();
-        form.setFieldsValue({
-          enabled: true,
-        });
-      }
-    }
-  }, [model, isOpen, form]);
-
-  const handleSubmit = useCallback(async () => {
-    console.log('handleSubmit', form.getFieldsValue());
-    try {
-      const values = await form.validateFields();
-      onSave(values);
-    } catch (error) {
-      console.error('Form validation failed:', error);
-    }
-  }, [form, onSave]);
-
-  const providerOptions = useMemo(() => {
-    return (
-      providersResponse?.data?.map((provider) => ({
-        label: provider?.name || provider?.providerId,
-        value: provider?.providerId,
-      })) || []
-    );
-  }, [providersResponse]);
-
-  return (
-    <Modal
-      title={t(`settings.modelConfig.${isEditMode ? 'editModel' : 'addModel'}`)}
-      open={isOpen}
-      onCancel={onClose}
-      footer={[
-        <Button key="cancel" onClick={onClose}>
-          {t('common.cancel')}
-        </Button>,
-        <Button key="submit" type="primary" onClick={handleSubmit} loading={isSubmitting}>
-          {isEditMode ? t('common.save') : t('common.add')}
-        </Button>,
-      ]}
-    >
-      <Form form={form} className="mt-6">
-        <Form.Item
-          name="providerId"
-          label={t('settings.modelConfig.provider')}
-          rules={[{ required: true, message: t('settings.modelConfig.providerPlaceholder') }]}
-        >
-          <Select
-            placeholder={t('settings.modelConfig.providerPlaceholder')}
-            loading={isProvidersLoading}
-            options={providerOptions}
-          />
-        </Form.Item>
-
-        <Form.Item
-          name="modelId"
-          label={t('settings.modelConfig.modelId')}
-          rules={[{ required: true, message: t('settings.modelConfig.modelIdPlaceholder') }]}
-        >
-          <Input placeholder={t('settings.modelConfig.modelIdPlaceholder')} />
-        </Form.Item>
-
-        <Form.Item
-          name="name"
-          label={t('settings.modelConfig.name')}
-          rules={[{ required: true, message: t('settings.modelConfig.namePlaceholder') }]}
-        >
-          <Input placeholder={t('settings.modelConfig.namePlaceholder')} />
-        </Form.Item>
-
-        <Form.Item
-          name="enabled"
-          label={t('settings.modelConfig.enableSetting')}
-          valuePropName="checked"
-        >
-          <Switch />
-        </Form.Item>
-      </Form>
-    </Modal>
-  );
-};
-
 export const ModelConfig = () => {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -286,17 +170,16 @@ export const ModelConfig = () => {
   const createModelMutation = useCallback(
     async (values: any) => {
       setIsSaving(true);
+      console.log('createModelMutation', values);
       const res = await getClient().createProviderItem({
         body: {
           ...values,
           category: 'llm',
+          providerId: values.providerId,
           config: {
             modelId: values.modelId,
             modelName: values.name,
           },
-        },
-        query: {
-          providerId: values.providerId,
         },
       });
       setIsSaving(false);
@@ -338,7 +221,7 @@ export const ModelConfig = () => {
     [refetch],
   );
 
-  const deleteModelMutation = useDeleteProviderItem(undefined, {
+  const deleteModelMutation = useDeleteProviderItem(null, {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['listProviderItems'] });
       message.success(t('settings.modelConfig.deleteSuccess'));
@@ -360,12 +243,10 @@ export const ModelConfig = () => {
     setIsModalOpen(true);
   };
 
-  const handleDeleteModel = (modelId: string) => {
+  const handleDeleteModel = (itemId: string) => {
     deleteModelMutation.mutate({
-      clientOptions: {
-        data: { id: modelId },
-      },
-    } as any);
+      body: { itemId },
+    });
   };
 
   const handleToggleEnabled = async (model: ProviderItem, enabled: boolean) => {

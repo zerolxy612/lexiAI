@@ -3491,6 +3491,10 @@ export type ModelInfo = {
    */
   provider: string;
   /**
+   * Model provider item ID
+   */
+  providerItemId?: string;
+  /**
    * Model tier
    */
   tier?: ModelTier;
@@ -3538,10 +3542,6 @@ export type Provider = {
    */
   name: string;
   /**
-   * Provider API key
-   */
-  apiKey: string;
-  /**
    * Provider base URL
    */
   baseUrl: string;
@@ -3553,6 +3553,10 @@ export type Provider = {
    * Whether the provider is global
    */
   isGlobal?: boolean;
+  /**
+   * Provider API key (this will never be exposed to the frontend)
+   */
+  apiKey?: string;
 };
 
 /**
@@ -3562,11 +3566,11 @@ export type LLMModelConfig = {
   /**
    * Model ID
    */
-  modelId?: string;
+  modelId: string;
   /**
    * Model name
    */
-  modelName?: string;
+  modelName: string;
   /**
    * Model context limit (in tokens)
    */
@@ -3692,13 +3696,13 @@ export type UpsertProviderItemRequest = {
    */
   itemId?: string;
   /**
-   * Provider item name
-   */
-  name?: string;
-  /**
    * Provider ID
    */
   providerId?: string;
+  /**
+   * Provider item name
+   */
+  name?: string;
   /**
    * Provider category
    */
@@ -4793,12 +4797,6 @@ export type ListProviderItemsError = unknown;
 
 export type CreateProviderItemData = {
   body: UpsertProviderItemRequest;
-  query: {
-    /**
-     * Provider ID
-     */
-    providerId: string;
-  };
 };
 
 export type CreateProviderItemResponse = UpsertProviderItemResponse;

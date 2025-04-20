@@ -2106,13 +2106,6 @@ paths:
       summary: Create model item
       description: Create a new model item
       operationId: createProviderItem
-      parameters:
-        - name: providerId
-          in: query
-          description: Provider ID
-          required: true
-          schema:
-            type: string
       requestBody:
         required: true
         content:
@@ -5769,6 +5762,9 @@ components:
         provider:
           type: string
           description: Model provider
+        providerItemId:
+          type: string
+          description: Model provider item ID
         tier:
           type: string
           description: Model tier
@@ -5810,7 +5806,6 @@ components:
         - providerId
         - providerKey
         - name
-        - apiKey
         - baseUrl
         - enabled
       properties:
@@ -5823,9 +5818,6 @@ components:
         name:
           type: string
           description: Provider name
-        apiKey:
-          type: string
-          description: Provider API key
         baseUrl:
           type: string
           description: Provider base URL
@@ -5835,9 +5827,15 @@ components:
         isGlobal:
           type: boolean
           description: Whether the provider is global
+        apiKey:
+          type: string
+          description: Provider API key (this will never be exposed to the frontend)
     LLMModelConfig:
       type: object
       description: Provider config for LLMs
+      required:
+        - modelId
+        - modelName
       properties:
         modelId:
           type: string
@@ -5968,12 +5966,12 @@ components:
         itemId:
           type: string
           description: Provider item ID (only for update)
-        name:
-          type: string
-          description: Provider item name
         providerId:
           type: string
           description: Provider ID
+        name:
+          type: string
+          description: Provider item name
         category:
           description: Provider category
           $ref: '#/components/schemas/ProviderCategory'

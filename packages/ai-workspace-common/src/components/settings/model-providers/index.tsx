@@ -1,14 +1,12 @@
 import { useTranslation } from 'react-i18next';
 import { useListProviders } from '@refly-packages/ai-workspace-common/queries';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
-import React, { useCallback, useState, useMemo, useEffect } from 'react';
+import React, { useCallback, useState, useMemo } from 'react';
 import { Spin } from '@refly-packages/ai-workspace-common/components/common/spin';
 import {
   Button,
   Input,
-  Modal,
   Empty,
-  Form,
   Switch,
   Tooltip,
   Dropdown,
@@ -26,7 +24,10 @@ import {
   IconEdit,
   IconMoreHorizontal,
 } from '@refly-packages/ai-workspace-common/components/common/icon';
+import { ProviderModal } from './provider-modal';
+
 const { Title } = Typography;
+
 const ActionDropdown = ({
   provider,
   handleEdit,
@@ -168,154 +169,7 @@ const ProviderItem = React.memo(
   },
 );
 
-const ProviderModal = React.memo(
-  ({
-    isOpen,
-    onClose,
-    provider,
-    onSuccess,
-  }: {
-    isOpen: boolean;
-    onClose: () => void;
-    provider?: Provider | null;
-    onSuccess?: () => void;
-  }) => {
-    const { t } = useTranslation();
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [form] = Form.useForm();
-
-    const isEditMode = !!provider;
-
-    useEffect(() => {
-      if (isOpen) {
-        if (provider) {
-          form.setFieldsValue({
-            name: provider.name,
-            apiKey: provider.apiKey,
-            baseUrl: provider.baseUrl || '',
-            enabled: provider.enabled,
-          });
-        } else {
-          form.resetFields();
-          form.setFieldsValue({
-            enabled: true,
-          });
-        }
-      }
-    }, [provider, isOpen, form]);
-
-    const handleSubmit = useCallback(async () => {
-      try {
-        const values = await form.validateFields();
-        setIsSubmitting(true);
-
-        if (isEditMode && provider) {
-          const res = await getClient().updateProvider({
-            body: {
-              ...provider,
-              name: values.name,
-              enabled: values.enabled,
-              apiKey: values.apiKey,
-              baseUrl: values.baseUrl || undefined,
-            },
-          });
-          if (res.data.success) {
-            message.success(t('common.saveSuccess'));
-            onSuccess?.();
-            form.resetFields();
-            onClose();
-          }
-        } else {
-          const res = await getClient().createProvider({
-            body: {
-              name: values.name,
-              enabled: values.enabled,
-              apiKey: values.apiKey,
-              baseUrl: values.baseUrl,
-              providerKey: 'openai',
-            },
-          });
-          if (res.data.success) {
-            message.success(t('common.addSuccess'));
-            onSuccess?.();
-            form.resetFields();
-            onClose();
-          }
-        }
-      } catch (error) {
-        console.error(`Failed to ${isEditMode ? 'update' : 'create'} provider`, error);
-      } finally {
-        setIsSubmitting(false);
-      }
-    }, [form, onClose, onSuccess, provider, isEditMode]);
-
-    const modalTitle = isEditMode
-      ? t('settings.modelProviders.editProvider')
-      : t('settings.modelProviders.addProvider');
-
-    const submitButtonText = isEditMode ? t('common.save') : t('common.add');
-
-    return (
-      <Modal
-        title={modalTitle}
-        open={isOpen}
-        onCancel={onClose}
-        footer={[
-          <Button key="cancel" onClick={onClose}>
-            {t('common.cancel')}
-          </Button>,
-          <Button key="submit" type="primary" onClick={handleSubmit} loading={isSubmitting}>
-            {submitButtonText}
-          </Button>,
-        ]}
-      >
-        <Form form={form} className="mt-6">
-          <Form.Item
-            name="name"
-            label={t('settings.modelProviders.name')}
-            rules={[
-              {
-                required: true,
-                message: t('settings.modelProviders.namePlaceholder'),
-              },
-            ]}
-          >
-            <Input placeholder={t('settings.modelProviders.namePlaceholder')} />
-          </Form.Item>
-
-          <Form.Item
-            name="apiKey"
-            label={t('settings.modelProviders.apiKey')}
-            rules={[
-              {
-                required: true,
-                message: t('settings.modelProviders.apiKeyPlaceholder'),
-              },
-            ]}
-          >
-            <Input placeholder={t('settings.modelProviders.apiKeyPlaceholder')} />
-          </Form.Item>
-
-          <Form.Item
-            name="baseUrl"
-            label={t('settings.modelProviders.baseUrl')}
-            rules={[{ required: true, message: t('settings.modelProviders.baseUrlPlaceholder') }]}
-          >
-            <Input placeholder={t('settings.modelProviders.baseUrlPlaceholder')} />
-          </Form.Item>
-
-          <Form.Item
-            name="enabled"
-            label={t('settings.modelProviders.enableSetting')}
-            valuePropName="checked"
-          >
-            <Switch />
-          </Form.Item>
-        </Form>
-      </Modal>
-    );
-  },
-);
+ProviderItem.displayName = 'ProviderItem';
 
 export const ModelProviders = () => {
   const { t } = useTranslation();
@@ -369,7 +223,7 @@ export const ModelProviders = () => {
   return (
     <div className="p-4 pt-0 h-full overflow-hidden flex flex-col">
       <Title level={4} className="pb-4">
-        {t('settings.tabs.modelProviders')}
+        {t('settings.tabs.providers')}
       </Title>
       {/* Search and Add Bar */}
       <div className="flex items-center justify-between mb-6">

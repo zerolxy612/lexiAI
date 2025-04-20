@@ -80,7 +80,6 @@ import { labelClassPO2DTO, labelPO2DTO } from '../label/label.dto';
 import { SyncRequestUsageJobData, SyncTokenUsageJobData } from '../subscription/subscription.dto';
 import { SubscriptionService } from '../subscription/subscription.service';
 import {
-  ModelUsageQuotaExceeded,
   ParamsError,
   ProjectNotFoundError,
   ProviderItemNotFoundError,
@@ -101,7 +100,7 @@ import { ParserFactory } from '../knowledge/parsers/factory';
 import { CodeArtifactService } from '../code-artifact/code-artifact.service';
 import { projectPO2DTO } from '@/modules/project/project.dto';
 import { ProviderService } from '@/modules/provider/provider.service';
-import { providerItem2ModelInfo } from '@/modules/provider/provider.dto';
+import { providerItem2ModelInfo, providerPO2DTO } from '@/modules/provider/provider.dto';
 
 function validateSkillTriggerCreateParam(param: SkillTriggerCreateParam) {
   if (param.triggerType === 'simpleEvent') {
@@ -409,6 +408,7 @@ export class SkillService {
         : { query: existingResult.title };
 
       param.modelName ??= existingResult.modelName;
+      param.modelItemId ??= existingResult.providerItemId;
       param.skillName ??= safeParseJSON(existingResult.actionMeta).name;
       param.context ??= safeParseJSON(existingResult.context);
       param.resultHistory ??= safeParseJSON(existingResult.history);
@@ -424,7 +424,7 @@ export class SkillService {
     param.modelName ||= defaultModel?.name;
 
     // Check for usage quota
-    const usageResult = await this.subscription.checkRequestUsage(user);
+    // const usageResult = await this.subscription.checkRequestUsage(user);
 
     const modelItemId = param.modelItemId;
     const providerItem = await this.provider.findProviderItem(user, modelItemId);
@@ -435,11 +435,11 @@ export class SkillService {
 
     const modelInfo = providerItem2ModelInfo(providerItem);
 
-    if (!usageResult[modelInfo.tier]) {
-      throw new ModelUsageQuotaExceeded(
-        `model ${modelInfo.name} (${modelInfo.tier}) not available for current plan`,
-      );
-    }
+    // if (!usageResult[modelInfo.tier]) {
+    //   throw new ModelUsageQuotaExceeded(
+    //     `model ${modelInfo.name} (${modelInfo.tier}) not available for current plan`,
+    //   );
+    // }
 
     if (param.context) {
       param.context = await this.populateSkillContext(user, param.context);
@@ -492,6 +492,7 @@ export class SkillService {
       uid,
       rawParam: JSON.stringify(param),
       modelInfo,
+      provider: providerPO2DTO(providerItem?.provider),
     };
 
     if (existingResult) {
@@ -717,6 +718,7 @@ export class SkillService {
       tplConfig,
       runtimeConfig,
       modelInfo,
+      provider,
       resultHistory,
       projectId,
       eventListener,
@@ -740,6 +742,7 @@ export class SkillService {
         ...context,
         user,
         modelInfo,
+        provider,
         locale: displayLocale,
         uiLocale: userPo.uiLocale,
         tplConfig,

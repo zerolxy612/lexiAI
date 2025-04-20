@@ -9,16 +9,12 @@ import {
 } from '@refly/openapi-schema';
 
 export const providerPO2DTO = (provider: ProviderModel): Provider => {
+  if (!provider) {
+    return undefined;
+  }
+
   return {
-    ...pick(provider, [
-      'providerId',
-      'providerKey',
-      'name',
-      'apiKey',
-      'baseUrl',
-      'enabled',
-      'isGlobal',
-    ]),
+    ...pick(provider, ['providerId', 'providerKey', 'name', 'baseUrl', 'enabled', 'isGlobal']),
   };
 };
 
@@ -28,7 +24,7 @@ export const providerItemPO2DTO = (
   return {
     ...pick(providerItem, ['providerId', 'itemId', 'name', 'enabled']),
     category: providerItem.category as ProviderCategory,
-    provider: providerItem.provider ? providerPO2DTO(providerItem.provider) : undefined,
+    provider: providerPO2DTO(providerItem.provider),
     config: JSON.parse(providerItem.config || '{}'),
   };
 };
@@ -38,8 +34,8 @@ export const providerItem2ModelInfo = (
 ): ModelInfo => {
   const config: LLMModelConfig = JSON.parse(providerItem.config || '{}');
   return {
-    name: providerItem.name,
-    label: providerItem.name,
+    name: config.modelId,
+    label: config.modelName,
     provider: providerItem.provider?.name ?? '',
     // tier: config.tier as ModelTier,
     contextLimit: config.contextLimit ?? 0,

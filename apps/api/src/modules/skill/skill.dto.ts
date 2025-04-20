@@ -2,6 +2,7 @@ import {
   ActionResult,
   InvokeSkillRequest,
   ModelInfo,
+  Provider,
   SimpleEventName,
   SkillInstance,
   SkillTrigger,
@@ -18,6 +19,7 @@ export interface InvokeSkillJobData extends InvokeSkillRequest {
   rawParam: string;
   result?: ActionResult;
   modelInfo?: ModelInfo;
+  provider?: Provider;
 }
 
 export interface SkillTimeoutCheckJobData {

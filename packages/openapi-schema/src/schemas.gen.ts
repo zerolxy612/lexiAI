@@ -4951,6 +4951,10 @@ export const ModelInfoSchema = {
       type: 'string',
       description: 'Model provider',
     },
+    providerItemId: {
+      type: 'string',
+      description: 'Model provider item ID',
+    },
     tier: {
       type: 'string',
       description: 'Model tier',
@@ -5003,7 +5007,7 @@ export const ProviderCategorySchema = {
 export const ProviderSchema = {
   type: 'object',
   description: 'General provider info',
-  required: ['providerId', 'providerKey', 'name', 'apiKey', 'baseUrl', 'enabled'],
+  required: ['providerId', 'providerKey', 'name', 'baseUrl', 'enabled'],
   properties: {
     providerId: {
       type: 'string',
@@ -5017,10 +5021,6 @@ export const ProviderSchema = {
       type: 'string',
       description: 'Provider name',
     },
-    apiKey: {
-      type: 'string',
-      description: 'Provider API key',
-    },
     baseUrl: {
       type: 'string',
       description: 'Provider base URL',
@@ -5033,12 +5033,17 @@ export const ProviderSchema = {
       type: 'boolean',
       description: 'Whether the provider is global',
     },
+    apiKey: {
+      type: 'string',
+      description: 'Provider API key (this will never be exposed to the frontend)',
+    },
   },
 } as const;
 
 export const LLMModelConfigSchema = {
   type: 'object',
   description: 'Provider config for LLMs',
+  required: ['modelId', 'modelName'],
   properties: {
     modelId: {
       type: 'string',
@@ -5239,13 +5244,13 @@ export const UpsertProviderItemRequestSchema = {
       type: 'string',
       description: 'Provider item ID (only for update)',
     },
-    name: {
-      type: 'string',
-      description: 'Provider item name',
-    },
     providerId: {
       type: 'string',
       description: 'Provider ID',
+    },
+    name: {
+      type: 'string',
+      description: 'Provider item name',
     },
     category: {
       description: 'Provider category',
