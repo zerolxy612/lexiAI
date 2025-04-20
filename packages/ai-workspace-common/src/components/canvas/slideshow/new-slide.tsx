@@ -14,12 +14,10 @@ const NewSlide = memo(
     const { t } = useTranslation();
 
     return (
-      <div className="w-full h-full px-6 flex flex-col overflow-hidden">
+      <div className="w-full h-full px-6 flex flex-col items-center justify-center overflow-hidden">
         <Empty description={t('pages.slideshow.newSlideDescription')} />
 
-        <div className="w-full flex-grow overflow-hidden">
-          <CreatePageFromCanvas canvasId={canvasId} afterCreate={afterCreate} />
-        </div>
+        <CreatePageFromCanvas canvasId={canvasId} afterCreate={afterCreate} />
       </div>
     );
   },
