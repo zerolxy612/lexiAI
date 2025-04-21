@@ -5,7 +5,6 @@ import {
 } from '@refly-packages/ai-workspace-common/queries';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 import { useState, useMemo, useCallback } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import {
   Button,
   Input,
@@ -158,7 +157,6 @@ const ModelItem = ({
 
 export const ModelConfig = () => {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const { data, isLoading, refetch } = useListProviderItems();
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -223,13 +221,11 @@ export const ModelConfig = () => {
 
   const deleteModelMutation = useDeleteProviderItem(null, {
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['listProviderItems'] });
-      message.success(t('settings.modelConfig.deleteSuccess'));
+      message.success(t('common.deleteSuccess'));
+      refetch();
     },
     onError: (error) => {
-      message.error(
-        `${t('settings.modelConfig.deleteError')}: ${(error as any)?.message ?? t('common.unknownError')}`,
-      );
+      console.error('Failed to delete model', error);
     },
   });
 

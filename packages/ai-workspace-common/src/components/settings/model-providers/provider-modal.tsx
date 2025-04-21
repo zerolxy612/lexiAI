@@ -160,7 +160,7 @@ export const ProviderModal = React.memo(
               },
             ]}
           >
-            <Input.Password placeholder={t('settings.modelProviders.apiKeyPlaceholder')} />
+            <Input placeholder={t('settings.modelProviders.apiKeyPlaceholder')} />
           </Form.Item>
 
           <Form.Item
