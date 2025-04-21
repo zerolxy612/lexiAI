@@ -3,9 +3,11 @@
 欢迎来到 Refly 贡献指南！作为 AI 原生的创作引擎，我们致力于提供最直观的自由画布界面，整合多线程对话、知识库 RAG 集成、上下文记忆和智能搜索功能。您的每一份贡献都意义非凡。
 
 ## 开始之前
+
 [查找](https://github.com/refly-ai/refly/issues?q=is:issue+is:open)现有议题或[新建](https://github.com/refly-ai/refly/issues/new/choose)议题。我们将议题分为两类：
 
 ### 功能请求
+
 - 新建功能请求时，请详细说明提案功能的目标实现，及其如何增强 AI 原生创作体验
 - 认领现有议题时，请直接在评论区留言说明
   相关领域负责人将会介入审核，审核通过后方可开始编码。在此之前请暂缓开发工作以避免返工
@@ -41,42 +43,73 @@
   | 界面微调与文档更新                | 低优先级     |
 
 ## 环境搭建
+
 ### 1. Fork 本仓库
+
 ### 2. 克隆仓库
+
 ```shell
 git clone git@github.com:<github_用户名>/refly.git
 ```
 
 ### 3. 环境依赖
-- [Docker](https://www.docker.com/)
-- [Docker Compose](https://docs.docker.com/compose/install/)
-- [Node.js v20.x (LTS)](http://nodejs.org)
 
-### 4. 安装步骤
-1. 启动中间件服务：
-```bash
-cd deploy/docker
-docker-compose -f docker-compose.middleware.yml up -d
+Refly 需要以下依赖进行构建：
+
+- [Docker](https://www.docker.com/)：20.10.0 或以上
+- [Node.js](http://nodejs.org)：20.19.0 (LTS)
+
+我们强烈推荐使用 [nvm](https://github.com/nvm-sh/nvm) 安装 Node.js：
+
+```shell
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh | bash
+source ~/.bashrc  # 如果您使用的是 zsh，请使用 source ~/.zshrc 代替
+nvm install 20.19.0
 ```
 
+确保所有依赖都已准备就绪：
+
+```shell
+docker version
+node -v # v20.19.0
+```
+
+### 4. 进入开发
+
+1. 启动中间件服务：
+
+```bash
+docker compose -f deploy/docker/docker-compose.middleware.yml up -d
+docker ps | grep refly_ # 检查所有中间件容器是否健康
+```
+
+> 如果存在不健康的容器，请检查容器日志并搜索相应解决方案。如果问题仍然存在，请在仓库中提出 Issue。
+
 2. 安装依赖：
+
 ```bash
 corepack enable
 pnpm install
 ```
 
-3. 配置环境变量：
+> 如果 `corepack` 不可用，您也可以通过 `npm install -g pnpm` 安装 pnpm。
+
+3. 从根目录配置环境变量：
+
 ```bash
-cp apps/web/.env.example apps/web/.env
-cp apps/api/.env.example apps/api/.env
+pnpm copy-env
 ```
 
-4. 启动开发：
+4. 从根目录启动开发：
+
 ```bash
 pnpm build
 pnpm dev
 ```
-访问 [http://localhost:5173](http://localhost:5173/) 开始开发
+
+您可以访问 [http://localhost:5173](http://localhost:5173/) 开始开发 Refly。
+
+> 根目录的 `dev` 脚本会同时运行 `apps/web`、`apps/api` 和 `apps/extension` 的 `dev` 脚本。如果您只想运行其中一个，可以进入对应目录并运行 `dev` 脚本。
 
 ## 项目结构
 ### 后端结构
