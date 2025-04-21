@@ -1765,6 +1765,25 @@ export const OperationModeSchema = {
   enum: ['mouse', 'touchpad'],
 } as const;
 
+export const ProviderConfigSchema = {
+  type: 'object',
+  description: 'Provider config',
+  properties: {
+    providerId: {
+      type: 'string',
+      description: 'Provider ID',
+    },
+    providerKey: {
+      type: 'string',
+      description: 'Provider key',
+    },
+    modelId: {
+      type: 'string',
+      description: 'Model ID',
+    },
+  },
+} as const;
+
 export const UserPreferencesSchema = {
   type: 'object',
   description: 'User preferences',
@@ -1778,6 +1797,31 @@ export const UserPreferencesSchema = {
       type: 'boolean',
       description: 'Whether to disable hover tutorial',
       default: false,
+    },
+    embedding: {
+      type: 'object',
+      description: 'Embedding config',
+      $ref: '#/components/schemas/ProviderConfig',
+    },
+    reranker: {
+      type: 'object',
+      description: 'Reranking config',
+      $ref: '#/components/schemas/ProviderConfig',
+    },
+    webSearch: {
+      type: 'object',
+      description: 'Web search config',
+      $ref: '#/components/schemas/ProviderConfig',
+    },
+    urlParsing: {
+      type: 'object',
+      description: 'URL parsing config',
+      $ref: '#/components/schemas/ProviderConfig',
+    },
+    pdfParsing: {
+      type: 'object',
+      description: 'PDF parsing config',
+      $ref: '#/components/schemas/ProviderConfig',
     },
   },
 } as const;

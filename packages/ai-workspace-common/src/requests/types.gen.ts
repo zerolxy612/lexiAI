@@ -1466,6 +1466,24 @@ export type FileParsingMeter = {
 export type OperationMode = 'mouse' | 'touchpad';
 
 /**
+ * Provider config
+ */
+export type ProviderConfig = {
+  /**
+   * Provider ID
+   */
+  providerId?: string;
+  /**
+   * Provider key
+   */
+  providerKey?: string;
+  /**
+   * Model ID
+   */
+  modelId?: string;
+};
+
+/**
  * User preferences
  */
 export type UserPreferences = {
@@ -1477,6 +1495,26 @@ export type UserPreferences = {
    * Whether to disable hover tutorial
    */
   disableHoverCard?: boolean;
+  /**
+   * Embedding config
+   */
+  embedding?: ProviderConfig;
+  /**
+   * Reranking config
+   */
+  reranker?: ProviderConfig;
+  /**
+   * Web search config
+   */
+  webSearch?: ProviderConfig;
+  /**
+   * URL parsing config
+   */
+  urlParsing?: ProviderConfig;
+  /**
+   * PDF parsing config
+   */
+  pdfParsing?: ProviderConfig;
 };
 
 /**
