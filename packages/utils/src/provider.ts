@@ -1,49 +1,45 @@
 import { ProviderCategory } from '@refly/openapi-schema';
 
-export enum ProviderKey {
-  OPENAI = 'openai',
-  OLLAMA = 'ollama',
-  JINA = 'jina',
-  FIREWORKS = 'fireworks',
-  SERPER = 'serper',
-  TAVILY = 'tavily',
-}
-
 export interface ProviderInfo {
-  key: ProviderKey;
+  key: string;
   name: string;
   categories: ProviderCategory[];
 }
 
 export const providerInfoList: ProviderInfo[] = [
   {
-    key: ProviderKey.OPENAI,
+    key: 'openai',
     name: 'OpenAI',
     categories: ['llm', 'embedding'],
   },
   {
-    key: ProviderKey.OLLAMA,
+    key: 'ollama',
     name: 'Ollama',
     categories: ['llm', 'embedding'],
   },
   {
-    key: ProviderKey.JINA,
+    key: 'jina',
     name: 'Jina',
-    categories: ['embedding', 'reranker', 'parser'],
+    categories: ['embedding', 'reranker', 'urlParsing'],
   },
   {
-    key: ProviderKey.FIREWORKS,
+    key: 'fireworks',
     name: 'Fireworks',
     categories: ['llm', 'embedding'],
   },
   {
-    key: ProviderKey.SERPER,
+    key: 'serper',
     name: 'Serper',
     categories: ['webSearch'],
   },
   {
-    key: ProviderKey.TAVILY,
+    key: 'tavily',
     name: 'Tavily',
     categories: ['webSearch'],
+  },
+  {
+    key: 'marker',
+    name: 'Marker',
+    categories: ['pdfParsing'],
   },
 ];

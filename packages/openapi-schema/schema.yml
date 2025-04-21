@@ -5798,7 +5798,8 @@ components:
         - embedding
         - reranker
         - webSearch
-        - parser
+        - urlParsing
+        - pdfParsing
     Provider:
       type: object
       description: General provider info

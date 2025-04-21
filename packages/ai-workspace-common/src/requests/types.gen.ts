@@ -3523,7 +3523,13 @@ export type ListModelsResponse = BaseResponse & {
   data?: Array<ModelInfo>;
 };
 
-export type ProviderCategory = 'llm' | 'embedding' | 'reranker' | 'webSearch' | 'parser';
+export type ProviderCategory =
+  | 'llm'
+  | 'embedding'
+  | 'reranker'
+  | 'webSearch'
+  | 'urlParsing'
+  | 'pdfParsing';
 
 /**
  * General provider info

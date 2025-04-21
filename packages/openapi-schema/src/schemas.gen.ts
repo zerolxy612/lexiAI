@@ -5001,7 +5001,7 @@ export const ListModelsResponseSchema = {
 
 export const ProviderCategorySchema = {
   type: 'string',
-  enum: ['llm', 'embedding', 'reranker', 'webSearch', 'parser'],
+  enum: ['llm', 'embedding', 'reranker', 'webSearch', 'urlParsing', 'pdfParsing'],
 } as const;
 
 export const ProviderSchema = {
