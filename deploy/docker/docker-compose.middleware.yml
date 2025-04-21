@@ -3,7 +3,7 @@ services:
     container_name: refly_db
     image: postgres:16-alpine
     ports:
-      - 5435:5432
+      - 35432:5432
     restart: always
     volumes:
       - db_data:/var/lib/postgresql/data
@@ -25,8 +25,8 @@ services:
     command: server /data --console-address ":9001"
     restart: always
     ports:
-      - 9002:9000
-      - 9003:9001
+      - 39000:9000
+      - 39001:9001
     volumes:
       - minio_data:/data
     environment:
@@ -45,8 +45,8 @@ services:
     image: redis/redis-stack:latest
     restart: always
     ports:
-      - 6381:6379
-      - 8001:8001
+      - 36379:6379
+      - 38001:8001
     volumes:
       - redis_data:/data
     healthcheck:
@@ -61,8 +61,8 @@ services:
     container_name: refly_qdrant
     image: reflyai/qdrant:v1.13.1
     ports:
-      - 6333:6333
-      - 6334:6334
+      - 36333:6333
+      - 36334:6334
     volumes:
       - qdrant_data:/qdrant/storage:z
     restart: always
@@ -78,7 +78,7 @@ services:
     container_name: refly_elasticsearch
     image: reflyai/elasticsearch:7.10.2
     ports:
-      - 9210:9200
+      - 39200:9200
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
