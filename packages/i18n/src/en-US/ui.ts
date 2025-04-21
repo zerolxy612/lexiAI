@@ -1623,7 +1623,7 @@ const translations = {
     tabs: {
       providers: 'Providers',
       modelConfig: 'Model Config',
-      searchConfig: 'Search Config',
+      parserConfig: 'Parser Config',
       resourceParser: 'Resource Parser',
       account: 'Account',
       language: 'Language',
@@ -1831,6 +1831,15 @@ const translations = {
       noModels: 'No models',
       addFirstModel: 'Add the first model',
       tryDifferentSearch: 'Try different search',
+    },
+    parserConfig: {
+      webSearch: 'Web Search',
+      urlParsing: 'URL Parsing',
+      pdfParsing: 'PDF Parsing',
+      bing: 'Bing (Built-in)',
+      cheerio: 'Cheerio (Built-in)',
+      pdfjs: 'PDF.js (Built-in)',
+      createProvider: 'Create Provider',
     },
   },
   contentDetail: {

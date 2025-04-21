@@ -1583,7 +1583,7 @@ const translations = {
     tabs: {
       providers: '供应商',
       modelConfig: '模型配置',
-      searchConfig: '搜索配置',
+      parserConfig: '解析配置',
       resourceParser: '资源解析',
       account: '账号',
       language: '语言',
@@ -1785,6 +1785,15 @@ const translations = {
       noModels: '暂无模型',
       addFirstModel: '添加第一个模型',
       tryDifferentSearch: '尝试不同的搜索',
+    },
+    parserConfig: {
+      webSearch: '网页搜索',
+      urlParsing: 'URL 解析',
+      pdfParsing: 'PDF 解析',
+      bing: 'Bing (内置)',
+      cheerio: 'Cheerio (内置)',
+      pdfjs: 'PDF.js (内置)',
+      createProvider: '创建供应商',
     },
   },
   contentDetail: {

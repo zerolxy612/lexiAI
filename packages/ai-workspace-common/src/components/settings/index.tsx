@@ -2,7 +2,7 @@ import { Tabs, Modal } from 'antd';
 import { useTranslation } from 'react-i18next';
 import {
   useSiderStoreShallow,
-  type SettingsModalActiveTab,
+  SettingsModalActiveTab,
 } from '@refly-packages/ai-workspace-common/stores/sider';
 
 // components
@@ -11,7 +11,7 @@ import { LanguageSetting } from '@refly-packages/ai-workspace-common/components/
 import { Subscription } from '@refly-packages/ai-workspace-common/components/settings/subscription';
 import { ModelProviders } from '@refly-packages/ai-workspace-common/components/settings/model-providers';
 import { ModelConfig } from '@refly-packages/ai-workspace-common/components/settings/model-config';
-import { SearchConfig } from '@refly-packages/ai-workspace-common/components/settings/search-config';
+import { ParserConfig } from '@refly-packages/ai-workspace-common/components/settings/parser-config';
 
 import { RiAccountBoxLine } from 'react-icons/ri';
 import { HiOutlineLanguage } from 'react-icons/hi2';
@@ -47,7 +47,11 @@ export const SettingModal = (props: SettingModalProps) => {
       key: 'modelProviders',
       label: t('settings.tabs.providers'),
       icon: <IconCloud style={iconStyle} />,
-      children: <ModelProviders />,
+      children: (
+        <ModelProviders
+          visible={settingsModalActiveTab === SettingsModalActiveTab.ModelProviders}
+        />
+      ),
     },
     {
       key: 'modelConfig',
@@ -56,10 +60,12 @@ export const SettingModal = (props: SettingModalProps) => {
       children: <ModelConfig />,
     },
     {
-      key: 'searchConfig',
-      label: t('settings.tabs.searchConfig'),
+      key: 'parserConfig',
+      label: t('settings.tabs.parserConfig'),
       icon: <IconWorldConfig style={iconStyle} />,
-      children: <SearchConfig />,
+      children: (
+        <ParserConfig visible={settingsModalActiveTab === SettingsModalActiveTab.ParserConfig} />
+      ),
     },
     ...(subscriptionEnabled
       ? [

@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useListProviders } from '@refly-packages/ai-workspace-common/queries';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
-import React, { useCallback, useState, useMemo } from 'react';
+import React, { useCallback, useState, useMemo, useEffect } from 'react';
 import { Spin } from '@refly-packages/ai-workspace-common/components/common/spin';
 import {
   Button,
@@ -171,7 +171,11 @@ const ProviderItem = React.memo(
 
 ProviderItem.displayName = 'ProviderItem';
 
-export const ModelProviders = () => {
+interface ModelProvidersProps {
+  visible: boolean;
+}
+
+export const ModelProviders = ({ visible }: ModelProvidersProps) => {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -219,6 +223,12 @@ export const ModelProviders = () => {
         provider.providerKey?.toLowerCase().includes(lowerQuery),
     );
   }, [data?.data, searchQuery]);
+
+  useEffect(() => {
+    if (visible) {
+      refetch();
+    }
+  }, [visible]);
 
   return (
     <div className="p-4 pt-0 h-full overflow-hidden flex flex-col">
@@ -308,7 +318,7 @@ export const ModelProviders = () => {
           setEditProvider(null);
         }}
         provider={editProvider}
-        onSuccess={refetch}
+        onSuccess={() => refetch()}
       />
     </div>
   );

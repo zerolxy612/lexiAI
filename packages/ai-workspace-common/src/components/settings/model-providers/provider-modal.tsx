@@ -3,25 +3,39 @@ import React, { useCallback, useState, useEffect, useMemo } from 'react';
 import { Button, Input, Modal, Form, Switch, Select, message } from 'antd';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 import { Provider } from '@refly-packages/ai-workspace-common/requests/types.gen';
-import { ProviderKey, providerInfoList } from '@refly/utils';
+import { ProviderInfo, providerInfoList } from '@refly/utils';
 
 export const ProviderModal = React.memo(
   ({
     isOpen,
     onClose,
     provider,
+    presetProviders,
+    defaultProviderKey,
     onSuccess,
   }: {
     isOpen: boolean;
     onClose: () => void;
     provider?: Provider | null;
-    onSuccess?: () => void;
+    presetProviders?: ProviderInfo[];
+    defaultProviderKey?: string;
+    onSuccess?: (provider: Provider) => void;
   }) => {
     const { t } = useTranslation();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [form] = Form.useForm();
 
     const isEditMode = !!provider;
+
+    // Convert provider info list to options for the select component
+    const providerOptions = useMemo(
+      () =>
+        (presetProviders || providerInfoList).map((providerInfo) => ({
+          label: providerInfo.name,
+          value: providerInfo.key,
+        })),
+      [presetProviders],
+    );
 
     useEffect(() => {
       if (isOpen) {
@@ -37,7 +51,7 @@ export const ProviderModal = React.memo(
           form.resetFields();
           form.setFieldsValue({
             enabled: true,
-            providerKey: ProviderKey.OPENAI,
+            providerKey: defaultProviderKey || providerOptions[0].value,
           });
         }
       }
@@ -61,7 +75,7 @@ export const ProviderModal = React.memo(
           });
           if (res.data.success) {
             message.success(t('common.saveSuccess'));
-            onSuccess?.();
+            onSuccess?.(res.data.data);
             form.resetFields();
             onClose();
           }
@@ -77,7 +91,7 @@ export const ProviderModal = React.memo(
           });
           if (res.data.success) {
             message.success(t('common.addSuccess'));
-            onSuccess?.();
+            onSuccess?.(res.data.data);
             form.resetFields();
             onClose();
           }
@@ -94,16 +108,6 @@ export const ProviderModal = React.memo(
       : t('settings.modelProviders.addProvider');
 
     const submitButtonText = isEditMode ? t('common.save') : t('common.add');
-
-    // Convert provider info list to options for the select component
-    const providerOptions = useMemo(
-      () =>
-        providerInfoList.map((providerInfo) => ({
-          label: providerInfo.name,
-          value: providerInfo.key,
-        })),
-      [],
-    );
 
     return (
       <Modal

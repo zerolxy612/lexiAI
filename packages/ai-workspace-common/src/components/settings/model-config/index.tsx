@@ -276,7 +276,7 @@ export const ModelConfig = () => {
   return (
     <div className="p-4 pt-0 h-full overflow-hidden flex flex-col">
       <Title level={4} className="pb-4">
-        {t('settings.modelConfig.title')}
+        {t('settings.tabs.modelConfig')}
       </Title>
 
       {/* Search and Add Bar */}
