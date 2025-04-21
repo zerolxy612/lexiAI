@@ -8,7 +8,7 @@
     "dev": "vite",
     "dev:electron": "VITE_RUNTIME=desktop vite",
     "start": "serve dist -p 5700",
-    "build": "rimraf dist && vite build",
+    "build": "rimraf dist && NODE_OPTIONS=--max_old_space_size=8192 vite build",
     "preview": "vite preview",
     "analyze": "source-map-explorer 'dist/assets/*.js'"
   },
