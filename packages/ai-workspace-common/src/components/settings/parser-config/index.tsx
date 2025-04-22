@@ -1,13 +1,15 @@
 import { useTranslation } from 'react-i18next';
-import { message, Typography } from 'antd';
+import { message, Typography, Table, Select, Button } from 'antd';
 import { useState, useCallback, useMemo, useEffect, memo } from 'react';
 import { ProviderModal } from '../model-providers/provider-modal';
 import { useListProviders } from '@refly-packages/ai-workspace-common/queries';
 import { ProviderInfo, providerInfoList } from '@refly/utils';
-import { Provider } from '@refly-packages/ai-workspace-common/requests/types.gen';
-import { ConfigSection } from './config-section';
+import { ModelCell, ActionCell } from './model-cell';
 import { useUserStoreShallow } from '@refly-packages/ai-workspace-common/stores/user';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
+import { ProviderCategory, ProviderConfig, Provider } from '@refly/openapi-schema';
+import { IconPlus } from '@refly-packages/ai-workspace-common/components/common/icon';
+import { Spin } from '@refly-packages/ai-workspace-common/components/common/spin';
 
 const { Title } = Typography;
 
@@ -21,13 +23,19 @@ interface ParserConfigProps {
   visible: boolean;
 }
 
+export const Loading = memo(() => {
+  return (
+    <div className="w-full h-20 flex items-center justify-center">
+      <Spin />
+    </div>
+  );
+});
+
 export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
   const { t } = useTranslation();
   const [isProviderModalOpen, setIsProviderModalOpen] = useState(false);
   const [presetProviders, setPresetProviders] = useState<ProviderInfo[]>([]);
-  const [currentType, setCurrentType] = useState<'webSearch' | 'urlParsing' | 'pdfParsing'>(
-    'webSearch',
-  );
+  const [currentType, setCurrentType] = useState<ProviderCategory>('webSearch');
   const { userProfile, setUserProfile } = useUserStoreShallow((state) => ({
     userProfile: state.userProfile,
     setUserProfile: state.setUserProfile,
@@ -36,11 +44,21 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
   const [webSearchValue, setWebSearchValue] = useState<string>(
     userProfile?.preferences?.webSearch?.providerId || DEFAULT_PROVIDERS.webSearch,
   );
+
   const [urlParsingValue, setUrlParsingValue] = useState<string>(
     userProfile?.preferences?.urlParsing?.providerId || DEFAULT_PROVIDERS.urlParsing,
   );
+
   const [pdfParsingValue, setPdfParsingValue] = useState<string>(
     userProfile?.preferences?.pdfParsing?.providerId || DEFAULT_PROVIDERS.pdfParsing,
+  );
+
+  const [embedding, setEmbedding] = useState<ProviderConfig | null>(
+    userProfile?.preferences?.embedding || null,
+  );
+
+  const [reranker, setReranker] = useState<ProviderConfig | null>(
+    userProfile?.preferences?.reranker || null,
   );
 
   const { data, isLoading, refetch } = useListProviders({
@@ -48,7 +66,6 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
       enabled: true,
     },
   });
-
   const providers = data?.data || [];
 
   const webSearchProviders = useMemo(
@@ -81,24 +98,27 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
     [providers],
   );
 
-  const setCurrentProvider = useCallback(
-    (type: 'webSearch' | 'urlParsing' | 'pdfParsing', providerKey: string) => {
-      switch (type) {
-        case 'webSearch':
-          setWebSearchValue(providerKey);
-          break;
-        case 'urlParsing':
-          setUrlParsingValue(providerKey);
-          break;
-        case 'pdfParsing':
-          setPdfParsingValue(providerKey);
-          break;
-      }
-    },
-    [],
-  );
+  const setCurrentProvider = useCallback((type: ProviderCategory, provider: ProviderConfig) => {
+    switch (type) {
+      case 'webSearch':
+        setWebSearchValue(provider?.providerId || DEFAULT_PROVIDERS.webSearch);
+        break;
+      case 'urlParsing':
+        setUrlParsingValue(provider?.providerId || DEFAULT_PROVIDERS.urlParsing);
+        break;
+      case 'pdfParsing':
+        setPdfParsingValue(provider?.providerId || DEFAULT_PROVIDERS.pdfParsing);
+        break;
+      case 'embedding':
+        setEmbedding(provider);
+        break;
+      case 'reranker':
+        setReranker(provider);
+        break;
+    }
+  }, []);
 
-  const openProviderModal = useCallback((type: 'webSearch' | 'urlParsing' | 'pdfParsing') => {
+  const openProviderModal = useCallback((type: ProviderCategory) => {
     setCurrentType(type);
     const filteredProviderInfoList = providerInfoList.filter((provider) =>
       provider?.categories?.includes(type),
@@ -117,21 +137,22 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
     (provider: Provider) => {
       refetch();
       if (provider.enabled) {
-        setCurrentProvider(currentType, provider.providerId);
+        setCurrentProvider(currentType, provider);
       }
     },
     [currentType, refetch, setCurrentProvider],
   );
 
   const updateUserProfile = useCallback(
-    async (type: 'webSearch' | 'urlParsing' | 'pdfParsing', value: string) => {
-      const selectedProvider = providers.find((provider) => provider.providerId === value);
-
+    async (
+      type: ProviderCategory,
+      value: ProviderConfig | undefined,
+      afterSuccess?: () => void,
+    ) => {
       const updatedPreferences = {
         ...userProfile.preferences,
         [type]: {
-          providerKey: selectedProvider?.providerKey,
-          providerId: selectedProvider?.providerId,
+          ...value,
         },
       };
 
@@ -142,26 +163,29 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
       });
 
       if (res?.data?.success) {
-        message.success(t('settings.parserConfig.updateParserConfigSuccessfully'));
+        message.success(t('settings.parserConfig.updateConfigSuccessfully'));
+        setCurrentProvider(type, value);
+        console.log('updatedPreferences', value);
         setUserProfile({
           ...userProfile,
           preferences: updatedPreferences,
         });
+        if (afterSuccess) {
+          afterSuccess();
+        }
       } else {
-        message.error(t('settings.parserConfig.updateParserConfigFailed'));
+        message.error(t('settings.parserConfig.updateConfigFailed'));
       }
     },
-    [userProfile, setUserProfile, providers],
+    [userProfile, setUserProfile, setCurrentProvider, t],
   );
 
   const handleSelectProvider = useCallback(
     (value: string, type: 'webSearch' | 'urlParsing' | 'pdfParsing') => {
-      console.log('value', value);
-      console.log('type', type);
-      setCurrentProvider(type, value);
-      updateUserProfile(type, value);
+      const selectedProvider = providers.find((provider) => provider.providerId === value);
+      updateUserProfile(type, selectedProvider);
     },
-    [setCurrentProvider, updateUserProfile],
+    [providers, updateUserProfile],
   );
 
   useEffect(() => {
@@ -170,9 +194,69 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
     }
   }, [visible, refetch]);
 
-  useEffect(() => {
-    console.log('isLoading', isLoading);
-  }, [isLoading]);
+  // Prepare provider options for each type
+  const getProviderOptions = useMemo(() => {
+    return {
+      webSearch: [
+        {
+          label: t('settings.parserConfig.bing'),
+          value: DEFAULT_PROVIDERS.webSearch,
+        },
+        ...(webSearchProviders?.map((provider) => ({
+          label: `${provider.name} (${provider.providerKey})`,
+          value: provider.providerId,
+        })) || []),
+      ],
+      urlParsing: [
+        {
+          label: t('settings.parserConfig.cheerio'),
+          value: DEFAULT_PROVIDERS.urlParsing,
+        },
+        ...(urlParsingProviders?.map((provider) => ({
+          label: `${provider.name} (${provider.providerKey})`,
+          value: provider.providerId,
+        })) || []),
+      ],
+      pdfParsing: [
+        {
+          label: t('settings.parserConfig.pdfjs'),
+          value: DEFAULT_PROVIDERS.pdfParsing,
+        },
+        ...(pdfParsingProviders?.map((provider) => ({
+          label: `${provider.name} (${provider.providerKey})`,
+          value: provider.providerId,
+        })) || []),
+      ],
+    };
+  }, [t, webSearchProviders, urlParsingProviders, pdfParsingProviders]);
+
+  // Render select dropdown
+  const renderSelectDropdown = useCallback(
+    (menu: React.ReactNode, type: ProviderCategory) => {
+      return (
+        <>
+          {isLoading ? (
+            <Loading />
+          ) : (
+            <>
+              <div className="max-h-60 overflow-y-auto">{menu}</div>
+              <div className="p-2 border-t border-gray-200">
+                <Button
+                  type="text"
+                  icon={<IconPlus />}
+                  onClick={() => openProviderModal(type)}
+                  className="flex items-center w-full"
+                >
+                  {t('settings.parserConfig.createProvider')}
+                </Button>
+              </div>
+            </>
+          )}
+        </>
+      );
+    },
+    [isLoading, openProviderModal, t],
+  );
 
   return (
     <div className="p-4 pt-0 h-full overflow-hidden flex flex-col">
@@ -181,49 +265,136 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
       </Title>
 
       <div className="flex-grow overflow-y-auto space-y-8">
-        {/* Web Search Configuration */}
-        <ConfigSection
-          title={t('settings.parserConfig.webSearch')}
-          value={webSearchValue}
-          defaultValue={DEFAULT_PROVIDERS.webSearch}
-          defaultLabel={t('settings.parserConfig.bing')}
-          providers={webSearchProviders}
-          isLoading={isLoading}
-          onAddProvider={() => openProviderModal('webSearch')}
-          onChange={(value) => handleSelectProvider(value, 'webSearch')}
-        />
+        <div>
+          <Title level={5} className="pb-2 !font-medium">
+            {t('settings.parserConfig.modelConfig.title')}
+          </Title>
 
-        {/* URL Parsing Configuration */}
-        <ConfigSection
-          title={t('settings.parserConfig.urlParsing')}
-          value={urlParsingValue}
-          defaultValue={DEFAULT_PROVIDERS.urlParsing}
-          defaultLabel={t('settings.parserConfig.cheerio')}
-          providers={urlParsingProviders}
-          isLoading={isLoading}
-          onAddProvider={() => openProviderModal('urlParsing')}
-          onChange={(value) => handleSelectProvider(value, 'urlParsing')}
-        />
+          <div className="space-y-6">
+            <Table
+              tableLayout="fixed"
+              columns={[
+                {
+                  title: t('settings.parserConfig.modelConfig.modelType'),
+                  dataIndex: 'modelType',
+                  key: 'modelType',
+                  width: '25%',
+                },
+                {
+                  title: t('settings.parserConfig.modelConfig.modelId'),
+                  dataIndex: 'modelId',
+                  key: 'modelId',
+                  width: '60%',
+                  render: (_, record) => (
+                    <ModelCell
+                      modelValue={record.config}
+                      placeholder={record.placeholder}
+                      category={record.category as ProviderCategory}
+                    />
+                  ),
+                },
+                {
+                  title: t('common.action'),
+                  key: 'action',
+                  width: '15%',
+                  render: (_, record) => (
+                    <ActionCell
+                      modelValue={record.config}
+                      category={record.category as ProviderCategory}
+                      onSave={updateUserProfile}
+                    />
+                  ),
+                },
+              ]}
+              dataSource={[
+                {
+                  key: 'reranker',
+                  modelType: t('settings.parserConfig.modelConfig.reranker'),
+                  config: reranker,
+                  category: 'reranker',
+                  placeholder: t('settings.parserConfig.modelConfig.rerankerPlaceholder'),
+                },
+                {
+                  key: 'embedding',
+                  modelType: t('settings.parserConfig.modelConfig.embedding'),
+                  config: embedding,
+                  category: 'embedding',
+                  placeholder: t('settings.parserConfig.modelConfig.embeddingPlaceholder'),
+                },
+              ]}
+              pagination={false}
+              bordered
+              className="shadow-sm"
+            />
+          </div>
+        </div>
 
-        {/* PDF Parsing Configuration */}
-        <ConfigSection
-          title={t('settings.parserConfig.pdfParsing')}
-          value={pdfParsingValue}
-          defaultValue={DEFAULT_PROVIDERS.pdfParsing}
-          defaultLabel={t('settings.parserConfig.pdfjs')}
-          providers={pdfParsingProviders}
-          isLoading={isLoading}
-          onAddProvider={() => openProviderModal('pdfParsing')}
-          onChange={(value) => handleSelectProvider(value, 'pdfParsing')}
-        />
+        <div>
+          <Title level={5} className="pb-2 !font-medium">
+            {t('settings.tabs.parserConfig')}
+          </Title>
 
-        {/* Provider Modal */}
-        <ProviderModal
-          isOpen={isProviderModalOpen}
-          presetProviders={presetProviders}
-          onClose={handleProviderModalClose}
-          onSuccess={handleCreateProviderSuccess}
-        />
+          <div className="space-y-6">
+            <Table
+              tableLayout="fixed"
+              columns={[
+                {
+                  title: t('settings.parserConfig.parserType'),
+                  dataIndex: 'parserType',
+                  key: 'parserType',
+                  width: '25%',
+                },
+                {
+                  title: t('settings.parserConfig.parserProvider'),
+                  dataIndex: 'provider',
+                  key: 'provider',
+                  width: '75%',
+                  render: (_, record) => (
+                    <Select
+                      className="w-full"
+                      value={record.value}
+                      options={getProviderOptions[record.type]}
+                      onChange={(value) => handleSelectProvider(value, record.type)}
+                      dropdownRender={(menu) => renderSelectDropdown(menu, record.type)}
+                    />
+                  ),
+                },
+              ]}
+              dataSource={[
+                {
+                  key: 'webSearch',
+                  parserType: t('settings.parserConfig.webSearch'),
+                  type: 'webSearch' as const,
+                  value: webSearchValue,
+                },
+                {
+                  key: 'urlParsing',
+                  parserType: t('settings.parserConfig.urlParsing'),
+                  type: 'urlParsing' as const,
+                  value: urlParsingValue,
+                },
+                {
+                  key: 'pdfParsing',
+                  parserType: t('settings.parserConfig.pdfParsing'),
+                  type: 'pdfParsing' as const,
+                  value: pdfParsingValue,
+                },
+              ]}
+              pagination={false}
+              bordered
+              className="shadow-sm"
+            />
+
+            {/* Provider Modal */}
+            <ProviderModal
+              isOpen={isProviderModalOpen}
+              presetProviders={presetProviders}
+              onClose={handleProviderModalClose}
+              onSuccess={handleCreateProviderSuccess}
+              disabledEnableControl={true}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

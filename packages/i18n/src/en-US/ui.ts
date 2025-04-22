@@ -83,6 +83,7 @@ const translations = {
     preview: 'Preview',
     viewAll: 'View All',
     noMore: 'No more~',
+    action: 'Action',
   },
   verifyRules: {
     emailRequired: 'Email cannot be empty',
@@ -1834,14 +1835,26 @@ const translations = {
     },
     parserConfig: {
       webSearch: 'Web Search',
+      parserType: 'Parser Type',
+      parserProvider: 'Parser Provider',
       urlParsing: 'URL Parsing',
       pdfParsing: 'PDF Parsing',
       bing: 'Bing (Built-in)',
       cheerio: 'Cheerio (Built-in)',
       pdfjs: 'PDF.js (Built-in)',
       createProvider: 'Create Provider',
-      updateParserConfigSuccessfully: 'Parser config updated successfully!',
-      updateParserConfigFailed: 'Failed to update parser config. Please try again!',
+      updateConfigSuccessfully: 'Config updated successfully!',
+      updateConfigFailed: 'Failed to update config. Please try again!',
+      modelConfig: {
+        title: 'Model Config',
+        modelId: 'Model ID',
+        modelType: 'Model Type',
+        reranker: 'Reranker',
+        embedding: 'Embedding',
+        rerankerPlaceholder: 'No Reranker model configured, please click to configure',
+        embeddingPlaceholder:
+          'Please select Embedding model, to use knowledge base and resource memory function',
+      },
     },
   },
   contentDetail: {

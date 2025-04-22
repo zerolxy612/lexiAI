@@ -1,34 +1,32 @@
 import { useCallback, useEffect, useMemo, memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useListProviders } from '@refly-packages/ai-workspace-common/queries';
-import { Button, Input, Modal, Form, Switch, Select, message } from 'antd';
-import { ProviderCategory, ProviderItem } from '@refly/openapi-schema';
+import { Button, Input, Modal, Form, Select } from 'antd';
+import { ProviderCategory, ProviderConfig } from '@refly/openapi-schema';
 import { providerInfoList } from '@refly/utils';
 import { IconPlus } from '@refly-packages/ai-workspace-common/components/common/icon';
-import { Loading } from '../parser-config';
+import { Loading } from './index';
 import { ProviderModal } from '@refly-packages/ai-workspace-common/components/settings/model-providers/provider-modal';
 import { Provider } from '@refly-packages/ai-workspace-common/requests/types.gen';
-import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 
-export const ModelFormModal = memo(
+export const ModelEdit = memo(
   ({
     isOpen,
     onClose,
     model,
-    onSuccess,
+    onSave,
+    isSaving,
     filterProviderCategory,
-    disabledEnableControl = false,
   }: {
     isOpen: boolean;
     onClose: () => void;
-    model?: ProviderItem | null;
-    onSuccess: (type: 'create' | 'update', model: ProviderItem) => void;
+    model?: ProviderConfig | null;
+    onSave: (values: ProviderConfig) => void;
     filterProviderCategory?: string;
-    disabledEnableControl?: boolean;
+    isSaving: boolean;
   }) => {
     const { t } = useTranslation();
     const [form] = Form.useForm();
-    const isEditMode = !!model;
     const [isProviderModalOpen, setIsProviderModalOpen] = useState(false);
     const {
       data: providersResponse,
@@ -45,59 +43,6 @@ export const ModelFormModal = memo(
       });
     }, [providerInfoList, filterProviderCategory]);
 
-    const [isSaving, setIsSaving] = useState(false);
-
-    const createModelMutation = useCallback(
-      async (values: any) => {
-        setIsSaving(true);
-        const res = await getClient().createProviderItem({
-          body: {
-            ...values,
-            category: 'llm',
-            providerId: values.providerId,
-            config: {
-              modelId: values.modelId,
-              modelName: values.name,
-            },
-          },
-        });
-        setIsSaving(false);
-        if (res.data.success) {
-          message.success(t('common.addSuccess'));
-          onSuccess?.('create', res.data.data);
-          onClose();
-        }
-      },
-      [onSuccess, onClose],
-    );
-
-    const updateModelMutation = useCallback(
-      async (values: any, model: ProviderItem) => {
-        setIsSaving(true);
-        const res = await getClient().updateProviderItem({
-          body: {
-            ...values,
-            itemId: model.itemId,
-            config: {
-              ...model.config,
-              modelId: values.modelId,
-              modelName: values.name,
-            },
-          },
-          query: {
-            providerId: values.providerId,
-          },
-        });
-        setIsSaving(false);
-        if (res.data.success) {
-          message.success(t('common.saveSuccess'));
-          onSuccess?.('update', res.data.data);
-          onClose();
-        }
-      },
-      [onSuccess, onClose],
-    );
-
     const handleAddModel = useCallback(() => {
       setIsProviderModalOpen(true);
     }, []);
@@ -111,6 +56,7 @@ export const ModelFormModal = memo(
       if (provider?.enabled) {
         form.setFieldsValue({
           providerId: provider.providerId,
+          modelId: '',
         });
       }
     }, []);
@@ -118,15 +64,14 @@ export const ModelFormModal = memo(
     const handleSubmit = useCallback(async () => {
       try {
         const values = await form.validateFields();
-        if (isEditMode) {
-          updateModelMutation(values, model);
-        } else {
-          createModelMutation(values);
-        }
+        const providerKey = providerOptions.find(
+          (provider) => provider.value === values.providerId,
+        )?.providerKey;
+        onSave?.({ ...values, providerKey });
       } catch (error) {
         console.error('Form validation failed:', error);
       }
-    }, [form, updateModelMutation, createModelMutation]);
+    }, [form, onSave]);
 
     const providerOptions = useMemo(() => {
       return (
@@ -144,16 +89,12 @@ export const ModelFormModal = memo(
       if (isOpen) {
         if (model) {
           form.setFieldsValue({
-            name: model?.name,
-            modelId: model?.config?.modelId,
+            modelId: model?.modelId,
             providerId: model?.providerId,
-            enabled: model?.enabled ?? true,
-            // Set other fields as needed
           });
         } else {
           form.resetFields();
           form.setFieldsValue({
-            enabled: true,
             providerId: providerOptions?.[0]?.value,
           });
         }
@@ -168,7 +109,7 @@ export const ModelFormModal = memo(
 
     return (
       <Modal
-        title={t(`settings.modelConfig.${isEditMode ? 'editModel' : 'addModel'}`)}
+        title={t('settings.parserConfig.modelConfig.title')}
         centered
         open={isOpen}
         onCancel={onClose}
@@ -177,7 +118,7 @@ export const ModelFormModal = memo(
             {t('common.cancel')}
           </Button>,
           <Button key="submit" type="primary" onClick={handleSubmit} loading={isSaving}>
-            {isEditMode ? t('common.save') : t('common.add')}
+            {t('common.save')}
           </Button>,
         ]}
       >
@@ -223,22 +164,6 @@ export const ModelFormModal = memo(
             >
               <Input placeholder={t('settings.modelConfig.modelIdPlaceholder')} />
             </Form.Item>
-
-            <Form.Item
-              name="name"
-              label={t('settings.modelConfig.name')}
-              rules={[{ required: true, message: t('settings.modelConfig.namePlaceholder') }]}
-            >
-              <Input placeholder={t('settings.modelConfig.namePlaceholder')} />
-            </Form.Item>
-
-            <Form.Item
-              name="enabled"
-              label={t('settings.modelConfig.enabled')}
-              valuePropName="checked"
-            >
-              <Switch disabled={disabledEnableControl} />
-            </Form.Item>
           </Form>
         </div>
 
@@ -253,4 +178,4 @@ export const ModelFormModal = memo(
   },
 );
 
-ModelFormModal.displayName = 'ModelFormModal';
+ModelEdit.displayName = 'ModelEdit';

@@ -13,6 +13,7 @@ export const ProviderModal = React.memo(
     presetProviders,
     defaultProviderKey,
     onSuccess,
+    disabledEnableControl = false,
   }: {
     isOpen: boolean;
     onClose: () => void;
@@ -20,6 +21,7 @@ export const ProviderModal = React.memo(
     presetProviders?: ProviderInfo[];
     defaultProviderKey?: string;
     onSuccess?: (provider: Provider) => void;
+    disabledEnableControl?: boolean;
   }) => {
     const { t } = useTranslation();
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -205,7 +207,7 @@ export const ProviderModal = React.memo(
             label={t('settings.modelProviders.enabled')}
             valuePropName="checked"
           >
-            <Switch />
+            <Switch disabled={disabledEnableControl} />
           </Form.Item>
         </Form>
       </Modal>

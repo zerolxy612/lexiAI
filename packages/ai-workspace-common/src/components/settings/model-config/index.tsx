@@ -157,43 +157,20 @@ const ModelItem = ({
 
 export const ModelConfig = () => {
   const { t } = useTranslation();
-  const { data, isLoading, refetch } = useListProviderItems();
+  const { data, isLoading, refetch } = useListProviderItems({
+    query: {
+      category: 'llm',
+    },
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingModel, setEditingModel] = useState<ProviderItem | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const modelItems = data?.data || ([] as ProviderItem[]);
-
-  const createModelMutation = useCallback(
-    async (values: any) => {
-      setIsSaving(true);
-      console.log('createModelMutation', values);
-      const res = await getClient().createProviderItem({
-        body: {
-          ...values,
-          category: 'llm',
-          providerId: values.providerId,
-          config: {
-            modelId: values.modelId,
-            modelName: values.name,
-          },
-        },
-      });
-      setIsSaving(false);
-      if (res.data.success) {
-        refetch();
-        setIsModalOpen(false);
-        setEditingModel(null);
-        message.success(t('common.addSuccess'));
-      }
-    },
-    [refetch],
-  );
 
   const updateModelMutation = useCallback(
     async (values: any, model: ProviderItem) => {
-      setIsSaving(true);
+      setIsUpdating(true);
       const res = await getClient().updateProviderItem({
         body: {
           ...values,
@@ -208,11 +185,9 @@ export const ModelConfig = () => {
           providerId: values.providerId,
         },
       });
-      setIsSaving(false);
+      setIsUpdating(false);
       if (res.data.success) {
         refetch();
-        setIsModalOpen(false);
-        setEditingModel(null);
         message.success(t('common.saveSuccess'));
       }
     },
@@ -246,22 +221,13 @@ export const ModelConfig = () => {
   };
 
   const handleToggleEnabled = async (model: ProviderItem, enabled: boolean) => {
-    setIsSubmitting(true);
-    try {
-      updateModelMutation({ enabled }, model);
-    } catch (error) {
-      console.error('Failed to update model status', error);
-    } finally {
-      setIsSubmitting(false);
-    }
+    updateModelMutation({ enabled }, model);
   };
 
-  const handleSaveModel = (values: any) => {
-    if (editingModel) {
-      updateModelMutation(values, editingModel);
-    } else {
-      createModelMutation(values);
-    }
+  const handleSuccess = () => {
+    refetch();
+    setIsModalOpen(false);
+    setEditingModel(null);
   };
 
   const filteredModels = useMemo(() => {
@@ -342,7 +308,7 @@ export const ModelConfig = () => {
                   onEdit={handleEditModel}
                   onDelete={handleDeleteModel}
                   onToggleEnabled={handleToggleEnabled}
-                  isSubmitting={isSubmitting}
+                  isSubmitting={isUpdating}
                 />
               ))}
             </div>
@@ -360,8 +326,7 @@ export const ModelConfig = () => {
           setEditingModel(null);
         }}
         model={editingModel}
-        onSave={handleSaveModel}
-        isSubmitting={isSaving}
+        onSuccess={handleSuccess}
       />
     </div>
   );
