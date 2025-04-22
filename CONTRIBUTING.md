@@ -111,7 +111,7 @@ pnpm install
 3. Set up environment variables from the root directory:
 
 ```bash
-pnpm copy-env
+pnpm copy-env:develop
 ```
 
 4. Start developing from the root directory:

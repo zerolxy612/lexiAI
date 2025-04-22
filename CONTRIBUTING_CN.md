@@ -97,7 +97,7 @@ pnpm install
 3. 从根目录配置环境变量：
 
 ```bash
-pnpm copy-env
+pnpm copy-env:develop
 ```
 
 4. 从根目录启动开发：

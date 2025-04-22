@@ -17,6 +17,7 @@
     "build:electron": "turbo run build:electron --filter=@refly/api",
     "package:electron": "turbo run package:electron --filter=@refly/api",
     "copy-env": "turbo run copy-env",
+    "copy-env:develop": "turbo run copy-env:develop",
     "codegen": "turbo run codegen",
     "clean": "turbo run clean",
     "cy:open": "cypress open",
