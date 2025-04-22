@@ -32,6 +32,10 @@
       "cache": false,
       "persistent": false
     },
+    "copy-env:develop": {
+      "cache": false,
+      "persistent": false
+    },
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**"],
@@ -47,7 +51,9 @@
       "outputs": ["release/**"],
       "env": ["*"]
     },
-    "codegen": {},
+    "codegen": {
+      "cache": false
+    },
     "clean": {
       "cache": false,
       "outputs": ["packages/*/build"]
