@@ -24,6 +24,7 @@ export const ProviderModal = React.memo(
     const { t } = useTranslation();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [form] = Form.useForm();
+    const [isDefaultApiKey, setIsDefaultApiKey] = useState(false);
 
     const isEditMode = !!provider;
 
@@ -40,22 +41,40 @@ export const ProviderModal = React.memo(
     useEffect(() => {
       if (isOpen) {
         if (provider) {
+          const apiKeyValue = provider.apiKey;
+          setIsDefaultApiKey(!!apiKeyValue);
+
           form.setFieldsValue({
             name: provider.name,
-            apiKey: provider.apiKey,
+            apiKey: apiKeyValue,
             baseUrl: provider.baseUrl || '',
             enabled: provider.enabled,
             providerKey: provider.providerKey,
           });
         } else {
+          setIsDefaultApiKey(false);
           form.resetFields();
           form.setFieldsValue({
             enabled: true,
-            providerKey: defaultProviderKey || providerOptions[0].value,
+            providerKey: defaultProviderKey || providerOptions[0]?.value,
           });
         }
       }
-    }, [provider, isOpen, form]);
+    }, [provider, isOpen, form, providerOptions, defaultProviderKey]);
+
+    const handleApiKeyChange = useCallback(
+      (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+
+        if (isDefaultApiKey && value !== 'default') {
+          form.setFieldsValue({ apiKey: '' });
+          setIsDefaultApiKey(false);
+        } else {
+          form.setFieldsValue({ apiKey: value });
+        }
+      },
+      [isDefaultApiKey, form],
+    );
 
     const handleSubmit = useCallback(async () => {
       try {
@@ -164,7 +183,12 @@ export const ProviderModal = React.memo(
               },
             ]}
           >
-            <Input placeholder={t('settings.modelProviders.apiKeyPlaceholder')} />
+            <Input.Password
+              placeholder={t('settings.modelProviders.apiKeyPlaceholder')}
+              onChange={handleApiKeyChange}
+              visibilityToggle={!isDefaultApiKey}
+              className={isDefaultApiKey ? 'default-api-key' : ''}
+            />
           </Form.Item>
 
           <Form.Item

@@ -142,7 +142,7 @@ const ProviderItem = React.memo(
           <div className="flex items-center gap-2">
             <ActionDropdown
               provider={provider}
-              handleEdit={() => onSettingsClick(provider)}
+              handleEdit={() => onSettingsClick({ ...provider, apiKey: 'default' })}
               refetch={refetch}
             />
 
