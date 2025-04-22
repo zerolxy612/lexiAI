@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 
 const { Title } = Typography;
 
-const Loading = memo(() => {
+export const Loading = memo(() => {
   return (
     <div className="w-full h-20 flex items-center justify-center">
       <Spin />
@@ -51,7 +51,7 @@ export const ConfigSection = memo(
     }, [providers, defaultValue, defaultLabel]);
 
     return (
-      <div className="space-y-4 p-4 border-solid border-1 border-gray-100 rounded-md">
+      <div className="space-y-2 p-4 border-solid border-1 border-gray-100 rounded-md">
         <Title level={5}>{title}</Title>
 
         <div className="flex items-center">

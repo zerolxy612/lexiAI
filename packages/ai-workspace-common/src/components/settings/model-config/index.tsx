@@ -346,7 +346,7 @@ export const ModelConfig = () => {
                 />
               ))}
             </div>
-            <div className="text-center text-gray-400 text-sm mt-4">{t('common.noMore')}</div>
+            <div className="text-center text-gray-400 text-sm mt-4 pb-10">{t('common.noMore')}</div>
           </div>
         )}
       </div>
@@ -354,6 +354,7 @@ export const ModelConfig = () => {
       {/* Modal for Create and Edit */}
       <ModelFormModal
         isOpen={isModalOpen}
+        filterProviderCategory="llm"
         onClose={() => {
           setIsModalOpen(false);
           setEditingModel(null);

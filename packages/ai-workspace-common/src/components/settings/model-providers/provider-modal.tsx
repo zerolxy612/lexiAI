@@ -188,6 +188,7 @@ export const ProviderModal = React.memo(
               onChange={handleApiKeyChange}
               visibilityToggle={!isDefaultApiKey}
               className={isDefaultApiKey ? 'default-api-key' : ''}
+              autoComplete="new-password"
             />
           </Form.Item>
 

@@ -151,7 +151,7 @@ export const AccountSetting = () => {
         {t('settings.tabs.account')}
       </Title>
       <div className="w-full h-full pb-10 box-border overflow-y-auto">
-        <div className="max-w-[600px] mx-auto">
+        <div className="min-w-[680px] pr-4">
           <Form form={form} layout="vertical">
             <Form.Item label={t('settings.account.avatar')} name="avatar">
               <ImgCrop

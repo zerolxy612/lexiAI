@@ -98,7 +98,6 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
     [],
   );
 
-  // Open provider modal with specific category
   const openProviderModal = useCallback((type: 'webSearch' | 'urlParsing' | 'pdfParsing') => {
     setCurrentType(type);
     const filteredProviderInfoList = providerInfoList.filter((provider) =>
@@ -109,13 +108,11 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
     setIsProviderModalOpen(true);
   }, []);
 
-  // Handle provider modal close
   const handleProviderModalClose = useCallback(() => {
     setCurrentType(null);
     setIsProviderModalOpen(false);
   }, []);
 
-  // Success callback after provider creation/update
   const handleCreateProviderSuccess = useCallback(
     (provider: Provider) => {
       refetch();
