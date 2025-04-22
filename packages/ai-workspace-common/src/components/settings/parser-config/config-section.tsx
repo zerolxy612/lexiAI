@@ -1,6 +1,6 @@
 import { Spin } from '@refly-packages/ai-workspace-common/components/common/spin';
 import { Button, Select, Typography } from 'antd';
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { IconPlus } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { useTranslation } from 'react-i18next';
 
@@ -37,6 +37,18 @@ export const ConfigSection = memo(
     onChange,
   }: ConfigSectionProps) => {
     const { t } = useTranslation();
+    const options = useMemo(() => {
+      return [
+        {
+          label: defaultLabel,
+          value: defaultValue,
+        },
+        ...providers.map((provider) => ({
+          label: `${provider.name} (${provider.providerKey})`,
+          value: provider.providerId,
+        })),
+      ];
+    }, [providers, defaultValue, defaultLabel]);
 
     return (
       <div className="space-y-4 p-4 border-solid border-1 border-gray-100 rounded-md">
@@ -46,6 +58,7 @@ export const ConfigSection = memo(
           <Select
             className="w-full"
             value={value}
+            options={options}
             onChange={(value) => onChange(value)}
             dropdownRender={(menu) => (
               <>
@@ -68,14 +81,7 @@ export const ConfigSection = memo(
                 )}
               </>
             )}
-          >
-            <Select.Option value={defaultValue}>{defaultLabel}</Select.Option>
-            {providers?.map((provider) => (
-              <Select.Option key={provider?.providerId} value={provider?.providerId}>
-                {provider?.name} ({provider?.providerKey})
-              </Select.Option>
-            ))}
-          </Select>
+          />
         </div>
       </div>
     );

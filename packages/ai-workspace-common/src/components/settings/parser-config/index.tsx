@@ -1,12 +1,21 @@
 import { useTranslation } from 'react-i18next';
-import { Typography } from 'antd';
+import { message, Typography } from 'antd';
 import { useState, useCallback, useMemo, useEffect, memo } from 'react';
 import { ProviderModal } from '../model-providers/provider-modal';
 import { useListProviders } from '@refly-packages/ai-workspace-common/queries';
 import { ProviderInfo, providerInfoList } from '@refly/utils';
 import { Provider } from '@refly-packages/ai-workspace-common/requests/types.gen';
 import { ConfigSection } from './config-section';
+import { useUserStoreShallow } from '@refly-packages/ai-workspace-common/stores/user';
+import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
+
 const { Title } = Typography;
+
+const DEFAULT_PROVIDERS = {
+  webSearch: 'bing',
+  urlParsing: 'cheerio',
+  pdfParsing: 'pdfjs',
+};
 
 interface ParserConfigProps {
   visible: boolean;
@@ -19,9 +28,20 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
   const [currentType, setCurrentType] = useState<'webSearch' | 'urlParsing' | 'pdfParsing'>(
     'webSearch',
   );
-  const [webSearchValue, setWebSearchValue] = useState<string>('bing');
-  const [urlParsingValue, setUrlParsingValue] = useState<string>('cheerio');
-  const [pdfParsingValue, setPdfParsingValue] = useState<string>('pdfjs');
+  const { userProfile, setUserProfile } = useUserStoreShallow((state) => ({
+    userProfile: state.userProfile,
+    setUserProfile: state.setUserProfile,
+  }));
+
+  const [webSearchValue, setWebSearchValue] = useState<string>(
+    userProfile?.preferences?.webSearch?.providerId || DEFAULT_PROVIDERS.webSearch,
+  );
+  const [urlParsingValue, setUrlParsingValue] = useState<string>(
+    userProfile?.preferences?.urlParsing?.providerId || DEFAULT_PROVIDERS.urlParsing,
+  );
+  const [pdfParsingValue, setPdfParsingValue] = useState<string>(
+    userProfile?.preferences?.pdfParsing?.providerId || DEFAULT_PROVIDERS.pdfParsing,
+  );
 
   const { data, isLoading, refetch } = useListProviders({
     query: {
@@ -96,7 +116,7 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
   }, []);
 
   // Success callback after provider creation/update
-  const handleProviderSuccess = useCallback(
+  const handleCreateProviderSuccess = useCallback(
     (provider: Provider) => {
       refetch();
       if (provider.enabled) {
@@ -106,13 +126,45 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
     [currentType, refetch, setCurrentProvider],
   );
 
+  const updateUserProfile = useCallback(
+    async (type: 'webSearch' | 'urlParsing' | 'pdfParsing', value: string) => {
+      const selectedProvider = providers.find((provider) => provider.providerId === value);
+
+      const updatedPreferences = {
+        ...userProfile.preferences,
+        [type]: {
+          providerKey: selectedProvider?.providerKey,
+          providerId: selectedProvider?.providerId,
+        },
+      };
+
+      const res = await getClient().updateSettings({
+        body: {
+          preferences: updatedPreferences,
+        },
+      });
+
+      if (res?.data?.success) {
+        message.success(t('settings.parserConfig.updateParserConfigSuccessfully'));
+        setUserProfile({
+          ...userProfile,
+          preferences: updatedPreferences,
+        });
+      } else {
+        message.error(t('settings.parserConfig.updateParserConfigFailed'));
+      }
+    },
+    [userProfile, setUserProfile, providers],
+  );
+
   const handleSelectProvider = useCallback(
     (value: string, type: 'webSearch' | 'urlParsing' | 'pdfParsing') => {
       console.log('value', value);
       console.log('type', type);
       setCurrentProvider(type, value);
+      updateUserProfile(type, value);
     },
-    [setCurrentProvider],
+    [setCurrentProvider, updateUserProfile],
   );
 
   useEffect(() => {
@@ -136,7 +188,7 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
         <ConfigSection
           title={t('settings.parserConfig.webSearch')}
           value={webSearchValue}
-          defaultValue="bing"
+          defaultValue={DEFAULT_PROVIDERS.webSearch}
           defaultLabel={t('settings.parserConfig.bing')}
           providers={webSearchProviders}
           isLoading={isLoading}
@@ -148,7 +200,7 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
         <ConfigSection
           title={t('settings.parserConfig.urlParsing')}
           value={urlParsingValue}
-          defaultValue="cheerio"
+          defaultValue={DEFAULT_PROVIDERS.urlParsing}
           defaultLabel={t('settings.parserConfig.cheerio')}
           providers={urlParsingProviders}
           isLoading={isLoading}
@@ -160,7 +212,7 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
         <ConfigSection
           title={t('settings.parserConfig.pdfParsing')}
           value={pdfParsingValue}
-          defaultValue="pdfjs"
+          defaultValue={DEFAULT_PROVIDERS.pdfParsing}
           defaultLabel={t('settings.parserConfig.pdfjs')}
           providers={pdfParsingProviders}
           isLoading={isLoading}
@@ -173,7 +225,7 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
           isOpen={isProviderModalOpen}
           presetProviders={presetProviders}
           onClose={handleProviderModalClose}
-          onSuccess={handleProviderSuccess}
+          onSuccess={handleCreateProviderSuccess}
         />
       </div>
     </div>

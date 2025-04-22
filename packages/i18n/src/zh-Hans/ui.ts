@@ -1794,6 +1794,8 @@ const translations = {
       cheerio: 'Cheerio (内置)',
       pdfjs: 'PDF.js (内置)',
       createProvider: '创建供应商',
+      updateParserConfigSuccessfully: '解析配置更新成功！',
+      updateParserConfigFailed: '解析配置更新失败，请重试！',
     },
   },
   contentDetail: {

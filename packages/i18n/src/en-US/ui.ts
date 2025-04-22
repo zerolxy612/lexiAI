@@ -1840,6 +1840,8 @@ const translations = {
       cheerio: 'Cheerio (Built-in)',
       pdfjs: 'PDF.js (Built-in)',
       createProvider: 'Create Provider',
+      updateParserConfigSuccessfully: 'Parser config updated successfully!',
+      updateParserConfigFailed: 'Failed to update parser config. Please try again!',
     },
   },
   contentDetail: {
