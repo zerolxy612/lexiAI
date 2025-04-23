@@ -6,6 +6,7 @@ import {
   IconEdit,
   IconPlayOutline,
   IconCopy,
+  IconRemove,
 } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { useDeleteCanvas } from '@refly-packages/ai-workspace-common/hooks/canvas/use-delete-canvas';
 import { useTranslation } from 'react-i18next';
@@ -141,7 +142,7 @@ export const CanvasActionDropdown = memo((props: CanvasActionDropdown) => {
             handleRemoveFromProject();
           }}
         >
-          <IconDelete size={16} className="mr-2" />
+          <IconRemove size={16} className="mr-2" />
           {t('canvas.toolbar.removeFromProject')}
         </div>
       ),

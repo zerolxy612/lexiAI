@@ -254,7 +254,7 @@ export const ImportFromWeblink = () => {
             disabled={disableSave()}
             loading={saveLoading}
           >
-            {t('common.saveToCanvas')}
+            {isCanvasOpen ? t('common.saveToCanvas') : t('common.save')}
           </Button>
         </div>
       </div>
