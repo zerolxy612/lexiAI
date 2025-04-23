@@ -3,6 +3,7 @@ import { type NodeRelation } from './ArtifactRenderer';
 import { useGetResourceDetail } from '@refly-packages/ai-workspace-common/queries';
 import { Skeleton } from 'antd';
 import { Markdown } from '@refly-packages/ai-workspace-common/components/markdown';
+import { useFetchShareData } from '@refly-packages/ai-workspace-common/hooks/use-fetch-share-data';
 
 const ResourceRenderer = memo(
   ({
@@ -15,15 +16,22 @@ const ResourceRenderer = memo(
     isMinimap?: boolean;
   }) => {
     const resourceId = node.nodeData?.entityId ?? '';
-    const { data, isLoading } = useGetResourceDetail({ query: { resourceId } }, undefined, {
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
-      refetchOnReconnect: false,
-      staleTime: 60 * 1000,
-      gcTime: 5 * 60 * 1000,
-      enabled: !!node.nodeData?.entityId,
-    });
-    const resourceDetail = useMemo(() => data?.data || null, [data]);
+    const { shareId } = node.nodeData?.metadata || {};
+    const { data: shareData, loading: isShareLoading } = useFetchShareData(shareId);
+    const { data, isLoading: isRemoteLoading } = useGetResourceDetail(
+      { query: { resourceId } },
+      undefined,
+      {
+        refetchOnWindowFocus: false,
+        refetchOnMount: false,
+        refetchOnReconnect: false,
+        staleTime: 60 * 1000,
+        gcTime: 5 * 60 * 1000,
+        enabled: Boolean(!shareId && !!node.nodeData?.entityId),
+      },
+    );
+    const resourceDetail = useMemo(() => shareData || data?.data || null, [shareData, data]);
+    const isLoading = isRemoteLoading || isShareLoading;
 
     return (
       <div

@@ -14,8 +14,6 @@ import {
   getDocumentDetail,
   getPageByCanvasId,
   getPageDetail,
-  getPageVersion,
-  getPageVersions,
   getProjectDetail,
   getResourceDetail,
   getSettings,
@@ -48,8 +46,6 @@ import {
   GetDocumentDetailData,
   GetPageByCanvasIdData,
   GetPageDetailData,
-  GetPageVersionData,
-  GetPageVersionsData,
   GetProjectDetailData,
   GetResourceDetailData,
   ListCanvasesData,
@@ -65,14 +61,6 @@ import {
   ListSkillTriggersData,
 } from '../requests/types.gen';
 import * as Common from './common';
-export const ensureUseGetPageByCanvasIdData = (
-  queryClient: QueryClient,
-  clientOptions: Options<GetPageByCanvasIdData, true>,
-) =>
-  queryClient.ensureQueryData({
-    queryKey: Common.UseGetPageByCanvasIdKeyFn(clientOptions),
-    queryFn: () => getPageByCanvasId({ ...clientOptions }).then((response) => response.data),
-  });
 export const ensureUseListPagesData = (
   queryClient: QueryClient,
   clientOptions: Options<ListPagesData, true> = {},
@@ -89,21 +77,13 @@ export const ensureUseGetPageDetailData = (
     queryKey: Common.UseGetPageDetailKeyFn(clientOptions),
     queryFn: () => getPageDetail({ ...clientOptions }).then((response) => response.data),
   });
-export const ensureUseGetPageVersionsData = (
+export const ensureUseGetPageByCanvasIdData = (
   queryClient: QueryClient,
-  clientOptions: Options<GetPageVersionsData, true>,
+  clientOptions: Options<GetPageByCanvasIdData, true>,
 ) =>
   queryClient.ensureQueryData({
-    queryKey: Common.UseGetPageVersionsKeyFn(clientOptions),
-    queryFn: () => getPageVersions({ ...clientOptions }).then((response) => response.data),
-  });
-export const ensureUseGetPageVersionData = (
-  queryClient: QueryClient,
-  clientOptions: Options<GetPageVersionData, true>,
-) =>
-  queryClient.ensureQueryData({
-    queryKey: Common.UseGetPageVersionKeyFn(clientOptions),
-    queryFn: () => getPageVersion({ ...clientOptions }).then((response) => response.data),
+    queryKey: Common.UseGetPageByCanvasIdKeyFn(clientOptions),
+    queryFn: () => getPageByCanvasId({ ...clientOptions }).then((response) => response.data),
   });
 export const ensureUseGetAuthConfigData = (
   queryClient: QueryClient,

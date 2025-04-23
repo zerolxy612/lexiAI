@@ -74,8 +74,8 @@ export const PageNodeRelationSchema = {
       description: 'Order index',
     },
     nodeData: {
-      type: 'object',
       description: 'Node data',
+      $ref: '#/components/schemas/CanvasNodeData',
     },
   },
 } as const;

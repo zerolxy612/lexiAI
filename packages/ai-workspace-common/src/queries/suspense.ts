@@ -14,8 +14,6 @@ import {
   getDocumentDetail,
   getPageByCanvasId,
   getPageDetail,
-  getPageVersion,
-  getPageVersions,
   getProjectDetail,
   getResourceDetail,
   getSettings,
@@ -59,10 +57,6 @@ import {
   GetPageByCanvasIdError,
   GetPageDetailData,
   GetPageDetailError,
-  GetPageVersionData,
-  GetPageVersionError,
-  GetPageVersionsData,
-  GetPageVersionsError,
   GetProjectDetailData,
   GetProjectDetailError,
   GetResourceDetailData,
@@ -99,21 +93,6 @@ import {
   ServeStaticError,
 } from '../requests/types.gen';
 import * as Common from './common';
-export const useGetPageByCanvasIdSuspense = <
-  TData = Common.GetPageByCanvasIdDefaultResponse,
-  TError = GetPageByCanvasIdError,
-  TQueryKey extends Array<unknown> = unknown[],
->(
-  clientOptions: Options<GetPageByCanvasIdData, true>,
-  queryKey?: TQueryKey,
-  options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
-) =>
-  useSuspenseQuery<TData, TError>({
-    queryKey: Common.UseGetPageByCanvasIdKeyFn(clientOptions, queryKey),
-    queryFn: () =>
-      getPageByCanvasId({ ...clientOptions }).then((response) => response.data as TData) as TData,
-    ...options,
-  });
 export const useListPagesSuspense = <
   TData = Common.ListPagesDefaultResponse,
   TError = ListPagesError,
@@ -144,34 +123,19 @@ export const useGetPageDetailSuspense = <
       getPageDetail({ ...clientOptions }).then((response) => response.data as TData) as TData,
     ...options,
   });
-export const useGetPageVersionsSuspense = <
-  TData = Common.GetPageVersionsDefaultResponse,
-  TError = GetPageVersionsError,
+export const useGetPageByCanvasIdSuspense = <
+  TData = Common.GetPageByCanvasIdDefaultResponse,
+  TError = GetPageByCanvasIdError,
   TQueryKey extends Array<unknown> = unknown[],
 >(
-  clientOptions: Options<GetPageVersionsData, true>,
+  clientOptions: Options<GetPageByCanvasIdData, true>,
   queryKey?: TQueryKey,
   options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
 ) =>
   useSuspenseQuery<TData, TError>({
-    queryKey: Common.UseGetPageVersionsKeyFn(clientOptions, queryKey),
+    queryKey: Common.UseGetPageByCanvasIdKeyFn(clientOptions, queryKey),
     queryFn: () =>
-      getPageVersions({ ...clientOptions }).then((response) => response.data as TData) as TData,
-    ...options,
-  });
-export const useGetPageVersionSuspense = <
-  TData = Common.GetPageVersionDefaultResponse,
-  TError = GetPageVersionError,
-  TQueryKey extends Array<unknown> = unknown[],
->(
-  clientOptions: Options<GetPageVersionData, true>,
-  queryKey?: TQueryKey,
-  options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
-) =>
-  useSuspenseQuery<TData, TError>({
-    queryKey: Common.UseGetPageVersionKeyFn(clientOptions, queryKey),
-    queryFn: () =>
-      getPageVersion({ ...clientOptions }).then((response) => response.data as TData) as TData,
+      getPageByCanvasId({ ...clientOptions }).then((response) => response.data as TData) as TData,
     ...options,
   });
 export const useGetAuthConfigSuspense = <
