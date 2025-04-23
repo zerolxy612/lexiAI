@@ -7,12 +7,12 @@ import './action-menu.scss';
 import { useImportResourceStoreShallow } from '@refly-packages/ai-workspace-common/stores/import-resource';
 import { UpsertResourceRequest } from '@refly/openapi-schema';
 import { useKnowledgeBaseStore } from '@refly-packages/ai-workspace-common/stores/knowledge-base';
-import { useAddNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-node';
 import { useSubscriptionUsage } from '@refly-packages/ai-workspace-common/hooks/use-subscription-usage';
 import { StorageLimit } from '@refly-packages/ai-workspace-common/components/import-resource/intergrations/storageLimit';
 import { getAvailableFileCount } from '@refly/utils/quota';
 import { useGetProjectCanvasId } from '@refly-packages/ai-workspace-common/hooks/use-get-project-canvasId';
 import { useUpdateSourceList } from '@refly-packages/ai-workspace-common/hooks/canvas/use-update-source-list';
+import { nodeOperationsEmitter } from '@refly-packages/ai-workspace-common/events/nodeOperations';
 
 export enum ImportActionMode {
   CREATE_RESOURCE = 'createResource',
@@ -34,11 +34,10 @@ export const ActionMenu: React.FC<ActionMenuProps> = (props) => {
     updateSourceListDrawer: state.updateSourceListDrawer,
   }));
 
-  const { projectId } = useGetProjectCanvasId();
+  const { projectId, isCanvasOpen } = useGetProjectCanvasId();
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(projectId || null);
   const { updateSourceList } = useUpdateSourceList();
 
-  const { addNode } = useAddNode();
   const { refetchUsage, storageUsage } = useSubscriptionUsage();
 
   const { selectedItems, results, setSelectedItems } = useMultilingualSearchStore();
@@ -89,57 +88,66 @@ export const ActionMenu: React.FC<ActionMenuProps> = (props) => {
         refetchUsage();
         message.success(t('common.putSuccess'));
         setSelectedItems([]);
-
-        const resources = (Array.isArray(data?.data) ? data.data : []).map((resource, index) => {
-          const selectedItem = selectedItems[index];
-          return {
-            id: resource.resourceId,
-            title: resource.title,
-            domain: 'resource',
-            contentPreview: selectedItem?.pageContent ?? resource.contentPreview,
-          };
-        });
-
-        resources.forEach((resource, index) => {
-          const nodePosition = insertNodePosition
-            ? {
-                x: insertNodePosition?.x + index * 300,
-                y: insertNodePosition?.y,
-              }
-            : null;
-          addNode({
-            type: 'resource',
-            data: {
-              title: resource.title,
-              entityId: resource.id,
-              contentPreview: resource.contentPreview,
-              metadata: {
-                contentPreview: resource.contentPreview,
-              },
-            },
-            position: nodePosition,
-          });
-        });
         updateSourceList(Array.isArray(data?.data) ? data.data : [], currentProjectId);
+
+        if (isCanvasOpen) {
+          const resources = (Array.isArray(data?.data) ? data.data : []).map((resource, index) => {
+            const selectedItem = selectedItems[index];
+            return {
+              id: resource.resourceId,
+              title: resource.title,
+              domain: 'resource',
+              contentPreview: selectedItem?.pageContent ?? resource.contentPreview,
+            };
+          });
+
+          resources.forEach((resource, index) => {
+            const nodePosition = insertNodePosition
+              ? {
+                  x: insertNodePosition?.x + index * 300,
+                  y: insertNodePosition?.y,
+                }
+              : null;
+
+            nodeOperationsEmitter.emit('addNode', {
+              node: {
+                type: 'resource',
+                data: {
+                  title: resource.title,
+                  entityId: resource.id,
+                  contentPreview: resource.contentPreview,
+                  metadata: {
+                    contentPreview: resource.contentPreview,
+                  },
+                },
+                position: nodePosition,
+              },
+            });
+          });
+        }
       }
     } else if (props.importActionMode === ImportActionMode.ADD_NODE) {
-      for (const item of selectedItems) {
-        addNode({
-          type: 'resource',
-          data: {
-            title: item.title,
-            entityId: item.metadata?.entityId,
-            contentPreview: item.pageContent,
-            metadata: {
-              contentPreview: item.pageContent,
-            },
-          },
-        });
-      }
       message.success(t('common.putSuccess'));
       setSelectedItems([]);
-    }
 
+      if (isCanvasOpen) {
+        for (const item of selectedItems) {
+          nodeOperationsEmitter.emit('addNode', {
+            node: {
+              type: 'resource',
+              data: {
+                title: item.title,
+                entityId: item.metadata?.entityId,
+                contentPreview: item.pageContent,
+                metadata: {
+                  contentPreview: item.pageContent,
+                },
+              },
+            },
+          });
+        }
+      }
+    }
     setSaveLoading(false);
     handleClose();
   };
@@ -175,7 +183,7 @@ export const ActionMenu: React.FC<ActionMenuProps> = (props) => {
             disabled={disableSave() || props.disabled}
             loading={saveLoading}
           >
-            {t('common.saveToCanvas')}
+            {isCanvasOpen ? t('common.saveToCanvas') : t('common.save')}
           </Button>
         </div>
       </div>

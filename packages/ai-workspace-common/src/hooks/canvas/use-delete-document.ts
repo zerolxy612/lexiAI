@@ -5,16 +5,13 @@ import { useDebouncedCallback } from 'use-debounce';
 import { useDocumentStoreShallow } from '@refly-packages/ai-workspace-common/stores/document';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import { useSubscriptionUsage } from '../use-subscription-usage';
-import { useNodePreviewControl } from '@refly-packages/ai-workspace-common/hooks/canvas/use-node-preview-control';
-import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/canvas';
+import { nodeOperationsEmitter } from '@refly-packages/ai-workspace-common/events/nodeOperations';
 
 export const useDeleteDocument = () => {
   const [isRemoving, setIsRemoving] = useState(false);
   const { deleteDocumentData } = useDocumentStoreShallow((state) => ({
     deleteDocumentData: state.deleteDocumentData,
   }));
-  const { canvasId } = useCanvasContext();
-  const { closeNodePreviewByEntityId } = useNodePreviewControl({ canvasId });
 
   const { refetchUsage } = useSubscriptionUsage();
 
@@ -32,7 +29,9 @@ export const useDeleteDocument = () => {
       if (data?.success) {
         success = true;
         deleteDocumentData(docId);
-        closeNodePreviewByEntityId(docId);
+        nodeOperationsEmitter.emit('closeNodePreviewByEntityId', {
+          entityId: docId,
+        });
 
         // Clear IndexedDB persistence for the deleted document
         const indexedDbProvider = new IndexeddbPersistence(docId, new Y.Doc());

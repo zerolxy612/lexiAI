@@ -647,6 +647,7 @@ const translations = {
   },
   workspace: {
     addToCanvas: '添加到画布',
+    noCanvasSelected: '请先创建或选择一个画布',
     openWebpage: '打开原网页',
     downloadFile: '下载文件',
     canvasListModal: {
@@ -1001,6 +1002,7 @@ const translations = {
       createWebsiteDescription: '创建一个网站节点以在画布中嵌入网站',
       createMindMap: '创建思维导图节点',
       createMindMapDescription: '创建一个思维导图节点以在画布中嵌入思维导图',
+      removeFromProject: '从知识库移除',
     },
     connectionTimeout: {
       title: '连接超时',

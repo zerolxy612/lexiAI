@@ -10,8 +10,11 @@ import { ErrorBoundary } from '@sentry/react';
 import { VerificationModal } from '@/components/verification-modal';
 import { ResetPasswordModal } from '@/components/reset-password-modal';
 import { usePublicAccessPage } from '@refly-packages/ai-workspace-common/hooks/use-is-share-page';
-
+import { CanvasListModal } from '@refly-packages/ai-workspace-common/components/workspace/canvas-list-modal';
+import { LibraryModal } from '@refly-packages/ai-workspace-common/components/workspace/library-modal';
+import { ImportResourceModal } from '@refly-packages/ai-workspace-common/components/import-resource';
 import './index.scss';
+import { useSiderStoreShallow } from '@refly-packages/ai-workspace-common/stores/sider';
 
 const Content = Layout.Content;
 
@@ -25,6 +28,14 @@ export const AppLayout = (props: AppLayoutProps) => {
     userProfile: state.userProfile,
     isLogin: state.isLogin,
   }));
+
+  const { showCanvasListModal, setShowCanvasListModal, showLibraryModal, setShowLibraryModal } =
+    useSiderStoreShallow((state) => ({
+      showCanvasListModal: state.showCanvasListModal,
+      showLibraryModal: state.showLibraryModal,
+      setShowCanvasListModal: state.setShowCanvasListModal,
+      setShowLibraryModal: state.setShowLibraryModal,
+    }));
 
   const isPublicAccessPage = usePublicAccessPage();
   const matchPricing = useMatch('/pricing');
@@ -53,6 +64,9 @@ export const AppLayout = (props: AppLayoutProps) => {
         <VerificationModal />
         <ResetPasswordModal />
         <SubscribeModal />
+        <CanvasListModal visible={showCanvasListModal} setVisible={setShowCanvasListModal} />
+        <LibraryModal visible={showLibraryModal} setVisible={setShowLibraryModal} />
+        <ImportResourceModal />
       </Layout>
     </ErrorBoundary>
   );

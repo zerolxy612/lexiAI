@@ -17,6 +17,9 @@ export type Events = {
     descendantNodeType: CanvasNodeType;
     shouldPreview?: boolean;
   };
+  closeNodePreviewByEntityId: {
+    entityId: string;
+  };
 };
 
 export const nodeOperationsEmitter = mitt<Events>();
