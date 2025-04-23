@@ -1178,6 +1178,7 @@ const translations = {
       createWebsiteDescription: 'Create a website node to embed a website in your canvas',
       createMindMap: 'Create Mind Map Node',
       createMindMapDescription: 'Create a mind map node to embed a mind map in your canvas',
+      removeFromProject: 'Remove from Project',
     },
     connectionTimeout: {
       title: 'Connection Timeout',

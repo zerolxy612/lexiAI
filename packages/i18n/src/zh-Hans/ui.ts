@@ -1002,6 +1002,7 @@ const translations = {
       createWebsiteDescription: '创建一个网站节点以在画布中嵌入网站',
       createMindMap: '创建思维导图节点',
       createMindMapDescription: '创建一个思维导图节点以在画布中嵌入思维导图',
+      removeFromProject: '从知识库移除',
     },
     connectionTimeout: {
       title: '连接超时',

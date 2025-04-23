@@ -27,10 +27,10 @@ import { useDeleteDocument } from '@refly-packages/ai-workspace-common/hooks/can
 import { Markdown } from '@refly-packages/ai-workspace-common/components/markdown';
 import { NODE_COLORS } from '@refly-packages/ai-workspace-common/components/canvas/nodes/shared/colors';
 import { LuPlus } from 'react-icons/lu';
-import { useMatch, useParams } from 'react-router-dom';
+import { useMatch } from 'react-router-dom';
 import { nodeOperationsEmitter } from '@refly-packages/ai-workspace-common/events/nodeOperations';
 import { useCreateDocumentPurely } from '@refly-packages/ai-workspace-common/hooks/canvas/use-create-document-purely';
-
+import { useGetProjectCanvasId } from '@refly-packages/ai-workspace-common/hooks/use-get-project-canvasId';
 const ActionDropdown = ({ doc, afterDelete }: { doc: Document; afterDelete: () => void }) => {
   const { t } = useTranslation();
   const [popupVisible, setPopupVisible] = useState(false);
@@ -39,7 +39,7 @@ const ActionDropdown = ({ doc, afterDelete }: { doc: Document; afterDelete: () =
     setShowLibraryModal: state.setShowLibraryModal,
   }));
   const isShareCanvas = useMatch('/share/canvas/:canvasId');
-  const { canvasId } = useParams();
+  const { isCanvasOpen } = useGetProjectCanvasId();
 
   const handleDelete = async () => {
     const success = await deleteDocument(doc.docId);
@@ -76,10 +76,10 @@ const ActionDropdown = ({ doc, afterDelete }: { doc: Document; afterDelete: () =
       ),
       key: 'addToCanvas',
       onClick: () => {
-        if (canvasId && canvasId !== 'empty') {
+        if (isCanvasOpen) {
           handleAddToCanvas();
         } else {
-          message.error(t('canvas.action.noCanvasSelected'));
+          message.error(t('workspace.noCanvasSelected'));
         }
       },
     },

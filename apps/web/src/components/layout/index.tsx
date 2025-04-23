@@ -12,6 +12,7 @@ import { ResetPasswordModal } from '@/components/reset-password-modal';
 import { usePublicAccessPage } from '@refly-packages/ai-workspace-common/hooks/use-is-share-page';
 import { CanvasListModal } from '@refly-packages/ai-workspace-common/components/workspace/canvas-list-modal';
 import { LibraryModal } from '@refly-packages/ai-workspace-common/components/workspace/library-modal';
+import { ImportResourceModal } from '@refly-packages/ai-workspace-common/components/import-resource';
 import './index.scss';
 import { useSiderStoreShallow } from '@refly-packages/ai-workspace-common/stores/sider';
 
@@ -65,6 +66,7 @@ export const AppLayout = (props: AppLayoutProps) => {
         <SubscribeModal />
         <CanvasListModal visible={showCanvasListModal} setVisible={setShowCanvasListModal} />
         <LibraryModal visible={showLibraryModal} setVisible={setShowLibraryModal} />
+        <ImportResourceModal />
       </Layout>
     </ErrorBoundary>
   );

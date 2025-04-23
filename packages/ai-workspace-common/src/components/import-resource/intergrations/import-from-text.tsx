@@ -8,13 +8,13 @@ import { useImportResourceStoreShallow } from '@refly-packages/ai-workspace-comm
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 import { UpsertResourceRequest } from '@refly/openapi-schema';
 import { useTranslation } from 'react-i18next';
-import { useAddNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-node';
 import { TbClipboard } from 'react-icons/tb';
 import { useSubscriptionUsage } from '@refly-packages/ai-workspace-common/hooks/use-subscription-usage';
 import { StorageLimit } from './storageLimit';
 import { getAvailableFileCount } from '@refly/utils/quota';
 import { useGetProjectCanvasId } from '@refly-packages/ai-workspace-common/hooks/use-get-project-canvasId';
 import { useUpdateSourceList } from '@refly-packages/ai-workspace-common/hooks/canvas/use-update-source-list';
+import { nodeOperationsEmitter } from '@refly-packages/ai-workspace-common/events/nodeOperations';
 
 const { TextArea } = Input;
 const FormItem = Form.Item;
@@ -27,10 +27,9 @@ export const ImportFromText = () => {
       setImportResourceModalVisible: state.setImportResourceModalVisible,
       setCopiedTextPayload: state.setCopiedTextPayload,
     }));
-  const { projectId } = useGetProjectCanvasId();
+  const { projectId, isCanvasOpen } = useGetProjectCanvasId();
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(projectId || null);
   const { updateSourceList } = useUpdateSourceList();
-  const { addNode } = useAddNode();
   const { refetchUsage, storageUsage } = useSubscriptionUsage();
   const { insertNodePosition } = useImportResourceStoreShallow((state) => ({
     insertNodePosition: state.insertNodePosition,
@@ -70,18 +69,22 @@ export const ImportFromText = () => {
 
     if (data?.success) {
       refetchUsage();
-      addNode({
-        type: 'resource',
-        data: {
-          title: data?.data?.title || 'Untitled',
-          entityId: data?.data?.resourceId,
-          contentPreview: data?.data?.contentPreview,
-          metadata: {
-            resourceType: 'text',
+      if (isCanvasOpen) {
+        nodeOperationsEmitter.emit('addNode', {
+          node: {
+            type: 'resource',
+            data: {
+              title: data?.data?.title || 'Untitled',
+              entityId: data?.data?.resourceId,
+              contentPreview: data?.data?.contentPreview,
+              metadata: {
+                resourceType: 'text',
+              },
+            },
+            position: insertNodePosition,
           },
-        },
-        position: insertNodePosition,
-      });
+        });
+      }
       updateSourceList([data?.data], currentProjectId);
     }
   };

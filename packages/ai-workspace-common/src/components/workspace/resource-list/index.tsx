@@ -30,8 +30,9 @@ import { getClientOrigin } from '@refly/utils/url';
 import { useImportResourceStoreShallow } from '@refly-packages/ai-workspace-common/stores/import-resource';
 import { useDownloadFile } from '@refly-packages/ai-workspace-common/hooks/use-download-file';
 import { ResourceIcon } from '@refly-packages/ai-workspace-common/components/common/resourceIcon';
-import { useMatch, useParams } from 'react-router-dom';
+import { useMatch } from 'react-router-dom';
 import { nodeOperationsEmitter } from '@refly-packages/ai-workspace-common/events/nodeOperations';
+import { useGetProjectCanvasId } from '@refly-packages/ai-workspace-common/hooks/use-get-project-canvasId';
 
 const ActionDropdown = ({
   resource,
@@ -46,7 +47,7 @@ const ActionDropdown = ({
   const { deleteResource } = useDeleteResource();
   const { downloadFile } = useDownloadFile();
   const isShareCanvas = useMatch('/share/canvas/:canvasId');
-  const { canvasId } = useParams();
+  const { isCanvasOpen } = useGetProjectCanvasId();
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     deleteResource(resource.resourceId).then((success) => {
@@ -61,7 +62,7 @@ const ActionDropdown = ({
 
   const handleAddToCanvas: MenuProps['onClick'] = ({ domEvent }) => {
     domEvent.stopPropagation();
-    if (canvasId && canvasId !== 'empty') {
+    if (isCanvasOpen) {
       nodeOperationsEmitter.emit('addNode', {
         node: {
           type: 'resource',
