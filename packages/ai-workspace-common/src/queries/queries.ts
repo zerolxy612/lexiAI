@@ -18,7 +18,6 @@ import {
   createDocument,
   createLabelClass,
   createLabelInstance,
-  createPage,
   createPortalSession,
   createProject,
   createResource,
@@ -54,8 +53,6 @@ import {
   getDocumentDetail,
   getPageByCanvasId,
   getPageDetail,
-  getPageVersion,
-  getPageVersions,
   getProjectDetail,
   getResourceDetail,
   getSettings,
@@ -81,7 +78,6 @@ import {
   logout,
   multiLingualWebSearch,
   pinSkillInstance,
-  publishPage,
   queryReferences,
   refreshToken,
   reindexResource,
@@ -138,8 +134,6 @@ import {
   CreateLabelClassError,
   CreateLabelInstanceData,
   CreateLabelInstanceError,
-  CreatePageData,
-  CreatePageError,
   CreatePortalSessionError,
   CreateProjectData,
   CreateProjectError,
@@ -207,10 +201,6 @@ import {
   GetPageByCanvasIdError,
   GetPageDetailData,
   GetPageDetailError,
-  GetPageVersionData,
-  GetPageVersionError,
-  GetPageVersionsData,
-  GetPageVersionsError,
   GetProjectDetailData,
   GetProjectDetailError,
   GetResourceDetailData,
@@ -253,8 +243,6 @@ import {
   MultiLingualWebSearchError,
   PinSkillInstanceData,
   PinSkillInstanceError,
-  PublishPageData,
-  PublishPageError,
   QueryReferencesData,
   QueryReferencesError,
   RefreshTokenError,
@@ -303,21 +291,6 @@ import {
   UploadError,
 } from '../requests/types.gen';
 import * as Common from './common';
-export const useGetPageByCanvasId = <
-  TData = Common.GetPageByCanvasIdDefaultResponse,
-  TError = GetPageByCanvasIdError,
-  TQueryKey extends Array<unknown> = unknown[],
->(
-  clientOptions: Options<GetPageByCanvasIdData, true>,
-  queryKey?: TQueryKey,
-  options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
-) =>
-  useQuery<TData, TError>({
-    queryKey: Common.UseGetPageByCanvasIdKeyFn(clientOptions, queryKey),
-    queryFn: () =>
-      getPageByCanvasId({ ...clientOptions }).then((response) => response.data as TData) as TData,
-    ...options,
-  });
 export const useListPages = <
   TData = Common.ListPagesDefaultResponse,
   TError = ListPagesError,
@@ -348,34 +321,19 @@ export const useGetPageDetail = <
       getPageDetail({ ...clientOptions }).then((response) => response.data as TData) as TData,
     ...options,
   });
-export const useGetPageVersions = <
-  TData = Common.GetPageVersionsDefaultResponse,
-  TError = GetPageVersionsError,
+export const useGetPageByCanvasId = <
+  TData = Common.GetPageByCanvasIdDefaultResponse,
+  TError = GetPageByCanvasIdError,
   TQueryKey extends Array<unknown> = unknown[],
 >(
-  clientOptions: Options<GetPageVersionsData, true>,
+  clientOptions: Options<GetPageByCanvasIdData, true>,
   queryKey?: TQueryKey,
   options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
 ) =>
   useQuery<TData, TError>({
-    queryKey: Common.UseGetPageVersionsKeyFn(clientOptions, queryKey),
+    queryKey: Common.UseGetPageByCanvasIdKeyFn(clientOptions, queryKey),
     queryFn: () =>
-      getPageVersions({ ...clientOptions }).then((response) => response.data as TData) as TData,
-    ...options,
-  });
-export const useGetPageVersion = <
-  TData = Common.GetPageVersionDefaultResponse,
-  TError = GetPageVersionError,
-  TQueryKey extends Array<unknown> = unknown[],
->(
-  clientOptions: Options<GetPageVersionData, true>,
-  queryKey?: TQueryKey,
-  options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
-) =>
-  useQuery<TData, TError>({
-    queryKey: Common.UseGetPageVersionKeyFn(clientOptions, queryKey),
-    queryFn: () =>
-      getPageVersion({ ...clientOptions }).then((response) => response.data as TData) as TData,
+      getPageByCanvasId({ ...clientOptions }).then((response) => response.data as TData) as TData,
     ...options,
   });
 export const useGetAuthConfig = <
@@ -821,57 +779,6 @@ export const useServeStatic = <
       serveStatic({ ...clientOptions }).then((response) => response.data as TData) as TData,
     ...options,
   });
-export const useAddNodesToCanvasPage = <
-  TData = Common.AddNodesToCanvasPageMutationResult,
-  TError = AddNodesToCanvasPageError,
-  TQueryKey extends Array<unknown> = unknown[],
-  TContext = unknown,
->(
-  mutationKey?: TQueryKey,
-  options?: Omit<
-    UseMutationOptions<TData, TError, Options<AddNodesToCanvasPageData, true>, TContext>,
-    'mutationKey' | 'mutationFn'
-  >,
-) =>
-  useMutation<TData, TError, Options<AddNodesToCanvasPageData, true>, TContext>({
-    mutationKey: Common.UseAddNodesToCanvasPageKeyFn(mutationKey),
-    mutationFn: (clientOptions) => addNodesToCanvasPage(clientOptions) as unknown as Promise<TData>,
-    ...options,
-  });
-export const useCreatePage = <
-  TData = Common.CreatePageMutationResult,
-  TError = CreatePageError,
-  TQueryKey extends Array<unknown> = unknown[],
-  TContext = unknown,
->(
-  mutationKey?: TQueryKey,
-  options?: Omit<
-    UseMutationOptions<TData, TError, Options<CreatePageData, true>, TContext>,
-    'mutationKey' | 'mutationFn'
-  >,
-) =>
-  useMutation<TData, TError, Options<CreatePageData, true>, TContext>({
-    mutationKey: Common.UseCreatePageKeyFn(mutationKey),
-    mutationFn: (clientOptions) => createPage(clientOptions) as unknown as Promise<TData>,
-    ...options,
-  });
-export const usePublishPage = <
-  TData = Common.PublishPageMutationResult,
-  TError = PublishPageError,
-  TQueryKey extends Array<unknown> = unknown[],
-  TContext = unknown,
->(
-  mutationKey?: TQueryKey,
-  options?: Omit<
-    UseMutationOptions<TData, TError, Options<PublishPageData, true>, TContext>,
-    'mutationKey' | 'mutationFn'
-  >,
-) =>
-  useMutation<TData, TError, Options<PublishPageData, true>, TContext>({
-    mutationKey: Common.UsePublishPageKeyFn(mutationKey),
-    mutationFn: (clientOptions) => publishPage(clientOptions) as unknown as Promise<TData>,
-    ...options,
-  });
 export const useSharePage = <
   TData = Common.SharePageMutationResult,
   TError = SharePageError,
@@ -887,6 +794,23 @@ export const useSharePage = <
   useMutation<TData, TError, Options<SharePageData, true>, TContext>({
     mutationKey: Common.UseSharePageKeyFn(mutationKey),
     mutationFn: (clientOptions) => sharePage(clientOptions) as unknown as Promise<TData>,
+    ...options,
+  });
+export const useAddNodesToCanvasPage = <
+  TData = Common.AddNodesToCanvasPageMutationResult,
+  TError = AddNodesToCanvasPageError,
+  TQueryKey extends Array<unknown> = unknown[],
+  TContext = unknown,
+>(
+  mutationKey?: TQueryKey,
+  options?: Omit<
+    UseMutationOptions<TData, TError, Options<AddNodesToCanvasPageData, true>, TContext>,
+    'mutationKey' | 'mutationFn'
+  >,
+) =>
+  useMutation<TData, TError, Options<AddNodesToCanvasPageData, true>, TContext>({
+    mutationKey: Common.UseAddNodesToCanvasPageKeyFn(mutationKey),
+    mutationFn: (clientOptions) => addNodesToCanvasPage(clientOptions) as unknown as Promise<TData>,
     ...options,
   });
 export const useRefreshToken = <
@@ -1963,23 +1887,6 @@ export const useUpdateSettings = <
     mutationFn: (clientOptions) => updateSettings(clientOptions) as unknown as Promise<TData>,
     ...options,
   });
-export const useDeletePageNode = <
-  TData = Common.DeletePageNodeMutationResult,
-  TError = DeletePageNodeError,
-  TQueryKey extends Array<unknown> = unknown[],
-  TContext = unknown,
->(
-  mutationKey?: TQueryKey,
-  options?: Omit<
-    UseMutationOptions<TData, TError, Options<DeletePageNodeData, true>, TContext>,
-    'mutationKey' | 'mutationFn'
-  >,
-) =>
-  useMutation<TData, TError, Options<DeletePageNodeData, true>, TContext>({
-    mutationKey: Common.UseDeletePageNodeKeyFn(mutationKey),
-    mutationFn: (clientOptions) => deletePageNode(clientOptions) as unknown as Promise<TData>,
-    ...options,
-  });
 export const useDeletePage = <
   TData = Common.DeletePageMutationResult,
   TError = DeletePageError,
@@ -1995,5 +1902,22 @@ export const useDeletePage = <
   useMutation<TData, TError, Options<DeletePageData, true>, TContext>({
     mutationKey: Common.UseDeletePageKeyFn(mutationKey),
     mutationFn: (clientOptions) => deletePage(clientOptions) as unknown as Promise<TData>,
+    ...options,
+  });
+export const useDeletePageNode = <
+  TData = Common.DeletePageNodeMutationResult,
+  TError = DeletePageNodeError,
+  TQueryKey extends Array<unknown> = unknown[],
+  TContext = unknown,
+>(
+  mutationKey?: TQueryKey,
+  options?: Omit<
+    UseMutationOptions<TData, TError, Options<DeletePageNodeData, true>, TContext>,
+    'mutationKey' | 'mutationFn'
+  >,
+) =>
+  useMutation<TData, TError, Options<DeletePageNodeData, true>, TContext>({
+    mutationKey: Common.UseDeletePageNodeKeyFn(mutationKey),
+    mutationFn: (clientOptions) => deletePageNode(clientOptions) as unknown as Promise<TData>,
     ...options,
   });

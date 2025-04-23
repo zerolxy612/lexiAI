@@ -806,6 +806,7 @@ export function SlideshowEdit(props: PageEditProps) {
 
       {/* Share modal */}
       <Modal
+        centered
         title={
           <div className="flex items-center text-lg font-medium">
             <ShareAltOutlined className="mr-2 text-green-500" /> {t('common.shareLink')}
@@ -884,6 +885,7 @@ export function SlideshowEdit(props: PageEditProps) {
 
       {/* Wide mode modal */}
       <Modal
+        centered
         open={wideMode.isActive}
         footer={null}
         onCancel={handleCloseWideMode}

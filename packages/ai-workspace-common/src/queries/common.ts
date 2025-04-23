@@ -18,7 +18,6 @@ import {
   createDocument,
   createLabelClass,
   createLabelInstance,
-  createPage,
   createPortalSession,
   createProject,
   createResource,
@@ -54,8 +53,6 @@ import {
   getDocumentDetail,
   getPageByCanvasId,
   getPageDetail,
-  getPageVersion,
-  getPageVersions,
   getProjectDetail,
   getResourceDetail,
   getSettings,
@@ -81,7 +78,6 @@ import {
   logout,
   multiLingualWebSearch,
   pinSkillInstance,
-  publishPage,
   queryReferences,
   refreshToken,
   reindexResource,
@@ -107,18 +103,6 @@ import {
   updateSkillTrigger,
   upload,
 } from '../requests/services.gen';
-export type GetPageByCanvasIdDefaultResponse = Awaited<
-  ReturnType<typeof getPageByCanvasId>
->['data'];
-export type GetPageByCanvasIdQueryResult<
-  TData = GetPageByCanvasIdDefaultResponse,
-  TError = unknown,
-> = UseQueryResult<TData, TError>;
-export const useGetPageByCanvasIdKey = 'GetPageByCanvasId';
-export const UseGetPageByCanvasIdKeyFn = (
-  clientOptions: Options<unknown, true>,
-  queryKey?: Array<unknown>,
-) => [useGetPageByCanvasIdKey, ...(queryKey ?? [clientOptions])];
 export type ListPagesDefaultResponse = Awaited<ReturnType<typeof listPages>>['data'];
 export type ListPagesQueryResult<
   TData = ListPagesDefaultResponse,
@@ -139,26 +123,18 @@ export const UseGetPageDetailKeyFn = (
   clientOptions: Options<unknown, true>,
   queryKey?: Array<unknown>,
 ) => [useGetPageDetailKey, ...(queryKey ?? [clientOptions])];
-export type GetPageVersionsDefaultResponse = Awaited<ReturnType<typeof getPageVersions>>['data'];
-export type GetPageVersionsQueryResult<
-  TData = GetPageVersionsDefaultResponse,
+export type GetPageByCanvasIdDefaultResponse = Awaited<
+  ReturnType<typeof getPageByCanvasId>
+>['data'];
+export type GetPageByCanvasIdQueryResult<
+  TData = GetPageByCanvasIdDefaultResponse,
   TError = unknown,
 > = UseQueryResult<TData, TError>;
-export const useGetPageVersionsKey = 'GetPageVersions';
-export const UseGetPageVersionsKeyFn = (
+export const useGetPageByCanvasIdKey = 'GetPageByCanvasId';
+export const UseGetPageByCanvasIdKeyFn = (
   clientOptions: Options<unknown, true>,
   queryKey?: Array<unknown>,
-) => [useGetPageVersionsKey, ...(queryKey ?? [clientOptions])];
-export type GetPageVersionDefaultResponse = Awaited<ReturnType<typeof getPageVersion>>['data'];
-export type GetPageVersionQueryResult<
-  TData = GetPageVersionDefaultResponse,
-  TError = unknown,
-> = UseQueryResult<TData, TError>;
-export const useGetPageVersionKey = 'GetPageVersion';
-export const UseGetPageVersionKeyFn = (
-  clientOptions: Options<unknown, true>,
-  queryKey?: Array<unknown>,
-) => [useGetPageVersionKey, ...(queryKey ?? [clientOptions])];
+) => [useGetPageByCanvasIdKey, ...(queryKey ?? [clientOptions])];
 export type GetAuthConfigDefaultResponse = Awaited<ReturnType<typeof getAuthConfig>>['data'];
 export type GetAuthConfigQueryResult<
   TData = GetAuthConfigDefaultResponse,
@@ -471,28 +447,16 @@ export const UseServeStaticKeyFn = (
   clientOptions: Options<unknown, true> = {},
   queryKey?: Array<unknown>,
 ) => [useServeStaticKey, ...(queryKey ?? [clientOptions])];
-export type AddNodesToCanvasPageMutationResult = Awaited<ReturnType<typeof addNodesToCanvasPage>>;
-export const useAddNodesToCanvasPageKey = 'AddNodesToCanvasPage';
-export const UseAddNodesToCanvasPageKeyFn = (mutationKey?: Array<unknown>) => [
-  useAddNodesToCanvasPageKey,
-  ...(mutationKey ?? []),
-];
-export type CreatePageMutationResult = Awaited<ReturnType<typeof createPage>>;
-export const useCreatePageKey = 'CreatePage';
-export const UseCreatePageKeyFn = (mutationKey?: Array<unknown>) => [
-  useCreatePageKey,
-  ...(mutationKey ?? []),
-];
-export type PublishPageMutationResult = Awaited<ReturnType<typeof publishPage>>;
-export const usePublishPageKey = 'PublishPage';
-export const UsePublishPageKeyFn = (mutationKey?: Array<unknown>) => [
-  usePublishPageKey,
-  ...(mutationKey ?? []),
-];
 export type SharePageMutationResult = Awaited<ReturnType<typeof sharePage>>;
 export const useSharePageKey = 'SharePage';
 export const UseSharePageKeyFn = (mutationKey?: Array<unknown>) => [
   useSharePageKey,
+  ...(mutationKey ?? []),
+];
+export type AddNodesToCanvasPageMutationResult = Awaited<ReturnType<typeof addNodesToCanvasPage>>;
+export const useAddNodesToCanvasPageKey = 'AddNodesToCanvasPage';
+export const UseAddNodesToCanvasPageKeyFn = (mutationKey?: Array<unknown>) => [
+  useAddNodesToCanvasPageKey,
   ...(mutationKey ?? []),
 ];
 export type RefreshTokenMutationResult = Awaited<ReturnType<typeof refreshToken>>;
@@ -875,15 +839,15 @@ export const UseUpdateSettingsKeyFn = (mutationKey?: Array<unknown>) => [
   useUpdateSettingsKey,
   ...(mutationKey ?? []),
 ];
-export type DeletePageNodeMutationResult = Awaited<ReturnType<typeof deletePageNode>>;
-export const useDeletePageNodeKey = 'DeletePageNode';
-export const UseDeletePageNodeKeyFn = (mutationKey?: Array<unknown>) => [
-  useDeletePageNodeKey,
-  ...(mutationKey ?? []),
-];
 export type DeletePageMutationResult = Awaited<ReturnType<typeof deletePage>>;
 export const useDeletePageKey = 'DeletePage';
 export const UseDeletePageKeyFn = (mutationKey?: Array<unknown>) => [
   useDeletePageKey,
+  ...(mutationKey ?? []),
+];
+export type DeletePageNodeMutationResult = Awaited<ReturnType<typeof deletePageNode>>;
+export const useDeletePageNodeKey = 'DeletePageNode';
+export const UseDeletePageNodeKeyFn = (mutationKey?: Array<unknown>) => [
+  useDeletePageNodeKey,
   ...(mutationKey ?? []),
 ];

@@ -2317,8 +2317,8 @@ components:
           type: integer
           description: Order index
         nodeData:
-          type: object
           description: Node data
+          $ref: '#/components/schemas/CanvasNodeData'
 
     PageDetail:
       type: object

@@ -68,9 +68,7 @@ export type PageNodeRelation = {
   /**
    * Node data
    */
-  nodeData?: {
-    [key: string]: unknown;
-  };
+  nodeData?: CanvasNodeData;
 };
 
 export type PageDetail = Page & {

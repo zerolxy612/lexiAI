@@ -17,7 +17,12 @@ import {
   Resource,
   User,
 } from '@refly/openapi-schema';
-import { ParamsError, ShareNotFoundError, StorageQuotaExceeded } from '@refly/errors';
+import {
+  PageNotFoundError,
+  ParamsError,
+  ShareNotFoundError,
+  StorageQuotaExceeded,
+} from '@refly/errors';
 import { ConfigService } from '@nestjs/config';
 import { CanvasService } from '../canvas/canvas.service';
 import { KnowledgeService } from '../knowledge/knowledge.service';
@@ -747,7 +752,7 @@ export class ShareService {
   async createShareForPage(user: User, param: CreateShareRequest) {
     const { entityId: pageId, title, parentShareId, allowDuplication } = param;
 
-    // 检查分享记录是否已存在
+    // Check if shareRecord already exists
     const existingShareRecord = await this.prisma.shareRecord.findFirst({
       where: {
         entityId: pageId,
@@ -757,38 +762,34 @@ export class ShareService {
       },
     });
 
-    // 生成分享ID (如果还没有)
-    const shareId =
-      existingShareRecord?.shareId ?? genShareId('page' as keyof typeof SHARE_CODE_PREFIX);
+    // Generate shareId only if needed
+    const shareId = existingShareRecord?.shareId ?? genShareId('page');
 
-    // 获取页面详情
-    const [page] = await this.prisma.$queryRawUnsafe<any[]>(
-      `
-      SELECT * FROM "pages"
-      WHERE "page_id" = $1
-      AND "uid" = $2
-      AND "deleted_at" IS NULL
-    `,
-      pageId,
-      user.uid,
-    );
+    // Get page detail
+    const page = await this.prisma.page.findFirst({
+      where: {
+        pageId,
+        uid: user.uid,
+        deletedAt: null,
+      },
+    });
 
     if (!page) {
-      throw new ShareNotFoundError();
+      throw new PageNotFoundError();
     }
 
-    // 获取页面节点关联
-    const nodeRelations = await this.prisma.$queryRawUnsafe<any[]>(
-      `
-      SELECT * FROM "page_node_relations"
-      WHERE "page_id" = $1
-      AND "deleted_at" IS NULL
-      ORDER BY "order_index" ASC
-    `,
-      pageId,
-    );
+    // Get page node relations
+    const nodeRelations = await this.prisma.pageNodeRelation.findMany({
+      where: {
+        pageId,
+        deletedAt: null,
+      },
+      orderBy: {
+        orderIndex: 'asc',
+      },
+    });
 
-    // 读取页面当前状态
+    // Read page current state
     let pageContent = {};
     let pageConfig = {
       layout: 'slides',
@@ -796,10 +797,10 @@ export class ShareService {
     };
 
     try {
-      // 从存储服务读取页面状态
-      if (page.state_storage_key) {
+      // Read page state from storage service
+      if (page.stateStorageKey) {
         const stateBuffer = await this.miscService.downloadFile({
-          storageKey: page.state_storage_key,
+          storageKey: page.stateStorageKey,
           visibility: 'private',
         });
 
@@ -808,7 +809,7 @@ export class ShareService {
           const ydoc = new Y.Doc();
           Y.applyUpdate(ydoc, update);
 
-          // 提取页面内容
+          // Extract page content
           const title = ydoc.getText('title').toString();
           const nodeIds = Array.from(ydoc.getArray('nodeIds').toArray());
 
@@ -817,7 +818,7 @@ export class ShareService {
             nodeIds,
           };
 
-          // 提取页面配置
+          // Extract page config
           const pageConfigMap = ydoc.getMap('pageConfig');
           if (pageConfigMap.size > 0) {
             pageConfig = {
@@ -831,35 +832,111 @@ export class ShareService {
       this.logger.error('Error reading page state:', error);
     }
 
-    // 创建页面数据对象
+    // Set up concurrency limit for image processing
+    const limit = pLimit(5); // Limit to 5 concurrent operations
+    const tasks = nodeRelations.map((relation) => {
+      return limit(async () => {
+        const { relationId, nodeType, entityId } = relation;
+        if (nodeType === 'resource') {
+          const { shareRecord } = await this.createShareForResource(user, {
+            entityId,
+            entityType: 'resource',
+            parentShareId,
+            allowDuplication,
+          });
+          return { relationId, shareId: shareRecord.shareId };
+        }
+        if (nodeType === 'document') {
+          const { shareRecord } = await this.createShareForDocument(user, {
+            entityId,
+            entityType: 'document',
+            parentShareId,
+            allowDuplication,
+          });
+          return { relationId, shareId: shareRecord.shareId };
+        }
+        if (nodeType === 'codeArtifact') {
+          const { shareRecord } = await this.createShareForCodeArtifact(user, {
+            entityId,
+            entityType: 'codeArtifact',
+            parentShareId,
+            allowDuplication,
+          });
+          return { relationId, shareId: shareRecord.shareId };
+        }
+        if (nodeType === 'skillResponse') {
+          const { shareRecord } = await this.createShareForSkillResponse(user, {
+            entityId,
+            entityType: 'skillResponse',
+            parentShareId,
+            allowDuplication,
+          });
+          return { relationId, shareId: shareRecord.shareId };
+        }
+        if (nodeType === 'image') {
+          // Publish image to public bucket
+          const nodeData = JSON.parse(relation.nodeData);
+          if (nodeData.metadata?.storageKey) {
+            nodeData.metadata.imageUrl = await this.miscService.publishFile(
+              nodeData.metadata.storageKey,
+            );
+          }
+          relation.nodeData = JSON.stringify(nodeData);
+        }
+
+        return { relationId, shareId: null };
+      });
+    });
+
+    const relationShareResults = await Promise.all(tasks);
+    const relationShareMap = new Map<string, string>();
+    for (const { relationId, shareId } of relationShareResults) {
+      if (shareId) {
+        relationShareMap.set(relationId, shareId);
+      }
+    }
+
+    // Create page data object
     const pageData = {
       page: {
-        pageId: page.page_id,
+        pageId: page.pageId,
         title: title || page.title,
         description: page.description,
         status: page.status,
-        createdAt: page.created_at,
-        updatedAt: page.updated_at,
+        createdAt: page.createdAt,
+        updatedAt: page.updatedAt,
       },
       content: pageContent,
-      nodeRelations: nodeRelations.map((relation) => ({
-        relationId: relation.relation_id,
-        pageId: relation.page_id,
-        nodeId: relation.node_id,
-        nodeType: relation.node_type,
-        entityId: relation.entity_id,
-        orderIndex: relation.order_index,
-        nodeData: relation.node_data
-          ? typeof relation.node_data === 'string'
-            ? JSON.parse(relation.node_data)
-            : relation.node_data
-          : {},
-      })),
+      nodeRelations: nodeRelations.map((relation) => {
+        const shareId = relationShareMap.get(relation.relationId);
+        const nodeData = relation.nodeData
+          ? typeof relation.nodeData === 'string'
+            ? JSON.parse(relation.nodeData)
+            : relation.nodeData
+          : {};
+
+        return {
+          relationId: relation.relationId,
+          pageId: relation.pageId,
+          nodeId: relation.nodeId,
+          nodeType: relation.nodeType,
+          entityId: relation.entityId,
+          orderIndex: relation.orderIndex,
+          shareId: relationShareMap.get(relation.relationId),
+          nodeData: {
+            ...nodeData,
+            metadata: {
+              ...nodeData.metadata,
+              shareId,
+            },
+          },
+        };
+      }),
       pageConfig,
       snapshotTime: new Date(),
     };
 
-    // 上传页面内容到存储服务
+    // Upload page content to storage service
     const { storageKey } = await this.miscService.uploadBuffer(user, {
       fpath: 'page.json',
       buf: Buffer.from(JSON.stringify(pageData)),
@@ -872,7 +949,7 @@ export class ShareService {
     let shareRecord: ShareRecord;
 
     if (existingShareRecord) {
-      // 更新现有分享记录
+      // Update existing share record
       shareRecord = await this.prisma.shareRecord.update({
         where: {
           pk: existingShareRecord.pk,
@@ -887,7 +964,7 @@ export class ShareService {
       });
       this.logger.log(`Updated existing share record: ${shareRecord.shareId} for page: ${pageId}`);
     } else {
-      // 创建新的分享记录
+      // Create new share record
       shareRecord = await this.prisma.shareRecord.create({
         data: {
           shareId,
