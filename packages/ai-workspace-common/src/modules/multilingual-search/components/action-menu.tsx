@@ -38,7 +38,6 @@ export const ActionMenu: React.FC<ActionMenuProps> = (props) => {
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(projectId || null);
   const { updateSourceList } = useUpdateSourceList();
 
-  // const { addNode } = useAddNode();
   const { refetchUsage, storageUsage } = useSubscriptionUsage();
 
   const { selectedItems, results, setSelectedItems } = useMultilingualSearchStore();

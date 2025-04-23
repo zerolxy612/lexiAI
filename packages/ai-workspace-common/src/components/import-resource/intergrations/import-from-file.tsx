@@ -53,7 +53,6 @@ export const ImportFromFile = () => {
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(projectId || null);
   const { updateSourceList } = useUpdateSourceList();
 
-  // const { addNode } = useAddNode();
   const { refetchUsage, storageUsage, fileParsingUsage } = useSubscriptionUsage();
 
   const [saveLoading, setSaveLoading] = useState(false);
