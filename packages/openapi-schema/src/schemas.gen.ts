@@ -1777,10 +1777,6 @@ export const ProviderConfigSchema = {
       type: 'string',
       description: 'Provider key',
     },
-    modelId: {
-      type: 'string',
-      description: 'Model ID',
-    },
   },
 } as const;
 
@@ -1801,12 +1797,12 @@ export const UserPreferencesSchema = {
     embedding: {
       type: 'object',
       description: 'Embedding config',
-      $ref: '#/components/schemas/ProviderConfig',
+      $ref: '#/components/schemas/ProviderItem',
     },
     reranker: {
       type: 'object',
       description: 'Reranking config',
-      $ref: '#/components/schemas/ProviderConfig',
+      $ref: '#/components/schemas/ProviderItem',
     },
     webSearch: {
       type: 'object',

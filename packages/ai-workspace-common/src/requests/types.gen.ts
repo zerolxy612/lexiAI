@@ -1477,10 +1477,6 @@ export type ProviderConfig = {
    * Provider key
    */
   providerKey?: string;
-  /**
-   * Model ID
-   */
-  modelId?: string;
 };
 
 /**
@@ -1498,11 +1494,11 @@ export type UserPreferences = {
   /**
    * Embedding config
    */
-  embedding?: ProviderConfig;
+  embedding?: ProviderItem;
   /**
    * Reranking config
    */
-  reranker?: ProviderConfig;
+  reranker?: ProviderItem;
   /**
    * Web search config
    */

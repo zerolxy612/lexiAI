@@ -1769,6 +1769,8 @@ const translations = {
     },
     modelConfig: {
       title: '模型配置',
+      chatModels: '对话模型',
+      otherModels: '其他模型',
       addModel: '添加模型',
       editModel: '编辑模型',
       deleteConfirm: '确定删除模型 {{name}} 吗？',
@@ -1786,6 +1788,10 @@ const translations = {
       noModels: '暂无模型',
       addFirstModel: '添加第一个模型',
       tryDifferentSearch: '尝试不同的搜索',
+      reranker: '重排器',
+      embedding: '嵌入',
+      rerankerDescription: '用于重新排序搜索结果，提高准确性',
+      embeddingDescription: '用于知识库搜索功能的必要组件',
     },
     parserConfig: {
       webSearch: '网页搜索',
@@ -1799,15 +1805,6 @@ const translations = {
       createProvider: '创建供应商',
       updateConfigSuccessfully: '配置更新成功！',
       updateConfigFailed: '配置更新失败，请重试！',
-      modelConfig: {
-        title: '模型配置',
-        modelId: '模型 ID',
-        modelType: '模型类型',
-        reranker: 'Reranker',
-        embedding: 'Embedding',
-        rerankerPlaceholder: '暂未配置 Reranker 模型，请点击配置',
-        embeddingPlaceholder: '请配置 Embedding 模型，以正常使用资源记忆和知识库搜索功能',
-      },
     },
   },
   contentDetail: {

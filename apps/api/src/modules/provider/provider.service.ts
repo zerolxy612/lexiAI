@@ -42,6 +42,9 @@ export class ProviderService {
         },
         deletedAt: null,
       },
+      include: {
+        provider: true,
+      },
     });
 
     return { providers, items };
@@ -154,7 +157,8 @@ export class ProviderService {
   async listProviderItems(user: User, param: ListProviderItemsData['query']) {
     const { providerId, category, enabled } = param;
 
-    const items = await this.prisma.providerItem.findMany({
+    // Fetch user's provider items
+    const userItems = await this.prisma.providerItem.findMany({
       where: {
         uid: user.uid,
         providerId,
@@ -167,8 +171,33 @@ export class ProviderService {
       },
     });
 
+    // Fetch global provider items
     const { items: globalItems } = await this.globalProviderCache.get();
-    return [...globalItems, ...items];
+
+    // Filter global items based on the same filters applied to user items
+    const filteredGlobalItems = globalItems.filter((item) => {
+      return (
+        (!providerId || item.providerId === providerId) &&
+        (!category || item.category === category) &&
+        (enabled === undefined || item.enabled === enabled)
+      );
+    });
+
+    // Create a map of user items by name for fast lookup
+    const userItemsByName = new Map();
+    for (const item of userItems) {
+      if (item?.name) {
+        userItemsByName.set(item.name, item);
+      }
+    }
+
+    // Filter out global items that have a user-specific counterpart with the same name
+    const uniqueGlobalItems = filteredGlobalItems.filter(
+      (globalItem) => !globalItem?.name || !userItemsByName.has(globalItem.name),
+    );
+
+    // Combine user-specific items and unique global items
+    return [...userItems, ...uniqueGlobalItems];
   }
 
   async findProviderItem(user: User, itemId: string) {

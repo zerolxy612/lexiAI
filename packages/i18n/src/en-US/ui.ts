@@ -1815,6 +1815,8 @@ const translations = {
 
     modelConfig: {
       title: 'Model Config',
+      chatModels: 'Chat Models',
+      otherModels: 'Other Models',
       addModel: 'Add Model',
       editModel: 'Edit Model',
       deleteConfirm: 'Are you sure you want to delete the model {{name}}?',
@@ -1832,6 +1834,10 @@ const translations = {
       noModels: 'No models',
       addFirstModel: 'Add the first model',
       tryDifferentSearch: 'Try different search',
+      reranker: 'Reranker',
+      embedding: 'Embedding',
+      rerankerDescription: 'Re-rank search results based on the relevance to improve accuracy',
+      embeddingDescription: 'Essential component for knowledge base search feature',
     },
     parserConfig: {
       webSearch: 'Web Search',
@@ -1845,16 +1851,6 @@ const translations = {
       createProvider: 'Create Provider',
       updateConfigSuccessfully: 'Config updated successfully!',
       updateConfigFailed: 'Failed to update config. Please try again!',
-      modelConfig: {
-        title: 'Model Config',
-        modelId: 'Model ID',
-        modelType: 'Model Type',
-        reranker: 'Reranker',
-        embedding: 'Embedding',
-        rerankerPlaceholder: 'No Reranker model configured, please click to configure',
-        embeddingPlaceholder:
-          'Please select Embedding model, to use knowledge base and resource memory function',
-      },
     },
   },
   contentDetail: {

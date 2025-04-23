@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useListProviders } from '@refly-packages/ai-workspace-common/queries';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 import React, { useCallback, useState, useMemo, useEffect } from 'react';
+import { ProviderIcon } from '@lobehub/icons';
 import { Spin } from '@refly-packages/ai-workspace-common/components/common/spin';
 import {
   Button,
@@ -15,8 +16,9 @@ import {
   MenuProps,
   Typography,
   message,
+  Tag,
 } from 'antd';
-import { LuPlus, LuSearch } from 'react-icons/lu';
+import { LuGlobe, LuPlus, LuSearch } from 'react-icons/lu';
 import { cn } from '@refly-packages/ai-workspace-common/utils/cn';
 import { Provider } from '@refly-packages/ai-workspace-common/requests/types.gen';
 import {
@@ -25,6 +27,7 @@ import {
   IconMoreHorizontal,
 } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { ProviderModal } from './provider-modal';
+import { providerInfoList } from '@refly/utils/provider';
 
 const { Title } = Typography;
 
@@ -126,43 +129,63 @@ const ProviderItem = React.memo(
       e.stopPropagation();
     }, []);
 
+    const providerInfo = useMemo(() => {
+      return providerInfoList.find((p) => p.key === provider.providerKey);
+    }, [provider]);
+
     return (
       <div className="mb-3 p-4 hover:bg-gray-50 rounded-md cursor-pointer border border-solid border-gray-100">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex-1 flex items-center">
             <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center mr-3">
-              {provider.name?.[0]?.toUpperCase()}
+              {provider.isGlobal ? (
+                <LuGlobe size={18} />
+              ) : (
+                <ProviderIcon provider={provider.name?.toLowerCase()} size={18} type={'color'} />
+              )}
             </div>
-            <div>
-              <div className="font-medium">{provider.name}</div>
-              <div className="text-sm text-gray-500">{provider.providerKey}</div>
-            </div>
-          </div>
 
-          <div className="flex items-center gap-2">
-            <ActionDropdown
-              provider={provider}
-              handleEdit={() => onSettingsClick({ ...provider, apiKey: 'default' })}
-              refetch={refetch}
-            />
-
-            <Tooltip
-              title={
-                provider.enabled
-                  ? t('settings.modelProviders.disable')
-                  : t('settings.modelProviders.enable')
-              }
-            >
-              <div onClick={handleSwitchWrapperClick} className="flex items-center">
-                <Switch
-                  size="small"
-                  checked={provider.enabled ?? false}
-                  onChange={handleToggleChange}
-                  loading={isSubmitting}
-                />
+            <div className="flex flex-col gap-1">
+              <div className="font-medium flex items-center gap-2">
+                <span>{provider.name}</span>
+                <span className="text-sm text-gray-400">{provider.providerKey.toUpperCase()}</span>
               </div>
-            </Tooltip>
+              <div>
+                {providerInfo?.categories.map((category) => (
+                  <Tag key={category} color="green" bordered={false}>
+                    {category}
+                  </Tag>
+                ))}
+              </div>
+            </div>
           </div>
+
+          {!provider.isGlobal && (
+            <div className="flex items-center gap-2">
+              <ActionDropdown
+                provider={provider}
+                handleEdit={() => onSettingsClick({ ...provider, apiKey: 'default' })}
+                refetch={refetch}
+              />
+
+              <Tooltip
+                title={
+                  provider.enabled
+                    ? t('settings.modelProviders.disable')
+                    : t('settings.modelProviders.enable')
+                }
+              >
+                <div onClick={handleSwitchWrapperClick} className="flex items-center">
+                  <Switch
+                    size="small"
+                    checked={provider.enabled ?? false}
+                    onChange={handleToggleChange}
+                    loading={isSubmitting}
+                  />
+                </div>
+              </Tooltip>
+            </div>
+          )}
         </div>
       </div>
     );

@@ -4,7 +4,6 @@ import { useState, useCallback, useMemo, useEffect, memo } from 'react';
 import { ProviderModal } from '../model-providers/provider-modal';
 import { useListProviders } from '@refly-packages/ai-workspace-common/queries';
 import { ProviderInfo, providerInfoList } from '@refly/utils';
-import { ModelCell, ActionCell } from './model-cell';
 import { useUserStoreShallow } from '@refly-packages/ai-workspace-common/stores/user';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 import { ProviderCategory, ProviderConfig, Provider } from '@refly/openapi-schema';
@@ -51,14 +50,6 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
 
   const [pdfParsingValue, setPdfParsingValue] = useState<string>(
     userProfile?.preferences?.pdfParsing?.providerId || DEFAULT_PROVIDERS.pdfParsing,
-  );
-
-  const [embedding, setEmbedding] = useState<ProviderConfig | null>(
-    userProfile?.preferences?.embedding || null,
-  );
-
-  const [reranker, setReranker] = useState<ProviderConfig | null>(
-    userProfile?.preferences?.reranker || null,
   );
 
   const { data, isLoading, refetch } = useListProviders({
@@ -108,12 +99,6 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
         break;
       case 'pdfParsing':
         setPdfParsingValue(provider?.providerId || DEFAULT_PROVIDERS.pdfParsing);
-        break;
-      case 'embedding':
-        setEmbedding(provider);
-        break;
-      case 'reranker':
-        setReranker(provider);
         break;
     }
   }, []);
@@ -266,74 +251,6 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
 
       <div className="flex-grow overflow-y-auto space-y-8">
         <div>
-          <Title level={5} className="pb-2 !font-medium">
-            {t('settings.parserConfig.modelConfig.title')}
-          </Title>
-
-          <div className="space-y-6">
-            <Table
-              tableLayout="fixed"
-              columns={[
-                {
-                  title: t('settings.parserConfig.modelConfig.modelType'),
-                  dataIndex: 'modelType',
-                  key: 'modelType',
-                  width: '25%',
-                },
-                {
-                  title: t('settings.parserConfig.modelConfig.modelId'),
-                  dataIndex: 'modelId',
-                  key: 'modelId',
-                  width: '60%',
-                  render: (_, record) => (
-                    <ModelCell
-                      modelValue={record.config}
-                      placeholder={record.placeholder}
-                      category={record.category as ProviderCategory}
-                    />
-                  ),
-                },
-                {
-                  title: t('common.action'),
-                  key: 'action',
-                  width: '15%',
-                  render: (_, record) => (
-                    <ActionCell
-                      modelValue={record.config}
-                      category={record.category as ProviderCategory}
-                      onSave={updateUserProfile}
-                    />
-                  ),
-                },
-              ]}
-              dataSource={[
-                {
-                  key: 'reranker',
-                  modelType: t('settings.parserConfig.modelConfig.reranker'),
-                  config: reranker,
-                  category: 'reranker',
-                  placeholder: t('settings.parserConfig.modelConfig.rerankerPlaceholder'),
-                },
-                {
-                  key: 'embedding',
-                  modelType: t('settings.parserConfig.modelConfig.embedding'),
-                  config: embedding,
-                  category: 'embedding',
-                  placeholder: t('settings.parserConfig.modelConfig.embeddingPlaceholder'),
-                },
-              ]}
-              pagination={false}
-              bordered
-              className="shadow-sm"
-            />
-          </div>
-        </div>
-
-        <div>
-          <Title level={5} className="pb-2 !font-medium">
-            {t('settings.tabs.parserConfig')}
-          </Title>
-
           <div className="space-y-6">
             <Table
               tableLayout="fixed"

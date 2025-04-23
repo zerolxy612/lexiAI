@@ -16,6 +16,7 @@ import {
   Typography,
   message,
   MenuProps,
+  Divider,
 } from 'antd';
 import { Spin } from '@refly-packages/ai-workspace-common/components/common/spin';
 import { LuPlus, LuSearch } from 'react-icons/lu';
@@ -28,6 +29,7 @@ import {
 import { ProviderItem } from '@refly/openapi-schema';
 import { ModelIcon } from '@lobehub/icons';
 import { ModelFormModal } from './model-form';
+import { useUserStoreShallow } from '@refly-packages/ai-workspace-common/stores/user';
 
 const { Title } = Typography;
 
@@ -133,7 +135,9 @@ const ModelItem = ({
         </div>
 
         <div className="flex items-center gap-2">
-          <ActionDropdown model={model} handleEdit={handleEdit} handleDelete={handleDelete} />
+          {!model?.provider?.isGlobal && (
+            <ActionDropdown model={model} handleEdit={handleEdit} handleDelete={handleDelete} />
+          )}
 
           <Tooltip
             title={
@@ -162,6 +166,36 @@ export const ModelConfig = () => {
       category: 'llm',
     },
   });
+  const { data: embeddingRes } = useListProviderItems({
+    query: {
+      category: 'embedding',
+      enabled: true,
+    },
+  });
+  const { data: rerankerRes } = useListProviderItems({
+    query: {
+      category: 'reranker',
+      enabled: true,
+    },
+  });
+  const { userProfile } = useUserStoreShallow((state) => ({
+    userProfile: state.userProfile,
+  }));
+
+  const embedding = useMemo(() => {
+    if (userProfile?.preferences?.embedding) {
+      return userProfile?.preferences?.embedding;
+    }
+    return embeddingRes?.data?.[0];
+  }, [embeddingRes, userProfile?.preferences?.embedding]);
+
+  const reranker = useMemo(() => {
+    if (userProfile?.preferences?.reranker) {
+      return userProfile?.preferences?.reranker;
+    }
+    return rerankerRes?.data?.[0];
+  }, [rerankerRes, userProfile?.preferences?.reranker]);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingModel, setEditingModel] = useState<ProviderItem | null>(null);
@@ -242,7 +276,7 @@ export const ModelConfig = () => {
   return (
     <div className="p-4 pt-0 h-full overflow-hidden flex flex-col">
       <Title level={4} className="pb-4">
-        {t('settings.tabs.modelConfig')}
+        {t('settings.modelConfig.chatModels')}
       </Title>
 
       {/* Search and Add Bar */}
@@ -268,7 +302,6 @@ export const ModelConfig = () => {
       {/* Models List */}
       <div
         className={cn(
-          'flex-1 overflow-auto',
           isLoading || filteredModels.length === 0 ? 'flex items-center justify-center' : '',
           filteredModels.length === 0 ? 'border-dashed border-gray-200 rounded-md' : '',
         )}
@@ -315,6 +348,42 @@ export const ModelConfig = () => {
             <div className="text-center text-gray-400 text-sm mt-4 pb-10">{t('common.noMore')}</div>
           </div>
         )}
+      </div>
+
+      <Divider />
+
+      <Title level={4} className="pb-4">
+        {t('settings.modelConfig.otherModels')}
+      </Title>
+
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-base font-medium">{t('settings.modelConfig.embedding')}</div>
+            <div className="text-xs text-gray-500">
+              {t('settings.modelConfig.embeddingDescription')}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 cursor-pointer">
+            <div className="text-sm text-gray-500">{embedding?.name}</div>
+            <IconEdit size={16} />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-base font-medium">{t('settings.modelConfig.reranker')}</div>
+            <div className="text-xs text-gray-500">
+              {t('settings.modelConfig.rerankerDescription')}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 cursor-pointer">
+            <div className="text-sm text-gray-500">{reranker?.name}</div>
+            <IconEdit size={16} />
+          </div>
+        </div>
       </div>
 
       {/* Modal for Create and Edit */}

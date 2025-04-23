@@ -771,9 +771,9 @@ model Provider {
   /// Whether the provider is global
   isGlobal    Boolean        @default(false) @map("is_global")
   /// UID
-  uid         String         @map("uid")
+  uid         String?        @map("uid")
   /// Provider API key
-  apiKey      String         @map("api_key")
+  apiKey      String?        @map("api_key")
   /// Provider base URL
   baseUrl     String?        @map("base_url")
   /// Whether the provider is enabled
@@ -804,7 +804,7 @@ model ProviderItem {
   /// Provider item name
   name       String    @map("name")
   /// UID
-  uid        String    @map("uid")
+  uid        String?   @map("uid")
   /// Whether the model item is enabled
   enabled    Boolean   @default(true) @map("enabled")
   /// Provider item config (JSON)
