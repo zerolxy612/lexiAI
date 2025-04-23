@@ -818,6 +818,7 @@ const translations = {
   },
   workspace: {
     addToCanvas: 'Add to Canvas',
+    noCanvasSelected: 'Please create or select a canvas',
     openWebpage: 'Open Original Webpage',
     downloadFile: 'Download File',
     canvasListModal: {

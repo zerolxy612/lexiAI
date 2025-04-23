@@ -647,6 +647,7 @@ const translations = {
   },
   workspace: {
     addToCanvas: '添加到画布',
+    noCanvasSelected: '请先创建或选择一个画布',
     openWebpage: '打开原网页',
     downloadFile: '下载文件',
     canvasListModal: {

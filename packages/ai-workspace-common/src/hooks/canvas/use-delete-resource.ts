@@ -2,13 +2,9 @@ import { useState } from 'react';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 import { useDebouncedCallback } from 'use-debounce';
 import { useSubscriptionUsage } from '../use-subscription-usage';
-import { useNodePreviewControl } from '@refly-packages/ai-workspace-common/hooks/canvas/use-node-preview-control';
-import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/canvas';
-
+import { nodeOperationsEmitter } from '@refly-packages/ai-workspace-common/events/nodeOperations';
 export const useDeleteResource = () => {
   const [isRemoving, setIsRemoving] = useState(false);
-  const { canvasId } = useCanvasContext();
-  const { closeNodePreviewByEntityId } = useNodePreviewControl({ canvasId });
 
   const { refetchUsage } = useSubscriptionUsage();
 
@@ -23,7 +19,9 @@ export const useDeleteResource = () => {
 
       if (data?.success) {
         success = true;
-        closeNodePreviewByEntityId(resourceId);
+        nodeOperationsEmitter.emit('closeNodePreviewByEntityId', {
+          entityId: resourceId,
+        });
       }
     } finally {
       setIsRemoving(false);

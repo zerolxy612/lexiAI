@@ -23,23 +23,23 @@ import { useTranslation } from 'react-i18next';
 import { useFetchDataList } from '@refly-packages/ai-workspace-common/hooks/use-fetch-data-list';
 import { Spin } from '@refly-packages/ai-workspace-common/components/common/spin';
 import { useSiderStoreShallow } from '@refly-packages/ai-workspace-common/stores/sider';
-import { useAddNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-node';
 import { useDeleteDocument } from '@refly-packages/ai-workspace-common/hooks/canvas/use-delete-document';
 import { Markdown } from '@refly-packages/ai-workspace-common/components/markdown';
 import { NODE_COLORS } from '@refly-packages/ai-workspace-common/components/canvas/nodes/shared/colors';
 import { LuPlus } from 'react-icons/lu';
-import { useCreateDocument } from '@refly-packages/ai-workspace-common/hooks/canvas/use-create-document';
-import { useMatch } from 'react-router-dom';
+import { useMatch, useParams } from 'react-router-dom';
+import { nodeOperationsEmitter } from '@refly-packages/ai-workspace-common/events/nodeOperations';
+import { useCreateDocumentPurely } from '@refly-packages/ai-workspace-common/hooks/canvas/use-create-document-purely';
 
 const ActionDropdown = ({ doc, afterDelete }: { doc: Document; afterDelete: () => void }) => {
   const { t } = useTranslation();
   const [popupVisible, setPopupVisible] = useState(false);
   const { deleteDocument } = useDeleteDocument();
-  const { addNode } = useAddNode();
   const { setShowLibraryModal } = useSiderStoreShallow((state) => ({
     setShowLibraryModal: state.setShowLibraryModal,
   }));
   const isShareCanvas = useMatch('/share/canvas/:canvasId');
+  const { canvasId } = useParams();
 
   const handleDelete = async () => {
     const success = await deleteDocument(doc.docId);
@@ -51,8 +51,8 @@ const ActionDropdown = ({ doc, afterDelete }: { doc: Document; afterDelete: () =
   };
 
   const handleAddToCanvas = () => {
-    addNode(
-      {
+    nodeOperationsEmitter.emit('addNode', {
+      node: {
         type: 'document',
         data: {
           title: doc.title,
@@ -60,10 +60,9 @@ const ActionDropdown = ({ doc, afterDelete }: { doc: Document; afterDelete: () =
           contentPreview: doc.contentPreview,
         },
       },
-      [],
-      true,
-      true,
-    );
+      shouldPreview: true,
+      needSetCenter: true,
+    });
     setShowLibraryModal(false);
   };
 
@@ -76,7 +75,13 @@ const ActionDropdown = ({ doc, afterDelete }: { doc: Document; afterDelete: () =
         </div>
       ),
       key: 'addToCanvas',
-      onClick: () => handleAddToCanvas(),
+      onClick: () => {
+        if (canvasId && canvasId !== 'empty') {
+          handleAddToCanvas();
+        } else {
+          message.error(t('canvas.action.noCanvasSelected'));
+        }
+      },
     },
     {
       label: (
@@ -154,10 +159,9 @@ const DocumentCard = ({ item, onDelete }: { item: Document; onDelete: () => void
 
 const DocumentList = () => {
   const { t } = useTranslation();
-  const { createSingleDocumentInCanvas } = useCreateDocument();
-  const { showLibraryModal, setShowLibraryModal } = useSiderStoreShallow((state) => ({
+  const { createDocument, isCreating } = useCreateDocumentPurely();
+  const { showLibraryModal } = useSiderStoreShallow((state) => ({
     showLibraryModal: state.showLibraryModal,
-    setShowLibraryModal: state.setShowLibraryModal,
   }));
 
   const { dataList, setDataList, loadMore, reload, hasMore, isRequesting } = useFetchDataList({
@@ -198,11 +202,11 @@ const DocumentList = () => {
     <div className="h-full flex items-center justify-center">
       <Empty description={t('common.empty')}>
         <Button
+          loading={isCreating}
           className="text-[#00968F]"
           icon={<IconCreateDocument className="-mr-1 flex items-center justify-center" />}
           onClick={() => {
-            createSingleDocumentInCanvas();
-            setShowLibraryModal(false);
+            createDocument(t('common.untitled'), '');
           }}
         >
           {t('canvas.toolbar.createDocument')}

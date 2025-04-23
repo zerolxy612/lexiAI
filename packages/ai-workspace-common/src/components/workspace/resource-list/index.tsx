@@ -23,7 +23,6 @@ import { useFetchDataList } from '@refly-packages/ai-workspace-common/hooks/use-
 import { Spin } from '@refly-packages/ai-workspace-common/components/common/spin';
 import { useSiderStoreShallow } from '@refly-packages/ai-workspace-common/stores/sider';
 import { Resource } from '@refly/openapi-schema';
-import { useAddNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-node';
 import { useSubscriptionUsage } from '@refly-packages/ai-workspace-common/hooks/use-subscription-usage';
 import { Markdown } from '@refly-packages/ai-workspace-common/components/markdown';
 import { useDeleteResource } from '@refly-packages/ai-workspace-common/hooks/canvas/use-delete-resource';
@@ -31,7 +30,8 @@ import { getClientOrigin } from '@refly/utils/url';
 import { useImportResourceStoreShallow } from '@refly-packages/ai-workspace-common/stores/import-resource';
 import { useDownloadFile } from '@refly-packages/ai-workspace-common/hooks/use-download-file';
 import { ResourceIcon } from '@refly-packages/ai-workspace-common/components/common/resourceIcon';
-import { useMatch } from 'react-router-dom';
+import { useMatch, useParams } from 'react-router-dom';
+import { nodeOperationsEmitter } from '@refly-packages/ai-workspace-common/events/nodeOperations';
 
 const ActionDropdown = ({
   resource,
@@ -40,14 +40,13 @@ const ActionDropdown = ({
   const { t } = useTranslation();
   const [popupVisible, setPopupVisible] = useState(false);
   const { refetchUsage } = useSubscriptionUsage();
-  const { addNode } = useAddNode();
   const { setShowLibraryModal } = useSiderStoreShallow((state) => ({
     setShowLibraryModal: state.setShowLibraryModal,
   }));
   const { deleteResource } = useDeleteResource();
   const { downloadFile } = useDownloadFile();
   const isShareCanvas = useMatch('/share/canvas/:canvasId');
-
+  const { canvasId } = useParams();
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     deleteResource(resource.resourceId).then((success) => {
@@ -62,21 +61,24 @@ const ActionDropdown = ({
 
   const handleAddToCanvas: MenuProps['onClick'] = ({ domEvent }) => {
     domEvent.stopPropagation();
-    addNode(
-      {
-        type: 'resource',
-        data: {
-          title: resource.title,
-          entityId: resource.resourceId,
-          contentPreview: resource.contentPreview,
+    if (canvasId && canvasId !== 'empty') {
+      nodeOperationsEmitter.emit('addNode', {
+        node: {
+          type: 'resource',
+          data: {
+            title: resource.title,
+            entityId: resource.resourceId,
+            contentPreview: resource.contentPreview,
+          },
         },
-      },
-      [],
-      true,
-      true,
-    );
-    setShowLibraryModal(false);
-    setPopupVisible(false);
+        shouldPreview: true,
+        needSetCenter: true,
+      });
+      setShowLibraryModal(false);
+      setPopupVisible(false);
+    } else {
+      message.error(t('workspace.noCanvasSelected'));
+    }
   };
 
   const handleOpenWebpage: MenuProps['onClick'] = ({ domEvent }) => {
