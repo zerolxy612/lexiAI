@@ -21,9 +21,9 @@ import { CanvasNode } from '@refly-packages/ai-workspace-common/components/canva
 import { adoptUserNodes } from '@xyflow/system';
 
 // Define the maximum number of nodes allowed in a canvas
-const MAX_NODES_PER_CANVAS = 100;
-// Define the threshold at which to show warning (e.g., 90% of max)
-const WARNING_THRESHOLD = 0.9;
+const MAX_NODES_PER_CANVAS = 500;
+// Define the threshold at which to show warning (e.g., 98% of max)
+const WARNING_THRESHOLD = 0.98;
 
 const deduplicateNodes = (nodes: any[]) => {
   const uniqueNodesMap = new Map();
