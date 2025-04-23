@@ -196,9 +196,10 @@ const translations = {
       },
       nodeBlock: {
         untitledNode: 'Untitled Node',
-        confirmDelete: 'Confirm Delete Node',
-        confirmDeleteContent: 'Are you sure you want to delete node? This action cannot be undone.',
-        deleteNode: 'Delete Node',
+        confirmDelete: 'Remove Node',
+        confirmDeleteContent:
+          'Are you sure you want to remove this node? This action cannot be undone.',
+        deleteNode: 'Remove Node',
         wideModeView: 'Wide Mode View',
         slideshowPreview: 'Slideshow Preview',
       },
