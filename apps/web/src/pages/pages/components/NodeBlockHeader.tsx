@@ -1,5 +1,5 @@
 import React, { memo, useCallback } from 'react';
-import { Button, Dropdown, Modal } from 'antd';
+import { Button, Dropdown, Popconfirm } from 'antd';
 import type { MenuProps } from 'antd';
 import {
   MoreHorizontal,
@@ -88,34 +88,26 @@ export const NodeBlockHeader: React.FC<NodeBlockHeaderProps> = memo(
       console.log('Title updated:', newTitle);
     }, []);
 
-    // Handle node deletion
-    const handleDeleteNode = useCallback(() => {
-      if (!onDelete) return;
-
-      Modal.confirm({
-        title: t('pages.components.nodeBlock.confirmDelete'),
-        content: t('pages.components.nodeBlock.confirmDeleteContent', { title }),
-        okText: t('common.delete'),
-        okType: 'danger',
-        cancelText: t('common.cancel'),
-        onOk: () => {
-          onDelete(node.nodeId);
-        },
-      });
-    }, [node.nodeId, onDelete, title, t]);
-
     // Define dropdown menu items
     const menuItems: MenuProps['items'] = onDelete
       ? [
           {
             key: 'delete',
             label: (
-              <div className="flex items-center gap-2 text-red-600 whitespace-nowrap">
-                <Trash2 className="w-4 h-4 flex-shrink-0" />
-                <span>{t('pages.components.nodeBlock.deleteNode')}</span>
-              </div>
+              <Popconfirm
+                title={t('pages.components.nodeBlock.confirmDelete')}
+                description={t('pages.components.nodeBlock.confirmDeleteContent')}
+                onConfirm={() => onDelete(node.nodeId)}
+                okText={t('common.confirm')}
+                cancelText={t('common.cancel')}
+                okButtonProps={{ danger: true }}
+              >
+                <div className="flex items-center gap-2 text-red-600 whitespace-nowrap">
+                  <Trash2 className="w-4 h-4 flex-shrink-0" />
+                  <span>{t('pages.components.nodeBlock.deleteNode')}</span>
+                </div>
+              </Popconfirm>
             ),
-            onClick: handleDeleteNode,
           },
         ]
       : [];
