@@ -21,7 +21,7 @@ export const ActionButtons: FC<ActionButtonsProps> = memo(
     const lastZoom = useRef<number | null>(null);
     const { getZoom } = useReactFlow();
 
-    const SAFETY_MARGIN = 20;
+    const SAFETY_MARGIN = 5;
 
     const shouldShowMenu = isNodeHovered || isMenuHovered || isHoverCardOpen;
 
@@ -85,6 +85,14 @@ export const ActionButtons: FC<ActionButtonsProps> = memo(
 
         const menuRect = menuEl.getBoundingClientRect();
         const viewportHeight = window.innerHeight;
+
+        // If menu height exceeds available viewport space (with safety margins),
+        // align menu with top of viewport and skip regular adjustment
+        if (menuRect.height > viewportHeight - 2 * SAFETY_MARGIN) {
+          setMenuPosition({ top: 0 });
+          setShouldAdjustPosition(false);
+          return;
+        }
 
         // Check obstructions
         const isTopObstructed = menuRect.top < SAFETY_MARGIN;
