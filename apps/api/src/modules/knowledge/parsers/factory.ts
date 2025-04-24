@@ -7,36 +7,47 @@ import { MarkerParser } from './marker.parser';
 import { JinaParser } from './jina.parser';
 import { PlainTextParser } from '../../knowledge/parsers/plain-text.parser';
 import { PdfjsParser } from '../../knowledge/parsers/pdfjs.parser';
+import { User } from '@refly/openapi-schema';
+import { CheerioParser } from '@/modules/knowledge/parsers/cheerio.parser';
+import { ProviderService } from '@/modules/provider/provider.service';
 
 @Injectable()
 export class ParserFactory {
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    private readonly providerService: ProviderService,
+  ) {}
 
-  createParser(
-    type: 'pandoc' | 'marker' | 'jina' | 'plain-text',
-    options?: ParserOptions,
-  ): BaseParser {
+  /**
+   * Create a web parser
+   * @param user - The user to create the parser for
+   * @param options - The options to create the parser with
+   * @returns A promise that resolves to the created parser
+   */
+  async createWebParser(user: User, options?: ParserOptions): Promise<BaseParser> {
+    const provider = await this.providerService.findProviderByCategory(user, 'urlParsing');
     const mockMode = this.config.get('env') === 'test';
-
-    switch (type) {
-      case 'pandoc':
-        return new PandocParser({ mockMode, ...options });
-      case 'marker':
-        return new MarkerParser({ mockMode, ...options });
+    switch (provider?.providerKey) {
       case 'jina':
-        return new JinaParser({
-          mockMode,
-          ...options,
-          apiKey: this.config.get('credentials.jina'),
-        });
-      case 'plain-text':
-        return new PlainTextParser({ mockMode, ...options });
+        return new JinaParser({ mockMode, apiKey: provider.apiKey, ...options });
       default:
-        throw new Error(`Unknown parser type: ${type}`);
+        // Fallback to builtin cheerio parser
+        return new CheerioParser({ mockMode, ...options });
     }
   }
 
-  createParserByContentType(contentType: string, options?: ParserOptions): BaseParser {
+  /**
+   * Create a document parser
+   * @param user - The user to create the parser for
+   * @param contentType - The content type of the document
+   * @param options - The options to create the parser with
+   * @returns A promise that resolves to the created parser
+   */
+  async createDocumentParser(
+    user: User,
+    contentType: string,
+    options?: ParserOptions,
+  ): Promise<BaseParser> {
     // You can refer to common MIME types here:
     // https://developer.mozilla.org/en-US/docs/Web/HTTP/MIME_types/Common_types
     switch (contentType) {
@@ -45,14 +56,16 @@ export class ParserFactory {
         return new PlainTextParser(options);
       case 'text/html':
         return new PandocParser({ format: 'html', ...options });
-      case 'application/pdf':
-        if (this.config.get('parser.pdf') === 'marker') {
+      case 'application/pdf': {
+        const provider = await this.providerService.findProviderByCategory(user, 'pdfParsing');
+        if (provider?.providerKey === 'marker') {
           return new MarkerParser({
             ...options,
-            apiKey: this.config.get('credentials.marker'),
+            apiKey: provider.apiKey,
           });
         }
         return new PdfjsParser(options);
+      }
       case 'application/epub+zip':
         return new PandocParser({ format: 'epub', ...options });
       case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':

@@ -3198,6 +3198,14 @@ export type WebSearchRequest = {
    */
   hl?: string;
   /**
+   * Country/region code
+   */
+  gl?: string;
+  /**
+   * Location string
+   */
+  location?: string;
+  /**
    * Web search result limit
    */
   limit?: number;
@@ -3630,13 +3638,9 @@ export type LLMModelConfig = {
  */
 export type EmbeddingModelConfig = {
   /**
-   * Embedding model ID
+   * Embedding model
    */
-  modelId?: string;
-  /**
-   * Embedding model name
-   */
-  modelName?: string;
+  model: string;
   /**
    * Embedding model batch size
    */
@@ -3651,7 +3655,25 @@ export type EmbeddingModelConfig = {
   dimensions?: number;
 };
 
-export type ProviderItemConfig = LLMModelConfig | EmbeddingModelConfig;
+/**
+ * Provider config for rerankers
+ */
+export type RerankerModelConfig = {
+  /**
+   * Reranking model
+   */
+  model: string;
+  /**
+   * Number of top results to return
+   */
+  topN?: number;
+  /**
+   * Minimum relevance score threshold (0.0-1.0)
+   */
+  relevanceThreshold?: number;
+};
+
+export type ProviderItemConfig = LLMModelConfig | EmbeddingModelConfig | RerankerModelConfig;
 
 export type ProviderItem = {
   /**

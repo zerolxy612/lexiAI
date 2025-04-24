@@ -133,7 +133,7 @@ export class SkillService {
     private collabService: CollabService,
     private misc: MiscService,
     private codeArtifact: CodeArtifactService,
-    private provider: ProviderService,
+    private providerService: ProviderService,
     @InjectQueue(QUEUE_SKILL) private skillQueue: Queue<InvokeSkillJobData>,
     @InjectQueue(QUEUE_SKILL_TIMEOUT_CHECK)
     private timeoutCheckQueue: Queue<SkillTimeoutCheckJobData>,
@@ -225,10 +225,10 @@ export class SkillService {
         const result = await this.rag.inMemorySearchWithIndexing(user, options);
         return buildSuccessResponse(result);
       },
-      crawlUrl: async (_user, url) => {
+      crawlUrl: async (user, url) => {
         try {
-          const parserFactory = new ParserFactory(this.config);
-          const jinaParser = parserFactory.createParser('jina', {
+          const parserFactory = new ParserFactory(this.config, this.providerService);
+          const jinaParser = await parserFactory.createWebParser(user, {
             resourceId: `temp-${Date.now()}`,
           });
 
@@ -425,7 +425,7 @@ export class SkillService {
     param.modelName ||= defaultModel?.name;
 
     const modelItemId = param.modelItemId;
-    const providerItem = await this.provider.findProviderItemById(user, modelItemId);
+    const providerItem = await this.providerService.findProviderItemById(user, modelItemId);
 
     if (!providerItem || providerItem.category !== 'llm' || !providerItem.enabled) {
       throw new ProviderItemNotFoundError(`provider item ${modelItemId} not valid`);

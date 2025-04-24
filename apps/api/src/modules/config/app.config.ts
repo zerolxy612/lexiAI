@@ -103,14 +103,6 @@ export default () => ({
       callbackUrl: process.env.GOOGLE_CALLBACK_URL || 'test',
     },
   },
-  parser: {
-    pdf: process.env.PARSER_PDF || 'pdfjs',
-  },
-  reranker: {
-    topN: Number.parseInt(process.env.RERANKER_TOP_N) || 10,
-    model: process.env.RERANKER_MODEL || 'jina-reranker-v2-base-multilingual',
-    relevanceThreshold: Number.parseFloat(process.env.RERANKER_RELEVANCE_THRESHOLD) || 0.5,
-  },
   skill: {
     idleTimeout: Number.parseInt(process.env.SKILL_IDLE_TIMEOUT) || 1000 * 60, // 1 minute
     executionTimeout: Number.parseInt(process.env.SKILL_EXECUTION_TIMEOUT) || 1000 * 60 * 3, // 3 minutes
@@ -142,12 +134,5 @@ export default () => ({
     fileParse: {
       page: Number.parseInt(process.env.QUOTA_FILE_PARSE_PAGE) || -1,
     },
-  },
-  credentials: {
-    openai: process.env.OPENAI_API_KEY,
-    jina: process.env.JINA_API_KEY,
-    fireworks: process.env.FIREWORKS_API_KEY,
-    serper: process.env.SERPER_API_KEY,
-    marker: process.env.MARKER_API_KEY,
   },
 });

@@ -68,7 +68,6 @@
     "cookie-parser": "~1.4.6",
     "express": "~4.19.2",
     "get-port": "^5.1.1",
-    "hbs": "^4.2.0",
     "helmet": "^7.1.0",
     "ioredis": "^5.4.1",
     "json-parse-even-better-errors": "^4.0.0",

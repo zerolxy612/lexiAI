@@ -3198,6 +3198,14 @@ export type WebSearchRequest = {
    */
   hl?: string;
   /**
+   * Country/region code
+   */
+  gl?: string;
+  /**
+   * Location string
+   */
+  location?: string;
+  /**
    * Web search result limit
    */
   limit?: number;

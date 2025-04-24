@@ -4492,6 +4492,14 @@ export const WebSearchRequestSchema = {
       type: 'string',
       description: 'Language/locale code',
     },
+    gl: {
+      type: 'string',
+      description: 'Country/region code',
+    },
+    location: {
+      type: 'string',
+      description: 'Location string',
+    },
     limit: {
       type: 'number',
       description: 'Web search result limit',
