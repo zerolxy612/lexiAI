@@ -6,6 +6,7 @@ import {
   ProviderCategory,
   ModelInfo,
   LLMModelConfig,
+  ModelTier,
 } from '@refly/openapi-schema';
 
 export const providerPO2DTO = (provider: ProviderModel): Provider => {
@@ -37,7 +38,7 @@ export const providerItem2ModelInfo = (
     name: config.modelId,
     label: config.modelName,
     provider: providerItem.provider?.name ?? '',
-    // tier: config.tier as ModelTier,
+    tier: providerItem.tier as ModelTier,
     contextLimit: config.contextLimit ?? 0,
     maxOutput: config?.maxOutput ?? 0,
     capabilities: config?.capabilities ?? {},

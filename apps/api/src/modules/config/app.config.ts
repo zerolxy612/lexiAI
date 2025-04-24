@@ -106,12 +106,6 @@ export default () => ({
   parser: {
     pdf: process.env.PARSER_PDF || 'pdfjs',
   },
-  embeddings: {
-    provider: process.env.EMBEDDINGS_PROVIDER || 'jina',
-    modelName: process.env.EMBEDDINGS_MODEL_NAME || 'jina-embeddings-v3',
-    dimensions: Number.parseInt(process.env.EMBEDDINGS_DIMENSIONS) || 768,
-    batchSize: Number.parseInt(process.env.EMBEDDINGS_BATCH_SIZE) || 512,
-  },
   reranker: {
     topN: Number.parseInt(process.env.RERANKER_TOP_N) || 10,
     model: process.env.RERANKER_MODEL || 'jina-reranker-v2-base-multilingual',

@@ -5111,14 +5111,11 @@ export const LLMModelConfigSchema = {
 export const EmbeddingModelConfigSchema = {
   type: 'object',
   description: 'Provider config for embeddings',
+  required: ['model'],
   properties: {
-    modelId: {
+    model: {
       type: 'string',
-      description: 'Embedding model ID',
-    },
-    modelName: {
-      type: 'string',
-      description: 'Embedding model name',
+      description: 'Embedding model',
     },
     batchSize: {
       type: 'number',
@@ -5135,6 +5132,26 @@ export const EmbeddingModelConfigSchema = {
   },
 } as const;
 
+export const RerankerModelConfigSchema = {
+  type: 'object',
+  description: 'Provider config for rerankers',
+  required: ['model'],
+  properties: {
+    model: {
+      type: 'string',
+      description: 'Reranking model',
+    },
+    topN: {
+      type: 'number',
+      description: 'Number of top results to return',
+    },
+    relevanceThreshold: {
+      type: 'number',
+      description: 'Minimum relevance score threshold (0.0-1.0)',
+    },
+  },
+} as const;
+
 export const ProviderItemConfigSchema = {
   oneOf: [
     {
@@ -5142,6 +5159,9 @@ export const ProviderItemConfigSchema = {
     },
     {
       $ref: '#/components/schemas/EmbeddingModelConfig',
+    },
+    {
+      $ref: '#/components/schemas/RerankerModelConfig',
     },
   ],
 } as const;

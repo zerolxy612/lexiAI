@@ -5,18 +5,20 @@ import {
   DeleteProviderRequest,
   ListProviderItemsData,
   ListProvidersData,
+  ProviderCategory,
   UpsertProviderItemRequest,
   UpsertProviderRequest,
   User,
+  UserPreferences,
 } from '@refly/openapi-schema';
 import { Provider, ProviderItem } from '@/generated/client';
-import { genProviderItemID, genProviderID } from '@refly/utils';
+import { genProviderItemID, genProviderID, providerInfoList } from '@refly/utils';
 import { ProviderNotFoundError, ProviderItemNotFoundError, ParamsError } from '@refly/errors';
 import { SingleFlightCache } from '@/utils/cache';
 
 interface GlobalProviderConfig {
   providers: Provider[];
-  items: ProviderItem[];
+  items: (ProviderItem & { provider: Provider })[];
 }
 
 @Injectable()
@@ -200,7 +202,7 @@ export class ProviderService {
     return [...userItems, ...uniqueGlobalItems];
   }
 
-  async findProviderItem(user: User, itemId: string) {
+  async findProviderItemById(user: User, itemId: string) {
     const item = await this.prisma.providerItem.findUnique({
       where: { itemId, uid: user.uid, deletedAt: null },
       include: {
@@ -213,6 +215,68 @@ export class ProviderService {
     }
 
     return item;
+  }
+
+  async findProviderItemByCategory(user: User, category: ProviderCategory) {
+    // Prioritize user configured provider item
+    const item = await this.prisma.providerItem.findFirst({
+      where: { uid: user.uid, category, deletedAt: null },
+      include: {
+        provider: true,
+      },
+    });
+
+    if (item) {
+      return item;
+    }
+
+    // Fallback to global provider item
+    const { items: globalItems } = await this.globalProviderCache.get();
+    const globalItem = globalItems.find((item) => item.category === category);
+
+    if (globalItem) {
+      return globalItem;
+    }
+
+    return null;
+  }
+
+  async findProviderByCategory(user: User, category: ProviderCategory) {
+    const { preferences } = await this.prisma.user.findUnique({
+      where: { uid: user.uid },
+      select: {
+        preferences: true,
+      },
+    });
+    const userPreferences: UserPreferences = JSON.parse(preferences || '{}');
+
+    let providerId: string | null = null;
+    if (category === 'webSearch' && userPreferences.webSearch) {
+      providerId = userPreferences.webSearch?.providerId;
+    } else if (category === 'urlParsing' && userPreferences.urlParsing) {
+      providerId = userPreferences.urlParsing?.providerId;
+    } else if (category === 'pdfParsing' && userPreferences.pdfParsing) {
+      providerId = userPreferences.pdfParsing?.providerId;
+    }
+
+    if (providerId) {
+      return this.prisma.provider.findUnique({
+        where: { providerId, uid: user.uid, deletedAt: null },
+      });
+    }
+
+    const { providers: globalProviders } = await this.globalProviderCache.get();
+    const validProviderKeys = providerInfoList
+      .filter((info) => info.categories.includes(category))
+      .map((info) => info.key);
+    const globalProvider = globalProviders.find((provider) =>
+      validProviderKeys.includes(provider.providerKey),
+    );
+    if (globalProvider) {
+      return globalProvider;
+    }
+
+    return null;
   }
 
   async createProviderItem(user: User, param: UpsertProviderItemRequest) {
@@ -250,7 +314,7 @@ export class ProviderService {
   }
 
   async updateProviderItem(user: User, param: UpsertProviderItemRequest) {
-    const { itemId, name, enabled, config } = param;
+    const { itemId, name, enabled, config, providerId } = param;
 
     if (!itemId) {
       throw new ParamsError('Item ID is required');
@@ -275,6 +339,7 @@ export class ProviderService {
       data: {
         name,
         enabled,
+        providerId,
         ...(config ? { config: JSON.stringify(config) } : {}),
       },
     });

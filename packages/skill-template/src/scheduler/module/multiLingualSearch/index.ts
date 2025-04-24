@@ -307,10 +307,15 @@ export const callMultiLingualWebSearch = async (
         const searchResults = sourcesToSearchResults(finalResults);
 
         // Perform reranking
-        const rerankResponse = await engine.service.rerank(query, searchResults, {
-          topN: rerankLimit || searchResults.length,
-          relevanceThreshold: rerankRelevanceThreshold,
-        });
+        const rerankResponse = await engine.service.rerank(
+          config.configurable.user,
+          query,
+          searchResults,
+          {
+            topN: rerankLimit || searchResults.length,
+            relevanceThreshold: rerankRelevanceThreshold,
+          },
+        );
 
         // Convert back to Source format
         if (rerankResponse?.data) {

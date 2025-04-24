@@ -526,7 +526,7 @@ export class SearchService {
 
     if (options?.enableReranker) {
       this.logger.log(`Reranker enabled for query: ${req.query}`);
-      const rerankedResults = await this.rag.rerank(req.query, results.flat());
+      const rerankedResults = await this.rag.rerank(user, req.query, results.flat());
       this.logger.log(`Reranked results: ${JSON.stringify(rerankedResults)}`);
 
       return rerankedResults;
@@ -598,7 +598,7 @@ export class SearchService {
         try {
           const rerankResults = sourcesToSearchResults(finalResults);
 
-          const rerankResponse = await this.rag.rerank(query, rerankResults, {
+          const rerankResponse = await this.rag.rerank(user, query, rerankResults, {
             topN: rerankLimit || rerankResults.length,
             relevanceThreshold: rerankRelevanceThreshold,
           });

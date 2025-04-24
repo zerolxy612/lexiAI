@@ -99,6 +99,7 @@ export interface ReflyService {
   ) => Promise<WebSearchResponse>;
   search: (user: User, req: SearchRequest, options?: SearchOptions) => Promise<SearchResponse>;
   rerank: (
+    user: User,
     query: string,
     results: SearchResult[],
     options?: { topN?: number; relevanceThreshold?: number },

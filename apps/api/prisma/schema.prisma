@@ -809,6 +809,8 @@ model ProviderItem {
   enabled    Boolean   @default(true) @map("enabled")
   /// Provider item config (JSON)
   config     String?   @map("config")
+  /// Provider item billing tier
+  tier       String?   @map("tier")
   /// Create timestamp
   createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz()
   /// Update timestamp

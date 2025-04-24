@@ -816,7 +816,7 @@ export class SubscriptionService implements OnModuleInit {
   async syncRequestUsage(data: SyncRequestUsageJobData) {
     const { uid, tier } = data;
 
-    if (tier === 'free') {
+    if (!tier || tier === 'free') {
       return;
     }
 

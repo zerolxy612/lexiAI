@@ -80,6 +80,7 @@ import { labelClassPO2DTO, labelPO2DTO } from '../label/label.dto';
 import { SyncRequestUsageJobData, SyncTokenUsageJobData } from '../subscription/subscription.dto';
 import { SubscriptionService } from '../subscription/subscription.service';
 import {
+  ModelUsageQuotaExceeded,
   ParamsError,
   ProjectNotFoundError,
   ProviderItemNotFoundError,
@@ -204,8 +205,8 @@ export class SkillService {
         const result = await this.search.webSearch(user, req);
         return buildSuccessResponse(result);
       },
-      rerank: async (query, results, options) => {
-        const result = await this.rag.rerank(query, results, options);
+      rerank: async (user, query, results, options) => {
+        const result = await this.rag.rerank(user, query, results, options);
         return buildSuccessResponse(result);
       },
       search: async (user, req, options) => {
@@ -423,23 +424,25 @@ export class SkillService {
     const defaultModel = await this.subscription.getDefaultModel();
     param.modelName ||= defaultModel?.name;
 
-    // Check for usage quota
-    // const usageResult = await this.subscription.checkRequestUsage(user);
-
     const modelItemId = param.modelItemId;
-    const providerItem = await this.provider.findProviderItem(user, modelItemId);
+    const providerItem = await this.provider.findProviderItemById(user, modelItemId);
 
     if (!providerItem || providerItem.category !== 'llm' || !providerItem.enabled) {
       throw new ProviderItemNotFoundError(`provider item ${modelItemId} not valid`);
     }
 
-    const modelInfo = providerItem2ModelInfo(providerItem);
+    if (providerItem.provider.isGlobal && providerItem.tier) {
+      // Check for usage quota
+      const usageResult = await this.subscription.checkRequestUsage(user);
 
-    // if (!usageResult[modelInfo.tier]) {
-    //   throw new ModelUsageQuotaExceeded(
-    //     `model ${modelInfo.name} (${modelInfo.tier}) not available for current plan`,
-    //   );
-    // }
+      if (!usageResult[providerItem.tier]) {
+        throw new ModelUsageQuotaExceeded(
+          `model ${providerItem.name} (${providerItem.tier}) not available for current plan`,
+        );
+      }
+    }
+
+    const modelInfo = providerItem2ModelInfo(providerItem);
 
     if (param.context) {
       param.context = await this.populateSkillContext(user, param.context);
@@ -864,11 +867,13 @@ export class SkillService {
       input.images = await this.misc.generateImageUrls(user, input.images);
     }
 
-    await this.requestUsageQueue.add('syncRequestUsage', {
-      uid: user.uid,
-      tier,
-      timestamp: new Date(),
-    });
+    if (tier) {
+      await this.requestUsageQueue.add('syncRequestUsage', {
+        uid: user.uid,
+        tier,
+        timestamp: new Date(),
+      });
+    }
 
     let aborted = false;
 
@@ -1187,11 +1192,13 @@ export class SkillService {
         }
       }
 
-      await this.requestUsageQueue.add('syncRequestUsage', {
-        uid: user.uid,
-        tier,
-        timestamp: new Date(),
-      });
+      if (tier) {
+        await this.requestUsageQueue.add('syncRequestUsage', {
+          uid: user.uid,
+          tier,
+          timestamp: new Date(),
+        });
+      }
     }
   }
 
