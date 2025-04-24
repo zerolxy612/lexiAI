@@ -1,39 +1,31 @@
 import { Injectable } from '@nestjs/common';
+import { SearxngClient, searxng } from '@agentic/searxng';
 import { WebSearchRequest, WebSearchResult, BatchWebSearchRequest } from '@refly/openapi-schema';
-import { BaseWebSearcher } from './base';
-
-/**
- * Response interface for SearXNG API
- */
-interface SearXNGSearchResult {
-  url: string;
-  title: string;
-  content: string;
-  engine?: string;
-  parsed_url?: string[];
-  engines?: string[];
-  positions?: number[];
-  score?: number;
-  category?: string;
-  pretty_url?: string;
-  img_src?: string;
-}
+import { BaseWebSearcher, WebSearchConfig } from './base';
 
 /**
  * SearXNG API implementation of the web searcher
  */
 @Injectable()
 export class SearXNGWebSearcher extends BaseWebSearcher {
-  private readonly baseUrl: string;
+  private readonly client: SearxngClient;
 
-  constructor(config: { apiUrl: string } & Partial<any>) {
+  // Default engines to use if none specified
+  private readonly defaultEngines: searxng.SearchEngine[] = [
+    'google',
+    'brave',
+    'bing',
+    'duckduckgo',
+  ];
+
+  // Default categories to use if none specified
+  private readonly defaultCategories: searxng.SearchCategory[] = ['general'];
+
+  constructor(config?: WebSearchConfig) {
     super(config);
 
-    if (!config.apiUrl) {
-      throw new Error('SearXNG API URL must be provided');
-    }
-
-    this.baseUrl = config.apiUrl;
+    const apiUrl = config?.apiUrl || process.env.SEARXNG_API_URL || 'http://localhost:8080/';
+    this.client = new SearxngClient({ apiBaseUrl: apiUrl });
   }
 
   /**
@@ -74,108 +66,70 @@ export class SearXNGWebSearcher extends BaseWebSearcher {
    * @returns Processed web search results
    */
   private async executeSearXNGQuery(query: WebSearchRequest): Promise<WebSearchResult[]> {
-    const params = new URLSearchParams();
+    const { q, limit = this.config.defaultLimit, hl = this.config.defaultLocale } = query;
 
-    // Required parameter
-    params.append('q', query.q);
+    // Prepare search options for SearxngClient
+    const searchOptions: searxng.SearchOptions = {
+      query: q,
+      language: hl,
+      // Add pagination support - SearxNG defaults to 10 results per page
+      // Calculate pageno based on limit
+      pageno: Math.ceil(limit / 10) || 1,
+      // Use default engines and categories if not specified in config
+      engines: this.defaultEngines,
+      categories: this.defaultCategories,
+    };
 
-    // Optional parameters
-    params.append('format', 'json');
+    // Use the client to perform the search
+    const response = await this.client.search(searchOptions);
 
-    if (query.limit || this.config.defaultLimit) {
-      // SearXNG doesn't have direct limit parameter, but we can control pages
-      // We'll fetch one page and filter later
-      params.append('pageno', '1');
-    }
-
-    if (query.hl || this.config.defaultLocale) {
-      params.append('language', query.hl || this.config.defaultLocale);
-    }
-
-    // Time range support if needed
-    // params.append('time_range', 'day|week|month|year');
-
-    // Safety filters if needed
-    // params.append('safesearch', '0|1|2');
-
-    const searchUrl = `${this.baseUrl}search?${params.toString()}`;
-
-    const response = await fetch(searchUrl, {
-      method: 'GET',
-      headers: {
-        Accept: 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`SearXNG API returned ${response.status}: ${await response.text()}`);
-    }
-
-    const data = await response.json();
-    return this.parseSearchResults(
-      data,
-      query.hl || this.config.defaultLocale,
-      query.limit || this.config.defaultLimit,
-    );
+    return this.parseSearchResults(response, hl, limit);
   }
 
   /**
    * Parse search results from SearXNG API
    *
-   * @param data The JSON response from SearXNG API
+   * @param data The response from SearxngClient search
    * @param locale The locale used for the search
    * @param limit The maximum number of results to return
    * @returns Processed web search results
    */
   private parseSearchResults(
-    data: SearXNGSearchResult,
+    data: searxng.SearchResponse,
     locale: string,
     limit: number,
   ): WebSearchResult[] {
     const results: WebSearchResult[] = [];
 
-    if (data?.results?.length) {
-      for (const result of data.results) {
-        if (results.length >= limit) break;
+    // Check if results array exists and has items
+    if (data?.results?.length > 0) {
+      // Process only up to the limit
+      const resultsToProcess = data.results.slice(0, limit);
 
+      for (const result of resultsToProcess) {
         // Skip results without required fields
         if (!result?.url || !result?.title) continue;
 
-        results.push({
+        // Create a properly typed WebSearchResult object
+        const webResult: WebSearchResult = {
           name: result.title,
           url: result.url,
           snippet: result.content || '',
           locale,
-        });
+        };
+
+        results.push(webResult);
       }
     }
 
-    // Also add answer if available
-    if (data?.answers?.length) {
-      for (const answer of data.answers) {
-        if (results.length >= limit) break;
-
-        results.push({
-          name: 'SearXNG Answer',
-          url: answer.url || '',
-          snippet: answer.content || answer.answer || '',
-          locale,
-        });
-      }
-    }
-
-    // Add infoboxes if available
-    if (data?.infoboxes?.length) {
-      for (const infobox of data.infoboxes) {
-        if (results.length >= limit) break;
-
-        results.push({
-          name: infobox.title || 'Information',
-          url: infobox.url || '',
-          snippet: infobox.content || '',
-          locale,
-        });
-      }
+    // Include any search suggestions if there's space
+    if (data?.suggestions?.length > 0 && results.length < limit) {
+      results.push({
+        name: 'Related Searches',
+        url: '',
+        snippet: data.suggestions.join(', '),
+        locale,
+      });
     }
 
     return results;

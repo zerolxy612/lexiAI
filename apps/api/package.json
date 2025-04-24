@@ -25,6 +25,7 @@
     "sentry:sourcemaps": "sentry-cli sourcemaps inject --org refly-ai --project reflyd ./dist && sentry-cli sourcemaps upload --org refly-ai --project reflyd ./dist"
   },
   "dependencies": {
+    "@agentic/searxng": "^7.6.4",
     "@elastic/elasticsearch": "7.17.14",
     "@golevelup/nestjs-stripe": "~0.8.2",
     "@hocuspocus/extension-database": "~2.15.0",

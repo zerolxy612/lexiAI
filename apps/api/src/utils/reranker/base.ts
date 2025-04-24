@@ -16,7 +16,7 @@ export abstract class BaseReranker {
   protected logger: Logger;
   protected config: Partial<RerankerConfig>;
 
-  constructor(config: Partial<RerankerConfig>) {
+  constructor(config?: Partial<RerankerConfig>) {
     this.logger = new Logger(this.constructor.name);
     this.config = { ...config };
   }

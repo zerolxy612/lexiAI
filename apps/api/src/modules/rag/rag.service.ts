@@ -112,7 +112,7 @@ export class RAGService {
 
     // Rerankers are optional, so return null if no provider item is found
     if (!providerItem) {
-      return new FallbackReranker({});
+      return new FallbackReranker();
     }
 
     const { provider, config } = providerItem;
@@ -470,7 +470,7 @@ export class RAGService {
     } catch (e) {
       this.logger.error(`Reranker failed, fallback to default: ${e.stack}`);
       // When falling back, maintain the original order but add default relevance scores
-      const fallbackReranker = new FallbackReranker({});
+      const fallbackReranker = new FallbackReranker();
       return fallbackReranker.rerank(query, results, options);
     }
   }

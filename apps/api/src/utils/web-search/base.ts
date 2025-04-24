@@ -8,6 +8,9 @@ export interface WebSearchConfig {
   /** API credentials */
   apiKey?: string;
 
+  /** API URL */
+  apiUrl?: string;
+
   /** Default number of results to return */
   defaultLimit?: number;
 
@@ -28,7 +31,7 @@ export abstract class BaseWebSearcher {
   protected logger: Logger;
   protected config: Partial<WebSearchConfig>;
 
-  constructor(config: Partial<WebSearchConfig>) {
+  constructor(config?: Partial<WebSearchConfig>) {
     this.logger = new Logger(this.constructor.name);
     this.config = {
       defaultLimit: 10,

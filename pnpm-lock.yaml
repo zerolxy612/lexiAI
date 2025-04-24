@@ -47,6 +47,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@agentic/searxng':
+        specifier: ^7.6.4
+        version: 7.6.4(zod@3.23.8)
       '@elastic/elasticsearch':
         specifier: 7.17.14
         version: 7.17.14
@@ -1874,6 +1877,36 @@ packages:
     transitivePeerDependencies:
       - magicast
     dev: true
+
+  /@agentic/core@7.6.4(zod@3.23.8):
+    resolution: {integrity: sha512-WlJGBRAf5IMhnkl2G/r/sfQ2ny8Gbmijkwyb7N6uMyiA5WqSaDW82udx/ATNUaREYhb+f6KZEm5qHxTMGHMY7w==}
+    peerDependencies:
+      zod: ^3.24.2
+    dependencies:
+      dedent: 1.5.3
+      delay: 6.0.0
+      jsonrepair: 3.12.0
+      ky: 1.8.1
+      openai-zod-to-json-schema: 1.0.3(zod@3.23.8)
+      p-throttle: 6.2.0
+      type-fest: 4.40.0
+      zod: 3.23.8
+      zod-validation-error: 3.4.0(zod@3.23.8)
+    transitivePeerDependencies:
+      - babel-plugin-macros
+    dev: false
+
+  /@agentic/searxng@7.6.4(zod@3.23.8):
+    resolution: {integrity: sha512-koQBM3P2sxd52jfycmxJoF5ybqUVCCoeeInwGt6FpEu1Dpc9Mh78fxnZPlhd/FAP6MNaTNpYd0T+1jZF+yK8pw==}
+    peerDependencies:
+      zod: ^3.24.2
+    dependencies:
+      '@agentic/core': 7.6.4(zod@3.23.8)
+      ky: 1.8.1
+      zod: 3.23.8
+    transitivePeerDependencies:
+      - babel-plugin-macros
+    dev: false
 
   /@aklinker1/check@1.4.5(typescript@5.3.3):
     resolution: {integrity: sha512-whVpnpSK4qa4/83q22JAmxwRAEj35qYs8eIH/tX1C6rKbiwx7EL6kQVmSAhCe1NYqzoIWyOgsISdDPyHjC+h2A==}
@@ -14239,6 +14272,11 @@ packages:
       robust-predicates: 3.0.2
     dev: false
 
+  /delay@6.0.0:
+    resolution: {integrity: sha512-2NJozoOHQ4NuZuVIr5CWd0iiLVIRSDepakaovIN+9eIDHEhdCAEvSy2cuf1DCrPPQLvHmbqTHODlhHg8UCy4zw==}
+    engines: {node: '>=16'}
+    dev: false
+
   /delayed-stream@1.0.0:
     resolution: {integrity: sha512-ZySD7Nf91aLB0RxL4KGrKHBXl7Eds1DAmEdcoVawXnLD7SDhpNgtuII2aAkg7a7QS41jxPSZ17p4VdGnMHk3MQ==}
     engines: {node: '>=0.4.0'}
@@ -18228,6 +18266,11 @@ packages:
     resolution: {integrity: sha512-Y+60/zizpJ3HRH8DCss+q95yr6145JXZo46OTpFvDZWLfRCE4qChOyk1b26nMaNpfHHgxagk9dXT5OP0Tfe+dQ==}
     dev: false
 
+  /ky@1.8.1:
+    resolution: {integrity: sha512-7Bp3TpsE+L+TARSnnDpk3xg8Idi8RwSLdj6CMbNWoOARIrGrbuLGusV0dYwbZOm4bB3jHNxSw8Wk/ByDqJEnDw==}
+    engines: {node: '>=18'}
+    dev: false
+
   /langchain@0.3.15(@langchain/core@0.3.29)(@langchain/deepseek@0.0.1)(@langchain/ollama@0.2.0)(axios@1.7.4)(openai@4.95.1):
     resolution: {integrity: sha512-+DQ4I2iy4b5sErkxo6jAkgmumvhgqLwLB2fmiGl3yDt8+VVZdB1MUULZMzf+6ubarNc7Mwn/sxHUqK4GhEndhg==}
     engines: {node: '>=18'}
@@ -20918,6 +20961,16 @@ packages:
       is-wsl: 2.2.0
     dev: false
 
+  /openai-zod-to-json-schema@1.0.3(zod@3.23.8):
+    resolution: {integrity: sha512-CFU+KtOmX1dk2nPCZcGYgbrI3YLJJgMSehx1mLbH1A2fsRmZevHzMau6vFIhtkCpHWkGQ3ossA4a0OzVHlGrkw==}
+    engines: {node: '>=18'}
+    requiresBuild: true
+    peerDependencies:
+      zod: ^3.23.8
+    dependencies:
+      zod: 3.23.8
+    dev: false
+
   /openai@4.83.0(ws@8.17.1)(zod@3.23.8):
     resolution: {integrity: sha512-fmTsqud0uTtRKsPC7L8Lu55dkaTwYucqncDHzVvO64DKOpNTuiYwjbR/nVgpapXuYy8xSnhQQPUm+3jQaxICgw==}
     hasBin: true
@@ -21134,6 +21187,11 @@ packages:
       '@types/retry': 0.12.2
       is-network-error: 1.1.0
       retry: 0.13.1
+    dev: false
+
+  /p-throttle@6.2.0:
+    resolution: {integrity: sha512-NCKkOVj6PZa6NiTmfvGilDdf6vO1rFCD3KDnkHko8dTOtkpk4cSR/VTAhhLMG9aiQ7/A9HYgEDNmxzf6hxzR3g==}
+    engines: {node: '>=18'}
     dev: false
 
   /p-timeout@3.2.0:
@@ -25903,6 +25961,11 @@ packages:
     engines: {node: '>=14.16'}
     dev: false
 
+  /type-fest@4.40.0:
+    resolution: {integrity: sha512-ABHZ2/tS2JkvH1PEjxFDTUWC8dB5OsIGZP4IFLhR293GqT5Y5qB1WwL2kMPYhQW9DVgVD8Hd7I8gjwPIf5GFkw==}
+    engines: {node: '>=16'}
+    dev: false
+
   /type-is@1.6.18:
     resolution: {integrity: sha512-TkRKr9sUTxEH8MdfuCSP7VizJyzRNMjj2J2do2Jr3Kym598JVdEksuzPQCnlFPW4ky9Q+iA+ma9BGm06XQBy8g==}
     engines: {node: '>= 0.6'}
@@ -27448,6 +27511,15 @@ packages:
       zod: ^3.24.1
     dependencies:
       zod: 3.24.1
+    dev: false
+
+  /zod-validation-error@3.4.0(zod@3.23.8):
+    resolution: {integrity: sha512-ZOPR9SVY6Pb2qqO5XHt+MkkTRxGXb4EVtnjc9JpXUOtUB1T9Ru7mZOT361AN3MsetVe7R0a1KZshJDZdgp9miQ==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      zod: ^3.18.0
+    dependencies:
+      zod: 3.23.8
     dev: false
 
   /zod@3.23.8:

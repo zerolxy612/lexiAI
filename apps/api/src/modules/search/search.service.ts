@@ -24,6 +24,8 @@ import { detectLanguage, TimeTracker } from '@refly/utils';
 import { searchResultsToSources, sourcesToSearchResults } from '@refly/utils';
 import { SerperWebSearcher } from '@/utils/web-search/serper';
 import { ProviderService } from '@/modules/provider/provider.service';
+import { SearXNGWebSearcher } from '@/utils/web-search/searxng';
+import { BaseWebSearcher } from '@/utils/web-search/base';
 
 interface ProcessedSearchRequest extends SearchRequest {
   user?: User; // search user on behalf of
@@ -375,22 +377,25 @@ export class SearchService {
   ): Promise<WebSearchResult[]> {
     const provider = await this.providerService.findProviderByCategory(user, 'webSearch');
 
-    // TODO: add built-in and free web search provider
+    let webSearcher: BaseWebSearcher;
     if (!provider) {
-      throw new Error('No web search provider configured');
-    }
-
-    if (provider.providerKey === 'serper') {
-      const webSearcher = new SerperWebSearcher({
+      webSearcher = new SearXNGWebSearcher();
+    } else if (provider.providerKey === 'serper') {
+      webSearcher = new SerperWebSearcher({
         apiKey: provider.apiKey,
         defaultLimit: 10,
         defaultCountry: 'us',
         defaultLocation: 'United States',
       });
-      return webSearcher.search(req);
+    } else if (provider.providerKey === 'searxng') {
+      webSearcher = new SearXNGWebSearcher({
+        apiUrl: provider.baseUrl,
+      });
+    } else {
+      throw new Error(`Unsupported web search provider: ${provider.providerKey}`);
     }
 
-    throw new Error(`Unsupported web search provider: ${provider.providerKey}`);
+    return webSearcher.search(req);
   }
 
   async search(user: User, req: SearchRequest, options?: SearchOptions): Promise<SearchResult[]> {
