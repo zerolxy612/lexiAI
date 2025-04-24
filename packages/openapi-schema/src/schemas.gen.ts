@@ -1794,16 +1794,6 @@ export const UserPreferencesSchema = {
       description: 'Whether to disable hover tutorial',
       default: false,
     },
-    embedding: {
-      type: 'object',
-      description: 'Embedding config',
-      $ref: '#/components/schemas/ProviderItem',
-    },
-    reranker: {
-      type: 'object',
-      description: 'Reranking config',
-      $ref: '#/components/schemas/ProviderItem',
-    },
     webSearch: {
       type: 'object',
       description: 'Web search config',
@@ -5128,10 +5118,6 @@ export const EmbeddingModelConfigSchema = {
     batchSize: {
       type: 'number',
       description: 'Embedding model batch size',
-    },
-    dimensionsFixed: {
-      type: 'boolean',
-      description: 'Whether the embedding model has fixed dimensions',
     },
     dimensions: {
       type: 'number',

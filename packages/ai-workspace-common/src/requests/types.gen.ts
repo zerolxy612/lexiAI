@@ -1492,14 +1492,6 @@ export type UserPreferences = {
    */
   disableHoverCard?: boolean;
   /**
-   * Embedding config
-   */
-  embedding?: ProviderItem;
-  /**
-   * Reranking config
-   */
-  reranker?: ProviderItem;
-  /**
    * Web search config
    */
   webSearch?: ProviderConfig;
@@ -3645,10 +3637,6 @@ export type EmbeddingModelConfig = {
    * Embedding model batch size
    */
   batchSize?: number;
-  /**
-   * Whether the embedding model has fixed dimensions
-   */
-  dimensionsFixed?: boolean;
   /**
    * Embedding model dimensions
    */
