@@ -5109,11 +5109,15 @@ export const LLMModelConfigSchema = {
 export const EmbeddingModelConfigSchema = {
   type: 'object',
   description: 'Provider config for embeddings',
-  required: ['model'],
+  required: ['modelId'],
   properties: {
-    model: {
+    modelId: {
       type: 'string',
-      description: 'Embedding model',
+      description: 'Embedding model ID',
+    },
+    modelName: {
+      type: 'string',
+      description: 'Embedding model name',
     },
     batchSize: {
       type: 'number',
@@ -5129,11 +5133,15 @@ export const EmbeddingModelConfigSchema = {
 export const RerankerModelConfigSchema = {
   type: 'object',
   description: 'Provider config for rerankers',
-  required: ['model'],
+  required: ['modelId'],
   properties: {
-    model: {
+    modelId: {
       type: 'string',
-      description: 'Reranking model',
+      description: 'Reranking model ID',
+    },
+    modelName: {
+      type: 'string',
+      description: 'Reranking model name',
     },
     topN: {
       type: 'number',

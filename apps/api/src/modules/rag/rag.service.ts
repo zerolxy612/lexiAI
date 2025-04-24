@@ -77,21 +77,21 @@ export class RAGService {
     switch (providerKey) {
       case 'fireworks':
         return new FireworksEmbeddings({
-          model: embeddingConfig.model,
+          model: embeddingConfig.modelId,
           batchSize: embeddingConfig.batchSize,
           maxRetries: 3,
           apiKey: provider.apiKey,
         });
       case 'openai':
         return new OpenAIEmbeddings({
-          model: embeddingConfig.model,
+          model: embeddingConfig.modelId,
           batchSize: embeddingConfig.batchSize,
           dimensions: embeddingConfig.dimensions,
           apiKey: provider.apiKey,
         });
       case 'jina':
         return new JinaEmbeddings({
-          model: embeddingConfig.model,
+          model: embeddingConfig.modelId,
           batchSize: embeddingConfig.batchSize,
           dimensions: embeddingConfig.dimensions,
           apiKey: provider.apiKey,

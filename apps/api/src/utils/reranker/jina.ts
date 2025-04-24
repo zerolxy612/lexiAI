@@ -33,12 +33,12 @@ export class JinaReranker extends BaseReranker {
     options?: {
       topN?: number;
       relevanceThreshold?: number;
-      model?: string;
+      modelId?: string;
     },
   ): Promise<SearchResult[]> {
     const topN = options?.topN || this.config.topN;
     const relevanceThreshold = options?.relevanceThreshold || this.config.relevanceThreshold;
-    const model = options?.model || this.config.model;
+    const model = options?.modelId || this.config.modelId;
 
     // Create a map to reference original results by their combined snippets
     const contentMap = new Map<string, SearchResult>();

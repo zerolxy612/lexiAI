@@ -3630,9 +3630,13 @@ export type LLMModelConfig = {
  */
 export type EmbeddingModelConfig = {
   /**
-   * Embedding model
+   * Embedding model ID
    */
-  model: string;
+  modelId: string;
+  /**
+   * Embedding model name
+   */
+  modelName?: string;
   /**
    * Embedding model batch size
    */
@@ -3648,9 +3652,13 @@ export type EmbeddingModelConfig = {
  */
 export type RerankerModelConfig = {
   /**
-   * Reranking model
+   * Reranking model ID
    */
-  model: string;
+  modelId: string;
+  /**
+   * Reranking model name
+   */
+  modelName?: string;
   /**
    * Number of top results to return
    */
