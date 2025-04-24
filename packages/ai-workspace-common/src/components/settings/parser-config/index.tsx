@@ -6,14 +6,16 @@ import { useListProviders } from '@refly-packages/ai-workspace-common/queries';
 import { ProviderInfo, providerInfoList } from '@refly/utils';
 import { useUserStoreShallow } from '@refly-packages/ai-workspace-common/stores/user';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
-import { ProviderCategory, ProviderConfig, Provider } from '@refly/openapi-schema';
+import { ProviderConfig, Provider } from '@refly/openapi-schema';
 import { IconPlus } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { Spin } from '@refly-packages/ai-workspace-common/components/common/spin';
 
 const { Title } = Typography;
 
+type ParserCategory = 'webSearch' | 'urlParsing' | 'pdfParsing';
+
 const DEFAULT_PROVIDERS = {
-  webSearch: 'bing',
+  webSearch: 'searxng',
   urlParsing: 'cheerio',
   pdfParsing: 'pdfjs',
 };
@@ -34,7 +36,7 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
   const { t } = useTranslation();
   const [isProviderModalOpen, setIsProviderModalOpen] = useState(false);
   const [presetProviders, setPresetProviders] = useState<ProviderInfo[]>([]);
-  const [currentType, setCurrentType] = useState<ProviderCategory>('webSearch');
+  const [currentType, setCurrentType] = useState<ParserCategory>('webSearch');
   const { userProfile, setUserProfile } = useUserStoreShallow((state) => ({
     userProfile: state.userProfile,
     setUserProfile: state.setUserProfile,
@@ -89,7 +91,7 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
     [providers],
   );
 
-  const setCurrentProvider = useCallback((type: ProviderCategory, provider: ProviderConfig) => {
+  const setCurrentProvider = useCallback((type: ParserCategory, provider: ProviderConfig) => {
     switch (type) {
       case 'webSearch':
         setWebSearchValue(provider?.providerId || DEFAULT_PROVIDERS.webSearch);
@@ -103,7 +105,7 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
     }
   }, []);
 
-  const openProviderModal = useCallback((type: ProviderCategory) => {
+  const openProviderModal = useCallback((type: ParserCategory) => {
     setCurrentType(type);
     const filteredProviderInfoList = providerInfoList.filter((provider) =>
       provider?.categories?.includes(type),
@@ -118,22 +120,8 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
     setIsProviderModalOpen(false);
   }, []);
 
-  const handleCreateProviderSuccess = useCallback(
-    (provider: Provider) => {
-      refetch();
-      if (provider.enabled) {
-        setCurrentProvider(currentType, provider);
-      }
-    },
-    [currentType, refetch, setCurrentProvider],
-  );
-
   const updateUserProfile = useCallback(
-    async (
-      type: ProviderCategory,
-      value: ProviderConfig | undefined,
-      afterSuccess?: () => void,
-    ) => {
+    async (type: ParserCategory, value: ProviderConfig | undefined, afterSuccess?: () => void) => {
       const updatedPreferences = {
         ...userProfile.preferences,
         [type]: {
@@ -173,6 +161,17 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
     [providers, updateUserProfile],
   );
 
+  const handleCreateProviderSuccess = useCallback(
+    (provider: Provider) => {
+      refetch();
+      if (provider.enabled) {
+        setCurrentProvider(currentType, provider);
+        updateUserProfile(currentType, provider);
+      }
+    },
+    [currentType, refetch, setCurrentProvider, updateUserProfile],
+  );
+
   useEffect(() => {
     if (visible) {
       refetch();
@@ -184,7 +183,7 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
     return {
       webSearch: [
         {
-          label: t('settings.parserConfig.bing'),
+          label: t('settings.parserConfig.searxng'),
           value: DEFAULT_PROVIDERS.webSearch,
         },
         ...(webSearchProviders?.map((provider) => ({
@@ -217,7 +216,7 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
 
   // Render select dropdown
   const renderSelectDropdown = useCallback(
-    (menu: React.ReactNode, type: ProviderCategory) => {
+    (menu: React.ReactNode, type: ParserCategory) => {
       return (
         <>
           {isLoading ? (

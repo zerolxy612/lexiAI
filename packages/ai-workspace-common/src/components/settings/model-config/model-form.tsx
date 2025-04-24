@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useListProviders } from '@refly-packages/ai-workspace-common/queries';
-import { Button, Input, Modal, Form, Switch, Select, message } from 'antd';
+import { Button, Input, Modal, Form, Switch, Select, message, InputNumber, Checkbox } from 'antd';
 import { ProviderCategory, ProviderItem } from '@refly/openapi-schema';
 import { providerInfoList } from '@refly/utils';
 import { IconPlus } from '@refly-packages/ai-workspace-common/components/common/icon';
@@ -22,8 +22,8 @@ export const ModelFormModal = memo(
     isOpen: boolean;
     onClose: () => void;
     model?: ProviderItem | null;
-    onSuccess: (type: 'create' | 'update', model: ProviderItem) => void;
-    filterProviderCategory?: string;
+    onSuccess: (category: ProviderCategory, type: 'create' | 'update', model: ProviderItem) => void;
+    filterProviderCategory?: ProviderCategory;
     disabledEnableControl?: boolean;
   }) => {
     const { t } = useTranslation();
@@ -47,28 +47,70 @@ export const ModelFormModal = memo(
 
     const [isSaving, setIsSaving] = useState(false);
 
+    const getConfigByCategory = useCallback(
+      (values: any, existingConfig: any = {}) => {
+        const baseConfig = {
+          ...existingConfig,
+          modelId: values.modelId,
+          modelName: values.name,
+        };
+
+        if (filterProviderCategory === 'llm') {
+          const capabilitiesObject = {};
+          if (Array.isArray(values.capabilities)) {
+            for (const capability of values.capabilities) {
+              capabilitiesObject[capability] = true;
+            }
+          }
+
+          return {
+            ...baseConfig,
+            contextLimit: values.contextLimit,
+            maxOutput: values.maxOutput,
+            capabilities: capabilitiesObject,
+          };
+        }
+
+        if (filterProviderCategory === 'embedding') {
+          return {
+            ...baseConfig,
+            batchSize: values.batchSize,
+            dimensions: values.dimensions,
+          };
+        }
+
+        if (filterProviderCategory === 'reranker') {
+          return {
+            ...baseConfig,
+            topN: values.topN,
+            relevanceThreshold: values.relevanceThreshold,
+          };
+        }
+
+        return baseConfig;
+      },
+      [filterProviderCategory],
+    );
+
     const createModelMutation = useCallback(
       async (values: any) => {
         setIsSaving(true);
         const res = await getClient().createProviderItem({
           body: {
             ...values,
-            category: 'llm',
+            category: (filterProviderCategory as ProviderCategory) || 'llm',
             providerId: values.providerId,
-            config: {
-              modelId: values.modelId,
-              modelName: values.name,
-            },
+            config: getConfigByCategory(values),
           },
         });
         setIsSaving(false);
         if (res.data.success) {
           message.success(t('common.addSuccess'));
-          onSuccess?.('create', res.data.data);
+          onSuccess?.(filterProviderCategory, 'create', res.data.data);
           onClose();
         }
       },
-      [onSuccess, onClose],
+      [onSuccess, onClose, getConfigByCategory, filterProviderCategory],
     );
 
     const updateModelMutation = useCallback(
@@ -78,11 +120,7 @@ export const ModelFormModal = memo(
           body: {
             ...values,
             itemId: model.itemId,
-            config: {
-              ...model.config,
-              modelId: values.modelId,
-              modelName: values.name,
-            },
+            config: getConfigByCategory(values, model.config),
           },
           query: {
             providerId: values.providerId,
@@ -91,11 +129,11 @@ export const ModelFormModal = memo(
         setIsSaving(false);
         if (res.data.success) {
           message.success(t('common.saveSuccess'));
-          onSuccess?.('update', res.data.data);
+          onSuccess?.(filterProviderCategory, 'update', res.data.data);
           onClose();
         }
       },
-      [onSuccess, onClose],
+      [onSuccess, onClose, getConfigByCategory],
     );
 
     const handleAddModel = useCallback(() => {
@@ -143,28 +181,180 @@ export const ModelFormModal = memo(
     useEffect(() => {
       if (isOpen) {
         if (model) {
-          form.setFieldsValue({
-            name: model?.name,
-            modelId: model?.config?.modelId,
-            providerId: model?.providerId,
+          const config = model?.config || ({} as any);
+
+          interface FormValuesType {
+            name: string;
+            modelId: string;
+            providerId: string;
+            enabled: boolean;
+            contextLimit?: number;
+            maxOutput?: number;
+            capabilities?: string[];
+            batchSize?: number;
+            dimensions?: number;
+            topN?: number;
+            relevanceThreshold?: number;
+          }
+
+          const capabilitiesArray: string[] = [];
+          if (config.capabilities && typeof config.capabilities === 'object') {
+            for (const [key, value] of Object.entries(config.capabilities)) {
+              if (value === true) {
+                capabilitiesArray.push(key);
+              }
+            }
+          }
+
+          const formValues: FormValuesType = {
+            name: model?.name || '',
+            modelId: config.modelId,
+            providerId: model?.providerId || '',
             enabled: model?.enabled ?? true,
-            // Set other fields as needed
-          });
+          };
+
+          if (filterProviderCategory === 'llm') {
+            formValues.contextLimit = config.contextLimit;
+            formValues.maxOutput = config.maxOutput;
+            formValues.capabilities = capabilitiesArray;
+          } else if (filterProviderCategory === 'embedding') {
+            formValues.batchSize = config.batchSize;
+            formValues.dimensions = config.dimensions;
+          } else if (filterProviderCategory === 'reranker') {
+            formValues.topN = config.topN;
+            formValues.relevanceThreshold = config.relevanceThreshold;
+          }
+
+          form.setFieldsValue(formValues);
         } else {
           form.resetFields();
           form.setFieldsValue({
             enabled: true,
             providerId: providerOptions?.[0]?.value,
+            capabilities: [],
           });
         }
       }
-    }, [model, isOpen, form]);
+    }, [model, isOpen, form, filterProviderCategory, providerOptions]);
 
     useEffect(() => {
       if (isOpen) {
         refetch();
       }
-    }, [isOpen, refetch]);
+    }, [isOpen]);
+
+    const renderCategorySpecificFields = useMemo(() => {
+      if (filterProviderCategory === 'llm') {
+        return (
+          <>
+            <Form.Item
+              name="contextLimit"
+              label={t('settings.modelConfig.contextLimit')}
+              rules={[{ type: 'number' }]}
+            >
+              <InputNumber
+                placeholder={t('settings.modelConfig.contextLimitPlaceholder')}
+                className="w-full"
+                min={0}
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="maxOutput"
+              label={t('settings.modelConfig.maxOutput')}
+              rules={[{ type: 'number' }]}
+            >
+              <InputNumber
+                placeholder={t('settings.modelConfig.maxOutputPlaceholder')}
+                className="w-full"
+                min={0}
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="capabilities"
+              label={t('settings.modelConfig.capabilities')}
+              valuePropName="checked"
+            >
+              <Checkbox.Group className="w-full">
+                <div className="grid grid-cols-2 gap-2">
+                  <Checkbox value="functionCall">{t('settings.modelConfig.functionCall')}</Checkbox>
+                  <Checkbox value="vision">{t('settings.modelConfig.vision')}</Checkbox>
+                  <Checkbox value="reasoning">{t('settings.modelConfig.reasoning')}</Checkbox>
+                  <Checkbox value="contextCaching">
+                    {t('settings.modelConfig.contextCaching')}
+                  </Checkbox>
+                </div>
+              </Checkbox.Group>
+            </Form.Item>
+          </>
+        );
+      }
+
+      if (filterProviderCategory === 'embedding') {
+        return (
+          <>
+            <Form.Item
+              name="batchSize"
+              label={t('settings.modelConfig.batchSize')}
+              rules={[{ type: 'number' }]}
+            >
+              <InputNumber
+                placeholder={t('settings.modelConfig.batchSizePlaceholder')}
+                className="w-full"
+                min={1}
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="dimensions"
+              label={t('settings.modelConfig.dimensions')}
+              rules={[{ type: 'number' }]}
+            >
+              <InputNumber
+                placeholder={t('settings.modelConfig.dimensionsPlaceholder')}
+                className="w-full"
+                min={1}
+              />
+            </Form.Item>
+          </>
+        );
+      }
+
+      if (filterProviderCategory === 'reranker') {
+        return (
+          <>
+            <Form.Item
+              name="topN"
+              label={t('settings.modelConfig.topN')}
+              rules={[{ type: 'number' }]}
+            >
+              <InputNumber
+                placeholder={t('settings.modelConfig.topNPlaceholder')}
+                className="w-full"
+                min={1}
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="relevanceThreshold"
+              label={t('settings.modelConfig.relevanceThreshold')}
+              rules={[{ type: 'number' }]}
+            >
+              <InputNumber
+                placeholder={t('settings.modelConfig.relevanceThresholdPlaceholder')}
+                className="w-full"
+                min={0}
+                max={1}
+                step={0.01}
+              />
+            </Form.Item>
+          </>
+        );
+      }
+
+      return null;
+    }, [filterProviderCategory, t]);
 
     return (
       <Modal
@@ -182,7 +372,7 @@ export const ModelFormModal = memo(
         ]}
       >
         <div>
-          <Form form={form} className="mt-6" labelCol={{ span: 6 }} wrapperCol={{ span: 16 }}>
+          <Form form={form} className="mt-6" labelCol={{ span: 8 }} wrapperCol={{ span: 16 }}>
             <Form.Item
               name="providerId"
               label={t('settings.modelConfig.provider')}
@@ -232,6 +422,8 @@ export const ModelFormModal = memo(
               <Input placeholder={t('settings.modelConfig.namePlaceholder')} />
             </Form.Item>
 
+            {renderCategorySpecificFields}
+
             <Form.Item
               name="enabled"
               label={t('settings.modelConfig.enabled')}
@@ -247,6 +439,7 @@ export const ModelFormModal = memo(
           presetProviders={presetProviders}
           onClose={handleProviderModalClose}
           onSuccess={handleCreateProviderSuccess}
+          disabledEnableControl={true}
         />
       </Modal>
     );

@@ -57,7 +57,9 @@ export const SettingModal = (props: SettingModalProps) => {
       key: 'modelConfig',
       label: t('settings.tabs.modelConfig'),
       icon: <IconModel style={iconStyle} />,
-      children: <ModelConfig />,
+      children: (
+        <ModelConfig visible={settingsModalActiveTab === SettingsModalActiveTab.ModelConfig} />
+      ),
     },
     {
       key: 'parserConfig',

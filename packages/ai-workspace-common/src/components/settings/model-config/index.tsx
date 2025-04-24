@@ -1,10 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import {
-  useListProviderItems,
-  useDeleteProviderItem,
-} from '@refly-packages/ai-workspace-common/queries';
+import { useDeleteProviderItem } from '@refly-packages/ai-workspace-common/queries';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, memo } from 'react';
 import {
   Button,
   Input,
@@ -26,10 +23,9 @@ import {
   IconEdit,
   IconMoreHorizontal,
 } from '@refly-packages/ai-workspace-common/components/common/icon';
-import { ProviderItem } from '@refly/openapi-schema';
+import { LLMModelConfig, ProviderCategory, ProviderItem } from '@refly/openapi-schema';
 import { ModelIcon } from '@lobehub/icons';
 import { ModelFormModal } from './model-form';
-import { useUserStoreShallow } from '@refly-packages/ai-workspace-common/stores/user';
 
 const { Title } = Typography;
 
@@ -92,160 +88,165 @@ const ActionDropdown = ({
   );
 };
 
-const ModelItem = ({
-  model,
-  onEdit,
-  onDelete,
-  onToggleEnabled,
-  isSubmitting,
-}: {
-  model: ProviderItem;
-  onEdit: (model: ProviderItem) => void;
-  onDelete: (itemId: string) => void;
-  onToggleEnabled: (model: ProviderItem, enabled: boolean) => void;
-  isSubmitting: boolean;
-}) => {
-  const { t } = useTranslation();
+const ModelItem = memo(
+  ({
+    model,
+    onEdit,
+    onDelete,
+    onToggleEnabled,
+    isSubmitting,
+  }: {
+    model: ProviderItem;
+    onEdit: (model: ProviderItem) => void;
+    onDelete: (itemId: string) => void;
+    onToggleEnabled: (model: ProviderItem, enabled: boolean) => void;
+    isSubmitting: boolean;
+  }) => {
+    const { t } = useTranslation();
 
-  const handleToggleChange = useCallback(
-    (checked: boolean) => {
-      onToggleEnabled(model, checked);
-    },
-    [model, onToggleEnabled],
-  );
+    const handleToggleChange = useCallback(
+      (checked: boolean) => {
+        onToggleEnabled(model, checked);
+      },
+      [model, onToggleEnabled],
+    );
 
-  const handleSwitchWrapperClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-  }, []);
+    const handleSwitchWrapperClick = useCallback((e: React.MouseEvent) => {
+      e.stopPropagation();
+    }, []);
 
-  const handleEdit = useCallback(() => {
-    onEdit(model);
-  }, [model, onEdit]);
+    const handleEdit = useCallback(() => {
+      onEdit(model);
+    }, [model, onEdit]);
 
-  const handleDelete = useCallback(() => {
-    onDelete(model.itemId);
-  }, [model.itemId, onDelete]);
+    const handleDelete = useCallback(() => {
+      onDelete(model.itemId);
+    }, [model.itemId, onDelete]);
 
-  return (
-    <div className="mb-3 px-4 py-2 hover:bg-gray-50 rounded-md cursor-pointer border border-solid border-gray-100">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex-1 flex items-center gap-2">
-          <ModelIcon model={model.config?.modelId || model.name} size={18} type={'color'} />
-          <div className="font-medium">{model.name}</div>
-        </div>
+    return (
+      <div className="mb-3 px-4 py-0.5 hover:bg-gray-50 rounded-md cursor-pointer border border-solid border-gray-100">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex-1 flex items-center gap-2">
+            <ModelIcon
+              model={(model.config as LLMModelConfig)?.modelId || model.name}
+              size={18}
+              type={'color'}
+            />
+            <div className="font-medium">{model.name}</div>
+          </div>
 
-        <div className="flex items-center gap-2">
-          {!model?.provider?.isGlobal && (
-            <ActionDropdown model={model} handleEdit={handleEdit} handleDelete={handleDelete} />
-          )}
+          <div className="flex items-center gap-2">
+            {!model?.provider?.isGlobal && (
+              <ActionDropdown model={model} handleEdit={handleEdit} handleDelete={handleDelete} />
+            )}
 
-          <Tooltip
-            title={
-              model.enabled ? t('settings.modelConfig.disable') : t('settings.modelConfig.enable')
-            }
-          >
-            <div onClick={handleSwitchWrapperClick} className="flex items-center">
-              <Switch
-                size="small"
-                checked={model.enabled ?? false}
-                onChange={handleToggleChange}
-                loading={isSubmitting}
-              />
-            </div>
-          </Tooltip>
+            <Tooltip
+              title={
+                model.enabled ? t('settings.modelConfig.disable') : t('settings.modelConfig.enable')
+              }
+            >
+              <div onClick={handleSwitchWrapperClick} className="flex items-center">
+                <Switch
+                  size="small"
+                  checked={model.enabled ?? false}
+                  onChange={handleToggleChange}
+                  loading={isSubmitting}
+                />
+              </div>
+            </Tooltip>
+          </div>
         </div>
       </div>
-    </div>
-  );
-};
+    );
+  },
+);
 
-export const ModelConfig = () => {
+export const ModelConfig = ({ visible }: { visible: boolean }) => {
   const { t } = useTranslation();
-  const { data, isLoading, refetch } = useListProviderItems({
-    query: {
-      category: 'llm',
-    },
-  });
-  const { data: embeddingRes } = useListProviderItems({
-    query: {
-      category: 'embedding',
-      enabled: true,
-    },
-  });
-  const { data: rerankerRes } = useListProviderItems({
-    query: {
-      category: 'reranker',
-      enabled: true,
-    },
-  });
-  const { userProfile } = useUserStoreShallow((state) => ({
-    userProfile: state.userProfile,
-  }));
-
-  const embedding = useMemo(() => {
-    if (userProfile?.preferences?.embedding) {
-      return userProfile?.preferences?.embedding;
-    }
-    return embeddingRes?.data?.[0];
-  }, [embeddingRes, userProfile?.preferences?.embedding]);
-
-  const reranker = useMemo(() => {
-    if (userProfile?.preferences?.reranker) {
-      return userProfile?.preferences?.reranker;
-    }
-    return rerankerRes?.data?.[0];
-  }, [rerankerRes, userProfile?.preferences?.reranker]);
+  const [category, setCategory] = useState<ProviderCategory>('llm');
+  const [modelItems, setModelItems] = useState<ProviderItem[]>([]);
+  const [embedding, setEmbedding] = useState<ProviderItem | null>(null);
+  const [reranker, setReranker] = useState<ProviderItem | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingModel, setEditingModel] = useState<ProviderItem | null>(null);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const modelItems = data?.data || ([] as ProviderItem[]);
+
+  const getProviderItems = useCallback(async () => {
+    setIsLoading(true);
+    const res = await getClient().listProviderItems();
+    setIsLoading(false);
+    if (res?.data?.success) {
+      const list = res?.data?.data || [];
+      setModelItems(list.filter((item) => item.category === 'llm'));
+      setEmbedding(list.filter((item) => item.category === 'embedding')?.[0]);
+      setReranker(list.filter((item) => item.category === 'reranker')?.[0]);
+    }
+  }, []);
 
   const updateModelMutation = useCallback(
-    async (values: any, model: ProviderItem) => {
+    async (enabled: boolean, model: ProviderItem) => {
       setIsUpdating(true);
       const res = await getClient().updateProviderItem({
         body: {
-          ...values,
-          itemId: model.itemId,
-          config: {
-            ...model.config,
-            modelId: values.modelId,
-            modelName: values.name,
-          },
+          ...model,
+          enabled,
         },
         query: {
-          providerId: values.providerId,
+          providerId: model.providerId,
         },
       });
       setIsUpdating(false);
       if (res.data.success) {
-        refetch();
+        const updatedModel = res.data.data;
+        setModelItems(
+          modelItems.map((item) => (item.itemId === updatedModel.itemId ? updatedModel : item)),
+        );
         message.success(t('common.saveSuccess'));
       }
     },
-    [refetch],
+    [modelItems],
   );
 
   const deleteModelMutation = useDeleteProviderItem(null, {
-    onSuccess: () => {
+    onSuccess: (data) => {
       message.success(t('common.deleteSuccess'));
-      refetch();
+      console.log('data', data);
+      // setModelItems(modelItems.filter((item) => item.itemId !== data.itemId));
     },
     onError: (error) => {
       console.error('Failed to delete model', error);
     },
   });
 
-  const handleAddModel = () => {
+  const handleAddModel = (category: ProviderCategory) => {
+    setCategory(category);
     setEditingModel(null);
     setIsModalOpen(true);
   };
 
   const handleEditModel = (model: ProviderItem) => {
     setEditingModel(model);
+    setCategory(model.category);
     setIsModalOpen(true);
+  };
+
+  const handleEditEmbedding = () => {
+    if (embedding) {
+      handleEditModel(embedding);
+    } else {
+      handleAddModel('embedding');
+    }
+  };
+
+  const handleEditReranker = () => {
+    if (reranker) {
+      handleEditModel(reranker);
+    } else {
+      handleAddModel('reranker');
+    }
   };
 
   const handleDeleteModel = (itemId: string) => {
@@ -255,11 +256,27 @@ export const ModelConfig = () => {
   };
 
   const handleToggleEnabled = async (model: ProviderItem, enabled: boolean) => {
-    updateModelMutation({ enabled }, model);
+    updateModelMutation(enabled, model);
   };
 
-  const handleSuccess = () => {
-    refetch();
+  const handleSuccess = (
+    categoryType: ProviderCategory,
+    type?: 'create' | 'update',
+    model?: ProviderItem,
+  ) => {
+    if (categoryType === 'llm') {
+      if (type === 'create') {
+        setModelItems([...modelItems, model]);
+      } else if (type === 'update') {
+        setModelItems([
+          ...modelItems.map((item) => (item.itemId === model.itemId ? { ...model } : item)),
+        ]);
+      }
+    } else if (categoryType === 'embedding') {
+      setEmbedding(model);
+    } else if (categoryType === 'reranker') {
+      setReranker(model);
+    }
     setIsModalOpen(false);
     setEditingModel(null);
   };
@@ -272,6 +289,12 @@ export const ModelConfig = () => {
     const lowerQuery = searchQuery.toLowerCase();
     return items.filter((model) => model.name?.toLowerCase().includes(lowerQuery));
   }, [modelItems, searchQuery]);
+
+  useEffect(() => {
+    if (visible) {
+      getProviderItems();
+    }
+  }, [visible]);
 
   return (
     <div className="p-4 pt-0 h-full overflow-hidden flex flex-col">
@@ -293,7 +316,7 @@ export const ModelConfig = () => {
         <Button
           type="primary"
           icon={<LuPlus className="h-5 w-5 flex items-center" />}
-          onClick={handleAddModel}
+          onClick={() => handleAddModel('llm')}
         >
           {t('settings.modelConfig.addModel')}
         </Button>
@@ -303,7 +326,8 @@ export const ModelConfig = () => {
       <div
         className={cn(
           isLoading || filteredModels.length === 0 ? 'flex items-center justify-center' : '',
-          filteredModels.length === 0 ? 'border-dashed border-gray-200 rounded-md' : '',
+          filteredModels.length === 0 ? 'p-4 border-dashed border-gray-200 rounded-md' : '',
+          'max-h-[400px] min-h-[50px] overflow-y-auto',
         )}
       >
         {isLoading ? (
@@ -312,6 +336,7 @@ export const ModelConfig = () => {
           </div>
         ) : filteredModels.length === 0 ? (
           <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
             description={
               searchQuery ? (
                 <>
@@ -326,7 +351,10 @@ export const ModelConfig = () => {
             }
           >
             {!searchQuery && (
-              <Button onClick={handleAddModel} icon={<LuPlus className="flex items-center" />}>
+              <Button
+                onClick={() => handleAddModel('llm')}
+                icon={<LuPlus className="flex items-center" />}
+              >
                 {t('settings.modelConfig.addFirstModel')}
               </Button>
             )}
@@ -365,9 +393,18 @@ export const ModelConfig = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 cursor-pointer">
-            <div className="text-sm text-gray-500">{embedding?.name}</div>
-            <IconEdit size={16} />
+          <div
+            className="flex items-center gap-2 cursor-pointer"
+            onClick={() => handleEditEmbedding()}
+          >
+            <Button
+              type="text"
+              icon={<IconEdit size={16} className="text-gray-700" />}
+              iconPosition="end"
+              className={cn(embedding?.name ? 'text-gray-500' : 'text-gray-400', 'text-sm')}
+            >
+              {embedding?.name || t('settings.modelConfig.clickToSet')}
+            </Button>
           </div>
         </div>
 
@@ -379,9 +416,18 @@ export const ModelConfig = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 cursor-pointer">
-            <div className="text-sm text-gray-500">{reranker?.name}</div>
-            <IconEdit size={16} />
+          <div
+            className="flex items-center gap-2 cursor-pointer"
+            onClick={() => handleEditReranker()}
+          >
+            <Button
+              type="text"
+              icon={<IconEdit size={16} className="text-gray-700" />}
+              iconPosition="end"
+              className={cn(reranker?.name ? 'text-gray-500' : 'text-gray-400', 'text-sm')}
+            >
+              {reranker?.name || t('settings.modelConfig.clickToSet')}
+            </Button>
           </div>
         </div>
       </div>
@@ -389,13 +435,14 @@ export const ModelConfig = () => {
       {/* Modal for Create and Edit */}
       <ModelFormModal
         isOpen={isModalOpen}
-        filterProviderCategory="llm"
+        filterProviderCategory={category}
         onClose={() => {
           setIsModalOpen(false);
           setEditingModel(null);
         }}
         model={editingModel}
         onSuccess={handleSuccess}
+        disabledEnableControl={['embedding', 'reranker'].includes(category)}
       />
     </div>
   );
