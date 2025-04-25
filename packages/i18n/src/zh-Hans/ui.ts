@@ -1812,6 +1812,16 @@ const translations = {
       noProviders: '暂无供应商',
       addFirstProvider: '添加第一个供应商',
       deleteConfirm: '确定删除供应商 {{name}} 吗？',
+      category: '类别',
+      categoryPlaceholder: '请至少选择一个',
+      categories: {
+        llm: 'LLM',
+        webSearch: '网页搜索',
+        urlParsing: 'URL 解析',
+        pdfParsing: 'PDF 解析',
+        reranker: '重排器',
+        embedding: '嵌入',
+      },
     },
     modelConfig: {
       title: '模型配置',

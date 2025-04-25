@@ -304,6 +304,7 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
             {/* Provider Modal */}
             <ProviderModal
               isOpen={isProviderModalOpen}
+              filterCategory={currentType}
               presetProviders={presetProviders}
               onClose={handleProviderModalClose}
               onSuccess={handleCreateProviderSuccess}

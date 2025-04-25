@@ -2019,6 +2019,16 @@ const translations = {
       noProviders: 'No providers',
       addFirstProvider: 'Add the first provider',
       deleteConfirm: 'Are you sure you want to delete the provider {{name}}?',
+      category: 'Category',
+      categoryPlaceholder: 'Please select at least one',
+      categories: {
+        llm: 'LLM',
+        webSearch: 'Web Search',
+        urlParsing: 'URL Parsing',
+        pdfParsing: 'PDF Parsing',
+        reranker: 'Reranker',
+        embedding: 'Embedding',
+      },
     },
 
     modelConfig: {

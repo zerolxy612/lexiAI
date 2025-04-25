@@ -169,12 +169,13 @@ export const ModelFormModal = memo(
     const providerOptions = useMemo(() => {
       return (
         providersResponse?.data?.map((provider) => ({
+          categories: provider?.categories,
           providerKey: provider?.providerKey,
           label: provider?.name || provider?.providerId,
           value: provider?.providerId,
         })) || []
       ).filter((provider) => {
-        return presetProviders.some((p) => p.key === provider.providerKey);
+        return provider.categories?.includes(filterProviderCategory as ProviderCategory);
       });
     }, [providersResponse, filterProviderCategory]);
 
@@ -436,6 +437,7 @@ export const ModelFormModal = memo(
 
         <ProviderModal
           isOpen={isProviderModalOpen}
+          filterCategory={filterProviderCategory}
           presetProviders={presetProviders}
           onClose={handleProviderModalClose}
           onSuccess={handleCreateProviderSuccess}

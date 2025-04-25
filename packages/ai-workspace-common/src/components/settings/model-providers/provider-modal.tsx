@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import React, { useCallback, useState, useEffect, useMemo } from 'react';
-import { Button, Input, Modal, Form, Switch, Select, message } from 'antd';
+import { Button, Input, Modal, Form, Switch, Select, Checkbox, message } from 'antd';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
-import { Provider } from '@refly-packages/ai-workspace-common/requests/types.gen';
+import { Provider, ProviderCategory } from '@refly-packages/ai-workspace-common/requests/types.gen';
 import { ProviderInfo, providerInfoList } from '@refly/utils';
 
 export const ProviderModal = React.memo(
@@ -10,6 +10,7 @@ export const ProviderModal = React.memo(
     isOpen,
     onClose,
     provider,
+    filterCategory,
     presetProviders,
     defaultProviderKey,
     onSuccess,
@@ -18,6 +19,7 @@ export const ProviderModal = React.memo(
     isOpen: boolean;
     onClose: () => void;
     provider?: Provider | null;
+    filterCategory?: ProviderCategory;
     presetProviders?: ProviderInfo[];
     defaultProviderKey?: string;
     onSuccess?: (provider: Provider) => void;
@@ -49,6 +51,22 @@ export const ProviderModal = React.memo(
       return providers.find((p) => p.key === selectedProviderKey);
     }, [selectedProviderKey, presetProviders]);
 
+    // Get available categories for the selected provider
+    const categories = useMemo(() => {
+      if (filterCategory) {
+        return [filterCategory];
+      }
+      return selectedProviderInfo?.categories || [];
+    }, [filterCategory, selectedProviderInfo]);
+
+    // Create checkbox options from categories
+    const categoryOptions = useMemo(() => {
+      return categories.map((category) => ({
+        label: t(`settings.modelProviders.categories.${category}`),
+        value: category,
+      }));
+    }, [categories, t]);
+
     // Determine if apiKey and baseUrl should be shown and required
     const showApiKey = useMemo(() => {
       return selectedProviderInfo?.fieldConfig.apiKey.presence !== 'omit';
@@ -76,6 +94,14 @@ export const ProviderModal = React.memo(
         if (providerInfo?.fieldConfig.baseUrl.defaultValue && !isEditMode) {
           form.setFieldValue('baseUrl', providerInfo.fieldConfig.baseUrl.defaultValue);
         }
+
+        // Set all available categories as default
+        const providerCategories = providerInfo?.categories || [];
+        if (providerCategories.length > 0) {
+          form.setFieldValue('categories', providerCategories);
+        } else {
+          form.setFieldValue('categories', []);
+        }
       },
       [form, presetProviders, isEditMode],
     );
@@ -93,6 +119,7 @@ export const ProviderModal = React.memo(
             baseUrl: provider.baseUrl || '',
             enabled: provider.enabled,
             providerKey: provider.providerKey,
+            categories: provider.categories || [],
           });
         } else {
           setIsDefaultApiKey(false);
@@ -110,6 +137,12 @@ export const ProviderModal = React.memo(
           const providerInfo = providers.find((p) => p.key === initialProviderKey);
           if (providerInfo?.fieldConfig.baseUrl.defaultValue) {
             form.setFieldValue('baseUrl', providerInfo.fieldConfig.baseUrl.defaultValue);
+          }
+
+          // Select all categories by default
+          const providerCategories = providerInfo?.categories || [];
+          if (providerCategories.length > 0) {
+            form.setFieldValue('categories', providerCategories);
           }
         }
       }
@@ -143,6 +176,7 @@ export const ProviderModal = React.memo(
               apiKey: values.apiKey,
               baseUrl: values.baseUrl || undefined,
               providerKey: values.providerKey,
+              categories: values.categories,
             },
           });
           if (res.data.success) {
@@ -159,6 +193,7 @@ export const ProviderModal = React.memo(
               apiKey: values.apiKey,
               baseUrl: values.baseUrl,
               providerKey: values.providerKey,
+              categories: values.categories,
             },
           });
           if (res.data.success) {
@@ -213,7 +248,6 @@ export const ProviderModal = React.memo(
               onChange={handleProviderChange}
             />
           </Form.Item>
-
           <Form.Item
             name="name"
             label={t('settings.modelProviders.name')}
@@ -226,7 +260,20 @@ export const ProviderModal = React.memo(
           >
             <Input placeholder={t('settings.modelProviders.namePlaceholder')} />
           </Form.Item>
-
+          {categories.length > 0 && (
+            <Form.Item
+              name="categories"
+              label={t('settings.modelProviders.category')}
+              rules={[
+                {
+                  required: true,
+                  message: t('settings.modelProviders.categoryPlaceholder'),
+                },
+              ]}
+            >
+              <Checkbox.Group options={categoryOptions} className="w-full" />
+            </Form.Item>
+          )}
           {showApiKey && (
             <Form.Item
               name="apiKey"
@@ -247,7 +294,6 @@ export const ProviderModal = React.memo(
               />
             </Form.Item>
           )}
-
           {showBaseUrl && (
             <Form.Item
               name="baseUrl"
@@ -262,7 +308,6 @@ export const ProviderModal = React.memo(
               <Input placeholder={t('settings.modelProviders.baseUrlPlaceholder')} />
             </Form.Item>
           )}
-
           <Form.Item
             name="enabled"
             label={t('settings.modelProviders.enabled')}
