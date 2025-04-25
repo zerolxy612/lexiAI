@@ -3795,9 +3795,13 @@ export type Provider = {
    */
   name: string;
   /**
+   * Provider categories
+   */
+  categories?: Array<ProviderCategory>;
+  /**
    * Provider base URL
    */
-  baseUrl: string;
+  baseUrl?: string;
   /**
    * Whether the provider is enabled
    */
@@ -3913,6 +3917,10 @@ export type ProviderItem = {
    * Provider item config
    */
   config?: ProviderItemConfig;
+  /**
+   * Provider item order
+   */
+  order?: number;
 };
 
 export type ListProvidersResponse = BaseResponse & {
@@ -3932,6 +3940,10 @@ export type UpsertProviderRequest = {
    * Provider name
    */
   name?: string;
+  /**
+   * Provider categories
+   */
+  categories?: Array<ProviderCategory>;
   /**
    * Provider API key
    */
@@ -3986,10 +3998,28 @@ export type UpsertProviderItemRequest = {
    * Provider item config
    */
   config?: ProviderItemConfig;
+  /**
+   * Provider item order
+   */
+  order?: number;
 };
 
 export type UpsertProviderItemResponse = BaseResponse & {
   data?: ProviderItem;
+};
+
+export type BatchUpsertProviderItemsRequest = {
+  /**
+   * Provider items to upsert
+   */
+  items: Array<UpsertProviderItemRequest>;
+};
+
+export type BatchUpsertProviderItemsResponse = BaseResponse & {
+  /**
+   * Upserted provider items
+   */
+  data?: Array<ProviderItem>;
 };
 
 export type DeleteProviderItemRequest = {
@@ -5188,6 +5218,14 @@ export type CreateProviderItemResponse = UpsertProviderItemResponse;
 
 export type CreateProviderItemError = unknown;
 
+export type BatchCreateProviderItemsData = {
+  body: BatchUpsertProviderItemsRequest;
+};
+
+export type BatchCreateProviderItemsResponse = BatchUpsertProviderItemsResponse;
+
+export type BatchCreateProviderItemsError = unknown;
+
 export type UpdateProviderItemData = {
   body: UpsertProviderItemRequest;
 };
@@ -5195,6 +5233,14 @@ export type UpdateProviderItemData = {
 export type UpdateProviderItemResponse = UpsertProviderItemResponse;
 
 export type UpdateProviderItemError = unknown;
+
+export type BatchUpdateProviderItemsData = {
+  body: BatchUpsertProviderItemsRequest;
+};
+
+export type BatchUpdateProviderItemsResponse = BatchUpsertProviderItemsResponse;
+
+export type BatchUpdateProviderItemsError = unknown;
 
 export type DeleteProviderItemData = {
   body: DeleteProviderItemRequest;

@@ -6,8 +6,10 @@ import {
   addNodesToCanvasPage,
   addReferences,
   autoNameCanvas,
+  batchCreateProviderItems,
   batchCreateResource,
   batchUpdateDocument,
+  batchUpdateProviderItems,
   checkSettingsField,
   checkVerification,
   convert,
@@ -863,10 +865,26 @@ export const UseCreateProviderItemKeyFn = (mutationKey?: Array<unknown>) => [
   useCreateProviderItemKey,
   ...(mutationKey ?? []),
 ];
+export type BatchCreateProviderItemsMutationResult = Awaited<
+  ReturnType<typeof batchCreateProviderItems>
+>;
+export const useBatchCreateProviderItemsKey = 'BatchCreateProviderItems';
+export const UseBatchCreateProviderItemsKeyFn = (mutationKey?: Array<unknown>) => [
+  useBatchCreateProviderItemsKey,
+  ...(mutationKey ?? []),
+];
 export type UpdateProviderItemMutationResult = Awaited<ReturnType<typeof updateProviderItem>>;
 export const useUpdateProviderItemKey = 'UpdateProviderItem';
 export const UseUpdateProviderItemKeyFn = (mutationKey?: Array<unknown>) => [
   useUpdateProviderItemKey,
+  ...(mutationKey ?? []),
+];
+export type BatchUpdateProviderItemsMutationResult = Awaited<
+  ReturnType<typeof batchUpdateProviderItems>
+>;
+export const useBatchUpdateProviderItemsKey = 'BatchUpdateProviderItems';
+export const UseBatchUpdateProviderItemsKeyFn = (mutationKey?: Array<unknown>) => [
+  useBatchUpdateProviderItemsKey,
   ...(mutationKey ?? []),
 ];
 export type DeleteProviderItemMutationResult = Awaited<ReturnType<typeof deleteProviderItem>>;

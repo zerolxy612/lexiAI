@@ -5419,7 +5419,7 @@ export const ProviderCategorySchema = {
 export const ProviderSchema = {
   type: 'object',
   description: 'General provider info',
-  required: ['providerId', 'providerKey', 'name', 'baseUrl', 'enabled'],
+  required: ['providerId', 'providerKey', 'name', 'enabled'],
   properties: {
     providerId: {
       type: 'string',
@@ -5432,6 +5432,13 @@ export const ProviderSchema = {
     name: {
       type: 'string',
       description: 'Provider name',
+    },
+    categories: {
+      type: 'array',
+      description: 'Provider categories',
+      items: {
+        $ref: '#/components/schemas/ProviderCategory',
+      },
     },
     baseUrl: {
       type: 'string',
@@ -5575,6 +5582,10 @@ export const ProviderItemSchema = {
       description: 'Provider item config',
       $ref: '#/components/schemas/ProviderItemConfig',
     },
+    order: {
+      type: 'number',
+      description: 'Provider item order',
+    },
   },
 } as const;
 
@@ -5611,6 +5622,13 @@ export const UpsertProviderRequestSchema = {
     name: {
       type: 'string',
       description: 'Provider name',
+    },
+    categories: {
+      type: 'array',
+      description: 'Provider categories',
+      items: {
+        $ref: '#/components/schemas/ProviderCategory',
+      },
     },
     apiKey: {
       type: 'string',
@@ -5700,6 +5718,10 @@ export const UpsertProviderItemRequestSchema = {
       description: 'Provider item config',
       $ref: '#/components/schemas/ProviderItemConfig',
     },
+    order: {
+      type: 'number',
+      description: 'Provider item order',
+    },
   },
 } as const;
 
@@ -5713,6 +5735,40 @@ export const UpsertProviderItemResponseSchema = {
       properties: {
         data: {
           $ref: '#/components/schemas/ProviderItem',
+        },
+      },
+    },
+  ],
+} as const;
+
+export const BatchUpsertProviderItemsRequestSchema = {
+  type: 'object',
+  required: ['items'],
+  properties: {
+    items: {
+      type: 'array',
+      description: 'Provider items to upsert',
+      items: {
+        $ref: '#/components/schemas/UpsertProviderItemRequest',
+      },
+    },
+  },
+} as const;
+
+export const BatchUpsertProviderItemsResponseSchema = {
+  allOf: [
+    {
+      $ref: '#/components/schemas/BaseResponse',
+    },
+    {
+      type: 'object',
+      properties: {
+        data: {
+          type: 'array',
+          description: 'Upserted provider items',
+          items: {
+            $ref: '#/components/schemas/ProviderItem',
+          },
         },
       },
     },

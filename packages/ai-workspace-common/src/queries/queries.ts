@@ -6,8 +6,10 @@ import {
   addNodesToCanvasPage,
   addReferences,
   autoNameCanvas,
+  batchCreateProviderItems,
   batchCreateResource,
   batchUpdateDocument,
+  batchUpdateProviderItems,
   checkSettingsField,
   checkVerification,
   convert,
@@ -118,10 +120,14 @@ import {
   AddReferencesError,
   AutoNameCanvasData,
   AutoNameCanvasError,
+  BatchCreateProviderItemsData,
+  BatchCreateProviderItemsError,
   BatchCreateResourceData,
   BatchCreateResourceError,
   BatchUpdateDocumentData,
   BatchUpdateDocumentError,
+  BatchUpdateProviderItemsData,
+  BatchUpdateProviderItemsError,
   CheckSettingsFieldData,
   CheckSettingsFieldError,
   CheckVerificationData,
@@ -1924,6 +1930,24 @@ export const useCreateProviderItem = <
     mutationFn: (clientOptions) => createProviderItem(clientOptions) as unknown as Promise<TData>,
     ...options,
   });
+export const useBatchCreateProviderItems = <
+  TData = Common.BatchCreateProviderItemsMutationResult,
+  TError = BatchCreateProviderItemsError,
+  TQueryKey extends Array<unknown> = unknown[],
+  TContext = unknown,
+>(
+  mutationKey?: TQueryKey,
+  options?: Omit<
+    UseMutationOptions<TData, TError, Options<BatchCreateProviderItemsData, true>, TContext>,
+    'mutationKey' | 'mutationFn'
+  >,
+) =>
+  useMutation<TData, TError, Options<BatchCreateProviderItemsData, true>, TContext>({
+    mutationKey: Common.UseBatchCreateProviderItemsKeyFn(mutationKey),
+    mutationFn: (clientOptions) =>
+      batchCreateProviderItems(clientOptions) as unknown as Promise<TData>,
+    ...options,
+  });
 export const useUpdateProviderItem = <
   TData = Common.UpdateProviderItemMutationResult,
   TError = UpdateProviderItemError,
@@ -1939,6 +1963,24 @@ export const useUpdateProviderItem = <
   useMutation<TData, TError, Options<UpdateProviderItemData, true>, TContext>({
     mutationKey: Common.UseUpdateProviderItemKeyFn(mutationKey),
     mutationFn: (clientOptions) => updateProviderItem(clientOptions) as unknown as Promise<TData>,
+    ...options,
+  });
+export const useBatchUpdateProviderItems = <
+  TData = Common.BatchUpdateProviderItemsMutationResult,
+  TError = BatchUpdateProviderItemsError,
+  TQueryKey extends Array<unknown> = unknown[],
+  TContext = unknown,
+>(
+  mutationKey?: TQueryKey,
+  options?: Omit<
+    UseMutationOptions<TData, TError, Options<BatchUpdateProviderItemsData, true>, TContext>,
+    'mutationKey' | 'mutationFn'
+  >,
+) =>
+  useMutation<TData, TError, Options<BatchUpdateProviderItemsData, true>, TContext>({
+    mutationKey: Common.UseBatchUpdateProviderItemsKeyFn(mutationKey),
+    mutationFn: (clientOptions) =>
+      batchUpdateProviderItems(clientOptions) as unknown as Promise<TData>,
     ...options,
   });
 export const useDeleteProviderItem = <

@@ -770,6 +770,8 @@ model Provider {
   name        String         @map("name")
   /// Whether the provider is global
   isGlobal    Boolean        @default(false) @map("is_global")
+  /// Configured categories (comma separated)
+  categories  String         @default("") @map("categories")
   /// UID
   uid         String?        @map("uid")
   /// Provider API key
@@ -811,6 +813,8 @@ model ProviderItem {
   config     String?   @map("config")
   /// Provider item billing tier
   tier       String?   @map("tier")
+  /// Order
+  order      Int       @default(0) @map("order")
   /// Create timestamp
   createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz()
   /// Update timestamp

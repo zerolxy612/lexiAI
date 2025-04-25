@@ -2316,6 +2316,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UpsertProviderItemResponse'
+  /provider/item/batchCreate:
+    post:
+      tags:
+        - provider
+      summary: Batch create model items
+      description: Batch create model items
+      operationId: batchCreateProviderItems
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchUpsertProviderItemsRequest'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchUpsertProviderItemsResponse'
   /provider/item/update:
     post:
       tags:
@@ -2336,6 +2356,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UpsertProviderItemResponse'
+  /provider/item/batchUpdate:
+    post:
+      tags:
+        - provider
+      summary: Batch update provider items
+      description: Batch update provider items
+      operationId: batchUpdateProviderItems
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchUpsertProviderItemsRequest'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchUpsertProviderItemsResponse'
   /provider/item/delete:
     post:
       tags:
@@ -6282,7 +6322,6 @@ components:
         - providerId
         - providerKey
         - name
-        - baseUrl
         - enabled
       properties:
         providerId:
@@ -6294,6 +6333,11 @@ components:
         name:
           type: string
           description: Provider name
+        categories:
+          type: array
+          description: Provider categories
+          items:
+            $ref: '#/components/schemas/ProviderCategory'
         baseUrl:
           type: string
           description: Provider base URL
@@ -6400,6 +6444,9 @@ components:
         config:
           description: Provider item config
           $ref: '#/components/schemas/ProviderItemConfig'
+        order:
+          type: number
+          description: Provider item order
     ListProvidersResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -6421,6 +6468,11 @@ components:
         name:
           type: string
           description: Provider name
+        categories:
+          type: array
+          description: Provider categories
+          items:
+            $ref: '#/components/schemas/ProviderCategory'
         apiKey:
           type: string
           description: Provider API key
@@ -6475,6 +6527,9 @@ components:
         config:
           description: Provider item config
           $ref: '#/components/schemas/ProviderItemConfig'
+        order:
+          type: number
+          description: Provider item order
     UpsertProviderItemResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -6482,6 +6537,26 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/ProviderItem'
+    BatchUpsertProviderItemsRequest:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          description: Provider items to upsert
+          items:
+            $ref: '#/components/schemas/UpsertProviderItemRequest'
+    BatchUpsertProviderItemsResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              description: Upserted provider items
+              items:
+                $ref: '#/components/schemas/ProviderItem'
     DeleteProviderItemRequest:
       type: object
       required:

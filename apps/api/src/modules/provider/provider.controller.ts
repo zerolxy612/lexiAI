@@ -4,6 +4,8 @@ import { JwtAuthGuard } from '@/modules/auth/guard/jwt-auth.guard';
 import { LoginedUser } from '@/utils/decorators/user.decorator';
 import { User as UserModel } from '@/generated/client';
 import {
+  BatchUpsertProviderItemsRequest,
+  BatchUpsertProviderItemsResponse,
   DeleteProviderItemRequest,
   DeleteProviderItemResponse,
   DeleteProviderRequest,
@@ -91,6 +93,16 @@ export class ProviderController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Post('/item/batchCreate')
+  async batchCreateProviderItems(
+    @LoginedUser() user: UserModel,
+    @Body() body: BatchUpsertProviderItemsRequest,
+  ): Promise<BatchUpsertProviderItemsResponse> {
+    const items = await this.providerService.batchCreateProviderItems(user, body);
+    return buildSuccessResponse(items.map(providerItemPO2DTO));
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post('/item/update')
   async updateProviderItem(
     @LoginedUser() user: UserModel,
@@ -98,6 +110,16 @@ export class ProviderController {
   ): Promise<UpsertProviderItemResponse> {
     const item = await this.providerService.updateProviderItem(user, body);
     return buildSuccessResponse(providerItemPO2DTO(item));
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('/item/batchUpdate')
+  async batchUpdateProviderItems(
+    @LoginedUser() user: UserModel,
+    @Body() body: BatchUpsertProviderItemsRequest,
+  ): Promise<BatchUpsertProviderItemsResponse> {
+    const items = await this.providerService.batchUpdateProviderItems(user, body);
+    return buildSuccessResponse(items.map(providerItemPO2DTO));
   }
 
   @UseGuards(JwtAuthGuard)

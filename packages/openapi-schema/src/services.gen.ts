@@ -298,9 +298,15 @@ import type {
   CreateProviderItemData,
   CreateProviderItemError,
   CreateProviderItemResponse,
+  BatchCreateProviderItemsData,
+  BatchCreateProviderItemsError,
+  BatchCreateProviderItemsResponse,
   UpdateProviderItemData,
   UpdateProviderItemError,
   UpdateProviderItemResponse,
+  BatchUpdateProviderItemsData,
+  BatchUpdateProviderItemsError,
+  BatchUpdateProviderItemsResponse,
   DeleteProviderItemData,
   DeleteProviderItemError,
   DeleteProviderItemResponse,
@@ -1906,6 +1912,23 @@ export const createProviderItem = <ThrowOnError extends boolean = false>(
 };
 
 /**
+ * Batch create model items
+ * Batch create model items
+ */
+export const batchCreateProviderItems = <ThrowOnError extends boolean = false>(
+  options: Options<BatchCreateProviderItemsData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).post<
+    BatchCreateProviderItemsResponse,
+    BatchCreateProviderItemsError,
+    ThrowOnError
+  >({
+    ...options,
+    url: '/provider/item/batchCreate',
+  });
+};
+
+/**
  * Update model item
  * Update an existing model item
  */
@@ -1919,6 +1942,23 @@ export const updateProviderItem = <ThrowOnError extends boolean = false>(
   >({
     ...options,
     url: '/provider/item/update',
+  });
+};
+
+/**
+ * Batch update provider items
+ * Batch update provider items
+ */
+export const batchUpdateProviderItems = <ThrowOnError extends boolean = false>(
+  options: Options<BatchUpdateProviderItemsData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).post<
+    BatchUpdateProviderItemsResponse,
+    BatchUpdateProviderItemsError,
+    ThrowOnError
+  >({
+    ...options,
+    url: '/provider/item/batchUpdate',
   });
 };
 
