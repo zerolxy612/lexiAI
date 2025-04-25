@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@/modules/common/prisma.service';
 import {
   BatchUpsertProviderItemsRequest,
@@ -16,6 +16,7 @@ import { Provider, ProviderItem } from '@/generated/client';
 import { genProviderItemID, genProviderID, providerInfoList } from '@refly/utils';
 import { ProviderNotFoundError, ProviderItemNotFoundError, ParamsError } from '@refly/errors';
 import { SingleFlightCache } from '@/utils/cache';
+import { EncryptionService } from '@/modules/common/encryption.service';
 import pLimit from 'p-limit';
 
 interface GlobalProviderConfig {
@@ -27,9 +28,13 @@ const PROVIDER_ITEMS_BATCH_LIMIT = 50;
 
 @Injectable()
 export class ProviderService {
+  private logger = new Logger(ProviderService.name);
   private globalProviderCache: SingleFlightCache<GlobalProviderConfig>;
 
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly encryptionService: EncryptionService,
+  ) {
     this.globalProviderCache = new SingleFlightCache(this.fetchGlobalProviderConfig.bind(this));
   }
 
@@ -40,6 +45,12 @@ export class ProviderService {
         deletedAt: null,
       },
     });
+
+    // Decrypt API keys for all providers
+    const decryptedProviders = providers.map((provider) => ({
+      ...provider,
+      apiKey: this.encryptionService.decrypt(provider.apiKey),
+    }));
 
     const items = await this.prisma.providerItem.findMany({
       where: {
@@ -53,7 +64,16 @@ export class ProviderService {
       },
     });
 
-    return { providers, items };
+    // Decrypt API keys for all providers included in items
+    const decryptedItems = items.map((item) => ({
+      ...item,
+      provider: {
+        ...item.provider,
+        apiKey: this.encryptionService.decrypt(item.provider.apiKey),
+      },
+    }));
+
+    return { providers: decryptedProviders, items: decryptedItems };
   }
 
   async listProviders(user: User, param: ListProvidersData['query']) {
@@ -67,8 +87,15 @@ export class ProviderService {
         ...(category ? { categories: { contains: category } } : {}),
       },
     });
+
+    // Decrypt API keys for user providers
+    const decryptedUserProviders = providers.map((provider) => ({
+      ...provider,
+      apiKey: this.encryptionService.decrypt(provider.apiKey),
+    }));
+
     const { providers: globalProviders } = await this.globalProviderCache.get();
-    return [...globalProviders, ...providers];
+    return [...globalProviders, ...decryptedUserProviders];
   }
 
   async createProvider(user: User, param: UpsertProviderRequest) {
@@ -107,18 +134,27 @@ export class ProviderService {
     // Use default baseUrl if available and not provided
     const finalBaseUrl = baseUrl || providerInfo.fieldConfig.baseUrl?.defaultValue;
 
-    return this.prisma.provider.create({
+    // Encrypt API key before storing
+    const encryptedApiKey = this.encryptionService.encrypt(apiKey);
+
+    const provider = await this.prisma.provider.create({
       data: {
         providerId,
         providerKey,
         name,
-        apiKey,
+        apiKey: encryptedApiKey,
         baseUrl: finalBaseUrl,
         enabled,
         categories: categories.join(','),
         uid: user.uid,
       },
     });
+
+    // Return provider with decrypted API key
+    return {
+      ...provider,
+      apiKey: this.encryptionService.decrypt(provider.apiKey),
+    };
   }
 
   async updateProvider(user: User, param: UpsertProviderRequest) {
@@ -182,19 +218,29 @@ export class ProviderService {
 
     const finalCategories = categories || provider.categories.split(',');
 
-    return this.prisma.provider.update({
+    // Encrypt API key if provided
+    const encryptedApiKey =
+      apiKey !== undefined ? this.encryptionService.encrypt(apiKey) : undefined;
+
+    const updatedProvider = await this.prisma.provider.update({
       where: {
         pk: provider.pk,
       },
       data: {
         providerKey,
         name,
-        apiKey,
+        apiKey: encryptedApiKey,
         baseUrl: finalBaseUrl,
         categories: finalCategories.join(','),
         enabled,
       },
     });
+
+    // Return provider with decrypted API key
+    return {
+      ...updatedProvider,
+      apiKey: this.encryptionService.decrypt(updatedProvider.apiKey),
+    };
   }
 
   async deleteProvider(user: User, param: DeleteProviderRequest) {
@@ -287,7 +333,14 @@ export class ProviderService {
       return null;
     }
 
-    return item;
+    // Decrypt API key
+    return {
+      ...item,
+      provider: {
+        ...item.provider,
+        apiKey: this.encryptionService.decrypt(item.provider.apiKey),
+      },
+    };
   }
 
   async findProviderItemByCategory(user: User, category: ProviderCategory) {
@@ -300,7 +353,14 @@ export class ProviderService {
     });
 
     if (item) {
-      return item;
+      // Decrypt API key and return
+      return {
+        ...item,
+        provider: {
+          ...item.provider,
+          apiKey: this.encryptionService.decrypt(item.provider.apiKey),
+        },
+      };
     }
 
     // Fallback to global provider item
@@ -308,7 +368,7 @@ export class ProviderService {
     const globalItem = globalItems.find((item) => item.category === category);
 
     if (globalItem) {
-      return globalItem;
+      return globalItem; // Already decrypted by the global provider cache
     }
 
     return null;
@@ -333,22 +393,28 @@ export class ProviderService {
     }
 
     if (providerId) {
-      return this.prisma.provider.findUnique({
+      const provider = await this.prisma.provider.findUnique({
         where: { providerId, uid: user.uid, deletedAt: null },
       });
+      if (provider?.enabled) {
+        // Decrypt API key and return
+        return {
+          ...provider,
+          apiKey: this.encryptionService.decrypt(provider.apiKey),
+        };
+      }
+      this.logger.warn(`Provider ${providerId} not valid, fallback to search for global provider`);
     }
 
     const { providers: globalProviders } = await this.globalProviderCache.get();
-    const validProviderKeys = providerInfoList
-      .filter((info) => info.categories.includes(category))
-      .map((info) => info.key);
     const globalProvider = globalProviders.find((provider) =>
-      validProviderKeys.includes(provider.providerKey),
+      provider.categories.includes(category),
     );
     if (globalProvider) {
-      return globalProvider;
+      return globalProvider; // Already decrypted by the global provider cache
     }
 
+    this.logger.warn(`No valid provider found for category ${category}`);
     return null;
   }
 
