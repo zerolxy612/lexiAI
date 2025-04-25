@@ -236,7 +236,7 @@ export const ModelFormModal = memo(
           });
         }
       }
-    }, [model, isOpen, form, filterProviderCategory, providerOptions]);
+    }, [model, isOpen, form, filterProviderCategory]);
 
     useEffect(() => {
       if (isOpen) {

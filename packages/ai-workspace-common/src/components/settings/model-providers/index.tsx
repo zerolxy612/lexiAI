@@ -27,7 +27,6 @@ import {
   IconMoreHorizontal,
 } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { ProviderModal } from './provider-modal';
-import { providerInfoList } from '@refly/utils/provider';
 
 const { Title } = Typography;
 
@@ -80,7 +79,10 @@ const ActionDropdown = ({
           cancelText={t('common.cancel')}
           overlayStyle={{ maxWidth: '300px' }}
         >
-          <div className="flex items-center text-red-600 flex-grow">
+          <div
+            className="flex items-center text-red-600 flex-grow"
+            onClick={(e) => e.stopPropagation()}
+          >
             <IconDelete size={16} className="mr-2" />
             {t('common.delete')}
           </div>
@@ -129,10 +131,6 @@ const ProviderItem = React.memo(
       e.stopPropagation();
     }, []);
 
-    const providerInfo = useMemo(() => {
-      return providerInfoList.find((p) => p.key === provider.providerKey);
-    }, [provider]);
-
     return (
       <div className="mb-3 p-4 hover:bg-gray-50 rounded-md cursor-pointer border border-solid border-gray-100">
         <div className="flex items-center justify-between flex-wrap gap-3">
@@ -150,42 +148,47 @@ const ProviderItem = React.memo(
                 <span>{provider.name}</span>
                 <span className="text-sm text-gray-400">{provider.providerKey.toUpperCase()}</span>
               </div>
-              <div>
-                {providerInfo?.categories.map((category) => (
-                  <Tag key={category} color="green" bordered={false}>
-                    {category}
-                  </Tag>
-                ))}
-              </div>
+              {provider.categories?.length > 0 && (
+                <div>
+                  {provider.categories.map((category) => (
+                    <Tag key={category} color="green" bordered={false}>
+                      {category}
+                    </Tag>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
-          {!provider.isGlobal && (
-            <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            {!provider.isGlobal && (
               <ActionDropdown
                 provider={provider}
                 handleEdit={() => onSettingsClick({ ...provider, apiKey: 'default' })}
                 refetch={refetch}
               />
+            )}
 
-              <Tooltip
-                title={
-                  provider.enabled
+            <Tooltip
+              title={
+                provider.isGlobal
+                  ? ''
+                  : provider.enabled
                     ? t('settings.modelProviders.disable')
                     : t('settings.modelProviders.enable')
-                }
-              >
-                <div onClick={handleSwitchWrapperClick} className="flex items-center">
-                  <Switch
-                    size="small"
-                    checked={provider.enabled ?? false}
-                    onChange={handleToggleChange}
-                    loading={isSubmitting}
-                  />
-                </div>
-              </Tooltip>
-            </div>
-          )}
+              }
+            >
+              <div onClick={handleSwitchWrapperClick} className="flex items-center">
+                <Switch
+                  size="small"
+                  checked={provider.enabled ?? false}
+                  onChange={handleToggleChange}
+                  loading={isSubmitting}
+                  disabled={provider.isGlobal}
+                />
+              </div>
+            </Tooltip>
+          </div>
         </div>
       </div>
     );

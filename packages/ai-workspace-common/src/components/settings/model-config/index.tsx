@@ -97,6 +97,7 @@ const ModelItem = memo(
     onToggleEnabled,
     isSubmitting,
     index,
+    draggable = true,
   }: {
     model: ProviderItem;
     onEdit: (model: ProviderItem) => void;
@@ -104,6 +105,7 @@ const ModelItem = memo(
     onToggleEnabled: (model: ProviderItem, enabled: boolean) => void;
     isSubmitting: boolean;
     index: number;
+    draggable?: boolean;
   }) => {
     const { t } = useTranslation();
 
@@ -136,6 +138,15 @@ const ModelItem = memo(
           >
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div className="flex-1 flex items-center gap-2">
+                {draggable && (
+                  <div
+                    {...provided.dragHandleProps}
+                    className="p-1 text-gray-400 hover:text-green-600 group-hover:opacity-100 opacity-0 hidden group-hover:block transition-opacity duration-200"
+                  >
+                    <LuGripVertical size={16} className="flex items-center" />
+                  </div>
+                )}
+
                 <ModelIcon
                   model={(model.config as LLMModelConfig)?.modelId || model.name}
                   size={18}
@@ -145,20 +156,7 @@ const ModelItem = memo(
               </div>
 
               <div className="flex items-center gap-2">
-                <div
-                  {...provided.dragHandleProps}
-                  className="p-1 text-gray-400 hover:text-gray-600 group-hover:opacity-100 opacity-0 transition-opacity duration-200"
-                >
-                  <LuGripVertical size={16} className="flex items-center" />
-                </div>
-
-                {!model?.provider?.isGlobal && (
-                  <ActionDropdown
-                    model={model}
-                    handleEdit={handleEdit}
-                    handleDelete={handleDelete}
-                  />
-                )}
+                <ActionDropdown model={model} handleEdit={handleEdit} handleDelete={handleDelete} />
 
                 <Tooltip
                   title={
@@ -351,6 +349,10 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
     return items.filter((model) => model.name?.toLowerCase().includes(lowerQuery));
   }, [modelItems, searchQuery]);
 
+  const draggable = useMemo(() => {
+    return searchQuery.trim() === '';
+  }, [searchQuery]);
+
   useEffect(() => {
     if (visible) {
       getProviderItems();
@@ -435,6 +437,7 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
                         onToggleEnabled={handleToggleEnabled}
                         isSubmitting={isUpdating}
                         index={index}
+                        draggable={draggable}
                       />
                     ))}
                     {provided.placeholder}
