@@ -3,6 +3,7 @@
 import { type Options } from '@hey-api/client-fetch';
 import { UseQueryResult } from '@tanstack/react-query';
 import {
+  addNodesToCanvasPage,
   addReferences,
   autoNameCanvas,
   batchCreateResource,
@@ -31,6 +32,8 @@ import {
   deleteDocument,
   deleteLabelClass,
   deleteLabelInstance,
+  deletePage,
+  deletePageNode,
   deleteProject,
   deleteProjectItems,
   deleteProvider,
@@ -52,6 +55,8 @@ import {
   getCodeArtifactDetail,
   getCollabToken,
   getDocumentDetail,
+  getPageByCanvasId,
+  getPageDetail,
   getProjectDetail,
   getResourceDetail,
   getSettings,
@@ -67,6 +72,7 @@ import {
   listLabelClasses,
   listLabelInstances,
   listModels,
+  listPages,
   listProjects,
   listProviderItems,
   listProviders,
@@ -85,6 +91,7 @@ import {
   scrape,
   search,
   serveStatic,
+  sharePage,
   streamInvokeSkill,
   unpinSkillInstance,
   updateCanvas,
@@ -93,6 +100,7 @@ import {
   updateDocument,
   updateLabelClass,
   updateLabelInstance,
+  updatePage,
   updateProject,
   updateProjectItems,
   updateProvider,
@@ -103,6 +111,38 @@ import {
   updateSkillTrigger,
   upload,
 } from '../requests/services.gen';
+export type ListPagesDefaultResponse = Awaited<ReturnType<typeof listPages>>['data'];
+export type ListPagesQueryResult<
+  TData = ListPagesDefaultResponse,
+  TError = unknown,
+> = UseQueryResult<TData, TError>;
+export const useListPagesKey = 'ListPages';
+export const UseListPagesKeyFn = (
+  clientOptions: Options<unknown, true> = {},
+  queryKey?: Array<unknown>,
+) => [useListPagesKey, ...(queryKey ?? [clientOptions])];
+export type GetPageDetailDefaultResponse = Awaited<ReturnType<typeof getPageDetail>>['data'];
+export type GetPageDetailQueryResult<
+  TData = GetPageDetailDefaultResponse,
+  TError = unknown,
+> = UseQueryResult<TData, TError>;
+export const useGetPageDetailKey = 'GetPageDetail';
+export const UseGetPageDetailKeyFn = (
+  clientOptions: Options<unknown, true>,
+  queryKey?: Array<unknown>,
+) => [useGetPageDetailKey, ...(queryKey ?? [clientOptions])];
+export type GetPageByCanvasIdDefaultResponse = Awaited<
+  ReturnType<typeof getPageByCanvasId>
+>['data'];
+export type GetPageByCanvasIdQueryResult<
+  TData = GetPageByCanvasIdDefaultResponse,
+  TError = unknown,
+> = UseQueryResult<TData, TError>;
+export const useGetPageByCanvasIdKey = 'GetPageByCanvasId';
+export const UseGetPageByCanvasIdKeyFn = (
+  clientOptions: Options<unknown, true>,
+  queryKey?: Array<unknown>,
+) => [useGetPageByCanvasIdKey, ...(queryKey ?? [clientOptions])];
 export type GetAuthConfigDefaultResponse = Awaited<ReturnType<typeof getAuthConfig>>['data'];
 export type GetAuthConfigQueryResult<
   TData = GetAuthConfigDefaultResponse,
@@ -437,6 +477,18 @@ export const UseServeStaticKeyFn = (
   clientOptions: Options<unknown, true> = {},
   queryKey?: Array<unknown>,
 ) => [useServeStaticKey, ...(queryKey ?? [clientOptions])];
+export type SharePageMutationResult = Awaited<ReturnType<typeof sharePage>>;
+export const useSharePageKey = 'SharePage';
+export const UseSharePageKeyFn = (mutationKey?: Array<unknown>) => [
+  useSharePageKey,
+  ...(mutationKey ?? []),
+];
+export type AddNodesToCanvasPageMutationResult = Awaited<ReturnType<typeof addNodesToCanvasPage>>;
+export const useAddNodesToCanvasPageKey = 'AddNodesToCanvasPage';
+export const UseAddNodesToCanvasPageKeyFn = (mutationKey?: Array<unknown>) => [
+  useAddNodesToCanvasPageKey,
+  ...(mutationKey ?? []),
+];
 export type RefreshTokenMutationResult = Awaited<ReturnType<typeof refreshToken>>;
 export const useRefreshTokenKey = 'RefreshToken';
 export const UseRefreshTokenKeyFn = (mutationKey?: Array<unknown>) => [
@@ -841,9 +893,27 @@ export const UseConvertKeyFn = (mutationKey?: Array<unknown>) => [
   useConvertKey,
   ...(mutationKey ?? []),
 ];
+export type UpdatePageMutationResult = Awaited<ReturnType<typeof updatePage>>;
+export const useUpdatePageKey = 'UpdatePage';
+export const UseUpdatePageKeyFn = (mutationKey?: Array<unknown>) => [
+  useUpdatePageKey,
+  ...(mutationKey ?? []),
+];
 export type UpdateSettingsMutationResult = Awaited<ReturnType<typeof updateSettings>>;
 export const useUpdateSettingsKey = 'UpdateSettings';
 export const UseUpdateSettingsKeyFn = (mutationKey?: Array<unknown>) => [
   useUpdateSettingsKey,
+  ...(mutationKey ?? []),
+];
+export type DeletePageMutationResult = Awaited<ReturnType<typeof deletePage>>;
+export const useDeletePageKey = 'DeletePage';
+export const UseDeletePageKeyFn = (mutationKey?: Array<unknown>) => [
+  useDeletePageKey,
+  ...(mutationKey ?? []),
+];
+export type DeletePageNodeMutationResult = Awaited<ReturnType<typeof deletePageNode>>;
+export const useDeletePageNodeKey = 'DeletePageNode';
+export const UseDeletePageNodeKeyFn = (mutationKey?: Array<unknown>) => [
+  useDeletePageNodeKey,
   ...(mutationKey ?? []),
 ];

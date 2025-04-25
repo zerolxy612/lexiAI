@@ -115,6 +115,8 @@ export type ImageNodeMeta = {
   imageType: string;
   imageUrl: string;
   storageKey: string;
+  showBorder?: boolean;
+  showTitle?: boolean;
   sizeMode?: 'compact' | 'adaptive';
   style?: React.CSSProperties;
   originalWidth?: number;

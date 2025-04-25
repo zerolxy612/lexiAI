@@ -15,6 +15,8 @@ const ShareCodePage = () => {
   }));
   const { data: codeData, loading: isLoading } = useFetchShareData(shareId);
 
+  console.log({ codeData });
+
   // Force collapse by default
   useEffect(() => {
     setCollapse(true);

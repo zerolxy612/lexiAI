@@ -17,6 +17,7 @@
     "build:electron": "turbo run build:electron --filter=@refly/api",
     "package:electron": "turbo run package:electron --filter=@refly/api",
     "copy-env": "turbo run copy-env",
+    "copy-env:develop": "turbo run copy-env:develop",
     "codegen": "turbo run codegen",
     "clean": "turbo run clean",
     "cy:open": "cypress open",
@@ -55,5 +56,13 @@
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": ["biome check --write"],
     "*.json": ["biome format --write"]
+  },
+  "dependencies": {
+    "@types/react-beautiful-dnd": "^13.1.8",
+    "@types/react-virtualized-auto-sizer": "^1.0.8",
+    "@types/react-window": "^1.8.8",
+    "react-beautiful-dnd": "^13.1.1",
+    "react-virtualized-auto-sizer": "^1.0.26",
+    "react-window": "^1.8.11"
   }
 }

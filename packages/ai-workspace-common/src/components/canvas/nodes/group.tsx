@@ -26,6 +26,7 @@ import { useSetNodeDataByEntity } from '@refly-packages/ai-workspace-common/hook
 import { useThrottledCallback } from 'use-debounce';
 import { useNodeData } from '@refly-packages/ai-workspace-common/hooks/canvas/use-node-data';
 import { useCanvasLayout } from '@refly-packages/ai-workspace-common/hooks/canvas/use-canvas-layout';
+import { useSelectedNodeZIndex } from '@refly-packages/ai-workspace-common/hooks/canvas/use-selected-node-zIndex';
 
 interface GroupMetadata {
   label?: string;
@@ -75,6 +76,7 @@ export const GroupNode = memo(
     const setNodeDataByEntity = useSetNodeDataByEntity();
     const { setNodeStyle } = useNodeData();
     const { onLayoutWithGroup } = useCanvasLayout();
+    useSelectedNodeZIndex(id, selected);
 
     // Memoize node and its measurements
     const node = useMemo(() => getNode(id), [id, getNode]);
@@ -320,18 +322,6 @@ export const GroupNode = memo(
       };
     }, [id, handleDelete]);
 
-    useEffect(() => {
-      const newZIndex = selected ? 1000 : -1;
-      setNodes((nodes) =>
-        nodes.map((node) => {
-          if (node.id === id) {
-            return { ...node, zIndex: newZIndex };
-          }
-          return node;
-        }),
-      );
-    }, [selected, setNodes]);
-
     return (
       <div>
         <div
@@ -398,7 +388,6 @@ export const GroupNode = memo(
               className="absolute top-0 left-0 w-full h-full"
               style={{
                 backgroundColor: data.metadata?.bgColor || 'transparent',
-                opacity: selected ? 0.5 : 1,
               }}
             />
           </div>

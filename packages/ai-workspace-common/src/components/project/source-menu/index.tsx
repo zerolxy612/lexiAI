@@ -35,6 +35,7 @@ import { LuPlus, LuExternalLink } from 'react-icons/lu';
 import { useDownloadFile } from '@refly-packages/ai-workspace-common/hooks/use-download-file';
 import type { MenuProps, DropdownProps } from 'antd';
 import { useMatch } from 'react-router-dom';
+import { useGetProjectCanvasId } from '@refly-packages/ai-workspace-common/hooks/use-get-project-canvasId';
 
 const { Text } = Typography;
 
@@ -95,6 +96,7 @@ const SourceItemActionDropdown = memo(
     const { downloadFile } = useDownloadFile();
     const isShareCanvas = useMatch('/share/canvas/:canvasId');
     const isDocument = item.entityType === 'document';
+    const { isCanvasOpen } = useGetProjectCanvasId();
 
     // Resource-specific properties
     const resourceItem = !isDocument
@@ -147,18 +149,22 @@ const SourceItemActionDropdown = memo(
 
     const handleAddToCanvas = (e: React.MouseEvent) => {
       e.stopPropagation();
-      nodeOperationsEmitter.emit('addNode', {
-        node: {
-          type: item.entityType,
-          data: {
-            title: item.title,
-            entityId: item.entityId,
+      if (isCanvasOpen) {
+        nodeOperationsEmitter.emit('addNode', {
+          node: {
+            type: item.entityType,
+            data: {
+              title: item.title,
+              entityId: item.entityId,
+            },
           },
-        },
-        needSetCenter: true,
-        shouldPreview: true,
-      });
-      setPopupVisible(false);
+          needSetCenter: true,
+          shouldPreview: true,
+        });
+        setPopupVisible(false);
+      } else {
+        message.error(t('workspace.noCanvasSelected'));
+      }
     };
 
     const handleOpenWebpage = (e: React.MouseEvent) => {

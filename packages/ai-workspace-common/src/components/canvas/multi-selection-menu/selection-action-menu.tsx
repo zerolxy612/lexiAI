@@ -6,6 +6,7 @@ import {
   IconDelete,
   IconAskAI,
   IconLoading,
+  IconSlideshow,
 } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/canvas';
 import {
@@ -29,6 +30,7 @@ import { convertContextItemsToNodeFilters } from '@refly-packages/ai-workspace-c
 import { useNodeCluster } from '@refly-packages/ai-workspace-common/hooks/canvas/use-node-cluster';
 import { HoverCard, HoverContent } from '@refly-packages/ai-workspace-common/components/hover-card';
 import { useHoverCard } from '@refly-packages/ai-workspace-common/hooks/use-hover-card';
+import { useAddNodeToSlide } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-node-to-slide';
 
 interface MenuItem {
   key: string;
@@ -68,6 +70,14 @@ export const SelectionActionMenu: FC<SelectionActionMenuProps> = ({ onClose }) =
   }, [nodes]);
   const hasSkill = checkHasSkill();
   const allSelectedNodesAreSkill = checkAllSelectedNodesAreSkill();
+
+  const { addNodesToSlide, isAddingNodesToSlide } = useAddNodeToSlide({
+    canvasId,
+    nodes: (getNodes() || []).filter((node) => node.selected) as CanvasNode[],
+    onSuccess: () => {
+      onClose?.();
+    },
+  });
 
   const handleAskAI = useCallback(() => {
     // Get all selected nodes except skills
@@ -228,6 +238,10 @@ export const SelectionActionMenu: FC<SelectionActionMenuProps> = ({ onClose }) =
     }
   }, [getNodes, layoutNodeCluster]);
 
+  const handleAddToSlide = useCallback(() => {
+    addNodesToSlide();
+  }, [addNodesToSlide]);
+
   const getMenuItems = useCallback((): MenuItem[] => {
     return [
       allSelectedNodesAreSkill
@@ -275,6 +289,14 @@ export const SelectionActionMenu: FC<SelectionActionMenuProps> = ({ onClose }) =
           videoUrl:
             'https://static.refly.ai/onboarding/selection-node-action/selection-nodeAction-addToContext.webm',
         },
+      },
+      {
+        key: 'addToSlideshow',
+        icon: IconSlideshow,
+        label: t('canvas.nodeActions.addToSlideshow'),
+        onClick: handleAddToSlide,
+        loading: isAddingNodesToSlide,
+        type: 'button' as const,
       },
       { key: 'divider-2', type: 'divider' } as MenuItem,
       {

@@ -8,7 +8,6 @@ import { Tooltip, Button, Space, message } from 'antd';
 import { ImagePreview } from '@refly-packages/ai-workspace-common/components/common/image-preview';
 import { domToPng } from 'modern-screenshot';
 import copyToClipboard from 'copy-to-clipboard';
-import { useAddNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-node';
 import { IconCodeArtifact } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { IconCode, IconEye, IconCopy } from '@arco-design/web-react/icon';
 import { MarkdownMode } from '../../types';
@@ -50,9 +49,6 @@ const MermaidComponent = memo(
     const [zoomImageUrl, setZoomImageUrl] = useState<string>('');
 
     const isInteractive = mode === 'interactive';
-
-    // Only use addNode if in interactive mode and not readonly
-    const { addNode } = isInteractive ? useAddNode() : { addNode: undefined };
 
     // Generate a unique ID for this instance
     const diagramId = useMemo(() => generateUniqueId(), []);
@@ -296,7 +292,7 @@ const MermaidComponent = memo(
         type: 'application/refly.artifacts.mermaid',
         connectTo: [{ type: 'skillResponse', entityId: id }],
       });
-    }, [mermaidCode, diagramTitle, addNode, id, t, isInteractive]);
+    }, [mermaidCode, diagramTitle, id, t, isInteractive]);
 
     // Handle opening zoom modal
     const handleZoom = useCallback(async () => {

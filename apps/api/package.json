@@ -8,6 +8,7 @@
   "main": "dist-electron/electron/main.js",
   "scripts": {
     "copy-env": "ncp .env.example .env",
+    "copy-env:develop": "ncp .env.development .env",
     "build": "prisma generate && tsc --build --verbose && ncp prisma/ dist/prisma/ && ncp src/generated dist/generated",
     "build:electron": "prisma generate --schema=prisma/sqlite-schema.prisma && tsc --build tsconfig.electron.json && ncp src/generated dist-electron/generated",
     "prisma:generate": "prisma format && prisma generate",
@@ -43,6 +44,7 @@
     "@nestjs/passport": "~10.0.3",
     "@nestjs/platform-express": "^10.3.9",
     "@nestjs/platform-ws": "~10.3.9",
+    "@nestjs/swagger": "^8.1.1",
     "@nestjs/throttler": "^6.3.0",
     "@nestjs/websockets": "~10.3.9",
     "@opentelemetry/api": "~1.8.0",

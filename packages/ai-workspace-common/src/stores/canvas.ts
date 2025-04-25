@@ -45,8 +45,10 @@ export interface CanvasState {
   autoLayout: boolean;
   showTemplates: boolean;
   showReflyPilot: boolean;
+  showSlideshow: boolean;
   linearThreadMessages: LinearThreadMessage[];
   tplConfig: Record<string, any> | null;
+  canvasPage: Record<string, string>;
 
   setInitialFitViewCompleted: (completed: boolean) => void;
   deleteCanvasData: (canvasId: string) => void;
@@ -68,12 +70,14 @@ export interface CanvasState {
   setAutoLayout: (enabled: boolean) => void;
   setShowTemplates: (show: boolean) => void;
   setShowReflyPilot: (show: boolean) => void;
+  setShowSlideshow: (show: boolean) => void;
   addLinearThreadMessage: (message: Omit<LinearThreadMessage, 'timestamp'>) => void;
   removeLinearThreadMessage: (id: string) => void;
   removeLinearThreadMessageByNodeId: (nodeId: string) => void;
   clearLinearThreadMessages: () => void;
   setTplConfig: (config: Record<string, any> | null) => void;
   clearState: () => void;
+  setCanvasPage: (canvasId: string, pageId: string) => void;
 }
 
 const defaultCanvasConfig: () => CanvasConfig = () => ({
@@ -94,8 +98,10 @@ const defaultCanvasState = () => ({
   autoLayout: false,
   showTemplates: true,
   showReflyPilot: false,
+  showSlideshow: false,
   linearThreadMessages: [],
   tplConfig: null,
+  canvasPage: {},
 });
 
 export const useCanvasStore = create<CanvasState>()(
@@ -250,6 +256,10 @@ export const useCanvasStore = create<CanvasState>()(
         set((state) => {
           state.showReflyPilot = show;
         }),
+      setShowSlideshow: (show) =>
+        set((state) => {
+          state.showSlideshow = show;
+        }),
       addLinearThreadMessage: (message) =>
         set((state) => {
           state.linearThreadMessages.push({
@@ -278,6 +288,10 @@ export const useCanvasStore = create<CanvasState>()(
           state.tplConfig = config;
         }),
       clearState: () => set(defaultCanvasState()),
+      setCanvasPage: (canvasId, pageId) =>
+        set((state) => {
+          state.canvasPage[canvasId] = pageId;
+        }),
     })),
     {
       name: 'canvas-storage',
@@ -290,6 +304,8 @@ export const useCanvasStore = create<CanvasState>()(
         nodeSizeMode: state.nodeSizeMode,
         showReflyPilot: state.showReflyPilot,
         linearThreadMessages: state.linearThreadMessages,
+        showSlideshow: state.showSlideshow,
+        canvasPage: state.canvasPage,
       }),
     },
   ),

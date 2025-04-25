@@ -6,6 +6,7 @@ import {
   IconEdit,
   IconPlayOutline,
   IconCopy,
+  IconRemove,
 } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { useDeleteCanvas } from '@refly-packages/ai-workspace-common/hooks/canvas/use-delete-canvas';
 import { useTranslation } from 'react-i18next';
@@ -26,6 +27,7 @@ interface CanvasActionDropdown {
   afterDelete?: () => void;
   afterRename?: (newTitle: string, canvasId: string) => void;
   handleUseCanvas?: () => void;
+  handleRemoveFromProject?: () => void;
 }
 
 export const CanvasActionDropdown = memo((props: CanvasActionDropdown) => {
@@ -37,6 +39,7 @@ export const CanvasActionDropdown = memo((props: CanvasActionDropdown) => {
     afterDelete,
     afterRename,
     handleUseCanvas,
+    handleRemoveFromProject,
   } = props;
   const [popupVisible, setPopupVisible] = useState(false);
   const { t } = useTranslation();
@@ -128,6 +131,22 @@ export const CanvasActionDropdown = memo((props: CanvasActionDropdown) => {
         </div>
       ),
       key: 'duplicate',
+    },
+    handleRemoveFromProject && {
+      label: (
+        <div
+          className="flex items-center"
+          onClick={(e) => {
+            e.stopPropagation();
+            setPopupVisible(false);
+            handleRemoveFromProject();
+          }}
+        >
+          <IconRemove size={16} className="mr-2" />
+          {t('canvas.toolbar.removeFromProject')}
+        </div>
+      ),
+      key: 'removeFromProject',
     },
     {
       label: (

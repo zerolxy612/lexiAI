@@ -2,7 +2,7 @@ const translations = {
   commonQnA: {
     name: '通用问答',
     description: '基于上下文回答问题',
-    placeholder: '向 AI 提问，输入 / 选择技能...',
+    placeholder: '向 AI 提问，输入 Ctrl + / 选择技能...',
     steps: {
       analyzeQuery: {
         name: '分析需求',

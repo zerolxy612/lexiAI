@@ -22,7 +22,7 @@ import {
   UpsertProjectRequest,
   UpsertProjectResponse,
   User,
-} from '@refly-packages/openapi-schema';
+} from '@refly/openapi-schema';
 import { buildSuccessResponse } from '@/utils/response';
 import { projectPO2DTO } from '@/modules/project/project.dto';
 

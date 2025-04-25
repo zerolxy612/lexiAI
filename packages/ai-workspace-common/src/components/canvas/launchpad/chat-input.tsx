@@ -1,5 +1,5 @@
 import { AutoComplete, AutoCompleteProps, Input } from 'antd';
-import { memo, useRef, useMemo, useState, useCallback, forwardRef, useEffect } from 'react';
+import { memo, useRef, useMemo, useState, useCallback, forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { RefTextAreaType } from '@arco-design/web-react/es/Input/textarea';
 import { useSearchStoreShallow } from '@refly-packages/ai-workspace-common/stores/search';
@@ -109,36 +109,65 @@ const ChatInputComponent = forwardRef<HTMLDivElement, ChatInputProps>(
           return;
         }
 
-        if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && !showSkillSelector) {
-          e.stopPropagation();
+        // When the user presses Ctrl+/ key, open the skill selector
+        if (e.key === '/' && (e.ctrlKey || e.metaKey)) {
+          e.preventDefault();
+          setQuery(`${query}/`);
+          setShowSkillSelector(true);
+          setOptions(skillOptions);
+          hasMatchedOptions.current = true;
           return;
         }
 
-        if (e.key === '/') {
-          setShowSkillSelector(true);
-        } else if (!['ArrowUp', 'ArrowDown', 'Enter'].includes(e.key)) {
-          showSkillSelector && setShowSkillSelector(false);
+        // Handle Ctrl+K or Cmd+K to open search
+        if (e.keyCode === 75 && (e.metaKey || e.ctrlKey)) {
+          e.preventDefault();
+          searchStore.setIsSearchOpen(true);
         }
 
+        // Only intercept ArrowUp and ArrowDown when skill selector is active and has options
+        if (
+          (e.key === 'ArrowUp' || e.key === 'ArrowDown') &&
+          showSkillSelector &&
+          hasMatchedOptions.current &&
+          options.length > 0
+        ) {
+          // Allow the default behavior for AutoComplete navigation
+          return;
+        }
+
+        // Handle the Enter key
         if (e.keyCode === 13) {
-          if (showSkillSelector && hasMatchedOptions.current) {
-            e.preventDefault();
+          // Shift + Enter creates a new line (let default behavior handle it)
+          if (e.shiftKey) {
             return;
           }
 
-          if (e.ctrlKey || e.shiftKey || e.metaKey) {
+          // Ctrl/Meta + Enter should always send the message regardless of skill selector
+          if ((e.ctrlKey || e.metaKey) && query?.trim()) {
             e.preventDefault();
-            if (e.target instanceof HTMLTextAreaElement) {
-              const cursorPos = e.target.selectionStart ?? 0;
-              const newValue = `${query.slice(0, cursorPos)}\n${query.slice(cursorPos)}`;
-              setQuery(newValue);
-              setTimeout(() => {
-                if (e.target instanceof HTMLTextAreaElement) {
-                  e.target.selectionStart = e.target.selectionEnd = cursorPos + 1;
-                }
-              }, 0);
+            handleSendMessage();
+            return;
+          }
+
+          // For regular Enter key
+          if (!e.shiftKey) {
+            // enter should not be used to select when the skill selector is active and has options
+            if (showSkillSelector && hasMatchedOptions.current && options.length > 0) {
+              e.preventDefault();
+              return;
             }
-          } else {
+
+            // enter should send message when the query contains '//'
+            if (query?.includes('//')) {
+              e.preventDefault();
+              if (query?.trim()) {
+                handleSendMessage();
+              }
+              return;
+            }
+
+            // Otherwise send message on Enter
             e.preventDefault();
             if (query?.trim()) {
               handleSendMessage();
@@ -146,12 +175,17 @@ const ChatInputComponent = forwardRef<HTMLDivElement, ChatInputProps>(
           }
         }
 
-        if (e.keyCode === 75 && (e.metaKey || e.ctrlKey)) {
-          e.preventDefault();
-          searchStore.setIsSearchOpen(true);
+        // Update the skill selector state - exclude navigation keys to allow proper navigation
+        const navigationKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter'];
+        if (
+          !navigationKeys.includes(e.key) &&
+          !(e.key === '/' && (e.ctrlKey || e.metaKey)) &&
+          showSkillSelector
+        ) {
+          setShowSkillSelector(false);
         }
       },
-      [query, readonly, showSkillSelector, setQuery, handleSendMessage, searchStore],
+      [query, readonly, showSkillSelector, options, handleSendMessage, searchStore, skillOptions],
     );
 
     const handleInputChange = useCallback(
@@ -173,41 +207,33 @@ const ChatInputComponent = forwardRef<HTMLDivElement, ChatInputProps>(
         if (handleSelectSkill) {
           handleSelectSkill(skill);
         } else {
-          const lastSlashIndex = query.lastIndexOf('/');
-          const prefix = lastSlashIndex !== -1 ? query.slice(0, lastSlashIndex) : '';
-          setQuery(prefix);
+          setQuery('');
           setSelectedSkill(skill);
         }
       },
-      [skills, setSelectedSkill, handleSelectSkill, query, setQuery],
+      [skills, setSelectedSkill, handleSelectSkill, setQuery],
     );
 
-    // Update options when query changes and contains a slash
-    useEffect(() => {
-      const lastSlashIndex = query.lastIndexOf('/');
-      if (lastSlashIndex !== -1) {
-        setOptions(skillOptions);
-        setShowSkillSelector(true);
-      } else if (showSkillSelector) {
-        setOptions([]);
-        setShowSkillSelector(false);
-      }
-    }, [query, skillOptions, showSkillSelector]);
+    const filterOption = useCallback(
+      (inputValue: string, option: any) => {
+        // Ctrl+/ was just pressed, show all options
+        if (showSkillSelector && inputValue === query) {
+          return true;
+        }
 
-    const filterOption = useCallback((inputValue: string, option: any) => {
-      const lastSlashIndex = inputValue.lastIndexOf('/');
-      const searchText = lastSlashIndex !== -1 ? inputValue.slice(lastSlashIndex + 1) : inputValue;
-      const searchVal = searchText.toLowerCase();
-      const isMatch =
-        !searchVal ||
-        option.value.toString().toLowerCase().includes(searchVal) ||
-        option.textLabel.toLowerCase().includes(searchVal);
+        const searchVal = inputValue.toLowerCase();
+        const isMatch =
+          !searchVal ||
+          option.value.toString().toLowerCase().includes(searchVal) ||
+          option.textLabel.toLowerCase().includes(searchVal);
 
-      if (isMatch) {
-        hasMatchedOptions.current = true;
-      }
-      return isMatch;
-    }, []);
+        if (isMatch) {
+          hasMatchedOptions.current = true;
+        }
+        return isMatch;
+      },
+      [showSkillSelector, query],
+    );
 
     const onSelect = useCallback(
       (value: string) => {
@@ -216,11 +242,21 @@ const ChatInputComponent = forwardRef<HTMLDivElement, ChatInputProps>(
       [readonly, handleSearchListConfirm],
     );
 
-    // Handle focus event and propagate it upward
+    // Handle focus event and propagate it upward, then move cursor to end
     const handleFocus = useCallback(() => {
       if (onFocus && !readonly) {
         onFocus();
       }
+      // Ensure cursor is placed at end of text
+      setTimeout(() => {
+        const el =
+          (inputRef.current as any)?.resizableTextArea?.textArea ||
+          (inputRef.current as any)?.textarea;
+        if (el) {
+          const length = el.value.length;
+          el.setSelectionRange(length, length);
+        }
+      }, 0);
     }, [onFocus, readonly]);
 
     return (
@@ -231,7 +267,6 @@ const ChatInputComponent = forwardRef<HTMLDivElement, ChatInputProps>(
           isDragging && 'ring-2 ring-green-500 ring-opacity-50 rounded-lg',
           readonly && 'opacity-70 cursor-not-allowed',
         )}
-        onPaste={handlePaste}
         onDragOver={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -268,18 +303,55 @@ const ChatInputComponent = forwardRef<HTMLDivElement, ChatInputProps>(
             <div className="text-green-600 text-sm font-medium">{t('common.dropImageHere')}</div>
           </div>
         )}
-        <AutoComplete
-          className="h-full"
-          autoFocus={!readonly}
-          open={showSkillSelector && !readonly}
-          options={options}
-          popupMatchSelectWidth={false}
-          placement={autoCompletionPlacement}
-          value={query}
-          disabled={readonly}
-          filterOption={filterOption}
-          onSelect={onSelect}
-        >
+        {showSkillSelector && !readonly ? (
+          <AutoComplete
+            className="h-full"
+            autoFocus={!readonly}
+            open={true}
+            options={options}
+            popupMatchSelectWidth={false}
+            placement={autoCompletionPlacement}
+            value={query}
+            disabled={readonly}
+            filterOption={filterOption}
+            onSelect={onSelect}
+          >
+            <TextArea
+              style={{ paddingLeft: 0, paddingRight: 0, height: '100%' }}
+              ref={inputRef}
+              autoFocus={!readonly}
+              disabled={readonly}
+              onFocus={handleFocus}
+              onBlur={() => {
+                setTimeout(() => {
+                  setShowSkillSelector(false);
+                }, 100);
+              }}
+              value={query ?? ''}
+              onChange={handleInputChange}
+              onKeyDownCapture={handleKeyDown}
+              onPaste={handlePaste}
+              className={cn(
+                '!m-0 bg-transparent outline-none box-border border-none resize-none focus:outline-none focus:shadow-none focus:border-none',
+                inputClassName,
+                readonly && 'cursor-not-allowed !text-black !bg-transparent',
+              )}
+              placeholder={
+                selectedSkillName
+                  ? t(`${selectedSkillName}.placeholder`, {
+                      ns: 'skill',
+                      defaultValue: t('commonQnA.placeholder', { ns: 'skill' }),
+                    })
+                  : t('commonQnA.placeholder', { ns: 'skill' })
+              }
+              autoSize={{
+                minRows: 1,
+                maxRows: maxRows ?? 6,
+              }}
+              data-cy="chat-input"
+            />
+          </AutoComplete>
+        ) : (
           <TextArea
             style={{ paddingLeft: 0, paddingRight: 0, height: '100%' }}
             ref={inputRef}
@@ -294,18 +366,7 @@ const ChatInputComponent = forwardRef<HTMLDivElement, ChatInputProps>(
             value={query ?? ''}
             onChange={handleInputChange}
             onKeyDownCapture={handleKeyDown}
-            onPaste={(e) => {
-              if (readonly) return;
-              if (e.clipboardData?.items) {
-                for (const item of e.clipboardData.items) {
-                  if (item.type.startsWith('image/')) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    break;
-                  }
-                }
-              }
-            }}
+            onPaste={handlePaste}
             className={cn(
               '!m-0 bg-transparent outline-none box-border border-none resize-none focus:outline-none focus:shadow-none focus:border-none',
               inputClassName,
@@ -325,7 +386,7 @@ const ChatInputComponent = forwardRef<HTMLDivElement, ChatInputProps>(
             }}
             data-cy="chat-input"
           />
-        </AutoComplete>
+        )}
       </div>
     );
   },

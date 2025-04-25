@@ -55,6 +55,7 @@ import { truncateContent } from '@refly-packages/ai-workspace-common/utils/conte
 import { useNodeData } from '@refly-packages/ai-workspace-common/hooks/canvas';
 import { useSkillError } from '@refly-packages/ai-workspace-common/hooks/use-skill-error';
 import { ModelIcon } from '@lobehub/icons';
+import { useSelectedNodeZIndex } from '@refly-packages/ai-workspace-common/hooks/canvas/use-selected-node-zIndex';
 
 const POLLING_WAIT_TIME = 15000;
 
@@ -217,6 +218,7 @@ export const SkillResponseNode = memo(
     const [isHovered, setIsHovered] = useState(false);
     const { draggingNodeId } = useEditorPerformance();
     const isDragging = draggingNodeId === id;
+    useSelectedNodeZIndex(id, selected);
 
     const { operatingNodeId } = useCanvasStoreShallow((state) => ({
       operatingNodeId: state.operatingNodeId,

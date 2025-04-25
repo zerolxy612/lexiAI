@@ -13,6 +13,7 @@ import {
   IconCopy,
   IconMemo,
   IconDeleteFile,
+  IconSlideshow,
 } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { RiFullscreenFill } from 'react-icons/ri';
 import { useCanvasStoreShallow } from '@refly-packages/ai-workspace-common/stores/canvas';
@@ -45,6 +46,7 @@ import { HoverCard, HoverContent } from '@refly-packages/ai-workspace-common/com
 import { useHoverCard } from '@refly-packages/ai-workspace-common/hooks/use-hover-card';
 import { useNodePreviewControl } from '@refly-packages/ai-workspace-common/hooks/canvas';
 import { useGetNodeContent } from '@refly-packages/ai-workspace-common/hooks/canvas/use-get-node-content';
+import { useAddNodeToSlide } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-node-to-slide';
 
 interface MenuItem {
   key?: string;
@@ -70,6 +72,15 @@ interface NodeActionMenuProps {
   onHoverCardStateChange?: (isHovered: boolean) => void;
 }
 
+const getChildNodes = (id: string, nodes: CanvasNode[]) => {
+  const childNodes = nodes.filter((node) => {
+    const isInGroup = node.parentId === id;
+    return isInGroup && !['skill', 'group'].includes(node.type);
+  }) as CanvasNode[];
+
+  return childNodes;
+};
+
 export const NodeActionMenu: FC<NodeActionMenuProps> = ({
   nodeId,
   nodeType,
@@ -78,7 +89,7 @@ export const NodeActionMenu: FC<NodeActionMenuProps> = ({
   onHoverCardStateChange,
 }) => {
   const { t } = useTranslation();
-  const { getNode } = useReactFlow();
+  const { getNode, getNodes } = useReactFlow();
   const { canvasId } = useCanvasContext();
   const { setNodeSizeMode } = useNodeOperations();
   const { setShowPreview } = useCanvasStoreShallow((state) => ({
@@ -91,17 +102,33 @@ export const NodeActionMenu: FC<NodeActionMenuProps> = ({
   }));
 
   const node = useMemo(() => getNode(nodeId) as CanvasNode, [nodeId, getNode]);
+  const nodes = useMemo(() => getNodes(), [getNodes]);
   const nodeData = useMemo(() => node?.data, [node]);
   const { fetchNodeContent } = useGetNodeContent(node);
   const [localSizeMode, setLocalSizeMode] = useState(
     () => nodeData?.metadata?.sizeMode || 'adaptive',
   );
 
+  const nodesForSlide = useMemo(() => {
+    if (nodeType === 'group') {
+      return getChildNodes(nodeId, nodes as CanvasNode[]);
+    }
+    return [node];
+  }, [nodeType, nodes]);
+
   const [isCreatingDocument, setIsCreatingDocument] = useState(false);
   const [cloneAskAIRunning, setCloneAskAIRunning] = useState(false);
   const [beforeCopying, setBeforeCopying] = useState(false);
   const [beforeInserting, setBeforeInserting] = useState(false);
   const [beforeDuplicatingDocument, setBeforeDuplicatingDocument] = useState(false);
+
+  const { addNodesToSlide, isAddingNodesToSlide } = useAddNodeToSlide({
+    canvasId,
+    nodes: nodesForSlide,
+    onSuccess: () => {
+      onClose?.();
+    },
+  });
 
   useEffect(() => {
     setLocalSizeMode(nodeData?.metadata?.sizeMode || 'adaptive');
@@ -306,6 +333,11 @@ export const NodeActionMenu: FC<NodeActionMenuProps> = ({
     onClose?.();
   }, [nodeId, fetchNodeContent, onClose]);
 
+  const handleAddToSlideshow = useCallback(() => {
+    addNodesToSlide();
+    onClose?.();
+  }, [nodeData?.entityId, canvasId, addNodesToSlide, onClose, nodeType]);
+
   const getMenuItems = useCallback(
     (activeDocumentId: string): MenuItem[] => {
       if (isMultiSelection) {
@@ -422,6 +454,13 @@ export const NodeActionMenu: FC<NodeActionMenuProps> = ({
             description: t('canvas.nodeActions.addToContextDescription'),
             videoUrl: 'https://static.refly.ai/onboarding/nodeAction/nodeAction-addToContext.webm',
           },
+        },
+        {
+          key: 'addToSlideshow',
+          icon: IconSlideshow,
+          label: t('canvas.nodeActions.addToSlideshow'),
+          onClick: handleAddToSlideshow,
+          loading: isAddingNodesToSlide,
         },
       ];
 
@@ -774,6 +813,7 @@ export const NodeActionMenu: FC<NodeActionMenuProps> = ({
       handleUngroup,
       isMultiSelection,
       handleDuplicateDocument,
+      handleAddToSlideshow,
     ],
   );
 

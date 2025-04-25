@@ -1,6 +1,6 @@
 import React, { ReactNode, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Popconfirm, Button, Input, Tooltip, Affix, Modal } from 'antd';
+import { Popconfirm, Button, Input, Tooltip, Affix, Modal, message } from 'antd';
 import {
   IconDelete,
   IconRemove,
@@ -11,6 +11,7 @@ import {
 
 import cn from 'classnames';
 import { IoAlertCircle } from 'react-icons/io5';
+import { useGetProjectCanvasId } from '@refly-packages/ai-workspace-common/hooks/use-get-project-canvasId';
 
 export const iconClassName =
   'w-3.5 h-3.5 flex-shrink-0 flex items-center justify-center hover:text-gray-700';
@@ -56,6 +57,7 @@ const HeaderActions = ({
 }: HeaderActionsProps) => {
   const { t } = useTranslation();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { isCanvasOpen } = useGetProjectCanvasId();
 
   const actions = useMemo(() => {
     if (isSearchMode || isMultiSelectMode) {
@@ -101,7 +103,13 @@ const HeaderActions = ({
                       type="text"
                       size="small"
                       icon={<IconPlus className={cn(iconClassName, 'text-gray-500')} />}
-                      onClick={() => onAddSelectedSourcesToCanvas?.()}
+                      onClick={() => {
+                        if (isCanvasOpen) {
+                          onAddSelectedSourcesToCanvas?.();
+                        } else {
+                          message.error(t('workspace.noCanvasSelected'));
+                        }
+                      }}
                     />
                   </Tooltip>
                 )}

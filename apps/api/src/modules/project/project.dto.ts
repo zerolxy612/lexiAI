@@ -1,4 +1,4 @@
-import { Project } from '@refly-packages/openapi-schema';
+import { Project } from '@refly/openapi-schema';
 import {
   Project as ProjectModel,
   Canvas as CanvasModel,
