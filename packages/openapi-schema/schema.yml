@@ -6321,6 +6321,7 @@ components:
       required:
         - providerId
         - providerKey
+        - categories
         - name
         - enabled
       properties:

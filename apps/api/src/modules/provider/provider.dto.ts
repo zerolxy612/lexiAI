@@ -16,6 +16,7 @@ export const providerPO2DTO = (provider: ProviderModel): Provider => {
 
   return {
     ...pick(provider, ['providerId', 'providerKey', 'name', 'baseUrl', 'enabled', 'isGlobal']),
+    categories: provider.categories.split(',') as ProviderCategory[],
   };
 };
 
@@ -23,7 +24,7 @@ export const providerItemPO2DTO = (
   providerItem: ProviderItemModel & { provider?: ProviderModel },
 ): ProviderItem => {
   return {
-    ...pick(providerItem, ['providerId', 'itemId', 'name', 'enabled']),
+    ...pick(providerItem, ['providerId', 'itemId', 'name', 'enabled', 'order']),
     category: providerItem.category as ProviderCategory,
     provider: providerPO2DTO(providerItem.provider),
     config: JSON.parse(providerItem.config || '{}'),

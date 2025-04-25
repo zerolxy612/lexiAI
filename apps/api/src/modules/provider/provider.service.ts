@@ -318,7 +318,7 @@ export class ProviderService {
     );
 
     // Combine user-specific items and unique global items
-    return [...userItems, ...uniqueGlobalItems];
+    return [...userItems, ...uniqueGlobalItems].sort((a, b) => a.order - b.order);
   }
 
   async findProviderItemById(user: User, itemId: string) {

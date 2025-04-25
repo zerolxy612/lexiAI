@@ -3797,7 +3797,7 @@ export type Provider = {
   /**
    * Provider categories
    */
-  categories?: Array<ProviderCategory>;
+  categories: Array<ProviderCategory>;
   /**
    * Provider base URL
    */

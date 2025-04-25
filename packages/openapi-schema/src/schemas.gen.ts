@@ -5419,7 +5419,7 @@ export const ProviderCategorySchema = {
 export const ProviderSchema = {
   type: 'object',
   description: 'General provider info',
-  required: ['providerId', 'providerKey', 'name', 'enabled'],
+  required: ['providerId', 'providerKey', 'categories', 'name', 'enabled'],
   properties: {
     providerId: {
       type: 'string',
