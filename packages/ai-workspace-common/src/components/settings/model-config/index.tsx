@@ -16,7 +16,7 @@ import {
   Divider,
 } from 'antd';
 import { Spin } from '@refly-packages/ai-workspace-common/components/common/spin';
-import { LuPlus, LuSearch } from 'react-icons/lu';
+import { LuPlus, LuSearch, LuGripVertical } from 'react-icons/lu';
 import { cn } from '@refly-packages/ai-workspace-common/utils/cn';
 import {
   IconDelete,
@@ -25,6 +25,7 @@ import {
 } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { LLMModelConfig, ProviderCategory, ProviderItem } from '@refly/openapi-schema';
 import { ModelIcon } from '@lobehub/icons';
+import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { ModelFormModal } from './model-form';
 
 const { Title } = Typography;
@@ -95,12 +96,14 @@ const ModelItem = memo(
     onDelete,
     onToggleEnabled,
     isSubmitting,
+    index,
   }: {
     model: ProviderItem;
     onEdit: (model: ProviderItem) => void;
     onDelete: (itemId: string) => void;
     onToggleEnabled: (model: ProviderItem, enabled: boolean) => void;
     isSubmitting: boolean;
+    index: number;
   }) => {
     const { t } = useTranslation();
 
@@ -124,39 +127,60 @@ const ModelItem = memo(
     }, [model.itemId, onDelete]);
 
     return (
-      <div className="mb-3 px-4 py-0.5 hover:bg-gray-50 rounded-md cursor-pointer border border-solid border-gray-100">
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div className="flex-1 flex items-center gap-2">
-            <ModelIcon
-              model={(model.config as LLMModelConfig)?.modelId || model.name}
-              size={18}
-              type={'color'}
-            />
-            <div className="font-medium">{model.name}</div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {!model?.provider?.isGlobal && (
-              <ActionDropdown model={model} handleEdit={handleEdit} handleDelete={handleDelete} />
-            )}
-
-            <Tooltip
-              title={
-                model.enabled ? t('settings.modelConfig.disable') : t('settings.modelConfig.enable')
-              }
-            >
-              <div onClick={handleSwitchWrapperClick} className="flex items-center">
-                <Switch
-                  size="small"
-                  checked={model.enabled ?? false}
-                  onChange={handleToggleChange}
-                  loading={isSubmitting}
+      <Draggable draggableId={model.itemId} index={index}>
+        {(provided) => (
+          <div
+            ref={provided.innerRef}
+            {...provided.draggableProps}
+            className="mb-3 px-4 py-0.5 hover:bg-gray-50 rounded-md cursor-pointer border border-solid border-gray-100 group"
+          >
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex-1 flex items-center gap-2">
+                <ModelIcon
+                  model={(model.config as LLMModelConfig)?.modelId || model.name}
+                  size={18}
+                  type={'color'}
                 />
+                <div className="font-medium">{model.name}</div>
               </div>
-            </Tooltip>
+
+              <div className="flex items-center gap-2">
+                <div
+                  {...provided.dragHandleProps}
+                  className="p-1 text-gray-400 hover:text-gray-600 group-hover:opacity-100 opacity-0 transition-opacity duration-200"
+                >
+                  <LuGripVertical size={16} className="flex items-center" />
+                </div>
+
+                {!model?.provider?.isGlobal && (
+                  <ActionDropdown
+                    model={model}
+                    handleEdit={handleEdit}
+                    handleDelete={handleDelete}
+                  />
+                )}
+
+                <Tooltip
+                  title={
+                    model.enabled
+                      ? t('settings.modelConfig.disable')
+                      : t('settings.modelConfig.enable')
+                  }
+                >
+                  <div onClick={handleSwitchWrapperClick} className="flex items-center">
+                    <Switch
+                      size="small"
+                      checked={model.enabled ?? false}
+                      onChange={handleToggleChange}
+                      loading={isSubmitting}
+                    />
+                  </div>
+                </Tooltip>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        )}
+      </Draggable>
     );
   },
 );
@@ -173,6 +197,15 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingModel, setEditingModel] = useState<ProviderItem | null>(null);
+
+  const batchUpdateProviderItems = async (items: ProviderItem[]) => {
+    const res = await getClient().batchUpdateProviderItems({
+      body: { items: items.map((item, index) => ({ ...item, order: index })) },
+    });
+    if (res.data.success) {
+      message.success(t('common.saveSuccess'));
+    }
+  };
 
   const getProviderItems = useCallback(async () => {
     setIsLoading(true);
@@ -281,6 +314,34 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
     setEditingModel(null);
   };
 
+  const handleDragEnd = useCallback(
+    (result: DropResult) => {
+      const { destination, source } = result;
+
+      // If dropped outside the list or no movement
+      if (!destination || destination.index === source.index) {
+        return;
+      }
+
+      // Reorder the list
+      const reorderedItems = Array.from(modelItems);
+      const [removed] = reorderedItems.splice(source.index, 1);
+      reorderedItems.splice(destination.index, 0, removed);
+
+      // Update the order property for each item
+      const updatedItems = reorderedItems.map((item, index) => ({
+        ...item,
+        order: index,
+      }));
+
+      // Update the state with the new order
+      setModelItems(updatedItems);
+
+      batchUpdateProviderItems(updatedItems);
+    },
+    [modelItems, batchUpdateProviderItems],
+  );
+
   const filteredModels = useMemo(() => {
     const items = modelItems;
 
@@ -360,21 +421,30 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
             )}
           </Empty>
         ) : (
-          <div>
-            <div>
-              {filteredModels.map((model) => (
-                <ModelItem
-                  key={model.itemId}
-                  model={model}
-                  onEdit={handleEditModel}
-                  onDelete={handleDeleteModel}
-                  onToggleEnabled={handleToggleEnabled}
-                  isSubmitting={isUpdating}
-                />
-              ))}
-            </div>
+          <>
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <Droppable droppableId="model-list">
+                {(provided) => (
+                  <div {...provided.droppableProps} ref={provided.innerRef}>
+                    {filteredModels.map((model, index) => (
+                      <ModelItem
+                        key={model.itemId}
+                        model={model}
+                        onEdit={handleEditModel}
+                        onDelete={handleDeleteModel}
+                        onToggleEnabled={handleToggleEnabled}
+                        isSubmitting={isUpdating}
+                        index={index}
+                      />
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
+
             <div className="text-center text-gray-400 text-sm mt-4 pb-10">{t('common.noMore')}</div>
-          </div>
+          </>
         )}
       </div>
 
