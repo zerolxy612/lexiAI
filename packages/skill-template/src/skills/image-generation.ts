@@ -55,6 +55,10 @@ export class ImageGeneration extends BaseSkill {
         key: 'apiKey',
         inputMode: 'input' as InputMode,
         defaultValue: '',
+        inputProps: {
+          // @ts-ignore - 使用密码类型的输入框
+          passwordType: true,
+        },
         labelDict: {
           en: 'API Key',
           'zh-CN': 'API 密钥',
@@ -220,13 +224,39 @@ export class ImageGeneration extends BaseSkill {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`图像生成失败: ${response.status} - ${errorText}`);
+        // 添加更详细的错误信息
+        const errorMessage = `图像生成失败: ${response.status} - ${errorText}`;
+        this.emitEvent(
+          {
+            event: 'log',
+            log: {
+              key: 'image.api.error',
+              titleArgs: {
+                status: response.status.toString(),
+                error: errorText,
+              },
+            },
+          },
+          config,
+        );
+        throw new Error(errorMessage);
       }
 
       // Process the streaming response
       const reader = response.body?.getReader();
       if (!reader) {
-        throw new Error('无法读取响应流');
+        const errorMessage = '无法读取响应流';
+        this.emitEvent(
+          {
+            event: 'log',
+            log: {
+              key: 'image.stream.error',
+              titleArgs: { error: errorMessage },
+            },
+          },
+          config,
+        );
+        throw new Error(errorMessage);
       }
 
       let imageUrl = '';
@@ -241,6 +271,19 @@ export class ImageGeneration extends BaseSkill {
       const timeout = 6000000; // 6000 seconds timeout
       const startTime = Date.now();
 
+      // 添加进度反馈
+      let progressReported = false;
+      this.emitEvent(
+        {
+          event: 'log',
+          log: {
+            key: 'image.stream.processing',
+            titleArgs: { prompt: query },
+          },
+        },
+        config,
+      );
+
       while (!done && Date.now() - startTime < timeout) {
         const result = await reader.read();
         done = result.done;
@@ -249,17 +292,52 @@ export class ImageGeneration extends BaseSkill {
           const chunk = decoder.decode(result.value, { stream: true });
           fullResponse += chunk;
 
+          // 每15秒报告一次进度
+          if (!progressReported && Date.now() - startTime > 15000) {
+            progressReported = true;
+            this.emitEvent(
+              {
+                event: 'log',
+                log: {
+                  key: 'image.stream.progress',
+                  titleArgs: { seconds: Math.floor((Date.now() - startTime) / 1000).toString() },
+                },
+              },
+              config,
+            );
+          }
+
           // Try to extract image URL and gen_id from accumulated response
           const urlMatch = fullResponse.match(/!\[.*?\]\((https:\/\/.*?)\)/);
           if (urlMatch?.[1] && !imageUrl) {
             imageUrl = urlMatch[1];
             console.log('Found image URL:', imageUrl);
+            this.emitEvent(
+              {
+                event: 'log',
+                log: {
+                  key: 'image.url.found',
+                  titleArgs: { url: imageUrl },
+                },
+              },
+              config,
+            );
           }
 
           const genIdMatch = fullResponse.match(/gen_id: `(.*?)`/);
           if (genIdMatch?.[1] && !genId) {
             genId = genIdMatch[1];
             console.log('Found gen_id:', genId);
+            this.emitEvent(
+              {
+                event: 'log',
+                log: {
+                  key: 'image.genid.found',
+                  titleArgs: { genId: genId },
+                },
+              },
+              config,
+            );
           }
 
           // If we have both URL and gen_id, we can stop reading
@@ -269,9 +347,63 @@ export class ImageGeneration extends BaseSkill {
         }
       }
 
+      // 检查是否超时
+      if (Date.now() - startTime >= timeout) {
+        const errorMessage = '处理响应超时，请稍后重试';
+        this.emitEvent(
+          {
+            event: 'log',
+            log: {
+              key: 'image.timeout',
+              titleArgs: { timeout: (timeout / 1000).toString() },
+            },
+          },
+          config,
+        );
+        throw new Error(errorMessage);
+      }
+
       // If we couldn't find the image URL or gen_id in the response
       if (!imageUrl) {
-        throw new Error('无法从响应中提取图像URL');
+        // 尝试使用多种正则表达式模式
+        const alternativeUrlPatterns = [
+          /!\[.*?\]\((https:\/\/.*?)\)/,
+          /(https:\/\/.*?\.(?:png|jpg|jpeg|gif|webp))/i,
+          /"url":\s*"(https:\/\/.*?)"/,
+        ];
+
+        for (const pattern of alternativeUrlPatterns) {
+          const match = fullResponse.match(pattern);
+          if (match?.[1]) {
+            imageUrl = match[1];
+            this.emitEvent(
+              {
+                event: 'log',
+                log: {
+                  key: 'image.url.found.alternative',
+                  titleArgs: { url: imageUrl },
+                },
+              },
+              config,
+            );
+            break;
+          }
+        }
+
+        if (!imageUrl) {
+          const errorMessage = '无法从响应中提取图像URL';
+          this.emitEvent(
+            {
+              event: 'log',
+              log: {
+                key: 'image.url.missing',
+                titleArgs: { responseLength: fullResponse.length.toString() },
+              },
+            },
+            config,
+          );
+          throw new Error(errorMessage);
+        }
       }
 
       // Create artifact for the image
@@ -304,6 +436,18 @@ export class ImageGeneration extends BaseSkill {
         config,
       );
 
+      // 通知用户图像成功创建
+      this.emitEvent(
+        {
+          event: 'log',
+          log: {
+            key: 'image.artifact.created',
+            titleArgs: { title: imageTitle },
+          },
+        },
+        config,
+      );
+
       // 准备节点数据 - 按照ImageNodeMeta的要求设置
       const nodeData: CanvasNodeData = {
         title: imageTitle,
@@ -330,11 +474,35 @@ export class ImageGeneration extends BaseSkill {
         data: nodeData,
       };
 
+      // 记录尝试创建节点
+      this.emitEvent(
+        {
+          event: 'log',
+          log: {
+            key: 'image.node.creating',
+            titleArgs: { entityId: imageId },
+          },
+        },
+        config,
+      );
+
       // Emit an event to create a new image node in the canvas
       this.emitEvent(
         {
           event: 'create_node',
           node: canvasNode,
+        },
+        config,
+      );
+
+      // 记录节点创建已完成
+      this.emitEvent(
+        {
+          event: 'log',
+          log: {
+            key: 'image.node.created',
+            titleArgs: { entityId: imageId },
+          },
         },
         config,
       );
@@ -351,13 +519,13 @@ export class ImageGeneration extends BaseSkill {
         },
         {
           type: 'text',
-          text: `\n\n**生成的图像**\n\n提示词: ${query}\n\n图像ID: ${genId || 'unknown'}`,
+          text: `\n\n**生成的图像**\n\n提示词: ${query}\n\n图像ID: ${genId || 'unknown'}\n\n注意: 如果图像未显示在画板中，请检查网络连接或刷新页面。如果问题仍然存在，可以尝试使用"图像ID"重新生成。`,
         },
       ];
 
       // Also create a plain system message as fallback
       const systemMessage = new SystemMessage(
-        `![${imageTitle}](${imageUrl})\n\n生成的图像ID: ${genId || 'unknown'}\n\n提示词: ${query}`,
+        `![${imageTitle}](${imageUrl})\n\n生成的图像ID: ${genId || 'unknown'}\n\n提示词: ${query}\n\n注意: 如果图像未显示在画板中，请检查网络连接或刷新页面。如果问题仍然存在，可以尝试使用"图像ID"重新生成。`,
       );
 
       // Try to create an AI message with multimodal content
@@ -386,7 +554,11 @@ export class ImageGeneration extends BaseSkill {
       );
 
       return {
-        messages: [new SystemMessage(`图像生成错误: ${error.message}`)],
+        messages: [
+          new SystemMessage(
+            `图像生成错误: ${error.message}\n\n可能的解决方法:\n1. 检查API密钥是否有效\n2. 确认网络连接正常\n3. 简化提示词\n4. 检查API服务是否可用`,
+          ),
+        ],
       };
     }
   }

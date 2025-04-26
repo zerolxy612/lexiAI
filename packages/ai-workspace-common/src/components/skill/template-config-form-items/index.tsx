@@ -50,6 +50,8 @@ const ConfigItem = (props: {
     return (
       <Input
         placeholder={placeholder}
+        // @ts-ignore - 支持密码类型输入
+        type={item.inputProps?.passwordType ? 'password' : 'text'}
         defaultValue={(item?.defaultValue as string) || String(configValue?.value || '') || ''}
         onChange={(val) =>
           form.setFieldValue(field, {
