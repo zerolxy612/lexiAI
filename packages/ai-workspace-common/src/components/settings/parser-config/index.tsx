@@ -15,7 +15,7 @@ const { Title } = Typography;
 type ParserCategory = 'webSearch' | 'urlParsing' | 'pdfParsing';
 
 const DEFAULT_PROVIDERS = {
-  webSearch: 'searxng',
+  webSearch: null,
   urlParsing: 'cheerio',
   pdfParsing: 'pdfjs',
 };
@@ -182,10 +182,6 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
   const getProviderOptions = useMemo(() => {
     return {
       webSearch: [
-        {
-          label: t('settings.parserConfig.searxng'),
-          value: DEFAULT_PROVIDERS.webSearch,
-        },
         ...(webSearchProviders?.map((provider) => ({
           label: `${provider.name} (${provider.providerKey})`,
           value: provider.providerId,
@@ -269,6 +265,7 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
                     <Select
                       className="w-full"
                       value={record.value}
+                      placeholder={t('settings.parserConfig.settingPlaceholder')}
                       options={getProviderOptions[record.type]}
                       onChange={(value) => handleSelectProvider(value, record.type)}
                       dropdownRender={(menu) => renderSelectDropdown(menu, record.type)}

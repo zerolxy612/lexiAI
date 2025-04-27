@@ -1880,6 +1880,7 @@ const translations = {
       createProvider: '创建供应商',
       updateConfigSuccessfully: '配置更新成功！',
       updateConfigFailed: '配置更新失败，请重试！',
+      settingPlaceholder: ' 未配置',
     },
   },
   contentDetail: {

@@ -2088,6 +2088,7 @@ const translations = {
       createProvider: 'Create Provider',
       updateConfigSuccessfully: 'Config updated successfully!',
       updateConfigFailed: 'Failed to update config. Please try again!',
+      settingPlaceholder: 'Not configured',
     },
   },
   contentDetail: {
