@@ -55,6 +55,7 @@ export const createSkillTemplateInventory = (engine: SkillEngine): BaseSkill[] =
 export const createSkillInventory = (engine: SkillEngine): BaseSkill[] => {
   return [
     new CodeArtifacts(engine),
+    new ImageGeneration(engine),
     new WebSearch(engine),
     new LibrarySearch(engine),
     new CustomPrompt(engine),
@@ -63,6 +64,5 @@ export const createSkillInventory = (engine: SkillEngine): BaseSkill[] => {
     new CommonQnA(engine),
     // new RewriteDoc(engine),
     new EditDoc(engine),
-    new ImageGeneration(engine),
   ];
 };

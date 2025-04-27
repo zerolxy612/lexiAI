@@ -89,7 +89,6 @@ export class ImageGeneration extends BaseSkill {
         inputMode: 'input' as InputMode,
         defaultValue: '',
         inputProps: {
-          // @ts-ignore - 使用密码类型的输入框
           passwordType: true,
         },
         labelDict: {
@@ -175,7 +174,7 @@ export class ImageGeneration extends BaseSkill {
 
   description = '根据文本提示使用AI模型生成图像';
 
-  // 添加详细的用法说明
+  // more details
   helpText = {
     en: `
     # Image Generation
@@ -237,12 +236,12 @@ export class ImageGeneration extends BaseSkill {
     const ratio = tplConfig?.imageRatio?.value ?? '1:1';
     let model = tplConfig?.model?.value ?? 'gpt-4o-image-vip';
 
-    // 如果选择了自定义模型，则使用自定义模型名称
+    // if custom model is selected, use custom model name
     if (model === 'custom' && tplConfig?.customModel?.value) {
       model = tplConfig.customModel.value;
     }
 
-    // 使用state中的gen_id
+    // use gen_id from state
     const gen_id = stateGenId || '';
 
     if (!apiKey) {
@@ -251,7 +250,7 @@ export class ImageGeneration extends BaseSkill {
 
     config.metadata.step = { name: 'generateImage' };
 
-    // 定义变量以便在catch块中可以访问
+    // define variables so they can be accessed in the catch block
     let progressInterval: NodeJS.Timeout | undefined;
     const progressHistory: string[] = [];
     let taskId = '';
@@ -323,7 +322,7 @@ export class ImageGeneration extends BaseSkill {
 
       if (!response.ok) {
         const errorText = await response.text();
-        // 添加更详细的错误信息
+        // add more detailed error information
         const errorMessage = `图像生成失败: ${response.status} - ${errorText}`;
         this.emitEvent(
           {
@@ -370,7 +369,7 @@ export class ImageGeneration extends BaseSkill {
       const timeout = 6000000; // 6000 seconds timeout
       const startTime = Date.now();
 
-      // 添加进度反馈
+      // add progress feedback
       this.emitEvent(
         {
           event: 'log',
@@ -382,62 +381,77 @@ export class ImageGeneration extends BaseSkill {
         config,
       );
 
-      // 生成任务ID
+      // generate task id
       taskId = `task_${Date.now().toString(36)}${Math.random().toString(36).substr(2, 5)}`;
 
-      // 发送排队消息
+      // send queue message
       this.emitEvent(
         {
           event: 'log',
           log: {
-            key: '排队中',
+            key: 'image.queue.status',
             titleArgs: { taskId },
           },
         },
         config,
       );
 
-      // 进度追踪
+      // progress tracking
       let lastProgressPercentage = 0;
       const _progressUpdateCount = 0;
-      // 定义更细致的进度检查点，类似API示例中的进度格式
+      // define more detailed progress checkpoints, similar to the progress format in the API example
       const progressCheckpoints = [
-        { time: 2, percentage: 0, message: '排队中' },
-        { time: 5, percentage: 5, message: '生成中' },
-        { time: 8, percentage: 14, message: `进度 14% ${this.createProgressBar(14)}` },
-        { time: 13, percentage: 23, message: `进度 23% ${this.createProgressBar(23)}` },
-        { time: 18, percentage: 39, message: `进度 39% ${this.createProgressBar(39)}` },
-        { time: 25, percentage: 48, message: `进度 48% ${this.createProgressBar(48)}` },
-        { time: 32, percentage: 56, message: `进度 56% ${this.createProgressBar(56)}` },
-        { time: 39, percentage: 64, message: `进度 64% ${this.createProgressBar(64)}` },
-        { time: 45, percentage: 74, message: `进度 74% ${this.createProgressBar(74)}` },
-        { time: 52, percentage: 83, message: `进度 83% ${this.createProgressBar(83)}` },
-        { time: 58, percentage: 95, message: `进度 95% ${this.createProgressBar(95)}` },
+        { time: 2, percentage: 0, message: this.progressMessages.queueing },
+        { time: 5, percentage: 5, message: this.progressMessages.generating },
+        { time: 8, percentage: 14, message: this.progressMessages.progress },
+        { time: 13, percentage: 23, message: this.progressMessages.progress },
+        { time: 18, percentage: 39, message: this.progressMessages.progress },
+        { time: 25, percentage: 48, message: this.progressMessages.progress },
+        { time: 32, percentage: 56, message: this.progressMessages.progress },
+        { time: 39, percentage: 64, message: this.progressMessages.progress },
+        { time: 45, percentage: 74, message: this.progressMessages.progress },
+        { time: 52, percentage: 83, message: this.progressMessages.progress },
+        { time: 58, percentage: 95, message: this.progressMessages.progress },
       ];
 
-      // 收集进度信息用于最终显示
+      // collect progress information for final display
       progressHistory.push(`ID: \`${taskId}\``);
-      progressHistory.push('排队中.');
+      progressHistory.push(this.progressMessages.queueing['zh-CN'].replace('{taskId}', taskId));
 
-      // 为定时更新进度设置间隔
+      // set interval for updating progress
       progressInterval = setInterval(() => {
         const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
 
-        // 根据已经过的时间找到合适的进度检查点
+        // find appropriate progress checkpoint based on elapsed time
         for (const checkpoint of progressCheckpoints) {
           if (elapsedSeconds >= checkpoint.time && lastProgressPercentage < checkpoint.percentage) {
             lastProgressPercentage = checkpoint.percentage;
 
-            // 发出进度事件
+            // emit progress event
             const progressBar = this.createProgressBar(checkpoint.percentage);
+            const messageKey = checkpoint.message;
+            const lang = config.configurable?.locale || 'zh-CN';
+            let progressMessage = messageKey[lang] || messageKey['zh-CN'];
+
+            // Replace placeholders in the message
+            if (checkpoint.percentage > 0) {
+              progressMessage = progressMessage.replace(
+                '{percentage}',
+                checkpoint.percentage.toString(),
+              );
+            }
+            if (taskId) {
+              progressMessage = progressMessage.replace('{taskId}', taskId);
+            }
+
             this.emitEvent(
               {
                 event: 'log',
                 log: {
-                  key: checkpoint.message,
+                  key: progressMessage,
                   titleArgs: {
                     percentage: checkpoint.percentage.toString(),
-                    message: `${checkpoint.message}`,
+                    message: progressMessage,
                     progressBar: progressBar,
                     taskId,
                   },
@@ -446,18 +460,20 @@ export class ImageGeneration extends BaseSkill {
               config,
             );
 
-            // 添加进度到历史记录
-            progressHistory.push(checkpoint.message);
+            // add progress to history
+            const formattedProgressMessage =
+              checkpoint.percentage > 0 ? `${progressMessage} ${progressBar}` : progressMessage;
+            progressHistory.push(formattedProgressMessage);
 
             break;
           }
         }
 
-        // 如果已经找到了图片URL，则停止进度更新
+        // if image URL is found, stop progress update
         if (imageUrl) {
           clearInterval(progressInterval);
         }
-      }, 1000); // 每秒检查一次进度
+      }, 1000); // check progress every second
 
       while (!done && Date.now() - startTime < timeout) {
         const result = await reader.read();
@@ -467,25 +483,28 @@ export class ImageGeneration extends BaseSkill {
           const chunk = decoder.decode(result.value, { stream: true });
           fullResponse += chunk;
 
-          // 尝试从响应中提取进度信息 - 保留原有的逻辑作为备份
+          // try to extract progress information from response - keep original logic as backup
           const progressMatch = chunk.match(/进度\s*(\d+)%/);
           if (progressMatch?.[1]) {
             const currentProgress = Number.parseInt(progressMatch[1], 10);
             if (currentProgress > lastProgressPercentage) {
               lastProgressPercentage = currentProgress;
 
-              const progressMessage = `进度 ${currentProgress}% ${this.createProgressBar(currentProgress)}`;
-              // 记录实际API返回的进度
+              const progressBar = this.createProgressBar(currentProgress);
+              const progressMessageTemplate = this.progressMessages.progress['zh-CN'];
+              const progressMessage = `${progressMessageTemplate.replace('{percentage}', currentProgress.toString())} ${progressBar}`;
+
+              // record actual API returned progress
               progressHistory.push(progressMessage);
 
               this.emitEvent(
                 {
                   event: 'log',
                   log: {
-                    key: progressMessage,
+                    key: 'image.progress.status',
                     titleArgs: {
                       percentage: currentProgress.toString(),
-                      message: progressMessage,
+                      progressBar: progressBar,
                       taskId,
                     },
                   },
@@ -500,8 +519,8 @@ export class ImageGeneration extends BaseSkill {
           if (urlMatch?.[1] && !imageUrl) {
             imageUrl = urlMatch[1];
             console.log('Found image URL:', imageUrl);
-            // 记录完成状态
-            const completeMessage = '生成完成 ✅';
+            // record complete status
+            const completeMessage = this.progressMessages.complete['zh-CN'];
             progressHistory.push(completeMessage);
 
             this.emitEvent(
@@ -515,12 +534,12 @@ export class ImageGeneration extends BaseSkill {
               config,
             );
 
-            // 当找到图片URL时，发送100%完成的进度
+            // when image URL is found, send 100% complete progress
             this.emitEvent(
               {
                 event: 'log',
                 log: {
-                  key: completeMessage,
+                  key: 'image.complete.status',
                   titleArgs: {
                     taskId,
                     elapsedTime: Math.floor((Date.now() - startTime) / 1000).toString(),
@@ -530,7 +549,7 @@ export class ImageGeneration extends BaseSkill {
               config,
             );
 
-            // 优化提取gen_id的正则表达式，匹配API响应中可能的gen_id格式
+            // optimize regex for extracting gen_id, match possible gen_id formats in API response
             const genIdMatch =
               fullResponse.match(/gen_id:\s*[`'"]([^`'"]+)[`'"]/i) ||
               fullResponse.match(/gen_id[`'":\s]+([a-zA-Z0-9_]+)/i) ||
@@ -539,28 +558,28 @@ export class ImageGeneration extends BaseSkill {
             if (genIdMatch?.[1] && !genId) {
               genId = genIdMatch[1];
 
-              // 确保gen_id格式正确，应该是以gen_开头的字符串
+              // ensure gen_id format is correct, should be a string starting with gen_
               if (!genId.startsWith('gen_')) {
                 genId = `gen_${genId}`;
               }
 
               console.log('Found gen_id:', genId);
-              // 记录gen_id信息
-              const genIdMessage = `图像ID(gen_id): \`${genId}\``;
+              // record gen_id information
+              const genIdMessage = this.progressMessages.genId['zh-CN'].replace('{genId}', genId);
               progressHistory.push(genIdMessage);
 
               this.emitEvent(
                 {
                   event: 'log',
                   log: {
-                    key: genIdMessage,
+                    key: 'image.genid.display',
                     titleArgs: { genId: genId },
                   },
                 },
                 config,
               );
 
-              // 额外打印出完整响应的一部分，便于调试
+              // print out a part of the full response for debugging
               console.log(
                 'Response excerpt for gen_id debugging:',
                 fullResponse.length > 500
@@ -570,9 +589,9 @@ export class ImageGeneration extends BaseSkill {
             }
           }
 
-          // 尝试更进一步查找gen_id，如果还没找到
+          // try to find gen_id further, if not found yet
           if (!genId) {
-            // 使用更多正则表达式模式尝试匹配gen_id
+            // use more regex patterns to match gen_id
             const genIdPatterns = [
               /gen_id: `(.*?)`/,
               /gen_id:\s*`(.*?)`/,
@@ -589,22 +608,22 @@ export class ImageGeneration extends BaseSkill {
                 genId = match[1];
                 console.log('Found gen_id with alternative pattern:', genId);
 
-                // 记录gen_id信息
-                const genIdMessage = `图像ID(gen_id): \`${genId}\``;
+                // record gen_id information
+                const genIdMessage = this.progressMessages.genId['zh-CN'].replace('{genId}', genId);
                 progressHistory.push(genIdMessage);
 
                 this.emitEvent(
                   {
                     event: 'log',
                     log: {
-                      key: genIdMessage,
+                      key: 'image.genid.display',
                       titleArgs: { genId: genId },
                     },
                   },
                   config,
                 );
 
-                // 打印找到gen_id的上下文
+                // print out context of found gen_id
                 const matchIndex = fullResponse.indexOf(match[0]);
                 const contextStart = Math.max(0, matchIndex - 50);
                 const contextEnd = Math.min(fullResponse.length, matchIndex + match[0].length + 50);
@@ -622,28 +641,28 @@ export class ImageGeneration extends BaseSkill {
         }
       }
 
-      // 清理定时器以防内存泄漏
+      // clean up timer to prevent memory leak
       clearInterval(progressInterval);
 
-      // 检查是否超时
+      // check if timeout
       if (Date.now() - startTime >= timeout) {
-        const errorMessage = '处理响应超时，请稍后重试';
+        const timeoutSeconds = (timeout / 1000).toString();
         this.emitEvent(
           {
             event: 'log',
             log: {
               key: 'image.timeout',
-              titleArgs: { timeout: (timeout / 1000).toString() },
+              titleArgs: { timeout: timeoutSeconds },
             },
           },
           config,
         );
-        throw new Error(errorMessage);
+        throw new Error('image.error.timeout');
       }
 
       // If we couldn't find the image URL or gen_id in the response
       if (!imageUrl) {
-        // 尝试使用多种正则表达式模式
+        // try using multiple regex patterns
         const alternativeUrlPatterns = [
           /!\[.*?\]\((https:\/\/.*?)\)/,
           /(https:\/\/.*?\.(?:png|jpg|jpeg|gif|webp))/i,
@@ -714,33 +733,33 @@ export class ImageGeneration extends BaseSkill {
         config,
       );
 
-      // 通知用户图像成功创建
+      // notify user that image has been created
       this.emitEvent(
         {
           event: 'log',
           log: {
-            key: '图像成品已创建',
+            key: 'image.artifact.created',
             titleArgs: { title: imageTitle },
           },
         },
         config,
       );
 
-      // 准备节点标题，加入gen_id简短版本便于识别
+      // prepare node title, add short gen_id for identification
       let nodeTitle = imageTitle;
       if (genId) {
         const shortGenId = `${genId.substring(0, 10)}...`;
         nodeTitle = `${imageTitle} [ID:${shortGenId}]`;
       }
 
-      // 准备节点数据 - 按照ImageNodeMeta的要求设置
+      // prepare node data - set according to ImageNodeMeta requirements
       const nodeData: CanvasNodeData = {
         title: nodeTitle,
         entityId: imageId,
         metadata: {
-          imageUrl: imageUrl, // 必需的字段
-          imageType: 'png', // 必需的字段
-          storageKey: storageKey, // 必需的字段
+          imageUrl: imageUrl, // required field
+          imageType: 'png', // required field
+          storageKey: storageKey, // required field
           showBorder: true,
           showTitle: true,
           sizeMode: 'adaptive',
@@ -748,24 +767,24 @@ export class ImageGeneration extends BaseSkill {
           gen_id: genId || 'unknown',
           model: model,
           ratio: ratio,
-          originalWidth: 400, // 添加默认宽度
-          style: {}, // 添加空样式对象
-          copyableGenId: genId || 'unknown', // 添加一个特殊字段，标记为可复制的ID
+          originalWidth: 400, // add default width
+          style: {}, // add empty style object
+          copyableGenId: genId || 'unknown', // add a special field, marked as copyable ID
         },
       };
 
-      // 创建完整的Canvas节点
+      // create full Canvas node
       const canvasNode: CanvasNode = {
         type: 'image' as CanvasNodeType,
         data: nodeData,
       };
 
-      // 记录尝试创建节点
+      // record attempt to create node
       this.emitEvent(
         {
           event: 'log',
           log: {
-            key: '创建图像节点',
+            key: 'image.node.creating',
             titleArgs: { entityId: imageId },
           },
         },
@@ -781,50 +800,50 @@ export class ImageGeneration extends BaseSkill {
         config,
       );
 
-      // 记录节点创建已完成
+      // record node creation completed
       this.emitEvent(
         {
           event: 'log',
           log: {
-            key: '图像节点已创建',
+            key: 'image.node.created',
             titleArgs: { entityId: imageId },
           },
         },
         config,
       );
 
-      // 创建一个特殊的复制ID事件，方便用户复制gen_id
-      // 仅在确实找到了gen_id时才显示
+      // create a special copy ID event, convenient for user to copy gen_id
+      // only show gen_id if it is actually found
       if (genId && genId !== 'unknown') {
         this.emitEvent(
           {
             event: 'log',
             log: {
-              key: '✅ 图像ID',
+              key: 'image.genid.display',
               titleArgs: { genId: genId },
             },
           },
           config,
         );
 
-        // 显示可复制的gen_id，独立一行并添加提示
+        // show copyable gen_id, on a new line and add hint
         this.emitEvent(
           {
             event: 'log',
             log: {
-              key: `\`${genId}\` (点击可复制)`,
+              key: 'image.genid.copyable',
               titleArgs: { genId: genId },
             },
           },
           config,
         );
       } else {
-        // 如果未找到gen_id，提示用户
+        // if gen_id is not found, prompt user
         this.emitEvent(
           {
             event: 'log',
             log: {
-              key: '⚠️ 未能提取出图像ID，但图像已成功生成',
+              key: 'image.genid.missing',
               titleArgs: {},
             },
           },
@@ -834,10 +853,10 @@ export class ImageGeneration extends BaseSkill {
 
       // Try to create an AI message with multimodal content
       try {
-        // 创建包含进度信息的内容
+        // create content with progress information
         const progressInfo = `${progressHistory.join('\n')}\n\n`;
 
-        // 仅在找到有效的gen_id时才显示gen_id部分
+        // only show gen_id if it is actually found
         const genIdSection =
           genId && genId !== 'unknown'
             ? `
@@ -864,7 +883,7 @@ export class ImageGeneration extends BaseSkill {
             },
             {
               type: 'text',
-              text: `\n\n**生成的图像**\n\n提示词: ${query}\n\n${genId && genId !== 'unknown' ? `图像ID: \`${genId}\`` : ''}\n\n您可以${genId && genId !== 'unknown' ? '复制上方带反引号的图像ID(gen_id)，在"生成ID"字段中填入此ID并提供新的提示词来修改此图像' : '在生成图像后获取图像ID用于后续编辑'}。\n\n${genIdSection}\n\n注意: 如果图像未显示在画板中，请检查网络连接或刷新页面。`,
+              text: `\n\n**${this.progressMessages.complete['zh-CN']}**\n\n提示词: ${query}\n\n${genId && genId !== 'unknown' ? `图像ID: \`${genId}\`` : ''}\n\n您可以${genId && genId !== 'unknown' ? '复制上方带反引号的图像ID(gen_id)，在"生成ID"字段中填入此ID并提供新的提示词来修改此图像' : '在生成图像后获取图像ID用于后续编辑'}。\n\n${genIdSection}\n\n注意: 如果图像未显示在画板中，请检查网络连接或刷新页面。`,
             },
           ],
         });
@@ -875,11 +894,11 @@ export class ImageGeneration extends BaseSkill {
         // Fallback to system message if AI message creation fails
         const progressInfo = `${progressHistory.join('\n')}\n\n`;
 
-        // 在最后再次强调gen_id，方便用户复制
+        // again emphasize gen_id, convenient for user to copy
         const genIdInfo =
           genId && genId !== 'unknown' ? `\n\n复制这个ID来编辑图像：\n\`${genId}\`` : '';
 
-        // 添加一个特殊的gen_id部分
+        // add a special gen_id section
         const genIdSection =
           genId && genId !== 'unknown'
             ? `
@@ -901,14 +920,16 @@ export class ImageGeneration extends BaseSkill {
     } catch (error) {
       console.error('Image generation error:', error);
 
-      // 清理可能存在的定时器
+      // clean up possible existing timers
       if (typeof progressInterval !== 'undefined') {
         clearInterval(progressInterval);
       }
 
-      // 添加错误信息到进度历史
+      // add error information to progress history
       if (typeof progressHistory !== 'undefined') {
-        progressHistory.push(`生成失败 ❌: ${error.message}`);
+        progressHistory.push(
+          `${this.progressMessages.complete['zh-CN'].replace('✅', '❌')}: ${error.message}`,
+        );
       }
 
       // Handle errors

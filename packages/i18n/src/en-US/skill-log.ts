@@ -112,6 +112,78 @@ const translations = {
     title: 'Image Node Created',
     description: 'Canvas node created for image: {{entityId}}',
   },
+  // Image Generation Progress Messages
+  'image.queue.status': {
+    title: 'Image Generation Queued',
+    description: 'ID: `{{taskId}}`\nQueuing...',
+  },
+  'image.generate.status': {
+    title: 'Image Generation Started',
+    description: 'Generating...',
+  },
+  'image.progress.status': {
+    title: 'Image Generation Progress',
+    description: 'Progress {{percentage}}% {{progressBar}}',
+  },
+  'image.complete.status': {
+    title: 'Image Generation Complete',
+    description: 'Generation completed ✅',
+  },
+  'image.genid.display': {
+    title: 'Image Generation ID',
+    description: 'gen_id: `{{genId}}`',
+  },
+  'image.genid.copyable': {
+    title: 'Image ID (Click to Copy)',
+    description: '`{{genId}}` (click to copy)',
+  },
+  'image.genid.missing': {
+    title: 'Image ID Not Found',
+    description: '⚠️ Could not extract image ID, but the image was successfully generated',
+  },
+
+  // Image Generation Error Messages
+  'image.error.timeout': {
+    title: 'Processing Timeout',
+    description: 'Response processing timed out. Please try again later.',
+  },
+  'image.error.generation': {
+    title: 'Image Generation Error',
+    description:
+      'Error: {{message}}\n\nPossible solutions:\n1. Check if your API key is valid\n2. Verify your network connection\n3. Simplify your prompt\n4. Check if the API service is available',
+  },
+  'image.error.creation': {
+    title: 'Message Creation Error',
+    description: 'Error creating message with image: {{error}}',
+  },
+
+  // Image Generation Result Messages
+  'image.result.title': {
+    title: 'Generated Image',
+    description: 'Based on prompt: {{prompt}}',
+  },
+  'image.result.id': {
+    title: 'Image Generation ID',
+    description: 'Generation ID: `{{genId}}`',
+  },
+  'image.result.copy': {
+    title: 'Copy ID for Editing',
+    description: 'Copy this ID to edit the image:\n`{{genId}}`',
+  },
+  'image.result.instructions': {
+    title: 'Edit Instructions',
+    description: 'You can {{action}} to modify this image.',
+  },
+  'image.result.copySection': {
+    title: 'Copyable ID Section',
+    description:
+      '-----------------------------\n📋 **Copyable Image ID:**\n`{{genId}}`\n-----------------------------',
+  },
+  'image.result.note': {
+    title: 'Display Note',
+    description:
+      'Note: If the image is not displayed in the canvas, check your network connection or refresh the page.',
+  },
 };
 
 export default translations;
