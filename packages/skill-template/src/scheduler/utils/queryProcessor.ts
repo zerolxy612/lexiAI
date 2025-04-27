@@ -15,7 +15,7 @@ interface QueryProcessorOptions {
 }
 
 export async function processQuery(options: QueryProcessorOptions): Promise<QueryProcessorResult> {
-  const { config, ctxThis, state, shouldSkipAnalysis = false } = options;
+  const { config, ctxThis, state } = options;
   const { query: originalQuery } = state;
   const {
     modelInfo,
@@ -62,8 +62,7 @@ export async function processQuery(options: QueryProcessorOptions): Promise<Quer
   );
 
   // Only skip analysis if explicitly set to true and there's no context and chat history
-  const canSkipAnalysis =
-    shouldSkipAnalysis && !hasContext && (!usedChatHistory || usedChatHistory.length === 0);
+  const canSkipAnalysis = true;
 
   let mentionedContext = {};
   if (!canSkipAnalysis) {

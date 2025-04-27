@@ -1,0 +1,1852 @@
+### 商品摆放可视化内容：12张SVG图表
+
+针对您的视频制作与运营课程中"商品的摆放"这一任务点，我准备了12张以上专业的SVG可视化图表，帮助学生更好地理解核心概念。
+
+#### 图1: C位概念：让产品成为画面的主角
+
+```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <!-- Background -->
+  <rect width="800" height="500" fill="#f8f9fa" rx="10" ry="10"/>
+  
+  <!-- Title -->
+  <text x="400" y="50" font-family="'Microsoft YaHei', sans-serif" font-size="28" fill="#333" text-anchor="middle" font-weight="bold">C位概念：让产品成为画面的主角</text>
+  
+  <!-- Phone frame -->
+  <rect x="200" y="100" width="400" height="320" rx="20" ry="20" fill="#fff" stroke="#ddd" stroke-width="10"/>
+  
+  <!-- Phone camera -->
+  <circle cx="400" cy="130" r="8" fill="#ddd"/>
+  
+  <!-- Phone screen -->
+  <rect x="220" y="150" width="360" height="240" fill="#eef2f5" rx="5" ry="5"/>
+  
+  <!-- Grid lines for screen -->
+  <line x1="220" y1="230" x2="580" y2="230" stroke="#ccc" stroke-width="1" stroke-dasharray="5,5"/>
+  <line x1="220" y1="310" x2="580" y2="310" stroke="#ccc" stroke-width="1" stroke-dasharray="5,5"/>
+  <line x1="340" y1="150" x2="340" y2="390" stroke="#ccc" stroke-width="1" stroke-dasharray="5,5"/>
+  <line x1="460" y1="150" x2="460" y2="390" stroke="#ccc" stroke-width="1" stroke-dasharray="5,5"/>
+  
+  <!-- Center position (C position) -->
+  <circle cx="400" cy="270" r="60" fill="rgba(255,100,100,0.2)" stroke="#ff6464" stroke-width="2"/>
+  <circle cx="400" cy="270" r="40" fill="#ff6464" opacity="0.3"/>
+  <text x="400" y="275" font-family="'Microsoft YaHei', sans-serif" font-size="20" fill="#ff3333" text-anchor="middle" font-weight="bold">C位</text>
+  
+  <!-- Simple product (cup) in C position -->
+  <path d="M375 260 L375 290 Q375 300, 385 300 L415 300 Q425 300, 425 290 L425 260 Z" fill="#fff" stroke="#666" stroke-width="2"/>
+  <path d="M375 260 Q375 250, 385 250 L415 250 Q425 250, 425 260" fill="none" stroke="#666" stroke-width="2"/>
+  <path d="M425 265 L435 270 L435 280 L425 285" fill="none" stroke="#666" stroke-width="2"/>
+  
+  <!-- Annotations -->
+  <line x1="500" y1="270" x2="600" y2="220" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="520" y="180" width="160" height="60" rx="10" ry="10" fill="#fff" stroke="#ddd" stroke-width="1.5"/>
+  <text x="600" y="205" font-family="'Microsoft YaHei', sans-serif" font-size="14" fill="#333" text-anchor="middle">产品应位于画面中央</text>
+  <text x="600" y="225" font-family="'Microsoft YaHei', sans-serif" font-size="14" fill="#333" text-anchor="middle">这就是"C位"</text>
+  
+  <line x1="320" y1="350" x2="270" y2="410" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="120" y="390" width="250" height="60" rx="10" ry="10" fill="#fff" stroke="#ddd" stroke-width="1.5"/>
+  <text x="245" y="415" font-family="'Microsoft YaHei', sans-serif" font-size="14" fill="#333" text-anchor="middle">网格线可帮助你定位产品</text>
+  <text x="245" y="435" font-family="'Microsoft YaHei', sans-serif" font-size="14" fill="#333" text-anchor="middle">使它处于画面正中央</text>
+  
+  <!-- Arrow marker definition -->
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5"
+        markerWidth="6" markerHeight="6"
+        orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#333"/>
+    </marker>
+  </defs>
+</svg>
+```
+
+#### 图2: 产品尺寸对比：大小要适中
+
+```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <!-- Background -->
+  <rect width="800" height="500" fill="#f8f9fa" rx="10" ry="10"/>
+  
+  <!-- Title -->
+  <text x="400" y="50" font-family="'Microsoft YaHei', sans-serif" font-size="28" fill="#333" text-anchor="middle" font-weight="bold">产品尺寸对比：大小要适中</text>
+  
+  <!-- Phone frame 1: Too small -->
+  <rect x="80" y="120" width="200" height="320" rx="20" ry="20" fill="#fff" stroke="#ddd" stroke-width="8"/>
+  <circle cx="180" cy="145" r="6" fill="#ddd"/>
+  <rect x="95" y="160" width="170" height="260" fill="#eef2f5" rx="5" ry="5"/>
+  
+  <!-- Small product -->
+  <path d="M170 280 L170 295 Q170 300, 175 300 L185 300 Q190 300, 190 295 L190 280 Z" fill="#fff" stroke="#666" stroke-width="1.5"/>
+  <path d="M170 280 Q170 275, 175 275 L185 275 Q190 275, 190 280" fill="none" stroke="#666" stroke-width="1.5"/>
+  <path d="M190 282 L195 284 L195 288 L190 290" fill="none" stroke="#666" stroke-width="1.5"/>
+  
+  <!-- Annotation for 1 -->
+  <text x="180" y="350" font-family="'Microsoft YaHei', sans-serif" font-size="20" fill="#ff5252" text-anchor="middle" font-weight="bold">太小</text>
+  <text x="180" y="375" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#666" text-anchor="middle">产品几乎看不清</text>
+  <line x1="180" y1="320" x2="180" y2="335" stroke="#ff5252" stroke-width="2" marker-end="url(#redArrow)"/>
+  
+  <!-- Phone frame 2: Too large -->
+  <rect x="300" y="120" width="200" height="320" rx="20" ry="20" fill="#fff" stroke="#ddd" stroke-width="8"/>
+  <circle cx="400" cy="145" r="6" fill="#ddd"/>
+  <rect x="315" y="160" width="170" height="260" fill="#eef2f5" rx="5" ry="5"/>
+  
+  <!-- Large product -->
+  <path d="M315 190 L315 330 Q315 350, 335 350 L465 350 Q485 350, 485 330 L485 190 Z" fill="#fff" stroke="#666" stroke-width="2"/>
+  <path d="M315 190 Q315 170, 335 170 L465 170 Q485 170, 485 190" fill="none" stroke="#666" stroke-width="2"/>
+  <path d="M485 210 L495 220 L495 235 L485 245" fill="none" stroke="#666" stroke-width="2"/>
+  
+  <!-- Annotation for 2 -->
+  <text x="400" y="390" font-family="'Microsoft YaHei', sans-serif" font-size="20" fill="#ff5252" text-anchor="middle" font-weight="bold">太大</text>
+  <text x="400" y="415" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#666" text-anchor="middle">产品超出画面边界</text>
+  
+  <!-- Phone frame 3: Just right -->
+  <rect x="520" y="120" width="200" height="320" rx="20" ry="20" fill="#fff" stroke="#ddd" stroke-width="8"/>
+  <circle cx="620" cy="145" r="6" fill="#ddd"/>
+  <rect x="535" y="160" width="170" height="260" fill="#eef2f5" rx="5" ry="5"/>
+  
+  <!-- Right-sized product -->
+  <path d="M570 235 L570 295 Q570 305, 580 305 L610 305 Q620 305, 620 295 L620 235 Z" fill="#fff" stroke="#666" stroke-width="2"/>
+  <path d="M570 235 Q570 225, 580 225 L610 225 Q620 225, 620 235" fill="none" stroke="#666" stroke-width="2"/>
+  <path d="M620 245 L630 250 L630 260 L620 265" fill="none" stroke="#666" stroke-width="2"/>
+  
+  <!-- Annotation for 3 -->
+  <text x="620" y="350" font-family="'Microsoft YaHei', sans-serif" font-size="20" fill="#4caf50" text-anchor="middle" font-weight="bold">刚好</text>
+  <text x="620" y="375" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#666" text-anchor="middle">产品大小适中，清晰可见</text>
+  
+  <!-- Checkmark for right size -->
+  <circle cx="670" cy="265" r="20" fill="rgba(76,175,80,0.2)" stroke="#4caf50" stroke-width="2"/>
+  <path d="M660 265 L668 273 L680 255" fill="none" stroke="#4caf50" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- X mark for wrong sizes -->
+  <circle cx="230" cy="285" r="20" fill="rgba(255,82,82,0.2)" stroke="#ff5252" stroke-width="2"/>
+  <path d="M222 277 L238 293 M238 277 L222 293" fill="none" stroke="#ff5252" stroke-width="3" stroke-linecap="round"/>
+  
+  <circle cx="450" cy="260" r="20" fill="rgba(255,82,82,0.2)" stroke="#ff5252" stroke-width="2"/>
+  <path d="M442 252 L458 268 M458 252 L442 268" fill="none" stroke="#ff5252" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Definitions -->
+  <defs>
+    <marker id="redArrow" viewBox="0 0 10 10" refX="5" refY="5"
+        markerWidth="6" markerHeight="6"
+        orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#ff5252"/>
+    </marker>
+  </defs>
+</svg>
+```
+
+#### 图3: 聚焦对比：清晰度决定吸引力
+
+```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <!-- Background -->
+  <rect width="800" height="500" fill="#f8f9fa" rx="10" ry="10"/>
+  
+  <!-- Title -->
+  <text x="400" y="50" font-family="'Microsoft YaHei', sans-serif" font-size="28" fill="#333" text-anchor="middle" font-weight="bold">聚焦对比：清晰度决定吸引力</text>
+  
+  <!-- Divider line -->
+  <line x1="400" y1="100" x2="400" y2="400" stroke="#ddd" stroke-width="2" stroke-dasharray="8 4"/>
+  
+  <!-- Left side - Focused product -->
+  <g>
+    <!-- Phone frame -->
+    <rect x="100" y="120" width="220" height="340" rx="20" ry="20" fill="#fff" stroke="#ddd" stroke-width="8"/>
+    <circle cx="210" cy="145" r="6" fill="#ddd"/>
+    <rect x="115" y="160" width="190" height="280" fill="#eef2f5" rx="5" ry="5"/>
+    
+    <!-- Focused product (coffee cup) -->
+    <g>
+      <path d="M170 265 L170 335 Q170 345, 180 345 L240 345 Q250 345, 250 335 L250 265 Z" fill="#fff" stroke="#333" stroke-width="2.5"/>
+      <path d="M170 265 Q170 255, 180 255 L240 255 Q250 255, 250 265" fill="none" stroke="#333" stroke-width="2.5"/>
+      <path d="M250 275 L265 280 L265 300 L250 305" fill="none" stroke="#333" stroke-width="2.5"/>
+      
+      <!-- Cup logo -->
+      <circle cx="210" cy="300" r="15" fill="#4285f4"/>
+      <path d="M202 300 L208 306 L222 292" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    
+    <!-- Focus indicator -->
+    <circle cx="210" cy="300" r="60" fill="none" stroke="#4caf50" stroke-width="2" stroke-dasharray="4 2"/>
+    <path d="M150 300 L170 300 M250 300 L270 300 M210 240 L210 260 M210 340 L210 360" stroke="#4caf50" stroke-width="2"/>
+    
+    <!-- Touch indicator -->
+    <circle cx="210" cy="300" r="15" fill="rgba(76,175,80,0.3)" stroke="#4caf50" stroke-width="1.5"/>
+    <circle cx="210" cy="300" r="5" fill="#4caf50"/>
+    
+    <!-- Annotation -->
+    <text x="210" y="400" font-family="'Microsoft YaHei', sans-serif" font-size="20" fill="#4caf50" text-anchor="middle" font-weight="bold">清晰聚焦</text>
+    <text x="210" y="425" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#666" text-anchor="middle">点击产品进行对焦</text>
+    <text x="210" y="445" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#666" text-anchor="middle">使其变得锐利清晰</text>
+  </g>
+  
+  <!-- Right side - Blurry product -->
+  <g>
+    <!-- Phone frame -->
+    <rect x="480" y="120" width="220" height="340" rx="20" ry="20" fill="#fff" stroke="#ddd" stroke-width="8"/>
+    <circle cx="590" cy="145" r="6" fill="#ddd"/>
+    <rect x="495" y="160" width="190" height="280" fill="#eef2f5" rx="5" ry="5"/>
+    
+    <!-- Blurry product effect -->
+    <g filter="url(#blur)">
+      <path d="M550 265 L550 335 Q550 345, 560 345 L620 345 Q630 345, 630 335 L630 265 Z" fill="#fff" stroke="#777" stroke-width="2.5"/>
+      <path d="M550 265 Q550 255, 560 255 L620 255 Q630 255, 630 265" fill="none" stroke="#777" stroke-width="2.5"/>
+      <path d="M630 275 L645 280 L645 300 L630 305" fill="none" stroke="#777" stroke-width="2.5"/>
+      
+      <!-- Cup logo blurred -->
+      <circle cx="590" cy="300" r="15" fill="#777"/>
+      <path d="M582 300 L588 306 L602 292" fill="none" stroke="#eef2f5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    
+    <!-- X mark for wrong focus -->
+    <circle cx="650" cy="260" r="20" fill="rgba(255,82,82,0.2)" stroke="#ff5252" stroke-width="2"/>
+    <path d="M642 252 L658 268 M658 252 L642 268" fill="none" stroke="#ff5252" stroke-width="3" stroke-linecap="round"/>
+    
+    <!-- Annotation -->
+    <text x="590" y="400" font-family="'Microsoft YaHei', sans-serif" font-size="20" fill="#ff5252" text-anchor="middle" font-weight="bold">模糊不清</text>
+    <text x="590" y="425" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#666" text-anchor="middle">未对焦的产品</text>
+    <text x="590" y="445" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#666" text-anchor="middle">看起来模糊，缺乏吸引力</text>
+  </g>
+  
+  <!-- Definitions -->
+  <defs>
+    <filter id="blur" x="-0.1" y="-0.1" width="1.2" height="1.2">
+      <feGaussianBlur stdDeviation="3" />
+    </filter>
+  </defs>
+</svg>
+```
+
+#### 图4: 常见摆放错误
+
+```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <!-- Background -->
+  <rect width="800" height="500" fill="#f8f9fa" rx="10" ry="10"/>
+  
+  <!-- Title -->
+  <text x="400" y="50" font-family="'Microsoft YaHei', sans-serif" font-size="28" fill="#333" text-anchor="middle" font-weight="bold">常见摆放错误</text>
+  
+  <!-- Main illustration frame -->
+  <rect x="100" y="90" width="600" height="360" rx="10" ry="10" fill="#fff" stroke="#ddd" stroke-width="2"/>
+  
+  <!-- Error 1: Off-center placement -->
+  <g transform="translate(200, 170)">
+    <!-- Phone screen outline -->
+    <rect x="-70" y="-90" width="140" height="180" rx="5" ry="5" fill="#eef2f5" stroke="#ddd" stroke-width="2"/>
+    
+    <!-- Product (cup) off-center -->
+    <path d="M-40 -20 L-40 30 Q-40 40, -30 40 L0 40 Q10 40, 10 30 L10 -20 Z" fill="#fff" stroke="#777" stroke-width="1.5"/>
+    <path d="M-40 -20 Q-40 -30, -30 -30 L0 -30 Q10 -30, 10 -20" fill="none" stroke="#777" stroke-width="1.5"/>
+    <path d="M10 -15 L20 -10 L20 0 L10 5" fill="none" stroke="#777" stroke-width="1.5"/>
+    
+    <!-- Center indicator -->
+    <circle cx="0" cy="0" r="10" fill="none" stroke="#ff5252" stroke-width="1" stroke-dasharray="2 2"/>
+    <line x1="-5" y1="0" x2="5" y2="0" stroke="#ff5252" stroke-width="1"/>
+    <line x1="0" y1="-5" x2="0" y2="5" stroke="#ff5252" stroke-width="1"/>
+    
+    <!-- Arrow showing off-center -->
+    <line x1="0" y1="0" x2="-15" y2="5" stroke="#ff5252" stroke-width="1.5" marker-end="url(#redArrow)"/>
+    
+    <!-- Label -->
+    <text x="0" y="75" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#333" text-anchor="middle" font-weight="bold">错误一：位置偏离中心</text>
+  </g>
+  
+  <!-- Error 2: Too small -->
+  <g transform="translate(400, 170)">
+    <!-- Phone screen outline -->
+    <rect x="-70" y="-90" width="140" height="180" rx="5" ry="5" fill="#eef2f5" stroke="#ddd" stroke-width="2"/>
+    
+    <!-- Product (cup) too small -->
+    <path d="M-10 -5 L-10 5 Q-10 7, -8 7 L8 7 Q10 7, 10 5 L10 -5 Z" fill="#fff" stroke="#777" stroke-width="1"/>
+    <path d="M-10 -5 Q-10 -7, -8 -7 L8 -7 Q10 -7, 10 -5" fill="none" stroke="#777" stroke-width="1"/>
+    <path d="M10 -3 L12 -2 L12 0 L10 1" fill="none" stroke="#777" stroke-width="1"/>
+    
+    <!-- Size indicator -->
+    <circle cx="0" cy="0" r="25" fill="none" stroke="#ff5252" stroke-width="1" stroke-dasharray="2 2"/>
+    <text x="0" y="35" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#ff5252" text-anchor="middle">理想大小</text>
+    
+    <!-- Label -->
+    <text x="0" y="75" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#333" text-anchor="middle" font-weight="bold">错误二：产品太小</text>
+  </g>
+  
+  <!-- Error 3: Blurry -->
+  <g transform="translate(600, 170)">
+    <!-- Phone screen outline -->
+    <rect x="-70" y="-90" width="140" height="180" rx="5" ry="5" fill="#eef2f5" stroke="#ddd" stroke-width="2"/>
+    
+    <!-- Product (cup) blurry -->
+    <g filter="url(#blurError)">
+      <path d="M-20 -25 L-20 25 Q-20 35, -10 35 L20 35 Q30 35, 30 25 L30 -25 Z" fill="#fff" stroke="#777" stroke-width="1.5"/>
+      <path d="M-20 -25 Q-20 -35, -10 -35 L20 -35 Q30 -35, 30 -25" fill="none" stroke="#777" stroke-width="1.5"/>
+      <path d="M30 -15 L40 -10 L40 0 L30 5" fill="none" stroke="#777" stroke-width="1.5"/>
+    </g>
+    
+    <!-- Focus indicator -->
+    <circle cx="0" cy="0" r="45" fill="none" stroke="#ff5252" stroke-width="1" stroke-dasharray="3 2"/>
+    <text x="0" y="57" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#ff5252" text-anchor="middle">没有对焦</text>
+    
+    <!-- Label -->
+    <text x="0" y="75" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#333" text-anchor="middle" font-weight="bold">错误三：没对焦，画面模糊</text>
+  </g>
+  
+  <!-- Error 4: Cropped/Cut off -->
+  <g transform="translate(200, 340)">
+    <!-- Phone screen outline -->
+    <rect x="-70" y="-70" width="140" height="140" rx="5" ry="5" fill="#eef2f5" stroke="#ddd" stroke-width="2"/>
+    
+    <!-- Product (cup) cut off -->
+    <clipPath id="screenClip1">
+      <rect x="-70" y="-70" width="140" height="140" rx="5" ry="5"/>
+    </clipPath>
+    
+    <g clip-path="url(#screenClip1)">
+      <path d="M-40 -40 L-40 60 Q-40 70, -30 70 L30 70 Q40 70, 40 60 L40 -40 Z" fill="#fff" stroke="#777" stroke-width="2"/>
+      <path d="M-40 -40 Q-40 -50, -30 -50 L30 -50 Q40 -50, 40 -40" fill="none" stroke="#777" stroke-width="2"/>
+      <path d="M40 -30 L50 -25 L50 -10 L40 -5" fill="none" stroke="#777" stroke-width="2"/>
+    </g>
+    
+    <!-- Cut indicator -->
+    <line x1="-70" y1="70" x2="70" y2="70" stroke="#ff5252" stroke-width="2" stroke-dasharray="5 3"/>
+    <text x="0" y="55" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#ff5252" text-anchor="middle">产品被切断</text>
+    
+    <!-- Label -->
+    <text x="0" y="85" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#333" text-anchor="middle" font-weight="bold">错误四：产品被截断</text>
+  </g>
+  
+  <!-- Error 5: Hand in frame -->
+  <g transform="translate(400, 340)">
+    <!-- Phone screen outline -->
+    <rect x="-70" y="-70" width="140" height="140" rx="5" ry="5" fill="#eef2f5" stroke="#ddd" stroke-width="2"/>
+    
+    <!-- Product (cup) -->
+    <path d="M-30 -30 L-30 20 Q-30 30, -20 30 L20 30 Q30 30, 30 20 L30 -30 Z" fill="#fff" stroke="#777" stroke-width="1.5"/>
+    <path d="M-30 -30 Q-30 -40, -20 -40 L20 -40 Q30 -40, 30 -30" fill="none" stroke="#777" stroke-width="1.5"/>
+    <path d="M30 -20 L40 -15 L40 -5 L30 0" fill="none" stroke="#777" stroke-width="1.5"/>
+    
+    <!-- Hand in frame -->
+    <path d="M-70 30 C-60 20, -50 15, -30 20 C-20 22, -10 30, 0 30" fill="#ffccbc" stroke="#e0826d" stroke-width="1"/>
+    <circle cx="-50" cy="30" r="8" fill="#ff5252" opacity="0.5"/>
+    <text x="-50" cy="30" font-family="'Microsoft YaHei', sans-serif" font-size="10" fill="#fff" text-anchor="middle">手</text>
+    
+    <!-- Label -->
+    <text x="0" y="85" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#333" text-anchor="middle" font-weight="bold">错误五：手出现在画面中</text>
+  </g>
+  
+  <!-- Error 6: Tilted/Unstable -->
+  <g transform="translate(600, 340)">
+    <!-- Phone screen outline -->
+    <rect x="-70" y="-70" width="140" height="140" rx="5" ry="5" fill="#eef2f5" stroke="#ddd" stroke-width="2"/>
+    
+    <!-- Product (cup) tilted -->
+    <g transform="rotate(15, 0, 0)">
+      <path d="M-30 -30 L-30 20 Q-30 30, -20 30 L20 30 Q30 30, 30 20 L30 -30 Z" fill="#fff" stroke="#777" stroke-width="1.5"/>
+      <path d="M-30 -30 Q-30 -40, -20 -40 L20 -40 Q30 -40, 30 -30" fill="none" stroke="#777" stroke-width="1.5"/>
+      <path d="M30 -20 L40 -15 L40 -5 L30 0" fill="none" stroke="#777" stroke-width="1.5"/>
+    </g>
+    
+    <!-- Tilt indicator -->
+    <line x1="-25" y1="-50" x2="25" y2="-50" stroke="#333" stroke-width="1"/>
+    <line x1="-30" y1="-45" x2="-20" y2="-55" stroke="#333" stroke-width="1"/>
+    <line x1="30" y1="-45" x2="20" y2="-55" stroke="#333" stroke-width="1"/>
+    <path d="M-25 -50 L25 -50" stroke="#ff5252" stroke-width="1.5" transform="rotate(15, 0, 0)"/>
+    <text x="0" y="-30" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#ff5252" text-anchor="middle" transform="rotate(15, 0, -30)">倾斜</text>
+    
+    <!-- Label -->
+    <text x="0" y="85" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#333" text-anchor="middle" font-weight="bold">错误六：画面倾斜</text>
+  </g>
+  
+  <!-- Definitions -->
+  <defs>
+    <marker id="redArrow" viewBox="0 0 10 10" refX="5" refY="5"
+        markerWidth="6" markerHeight="6"
+        orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#ff5252"/>
+    </marker>
+    
+    <filter id="blurError" x="-0.1" y="-0.1" width="1.2" height="1.2">
+      <feGaussianBlur stdDeviation="2" />
+    </filter>
+  </defs>
+</svg>
+```
+
+#### 图5: 背景的重要性：让"主角"更闪亮
+
+```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <!-- Background -->
+  <rect width="800" height="500" fill="#f8f9fa" rx="10" ry="10"/>
+  
+  <!-- Title -->
+  <text x="400" y="50" font-family="'Microsoft YaHei', sans-serif" font-size="28" fill="#333" text-anchor="middle" font-weight="bold">背景的重要性：让"主角"更闪亮</text>
+  
+  <!-- Divider line -->
+  <line x1="400" y1="90" x2="400" y2="450" stroke="#ddd" stroke-width="2" stroke-dasharray="8 4"/>
+  
+  <!-- Left side - Cluttered background -->
+  <g>
+    <!-- Phone frame -->
+    <rect x="80" y="120" width="240" height="320" rx="20" ry="20" fill="#fff" stroke="#ddd" stroke-width="8"/>
+    <circle cx="200" cy="145" r="6" fill="#ddd"/>
+    <rect x="95" y="160" width="210" height="260" fill="#eef2f5" rx="5" ry="5"/>
+    
+    <!-- Messy background elements -->
+    <rect x="100" y="165" width="50" height="70" fill="#ffe0b2" stroke="#ffcc80" stroke-width="1"/>
+    <rect x="160" y="175" width="60" height="40" fill="#e1bee7" stroke="#ce93d8" stroke-width="1"/>
+    <rect x="230" y="165" width="70" height="30" fill="#c5cae9" stroke="#9fa8da" stroke-width="1"/>
+    <rect x="120" y="250" width="80" height="60" fill="#dcedc8" stroke="#c5e1a5" stroke-width="1"/>
+    <rect x="220" y="270" width="50" height="90" fill="#ffccbc" stroke="#ffab91" stroke-width="1"/>
+    <rect x="110" y="330" width="100" height="40" fill="#b3e5fc" stroke="#81d4fa" stroke-width="1"/>
+    <circle cx="255" cy="230" r="30" fill="#fff176" stroke="#ffd54f" stroke-width="1"/>
+    <path d="M140 220 L170 200 L200 220 L230 200 L260 220" fill="none" stroke="#a1887f" stroke-width="2"/>
+    
+    <!-- Product (headphones) in cluttered environment -->
+    <g>
+      <ellipse cx="200" cy="250" rx="30" ry="35" fill="#444" stroke="#333" stroke-width="1.5"/>
+      <path d="M170 250 C170 215, 230 215, 230 250" fill="none" stroke="#333" stroke-width="3"/>
+      <rect x="165" y="248" width="10" height="20" rx="2" ry="2" fill="#444" stroke="#333" stroke-width="1"/>
+      <rect x="225" y="248" width="10" height="20" rx="2" ry="2" fill="#444" stroke="#333" stroke-width="1"/>
+    </g>
+    
+    <!-- X mark -->
+    <circle cx="270" cy="200" r="20" fill="rgba(255,82,82,0.2)" stroke="#ff5252" stroke-width="2"/>
+    <path d="M262 192 L278 208 M278 192 L262 208" fill="none" stroke="#ff5252" stroke-width="3" stroke-linecap="round"/>
+    
+    <!-- Annotation -->
+    <rect x="100" y="380" width="200" height="60" rx="5" ry="5" fill="#fff" stroke="#ddd" stroke-width="1.5"/>
+    <text x="200" y="410" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#ff5252" text-anchor="middle" font-weight="bold">杂乱背景</text>
+    <text x="200" y="430" font-family="'Microsoft YaHei', sans-serif" font-size="14" fill="#666" text-anchor="middle">太多元素争夺注意力</text>
+  </g>
+  
+  <!-- Right side - Clean background -->
+  <g>
+    <!-- Phone frame -->
+    <rect x="480" y="120" width="240" height="320" rx="20" ry="20" fill="#fff" stroke="#ddd" stroke-width="8"/>
+    <circle cx="600" cy="145" r="6" fill="#ddd"/>
+    <rect x="495" y="160" width="210" height="260" fill="#f5f5f5" rx="5" ry="5"/>
+    
+    <!-- Clean gradient background -->
+    <linearGradient id="cleanGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fafafa"/>
+      <stop offset="100%" stop-color="#f0f0f0"/>
+    </linearGradient>
+    <rect x="495" y="160" width="210" height="260" fill="url(#cleanGradient)" rx="5" ry="5"/>
+    
+    <!-- Product (headphones) in clean environment -->
+    <g>
+      <ellipse cx="600" cy="250" rx="35" ry="40" fill="#444" stroke="#333" stroke-width="2"/>
+      <path d="M565 250 C565 210, 635 210, 635 250" fill="none" stroke="#333" stroke-width="3.5"/>
+      <rect x="560" y="248" width="12" height="25" rx="2" ry="2" fill="#444" stroke="#333" stroke-width="1.5"/>
+      <rect x="628" y="248" width="12" height="25" rx="2" ry="2" fill="#444" stroke="#333" stroke-width="1.5"/>
+    </g>
+    
+    <!-- Checkmark -->
+    <circle cx="670" cy="200" r="20" fill="rgba(76,175,80,0.2)" stroke="#4caf50" stroke-width="2"/>
+    <path d="M660 200 L668 208 L680 190" fill="none" stroke="#4caf50" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Annotation -->
+    <rect x="500" y="380" width="200" height="60" rx="5" ry="5" fill="#fff" stroke="#ddd" stroke-width="1.5"/>
+    <text x="600" y="410" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#4caf50" text-anchor="middle" font-weight="bold">干净背景</text>
+    <text x="600" y="430" font-family="'Microsoft YaHei', sans-serif" font-size="14" fill="#666" text-anchor="middle">产品成为唯一焦点</text>
+  </g>
+  
+  <!-- Visual impact indicators -->
+  <g transform="translate(400, 250)">
+    <!-- Arrow pointing to cluttered side -->
+    <path d="M-10 0 L-80 0" stroke="#ff5252" stroke-width="3" marker-end="url(#redArrowLarge)" stroke-dasharray="5 3"/>
+    <text x="-45" y="-15" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#ff5252" text-anchor="middle">注意力分散</text>
+    
+    <!-- Arrow pointing to clean side -->
+    <path d="M10 0 L80 0" stroke="#4caf50" stroke-width="3" marker-end="url(#greenArrow)" stroke-dasharray="5 3"/>
+    <text x="45" y="-15" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#4caf50" text-anchor="middle">注意力集中</text>
+  </g>
+  
+  <!-- Definitions -->
+  <defs>
+    <marker id="redArrowLarge" viewBox="0 0 10 10" refX="5" refY="5"
+        markerWidth="8" markerHeight="8"
+        orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#ff5252"/>
+    </marker>
+    
+    <marker id="greenArrow" viewBox="0 0 10 10" refX="5" refY="5"
+        markerWidth="8" markerHeight="8"
+        orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#4caf50"/>
+    </marker>
+  </defs>
+</svg>
+```
+
+#### 图6: 简洁背景选项：随处可得的"舞台"
+
+```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <!-- Background -->
+  <rect width="800" height="500" fill="#f8f9fa" rx="10" ry="10"/>
+  
+  <!-- Title -->
+  <text x="400" y="50" font-family="'Microsoft YaHei', sans-serif" font-size="28" fill="#333" text-anchor="middle" font-weight="bold">简洁背景选项：随处可得的"舞台"</text>
+  
+  <!-- Background options grid -->
+  <g>
+    <!-- Option 1: White wall -->
+    <g transform="translate(200, 150)">
+      <!-- Background frame -->
+      <rect x="-90" y="-80" width="180" height="160" rx="5" ry="5" fill="#fff" stroke="#ddd" stroke-width="2"/>
+      
+      <!-- Wall texture subtle -->
+      <pattern id="wallTexture" patternUnits="userSpaceOnUse" width="30" height="30" patternTransform="rotate(45)">
+        <rect width="30" height="30" fill="#fff"/>
+        <rect width="30" height="30" fill="#f5f5f5" opacity="0.5"/>
+      </pattern>
+      <rect x="-85" y="-75" width="170" height="150" rx="3" ry="3" fill="url(#wallTexture)"/>
+      
+      <!-- Product (perfume bottle) -->
+      <rect x="-15" y="-40" width="30" height="60" rx="2" ry="2" fill="#fff" stroke="#ccc" stroke-width="1"/>
+      <rect x="-10" y="-45" width="20" height="10" rx="1" ry="1" fill="#fff" stroke="#ccc" stroke-width="1"/>
+      <circle cx="0" cy="-45" r="5" fill="#ddd" stroke="#ccc" stroke-width="0.5"/>
+      
+      <!-- Label -->
+      <text x="0" y="100" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#333" text-anchor="middle" font-weight="bold">白墙</text>
+      <text x="0" y="120" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#666" text-anchor="middle">最简单的选择</text>
+    </g>
+    
+    <!-- Option 2: Clean desk -->
+    <g transform="translate(400, 150)">
+      <!-- Background frame -->
+      <rect x="-90" y="-80" width="180" height="160" rx="5" ry="5" fill="#fff" stroke="#ddd" stroke-width="2"/>
+      
+      <!-- Desk texture -->
+      <linearGradient id="woodGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#e0c39f"/>
+        <stop offset="50%" stop-color="#d4b48f"/>
+        <stop offset="100%" stop-color="#e0c39f"/>
+      </linearGradient>
+      <rect x="-85" y="-75" width="170" height="150" rx="3" ry="3" fill="url(#woodGradient)"/>
+      
+      <!-- Wood grain -->
+      <path d="M-85 -60 L85 -60 M-85 -40 L85 -40 M-85 -20 L85 -20 M-85 0 L85 0 M-85 20 L85 20 M-85 40 L85 40 M-85 60 L85 60" stroke="#c9a981" stroke-width="0.5" opacity="0.3"/>
+      
+      <!-- Product (perfume bottle) -->
+      <rect x="-15" y="-40" width="30" height="60" rx="2" ry="2" fill="#fff" stroke="#ccc" stroke-width="1"/>
+      <rect x="-10" y="-45" width="20" height="10" rx="1" ry="1" fill="#fff" stroke="#ccc" stroke-width="1"/>
+      <circle cx="0" cy="-45" r="5" fill="#ddd" stroke="#ccc" stroke-width="0.5"/>
+      
+      <!-- Drop shadow -->
+      <ellipse cx="0" cy="25" rx="20" ry="5" fill="#000" opacity="0.1"/>
+      
+      <!-- Label -->
+      <text x="0" y="100" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#333" text-anchor="middle" font-weight="bold">干净桌面</text>
+      <text x="0" y="120" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#666" text-anchor="middle">清理出一块空地</text>
+    </g>
+    
+    <!-- Option 3: Colored fabric -->
+    <g transform="translate(600, 150)">
+      <!-- Background frame -->
+      <rect x="-90" y="-80" width="180" height="160" rx="5" ry="5" fill="#fff" stroke="#ddd" stroke-width="2"/>
+      
+      <!-- Fabric texture -->
+      <linearGradient id="fabricGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#a5d6a7"/>
+        <stop offset="100%" stop-color="#81c784"/>
+      </linearGradient>
+      <rect x="-85" y="-75" width="170" height="150" rx="3" ry="3" fill="url(#fabricGradient)"/>
+      
+      <!-- Fabric texture details -->
+      <pattern id="fabricPattern" patternUnits="userSpaceOnUse" width="10" height="10">
+        <path d="M0 0 L10 0 L0 10 Z" fill="#a5d6a7" opacity="0.3"/>
+      </pattern>
+      <rect x="-85" y="-75" width="170" height="150" rx="3" ry="3" fill="url(#fabricPattern)"/>
+      
+      <!-- Product (perfume bottle) -->
+      <rect x="-15" y="-40" width="30" height="60" rx="2" ry="2" fill="#fff" stroke="#ccc" stroke-width="1"/>
+      <rect x="-10" y="-45" width="20" height="10" rx="1" ry="1" fill="#fff" stroke="#ccc" stroke-width="1"/>
+      <circle cx="0" cy="-45" r="5" fill="#ddd" stroke="#ccc" stroke-width="0.5"/>
+      
+      <!-- Shadow -->
+      <ellipse cx="0" cy="25" rx="20" ry="5" fill="#000" opacity="0.1"/>
+      
+      <!-- Label -->
+      <text x="0" y="100" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#333" text-anchor="middle" font-weight="bold">纯色布/布料</text>
+      <text x="0" y="120" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#666" text-anchor="middle">丝巾、T恤、床单</text>
+    </g>
+    
+    <!-- Option 4: A4 paper -->
+    <g transform="translate(200, 330)">
+      <!-- Background frame -->
+      <rect x="-90" y="-80" width="180" height="160" rx="5" ry="5" fill="#fff" stroke="#ddd" stroke-width="2"/>
+      
+      <!-- Paper texture -->
+      <rect x="-60" y="-70" width="120" height="140" fill="#fff" stroke="#eee" stroke-width="1"/>
+      
+      <!-- Paper edge detail -->
+      <line x1="-60" y1="-70" x2="-60" y2="70" stroke="#ddd" stroke-width="2"/>
+      
+      <!-- Product (perfume bottle) -->
+      <rect x="-15" y="-30" width="30" height="60" rx="2" ry="2" fill="#fff" stroke="#ccc" stroke-width="1"/>
+      <rect x="-10" y="-35" width="20" height="10" rx="1" ry="1" fill="#fff" stroke="#ccc" stroke-width="1"/>
+      <circle cx="0" cy="-35" r="5" fill="#ddd" stroke="#ccc" stroke-width="0.5"/>
+      
+      <!-- Shadow -->
+      <ellipse cx="0" cy="35" rx="15" ry="3" fill="#000" opacity="0.05"/>
+      
+      <!-- Label -->
+      <text x="0" y="100" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#333" text-anchor="middle" font-weight="bold">白纸</text>
+      <text x="0" y="120" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#666" text-anchor="middle">A4纸等皆可</text>
+    </g>
+    
+    <!-- Option 5: Gradient backdrop -->
+    <g transform="translate(400, 330)">
+      <!-- Background frame -->
+      <rect x="-90" y="-80" width="180" height="160" rx="5" ry="5" fill="#fff" stroke="#ddd" stroke-width="2"/>
+      
+      <!-- Gradient backdrop -->
+      <linearGradient id="blueGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#bbdefb"/>
+        <stop offset="100%" stop-color="#90caf9"/>
+      </linearGradient>
+      <rect x="-85" y="-75" width="170" height="150" rx="3" ry="3" fill="url(#blueGradient)"/>
+      
+      <!-- Product (perfume bottle) -->
+      <rect x="-15" y="-40" width="30" height="60" rx="2" ry="2" fill="#fff" stroke="#ccc" stroke-width="1"/>
+      <rect x="-10" y="-45" width="20" height="10" rx="1" ry="1" fill="#fff" stroke="#ccc" stroke-width="1"/>
+      <circle cx="0" cy="-45" r="5" fill="#ddd" stroke="#ccc" stroke-width="0.5"/>
+      
+      <!-- Label -->
+      <text x="0" y="100" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#333" text-anchor="middle" font-weight="bold">渐变背景</text>
+      <text x="0" y="120" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#666" text-anchor="middle">彩色卡纸或手机壁纸</text>
+    </g>
+    
+    <!-- Option 6: Books as backdrop -->
+    <g transform="translate(600, 330)">
+      <!-- Background frame -->
+      <rect x="-90" y="-80" width="180" height="160" rx="5" ry="5" fill="#fff" stroke="#ddd" stroke-width="2"/>
+      
+      <!-- Book backdrop -->
+      <rect x="-85" y="-75" width="170" height="150" fill="#f5f5f5" rx="3" ry="3"/>
+      <rect x="-75" y="-65" width="150" height="130" fill="#eee" stroke="#ddd" stroke-width="0.5" rx="2" ry="2"/>
+      <rect x="-70" y="-60" width="140" height="120" fill="#fff" stroke="#ddd" stroke-width="1"/>
+      
+      <!-- Book pages -->
+      <path d="M-70 -60 L70 -60 M-70 -45 L70 -45 M-70 -30 L70 -30 M-70 -15 L70 -15 M-70 0 L70 0 M-70 15 L70 15 M-70 30 L70 30 M-70 45 L70 45" stroke="#eee" stroke-width="1"/>
+      
+      <!-- Product (perfume bottle) -->
+      <rect x="-15" y="-20" width="30" height="60" rx="2" ry="2" fill="#fff" stroke="#ccc" stroke-width="1"/>
+      <rect x="-10" y="-25" width="20" height="10" rx="1" ry="1" fill="#fff" stroke="#ccc" stroke-width="1"/>
+      <circle cx="0" cy="-25" r="5" fill="#ddd" stroke="#ccc" stroke-width="0.5"/>
+      
+      <!-- Shadow -->
+      <ellipse cx="0" cy="45" rx="15" ry="3" fill="#000" opacity="0.1"/>
+      
+      <!-- Label -->
+      <text x="0" y="100" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#333" text-anchor="middle" font-weight="bold">书本</text>
+      <text x="0" y="120" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#666" text-anchor="middle">白色笔记本最佳</text>
+    </g>
+  </g>
+  
+  <!-- Main message banner -->
+  <rect x="250" y="420" width="300" height="60" rx="10" ry="10" fill="#e3f2fd" stroke="#bbdefb" stroke-width="2"/>
+  <text x="400" y="445" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#1976d2" text-anchor="middle" font-weight="bold">背景简单原则：不抢主角风头</text>
+  <text x="400" y="465" font-family="'Microsoft YaHei', sans-serif" font-size="14" fill="#1976d2" text-anchor="middle">生活中随处可找，打扫干净的桌面就是好背景</text>
+</svg>
+```
+
+#### 图7: 背景常见错误
+
+```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <!-- Background -->
+  <rect width="800" height="500" fill="#f8f9fa" rx="10" ry="10"/>
+  
+  <!-- Title -->
+  <text x="400" y="50" font-family="'Microsoft YaHei', sans-serif" font-size="28" fill="#333" text-anchor="middle" font-weight="bold">背景常见错误</text>
+  
+  <!-- Main illustration frame -->
+  <rect x="50" y="90" width="700" height="370" rx="10" ry="10" fill="#fff" stroke="#ddd" stroke-width="2"/>
+  
+  <!-- Grid divider lines -->
+  <line x1="400" y1="90" x2="400" y2="460" stroke="#eee" stroke-width="1"/>
+  <line x1="50" y1="275" x2="750" y2="275" stroke="#eee" stroke-width="1"/>
+  
+  <!-- Error 1: Too busy background -->
+  <g transform="translate(225, 180)">
+    <!-- Error frame -->
+    <rect x="-150" y="-70" width="300" height="140" rx="5" ry="5" fill="#ffebee" fill-opacity="0.3"/>
+    
+    <!-- Illustration: Product lost in busy pattern -->
+    <rect x="-130" y="-50" width="260" height="100" rx="5" ry="5" fill="#fff" stroke="#ddd" stroke-width="1"/>
+    
+    <!-- Busy pattern background -->
+    <pattern id="busyPattern" patternUnits="userSpaceOnUse" width="20" height="20" patternTransform="rotate(45)">
+      <rect width="20" height="20" fill="#fff"/>
+      <circle cx="10" cy="10" r="5" fill="#ffccbc"/>
+      <circle cx="0" cy="0" r="3" fill="#b2ebf2"/>
+      <circle cx="20" cy="0" r="3" fill="#b2ebf2"/>
+      <circle cx="0" cy="20" r="3" fill="#b2ebf2"/>
+      <circle cx="20" cy="20" r="3" fill="#b2ebf2"/>
+    </pattern>
+    <rect x="-125" y="-45" width="250" height="90" rx="3" ry="3" fill="url(#busyPattern)"/>
+    
+    <!-- Product (small water bottle) -->
+    <rect x="-10" y="-20" width="20" height="40" rx="2" ry="2" fill="#eceff1" stroke="#cfd8dc" stroke-width="1"/>
+    <rect x="-7" y="-25" width="14" height="5" rx="1" ry="1" fill="#eceff1" stroke="#cfd8dc" stroke-width="1"/>
+    
+    <!-- Error indicator -->
+    <circle cx="100" cy="-20" r="15" fill="rgba(255,82,82,0.2)" stroke="#ff5252" stroke-width="1.5"/>
+    <path d="M93 -27 L107 -13 M107 -27 L93 -13" fill="none" stroke="#ff5252" stroke-width="2" stroke-linecap="round"/>
+    
+    <!-- Label -->
+    <text x="0" y="70" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#d32f2f" text-anchor="middle" font-weight="bold">错误一：背景花哨</text>
+    <text x="0" y="90" font-family="'Microsoft YaHei', sans-serif" font-size="14" fill="#666" text-anchor="middle">图案太复杂，产品被淹没</text>
+  </g>
+  
+  <!-- Error 2: Similar color to product -->
+  <g transform="translate(580, 180)">
+    <!-- Error frame -->
+    <rect x="-150" y="-70" width="300" height="140" rx="5" ry="5" fill="#ffebee" fill-opacity="0.3"/>
+    
+    <!-- Illustration: Product blends with background -->
+    <rect x="-130" y="-50" width="260" height="100" rx="5" ry="5" fill="#fff" stroke="#ddd" stroke-width="1"/>
+    
+    <!-- Similar color background -->
+    <rect x="-125" y="-45" width="250" height="90" rx="3" ry="3" fill="#eceff1"/>
+    
+    <!-- Product (water bottle same color as background) -->
+    <rect x="-10" y="-20" width="20" height="40" rx="2" ry="2" fill="#eceff1" stroke="#cfd8dc" stroke-width="1"/>
+    <rect x="-7" y="-25" width="14" height="5" rx="1" ry="1" fill="#eceff1" stroke="#cfd8dc" stroke-width="1"/>
+    
+    <!-- Highlight where product is -->
+    <circle cx="0" cy="0" r="25" fill="none" stroke="#ff5252" stroke-width="1" stroke-dasharray="2 2"/>
+    <text x="0" y="2" font-family="'Microsoft YaHei', sans-serif" font-size="9" fill="#ff5252" text-anchor="middle">产品在这里</text>
+    
+    <!-- Error indicator -->
+    <circle cx="-100" cy="-20" r="15" fill="rgba(255,82,82,0.2)" stroke="#ff5252" stroke-width="1.5"/>
+    <path d="M-107 -27 L-93 -13 M-93 -27 L-107 -13" fill="none" stroke="#ff5252" stroke-width="2" stroke-linecap="round"/>
+    
+    <!-- Label -->
+    <text x="0" y="70" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#d32f2f" text-anchor="middle" font-weight="bold">错误二：颜色相似</text>
+    <text x="0" y="90" font-family="'Microsoft YaHei', sans-serif" font-size="14" fill="#666" text-anchor="middle">产品与背景颜色太接近</text>
+  </g>
+  
+  <!-- Error 3: Background too messy/cluttered -->
+  <g transform="translate(225, 360)">
+    <!-- Error frame -->
+    <rect x="-150" y="-65" width="300" height="135" rx="5" ry="5" fill="#ffebee" fill-opacity="0.3"/>
+    
+    <!-- Illustration: Messy desk -->
+    <rect x="-130" y="-50" width="260" height="100" rx="5" ry="5" fill="#fff" stroke="#ddd" stroke-width="1"/>
+    
+    <!-- Desk surface -->
+    <rect x="-125" y="-45" width="250" height="90" rx="3" ry="3" fill="#d7ccc8"/>
+    
+    <!-- Desk clutter -->
+    <rect x="-115" y="-35" width="40" height="30" fill="#ef9a9a"/>
+    <rect x="-70" y="-40" width="50" height="20" fill="#a5d6a7"/>
+    <rect x="-10" y="-35" width="30" height="25" fill="#ffcc80"/>
+    <rect x="30" y="-25" width="45" height="15" fill="#90caf9"/>
+    <rect x="85" y="-35" width="30" height="25" fill="#ce93d8"/>
+    <rect x="-100" y="0" width="35" height="30" fill="#b39ddb"/>
+    <rect x="-60" y="0" width="25" height="20" fill="#80deea"/>
+    <rect x="-30" y="0" width="40" height="15" fill="#fff59d"/>
+    <rect x="20" y="5" width="30" height="30" fill="#ffab91"/>
+    <rect x="55" y="0" width="25" height="30" fill="#c5e1a5"/>
+    <rect x="85" y="5" width="30" height="25" fill="#81d4fa"/>
+    
+    <!-- Product (small bottle) trying to find space -->
+    <rect x="-15" y="-15" width="10" height="25" rx="1" ry="1" fill="#fff" stroke="#ccc" stroke-width="1"/>
+    <rect x="-12" y="-18" width="4" height="3" rx="0.5" ry="0.5" fill="#fff" stroke="#ccc" stroke-width="0.5"/>
+    
+    <!-- Error indicator -->
+    <circle cx="100" cy="-20" r="15" fill="rgba(255,82,82,0.2)" stroke="#ff5252" stroke-width="1.5"/>
+    <path d="M93 -27 L107 -13 M107 -27 L93 -13" fill="none" stroke="#ff5252" stroke-width="2" stroke-linecap="round"/>
+    
+    <!-- Label -->
+    <text x="0" y="65" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#d32f2f" text-anchor="middle" font-weight="bold">错误三：桌面杂乱</text>
+    <text x="0" y="85" font-family="'Microsoft YaHei', sans-serif" font-size="14" fill="#666" text-anchor="middle">太多杂物抢镜</text>
+  </g>
+  
+  <!-- Error 4: Distracting shadow/reflection -->
+  <g transform="translate(580, 360)">
+    <!-- Error frame -->
+    <rect x="-150" y="-65" width="300" height="135" rx="5" ry="5" fill="#ffebee" fill-opacity="0.3"/>
+    
+    <!-- Illustration: Distracting reflections -->
+    <rect x="-130" y="-50" width="260" height="100" rx="5" ry="5" fill="#fff" stroke="#ddd" stroke-width="1"/>
+    
+    <!-- Glossy surface -->
+    <linearGradient id="glossyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#e0e0e0"/>
+      <stop offset="50%" stop-color="#f5f5f5"/>
+      <stop offset="100%" stop-color="#e0e0e0"/>
+    </linearGradient>
+    <rect x="-125" y="-45" width="250" height="90" rx="3" ry="3" fill="url(#glossyGradient)"/>
+    
+    <!-- Distracting reflections -->
+    <ellipse cx="-80" cy="-15" rx="30" ry="15" fill="#fff" opacity="0.7"/>
+    <ellipse cx="-30" cy="20" rx="25" ry="10" fill="#fff" opacity="0.6"/>
+    <ellipse cx="40" cy="-10" rx="20" ry="15" fill="#fff" opacity="0.5"/>
+    <ellipse cx="90" cy="15" rx="28" ry="12" fill="#fff" opacity="0.7"/>
+    
+    <!-- Product (perfume bottle) -->
+    <rect x="-15" y="-20" width="30" height="40" rx="2" ry="2" fill="#fff" stroke="#ccc" stroke-width="1"/>
+    <rect x="-10" y="-25" width="20" height="5" rx="1" ry="1" fill="#fff" stroke="#ccc" stroke-width="1"/>
+    
+    <!-- Product reflection -->
+    <rect x="-15" y="20" width="30" height="10" rx="2" ry="2" fill="#fff" opacity="0.3"/>
+    
+    <!-- Error indicator -->
+    <circle cx="-80" cy="-15" r="15" fill="rgba(255,82,82,0.2)" stroke="#ff5252" stroke-width="1.5"/>
+    <path d="M-87 -22 L-73 -8 M-73 -22 L-87 -8" fill="none" stroke="#ff5252" stroke-width="2" stroke-linecap="round"/>
+    
+    <!-- Label -->
+    <text x="0" y="65" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#d32f2f" text-anchor="middle" font-weight="bold">错误四：反光/阴影干扰</text>
+    <text x="0" y="85" font-family="'Microsoft YaHei', sans-serif" font-size="14" fill="#666" text-anchor="middle">光线反射导致干扰</text>
+  </g>
+  
+  <!-- Correct solution banner -->
+  <rect x="250" y="470" width="300" height="20" rx="10" ry="10" fill="#e8f5e9" stroke="#c8e6c9" stroke-width="1"/>
+  <text x="400" y="485" font-family="'Microsoft YaHei', sans-serif" font-size="14" fill="#2e7d32" text-anchor="middle" font-weight="bold">正确做法：简单纯色，不抢产品风头</text>
+</svg>
+```
+
+#### 图8: 产品亮点：展示"真香"细节
+
+```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <!-- Background -->
+  <rect width="800" height="500" fill="#f8f9fa" rx="10" ry="10"/>
+  
+  <!-- Title -->
+  <text x="400" y="50" font-family="'Microsoft YaHei', sans-serif" font-size="28" fill="#333" text-anchor="middle" font-weight="bold">产品亮点：展示"真香"细节</text>
+  
+  <!-- Main content frame -->
+  <rect x="100" y="90" width="600" height="380" rx="10" ry="10" fill="#fff" stroke="#eee" stroke-width="2"/>
+  
+  <!-- Product 1: Smartphone -->
+  <g transform="translate(250, 180)">
+    <!-- Phone overall -->
+    <rect x="-50" y="-80" width="100" height="160" rx="10" ry="10" fill="#f5f5f5" stroke="#e0e0e0" stroke-width="2"/>
+    <rect x="-45" y="-75" width="90" height="150" rx="5" ry="5" fill="#333"/>
+    
+    <!-- Phone screen -->
+    <rect x="-40" y="-70" width="80" height="130" rx="2" ry="2" fill="#4fc3f7"/>
+    <circle cx="0" cy="75" r="10" fill="#e0e0e0"/>
+    
+    <!-- Phone details - Camera -->
+    <circle cx="0" cy="-60" r="8" fill="#555" stroke="#777" stroke-width="1"/>
+    <circle cx="0" cy="-60" r="5" fill="#333" stroke="#555" stroke-width="0.5"/>
+    <circle cx="0" cy="-60" r="2" fill="#111"/>
+    
+    <!-- Phone details - Speaker -->
+    <rect x="-15" y="-60" width="30" height="3" rx="1.5" ry="1.5" fill="#555" opacity="0.7"/>
+    
+    <!-- Phone logo -->
+    <circle cx="0" cy="45" r="10" fill="#fff"/>
+    <path d="M-5 45 L-2 48 L5 41" fill="none" stroke="#4fc3f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Highlight 1: Camera -->
+    <circle cx="30" cy="-60" r="20" fill="none" stroke="#ff6d00" stroke-width="2" stroke-dasharray="3 2"/>
+    <line x1="20" y1="-65" x2="10" y2="-62" stroke="#ff6d00" stroke-width="1.5"/>
+    <text x="50" y="-60" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#ff6d00" text-anchor="start">高清摄像头</text>
+    
+    <!-- Highlight 2: Logo -->
+    <circle cx="50" cy="45" r="20" fill="none" stroke="#ff6d00" stroke-width="2" stroke-dasharray="3 2"/>
+    <line x1="40" y1="45" x2="15" y2="45" stroke="#ff6d00" stroke-width="1.5"/>
+    <text x="70" y="50" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#ff6d00" text-anchor="start">品牌Logo</text>
+    
+    <!-- Title -->
+    <text x="0" y="-100" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#333" text-anchor="middle" font-weight="bold">手机亮点</text>
+  </g>
+  
+  <!-- Product 2: Sneaker -->
+  <g transform="translate(550, 180)">
+    <!-- Sneaker outline -->
+    <path d="M-80 0 C-70 -20, -40 -30, -10 -25 C20 -20, 40 -5, 60 0 C80 5, 90 10, 80 20 C50 40, 0 45, -50 30 C-70 25, -80 20, -80 0 Z" fill="#f5f5f5" stroke="#ddd" stroke-width="2"/>
+    
+    <!-- Sneaker details -->
+    <path d="M-75 0 C-65 -15, -40 -25, -10 -20 C15 -15, 35 -5, 55 0" fill="none" stroke="#ccc" stroke-width="1.5"/>
+    <path d="M-50 -10 C-30 -5, -10 -5, 10 -10" fill="none" stroke="#ccc" stroke-width="1.5"/>
+    <path d="M40 0 C50 10, 50 20, 40 25" fill="none" stroke="#ccc" stroke-width="1.5"/>
+    
+    <!-- Sneaker logo -->
+    <path d="M0 -5 L10 -15 L20 -5 L10 5 Z" fill="#ff6d00"/>
+    
+    <!-- Sneaker special texture -->
+    <path d="M-40 10 L-30 5 L-20 10 L-10 5 L0 10" fill="none" stroke="#aaa" stroke-width="1"/>
+    <path d="M-40 15 L-30 10 L-20 15 L-10 10 L0 15" fill="none" stroke="#aaa" stroke-width="1"/>
+    
+    <!-- Sneaker laces -->
+    <path d="M-20 -15 C-10 -12, 0 -12, 10 -15" fill="none" stroke="#ddd" stroke-width="2"/>
+    <path d="M-20 -10 C-10 -7, 0 -7, 10 -10" fill="none" stroke="#ddd" stroke-width="2"/>
+    <path d="M-20 -5 C-10 -2, 0 -2, 10 -5" fill="none" stroke="#ddd" stroke-width="2"/>
+    
+    <!-- Sole pattern -->
+    <path d="M-50 20 L-40 25 M-30 25 L-20 30 M-10 30 L0 25 M10 25 L20 20" fill="none" stroke="#ddd" stroke-width="1.5"/>
+    
+    <!-- Highlight 1: Logo -->
+    <circle cx="10" cy="-5" r="20" fill="none" stroke="#ff6d00" stroke-width="2" stroke-dasharray="3 2"/>
+    <line x1="25" y1="-15" x2="40" y2="-25" stroke="#ff6d00" stroke-width="1.5"/>
+    <text x="50" y="-25" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#ff6d00" text-anchor="start">品牌标志</text>
+    
+    <!-- Highlight 2: Special texture -->
+    <ellipse cx="-20" cy="10" rx="30" ry="10" fill="none" stroke="#ff6d00" stroke-width="2" stroke-dasharray="3 2"/>
+    <line x1="-45" y1="15" x2="-60" y2="25" stroke="#ff6d00" stroke-width="1.5"/>
+    <text x="-50" y="40" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#ff6d00" text-anchor="middle">特殊纹理</text>
+    
+    <!-- Title -->
+    <text x="0" y="-50" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#333" text-anchor="middle" font-weight="bold">运动鞋亮点</text>
+  </g>
+  
+  <!-- Product 3: Food/Dessert -->
+  <g transform="translate(250, 350)">
+    <!-- Plate -->
+    <ellipse cx="0" cy="0" rx="70" ry="25" fill="#f5f5f5" stroke="#eee" stroke-width="1"/>
+    
+    <!-- Cake base -->
+    <ellipse cx="0" cy="-5" rx="50" ry="18" fill="#a1887f"/>
+    <ellipse cx="0" cy="-10" rx="45" ry="16" fill="#bcaaa4"/>
+    
+    <!-- Cream topping -->
+    <ellipse cx="0" cy="-12" rx="40" ry="14" fill="#fff8e1"/>
+    
+    <!-- Fruits on top -->
+    <circle cx="-25" cy="-20" r="8" fill="#e53935"/>
+    <circle cx="-10" cy="-25" r="8" fill="#e53935"/>
+    <circle cx="5" cy="-25" r="8" fill="#e53935"/>
+    <circle cx="20" cy="-20" r="8" fill="#e53935"/>
+    
+    <!-- Sugar powder -->
+    <circle cx="-30" cy="-15" r="2" fill="#fff"/>
+    <circle cx="-20" cy="-10" r="2" fill="#fff"/>
+    <circle cx="-5" cy="-15" r="2" fill="#fff"/>
+    <circle cx="10" cy="-10" r="2" fill="#fff"/>
+    <circle cx="25" cy="-15" r="2" fill="#fff"/>
+    
+    <!-- Highlight 1: Fresh fruits -->
+    <ellipse cx="0" cy="-22" rx="35" ry="12" fill="none" stroke="#ff6d00" stroke-width="2" stroke-dasharray="3 2"/>
+    <line x1="30" y1="-25" x2="50" y2="-35" stroke="#ff6d00" stroke-width="1.5"/>
+    <text x="70" y="-35" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#ff6d00" text-anchor="start">新鲜草莓</text>
+    
+    <!-- Highlight 2: Texture -->
+    <circle cx="-25" cy="-5" r="15" fill="none" stroke="#ff6d00" stroke-width="2" stroke-dasharray="3 2"/>
+    <line x1="-40" y1="-5" x2="-60" y2="-10" stroke="#ff6d00" stroke-width="1.5"/>
+    <text x="-70" y="5" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#ff6d00" text-anchor="end">松软蛋糕质地</text>
+    
+    <!-- Title -->
+    <text x="0" y="-45" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#333" text-anchor="middle" font-weight="bold">甜点亮点</text>
+  </g>
+  
+  <!-- Product 4: Cosmetics -->
+  <g transform="translate(550, 350)">
+    <!-- Bottle body -->
+    <path d="M-15 -40 L-15 20 Q-15 30, -5 30 L5 30 Q15 30, 15 20 L15 -40 Z" fill="#fce4ec" stroke="#f8bbd0" stroke-width="1.5"/>
+    
+    <!-- Bottle cap -->
+    <path d="M-15 -40 Q-15 -50, -5 -50 L5 -50 Q15 -50, 15 -40" fill="none" stroke="#f8bbd0" stroke-width="1.5"/>
+    <rect x="-10" y="-60" width="20" height="10" rx="2" ry="2" fill="#f8bbd0" stroke="#f48fb1" stroke-width="1"/>
+    
+    <!-- Bottle label -->
+    <rect x="-12" y="-30" width="24" height="30" rx="2" ry="2" fill="#fff" stroke="#eee" stroke-width="0.5"/>
+    <text x="0" y="-18" font-family="'Microsoft YaHei', sans-serif" font-size="6" fill="#ec407a" text-anchor="middle" font-weight="bold">BEAUTY</text>
+    <text x="0" y="-10" font-family="'Microsoft YaHei', sans-serif" font-size="4" fill="#ec407a" text-anchor="middle">PREMIUM</text>
+    <path d="M-8 -5 L8 -5" stroke="#ec407a" stroke-width="0.5"/>
+    <text x="0" y="0" font-family="'Microsoft YaHei', sans-serif" font-size="5" fill="#ec407a" text-anchor="middle">ESSENCE</text>
+    
+    <!-- Bottle detail design -->
+    <path d="M-15 5 C-5 0, 5 0, 15 5" fill="none" stroke="#f8bbd0" stroke-width="1" stroke-dasharray="2 1"/>
+    
+    <!-- Highlight 1: Packaging design -->
+    <ellipse cx="0" cy="-15" rx="20" ry="25" fill="none" stroke="#ff6d00" stroke-width="2" stroke-dasharray="3 2"/>
+    <line x1="20" y1="-15" x2="40" y2="-15" stroke="#ff6d00" stroke-width="1.5"/>
+    <text x="40" y="-15" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#ff6d00" text-anchor="start">精美包装</text>
+    
+    <!-- Highlight 2: Color -->
+    <circle cx="25" cy="10" r="15" fill="none" stroke="#ff6d00" stroke-width="2" stroke-dasharray="3 2"/>
+    <line x1="15" y1="10" x2="15" y2="10" stroke="#ff6d00" stroke-width="1.5"/>
+    <text x="40" y="10" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#ff6d00" text-anchor="start">粉嫩颜色</text>
+    
+    <!-- Title -->
+    <text x="0" y="-70" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#333" text-anchor="middle" font-weight="bold">化妆品亮点</text>
+  </g>
+  
+  <!-- Key message -->
+  <rect x="150" y="430" width="500" height="30" rx="15" ry="15" fill="#fff3e0" stroke="#ffe0b2" stroke-width="1.5"/>
+  <text x="400" y="450" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#e65100" text-anchor="middle" font-weight="bold">寻找产品最吸引人的地方，给它一个"特写镜头"</text>
+</svg>
+```
+
+#### 图9: 特写效果：展现细节的魅力
+
+```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <!-- Background -->
+  <rect width="800" height="500" fill="#f8f9fa" rx="10" ry="10"/>
+  
+  <!-- Title -->
+  <text x="400" y="50" font-family="'Microsoft YaHei', sans-serif" font-size="28" fill="#333" text-anchor="middle" font-weight="bold">特写效果：展现细节的魅力</text>
+  
+  <!-- Divider line -->
+  <line x1="400" y1="90" x2="400" y2="450" stroke="#ddd" stroke-width="2" stroke-dasharray="8 4"/>
+  
+  <!-- Left side - Full product image -->
+  <g transform="translate(200, 270)">
+    <!-- Phone frame -->
+    <rect x="-130" y="-170" width="260" height="340" rx="15" ry="15" fill="#fff" stroke="#ddd" stroke-width="5"/>
+    <circle cx="0" cy="-150" r="8" fill="#eee"/>
+    
+    <!-- Phone screen area -->
+    <rect x="-120" y="-140" width="240" height="300" rx="5" ry="5" fill="#f5f5f5"/>
+    
+    <!-- Whole watch photo -->
+    <circle cx="0" cy="0" r="100" fill="#fff" stroke="#eee" stroke-width="3"/>
+    
+    <!-- Watch drawing -->
+    <circle cx="0" cy="0" r="80" fill="#fff" stroke="#333" stroke-width="3"/>
+    <circle cx="0" cy="0" r="75" fill="none" stroke="#555" stroke-width="1"/>
+    
+    <!-- Watch face details -->
+    <circle cx="0" cy="0" r="65" fill="#f8f9fa" stroke="#ccc" stroke-width="0.5"/>
+    
+    <!-- Watch hands -->
+    <line x1="0" y1="0" x2="0" y2="-40" stroke="#333" stroke-width="2"/>
+    <line x1="0" y1="0" x2="30" y2="20" stroke="#333" stroke-width="2"/>
+    
+    <!-- Watch hour markers -->
+    <line x1="0" y1="-60" x2="0" y2="-50" stroke="#333" stroke-width="2.5"/>
+    <line x1="60" y1="0" x2="50" y2="0" stroke="#333" stroke-width="2.5"/>
+    <line x1="0" y1="60" x2="0" y2="50" stroke="#333" stroke-width="2.5"/>
+    <line x1="-60" y1="0" x2="-50" y2="0" stroke="#333" stroke-width="2.5"/>
+    
+    <line x1="30" y1="-52" x2="25" y2="-43" stroke="#333" stroke-width="1.5"/>
+    <line x1="52" y1="-30" x2="43" y2="-25" stroke="#333" stroke-width="1.5"/>
+    <line x1="52" y1="30" x2="43" y2="25" stroke="#333" stroke-width="1.5"/>
+    <line x1="30" y1="52" x2="25" y2="43" stroke="#333" stroke-width="1.5"/>
+    <line x1="-30" y1="52" x2="-25" y2="43" stroke="#333" stroke-width="1.5"/>
+    <line x1="-52" y1="30" x2="-43" y2="25" stroke="#333" stroke-width="1.5"/>
+    <line x1="-52" y1="-30" x2="-43" y2="-25" stroke="#333" stroke-width="1.5"/>
+    <line x1="-30" y1="-52" x2="-25" y2="-43" stroke="#333" stroke-width="1.5"/>
+    
+    <!-- Watch logo -->
+    <text x="0" y="-15" font-family="'Microsoft YaHei', sans-serif" font-size="10" fill="#333" text-anchor="middle" font-weight="bold">LUXTIME</text>
+    <text x="0" y="25" font-family="'Microsoft YaHei', sans-serif" font-size="8" fill="#777" text-anchor="middle">AUTOMATIC</text>
+    
+    <!-- Watch crown -->
+    <rect x="83" y="-5" width="10" height="10" rx="5" ry="5" fill="#555" stroke="#333" stroke-width="1"/>
+    
+    <!-- Watch strap -->
+    <path d="M-80 0 L-100 -30 L-100 30 Z" fill="#333"/>
+    <path d="M80 0 L100 -30 L100 30 Z" fill="#333"/>
+    
+    <!-- Annotation -->
+    <rect x="-100" y="130" width="200" height="30" rx="5" ry="5" fill="#e3f2fd" stroke="#bbdefb" stroke-width="1"/>
+    <text x="0" y="150" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#1565c0" text-anchor="middle" font-weight="bold">整体产品图</text>
+  </g>
+  
+  <!-- Right side - Close-up detail -->
+  <g transform="translate(600, 270)">
+    <!-- Phone frame -->
+    <rect x="-130" y="-170" width="260" height="340" rx="15" ry="15" fill="#fff" stroke="#ddd" stroke-width="5"/>
+    <circle cx="0" cy="-150" r="8" fill="#eee"/>
+    
+    <!-- Phone screen area -->
+    <rect x="-120" y="-140" width="240" height="300" rx="5" ry="5" fill="#f5f5f5"/>
+    
+    <!-- Zoomed in circular area -->
+    <circle cx="0" cy="0" r="110" fill="#fff" stroke="#eee" stroke-width="3"/>
+    
+    <!-- Watch logo closeup (magnified) -->
+    <text x="0" y="-15" font-family="'Microsoft YaHei', sans-serif" font-size="24" fill="#333" text-anchor="middle" font-weight="bold">LUXTIME</text>
+    <text x="0" y="25" font-family="'Microsoft YaHei', sans-serif" font-size="18" fill="#777" text-anchor="middle">AUTOMATIC</text>
+    
+    <!-- Detail highlight - subtle embossing visible in closeup -->
+    <path d="M-70 -18 L70 -18" stroke="#eee" stroke-width="1"/>
+    <path d="M-70 -12 L70 -12" stroke="#eee" stroke-width="1"/>
+    <path d="M-50 28 L50 28" stroke="#eee" stroke-width="1"/>
+    <path d="M-50 22 L50 22" stroke="#eee" stroke-width="1"/>
+    
+    <!-- Detail texture visible in closeup -->
+    <pattern id="subtleTexture" patternUnits="userSpaceOnUse" width="10" height="10" patternTransform="scale(0.5)">
+      <rect width="10" height="10" fill="#fff"/>
+      <path d="M0 0 L5 5 M5 0 L10 5 M0 5 L5 10 M5 5 L10 10" stroke="#f5f5f5" stroke-width="0.5"/>
+    </pattern>
+    <circle cx="0" cy="0" r="90" fill="url(#subtleTexture)" fill-opacity="0.7"/>
+    
+    <!-- Magnification visual cue -->
+    <circle cx="80" cy="-80" r="25" fill="#fff" stroke="#2196f3" stroke-width="2" fill-opacity="0.9"/>
+    <text x="80" y="-76" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#2196f3" text-anchor="middle" font-weight="bold">+</text>
+    
+    <!-- Annotation -->
+    <rect x="-100" y="130" width="200" height="30" rx="5" ry="5" fill="#e8f5e9" stroke="#c8e6c9" stroke-width="1"/>
+    <text x="0" y="150" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#2e7d32" text-anchor="middle" font-weight="bold">细节特写</text>
+  </g>
+  
+  <!-- Connection between the two images -->
+  <g>
+    <!-- Visual connection -->
+    <path d="M300 270 C350 270, 450 200, 500 200" fill="none" stroke="#f50057" stroke-width="2" stroke-dasharray="5 3"/>
+    <circle cx="500" cy="200" r="10" fill="#f50057" fill-opacity="0.3" stroke="#f50057" stroke-width="1.5"/>
+    
+    <!-- Explanation text -->
+    <rect x="320" y="200" width="160" height="60" rx="10" ry="10" fill="#fff" stroke="#f50057" stroke-width="1.5" fill-opacity="0.9"/>
+    <text x="400" y="225" font-family="'Microsoft YaHei', sans-serif" font-size="14" fill="#f50057" text-anchor="middle" font-weight="bold">找到产品特色</text>
+    <text x="400" y="245" font-family="'Microsoft YaHei', sans-serif" font-size="14" fill="#f50057" text-anchor="middle">拍摄精美特写</text>
+  </g>
+  
+  <!-- Bottom section with key points -->
+  <rect x="150" y="430" width="500" height="50" rx="10" ry="10" fill="#fff3e0" stroke="#ffe0b2" stroke-width="1.5"/>
+  <text x="400" y="450" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#e65100" text-anchor="middle" font-weight="bold">特写镜头的威力：</text>
+  <text x="400" y="470" font-family="'Microsoft YaHei', sans-serif" font-size="14" fill="#e65100" text-anchor="middle">展示肉眼难以观察到的细节，突出商品的质感和品质</text>
+</svg>
+```
+
+#### 图10: 拍摄角度：不同视角的产品呈现
+
+```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <!-- Background -->
+  <rect width="800" height="500" fill="#f8f9fa" rx="10" ry="10"/>
+  
+  <!-- Title -->
+  <text x="400" y="50" font-family="'Microsoft YaHei', sans-serif" font-size="28" fill="#333" text-anchor="middle" font-weight="bold">拍摄角度：不同视角的产品呈现</text>
+  
+  <!-- Main content grid -->
+  <rect x="50" y="80" width="700" height="380" rx="10" ry="10" fill="#fff" stroke="#eee" stroke-width="2"/>
+  
+  <!-- Grid divider lines -->
+  <line x1="266" y1="80" x2="266" y2="460" stroke="#eee" stroke-width="1"/>
+  <line x1="534" y1="80" x2="534" y2="460" stroke="#eee" stroke-width="1"/>
+  <line x1="50" y1="220" x2="750" y2="220" stroke="#eee" stroke-width="1"/>
+  <line x1="50" y1="360" x2="750" y2="360" stroke="#eee" stroke-width="1"/>
+  
+  <!-- Angle 1: Front view -->
+  <g transform="translate(160, 150)">
+    <!-- Angle title -->
+    <text x="0" y="-50" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#333" text-anchor="middle" font-weight="bold">正面视角</text>
+    
+    <!-- Phone orientation illustration -->
+    <rect x="-5" y="-40" width="10" height="20" fill="#2196f3"/>
+    <rect x="-20" y="-35" width="40" height="10" fill="#90caf9"/>
+    <circle cx="0" cy="-30" r="2" fill="#1565c0"/>
+    
+    <!-- Camera illustration -->
+    <rect x="-15" y="15" width="30" height="20" rx="2" ry="2" fill="#e0e0e0" stroke="#bdbdbd" stroke-width="1"/>
+    <circle cx="0" cy="25" r="7" fill="#9e9e9e" stroke="#757575" stroke-width="0.5"/>
+    <circle cx="0" cy="25" r="5" fill="#424242"/>
+    <circle cx="0" cy="25" r="2" fill="#212121"/>
+    <rect x="-20" y="30" width="40" height="5" rx="2" ry="2" fill="#9e9e9e"/>
+    
+    <!-- Camera stand -->
+    <rect x="-2" y="35" width="4" height="10" fill="#9e9e9e"/>
+    <rect x="-10" y="45" width="20" height="2" fill="#9e9e9e"/>
+    
+    <!-- Direction arrow -->
+    <line x1="0" y1="20" x2="0" y2="-15" stroke="#2196f3" stroke-width="1.5" marker-end="url(#blueArrow)"/>
+    
+    <!-- Pros/Cons -->
+    <rect x="-80" y="-20" width="160" height="60" rx="5" ry="5" fill="#e3f2fd" fill-opacity="0.5" stroke="#bbdefb" stroke-width="1"/>
+    <text x="0" y="-5" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#1976d2" text-anchor="middle" font-weight="bold">优点：</text>
+    <text x="0" y="10" font-family="'Microsoft YaHei', sans-serif" font-size="10" fill="#1976d2" text-anchor="middle">完整展示产品正面形象</text>
+    <text x="0" y="25" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#f44336" text-anchor="middle" font-weight="bold">缺点：</text>
+    <text x="0" y="40" font-family="'Microsoft YaHei', sans-serif" font-size="10" fill="#f44336" text-anchor="middle">平面感强，缺乏立体质感</text>
+  </g>
+  
+  <!-- Angle 2: 45° angle view -->
+  <g transform="translate(400, 150)">
+    <!-- Angle title -->
+    <text x="0" y="-50" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#333" text-anchor="middle" font-weight="bold">45°斜角视角</text>
+    
+    <!-- Phone orientation illustration -->
+    <g transform="rotate(-45, 0, -30)">
+      <rect x="-5" y="-40" width="10" height="20" fill="#2196f3"/>
+      <rect x="-20" y="-35" width="40" height="10" fill="#90caf9"/>
+      <circle cx="0" cy="-30" r="2" fill="#1565c0"/>
+    </g>
+    
+    <!-- Camera illustration -->
+    <rect x="-15" y="15" width="30" height="20" rx="2" ry="2" fill="#e0e0e0" stroke="#bdbdbd" stroke-width="1"/>
+    <circle cx="0" cy="25" r="7" fill="#9e9e9e" stroke="#757575" stroke-width="0.5"/>
+    <circle cx="0" cy="25" r="5" fill="#424242"/>
+    <circle cx="0" cy="25" r="2" fill="#212121"/>
+    <rect x="-20" y="30" width="40" height="5" rx="2" ry="2" fill="#9e9e9e"/>
+    
+    <!-- Camera stand -->
+    <rect x="-2" y="35" width="4" height="10" fill="#9e9e9e"/>
+    <rect x="-10" y="45" width="20" height="2" fill="#9e9e9e"/>
+    
+    <!-- Direction arrow -->
+    <line x1="0" y1="20" x2="-20" y2="-15" stroke="#2196f3" stroke-width="1.5" marker-end="url(#blueArrow)"/>
+    
+    <!-- Pros/Cons -->
+    <rect x="-80" y="-20" width="160" height="60" rx="5" ry="5" fill="#e3f2fd" fill-opacity="0.5" stroke="#bbdefb" stroke-width="1"/>
+    <text x="0" y="-5" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#1976d2" text-anchor="middle" font-weight="bold">优点：</text>
+    <text x="0" y="10" font-family="'Microsoft YaHei', sans-serif" font-size="10" fill="#1976d2" text-anchor="middle">兼顾正面与侧面，增加立体感</text>
+    <text x="0" y="25" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#f44336" text-anchor="middle" font-weight="bold">缺点：</text>
+    <text x="0" y="40" font-family="'Microsoft YaHei', sans-serif" font-size="10" fill="#f44336" text-anchor="middle">可能导致一些细节变形</text>
+  </g>
+  
+  <!-- Angle 3: Top-down view -->
+  <g transform="translate(640, 150)">
+    <!-- Angle title -->
+    <text x="0" y="-50" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#333" text-anchor="middle" font-weight="bold">俯视角度</text>
+    
+    <!-- Phone orientation illustration from top -->
+    <rect x="-20" y="-35" width="40" height="10" fill="#2196f3" stroke="#1e88e5" stroke-width="0.5"/>
+    <circle cx="0" cy="-30" r="2" fill="#1565c0"/>
+    
+    <!-- Camera illustration -->
+    <rect x="-15" y="15" width="30" height="20" rx="2" ry="2" fill="#e0e0e0" stroke="#bdbdbd" stroke-width="1"/>
+    <circle cx="0" cy="25" r="7" fill="#9e9e9e" stroke="#757575" stroke-width="0.5"/>
+    <circle cx="0" cy="25" r="5" fill="#424242"/>
+    <circle cx="0" cy="25" r="2" fill="#212121"/>
+    <rect x="-20" y="30" width="40" height="5" rx="2" ry="2" fill="#9e9e9e"/>
+    
+    <!-- Camera stand -->
+    <rect x="-2" y="35" width="4" height="10" fill="#9e9e9e"/>
+    <rect x="-10" y="45" width="20" height="2" fill="#9e9e9e"/>
+    
+    <!-- Direction arrow -->
+    <line x1="0" y1="20" x2="0" y2="-15" stroke="#2196f3" stroke-width="1.5" marker-end="url(#blueArrow)"/>
+    
+    <!-- Pros/Cons -->
+    <rect x="-80" y="-20" width="160" height="60" rx="5" ry="5" fill="#e3f2fd" fill-opacity="0.5" stroke="#bbdefb" stroke-width="1"/>
+    <text x="0" y="-5" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#1976d2" text-anchor="middle" font-weight="bold">优点：</text>
+    <text x="0" y="10" font-family="'Microsoft YaHei', sans-serif" font-size="10" fill="#1976d2" text-anchor="middle">展示产品顶部细节</text>
+    <text x="0" y="25" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#f44336" text-anchor="middle" font-weight="bold">缺点：</text>
+    <text x="0" y="40" font-family="'Microsoft YaHei', sans-serif" font-size="10" fill="#f44336" text-anchor="middle">看不到产品正面和侧面</text>
+  </g>
+  
+  <!-- Angle 4: Low angle view -->
+  <g transform="translate(160, 290)">
+    <!-- Angle title -->
+    <text x="0" y="-50" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#333" text-anchor="middle" font-weight="bold">仰视角度</text>
+    
+    <!-- Phone orientation illustration -->
+    <g transform="rotate(15, 0, -30)">
+      <rect x="-5" y="-40" width="10" height="20" fill="#2196f3"/>
+      <rect x="-20" y="-35" width="40" height="10" fill="#90caf9"/>
+      <circle cx="0" cy="-30" r="2" fill="#1565c0"/>
+    </g>
+    
+    <!-- Camera illustration -->
+    <rect x="-15" y="-5" width="30" height="20" rx="2" ry="2" fill="#e0e0e0" stroke="#bdbdbd" stroke-width="1"/>
+    <circle cx="0" cy="5" r="7" fill="#9e9e9e" stroke="#757575" stroke-width="0.5"/>
+    <circle cx="0" cy="5" r="5" fill="#424242"/>
+    <circle cx="0" cy="5" r="2" fill="#212121"/>
+    <rect x="-20" y="10" width="40" height="5" rx="2" ry="2" fill="#9e9e9e"/>
+    
+    <!-- Camera stand -->
+    <rect x="-2" y="15" width="4" height="10" fill="#9e9e9e"/>
+    <rect x="-10" y="25" width="20" height="2" fill="#9e9e9e"/>
+    
+    <!-- Direction arrow -->
+    <line x1="0" y1="0" x2="0" y2="-20" stroke="#2196f3" stroke-width="1.5" marker-end="url(#blueArrow)"/>
+    
+    <!-- Pros/Cons -->
+    <rect x="-80" y="-20" width="160" height="60" rx="5" ry="5" fill="#e3f2fd" fill-opacity="0.5" stroke="#bbdefb" stroke-width="1"/>
+    <text x="0" y="-5" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#1976d2" text-anchor="middle" font-weight="bold">优点：</text>
+    <text x="0" y="10" font-family="'Microsoft YaHei', sans-serif" font-size="10" fill="#1976d2" text-anchor="middle">突出产品高度和气势</text>
+    <text x="0" y="25" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#f44336" text-anchor="middle" font-weight="bold">缺点：</text>
+    <text x="0" y="40" font-family="'Microsoft YaHei', sans-serif" font-size="10" fill="#f44336" text-anchor="middle">易产生变形，比例失调</text>
+  </g>
+  
+  <!-- Angle 5: Side view -->
+  <g transform="translate(400, 290)">
+    <!-- Angle title -->
+    <text x="0" y="-50" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#333" text-anchor="middle" font-weight="bold">侧面视角</text>
+    
+    <!-- Phone orientation illustration -->
+    <g transform="rotate(90, 0, -30)">
+      <rect x="-5" y="-40" width="10" height="20" fill="#2196f3"/>
+      <rect x="-20" y="-35" width="40" height="10" fill="#90caf9"/>
+      <circle cx="0" cy="-30" r="2" fill="#1565c0"/>
+    </g>
+    
+    <!-- Camera illustration -->
+    <rect x="-15" y="15" width="30" height="20" rx="2" ry="2" fill="#e0e0e0" stroke="#bdbdbd" stroke-width="1"/>
+    <circle cx="0" cy="25" r="7" fill="#9e9e9e" stroke="#757575" stroke-width="0.5"/>
+    <circle cx="0" cy="25" r="5" fill="#424242"/>
+    <circle cx="0" cy="25" r="2" fill="#212121"/>
+    <rect x="-20" y="30" width="40" height="5" rx="2" ry="2" fill="#9e9e9e"/>
+    
+    <!-- Camera stand -->
+    <rect x="-2" y="35" width="4" height="10" fill="#9e9e9e"/>
+    <rect x="-10" y="45" width="20" height="2" fill="#9e9e9e"/>
+    
+    <!-- Direction arrow -->
+    <line x1="0" y1="20" x2="-30" y2="-15" stroke="#2196f3" stroke-width="1.5" marker-end="url(#blueArrow)"/>
+    
+    <!-- Pros/Cons -->
+    <rect x="-80" y="-20" width="160" height="60" rx="5" ry="5" fill="#e3f2fd" fill-opacity="0.5" stroke="#bbdefb" stroke-width="1"/>
+    <text x="0" y="-5" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#1976d2" text-anchor="middle" font-weight="bold">优点：</text>
+    <text x="0" y="10" font-family="'Microsoft YaHei', sans-serif" font-size="10" fill="#1976d2" text-anchor="middle">展示产品侧面设计与厚度</text>
+    <text x="0" y="25" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#f44336" text-anchor="middle" font-weight="bold">缺点：</text>
+    <text x="0" y="40" font-family="'Microsoft YaHei', sans-serif" font-size="10" fill="#f44336" text-anchor="middle">看不到产品正面细节</text>
+  </g>
+  
+  <!-- Angle 6: Multiple angles combined -->
+  <g transform="translate(640, 290)">
+    <!-- Angle title -->
+    <text x="0" y="-50" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#333" text-anchor="middle" font-weight="bold">多角度组合</text>
+    
+    <!-- Phone orientation illustration - multiple positions -->
+    <g transform="translate(-40, -40)">
+      <rect x="-3" y="-6" width="6" height="12" fill="#2196f3" opacity="0.5"/>
+      <rect x="-10" y="-4" width="20" height="6" fill="#90caf9" opacity="0.5"/>
+    </g>
+    
+    <g transform="translate(20, -25) rotate(45)">
+      <rect x="-3" y="-6" width="6" height="12" fill="#2196f3" opacity="0.5"/>
+      <rect x="-10" y="-4" width="20" height="6" fill="#90caf9" opacity="0.5"/>
+    </g>
+    
+    <g transform="translate(-10, -10) rotate(90)">
+      <rect x="-3" y="-6" width="6" height="12" fill="#2196f3" opacity="0.5"/>
+      <rect x="-10" y="-4" width="20" height="6" fill="#90caf9" opacity="0.5"/>
+    </g>
+    
+    <!-- Camera illustration -->
+    <rect x="-15" y="15" width="30" height="20" rx="2" ry="2" fill="#e0e0e0" stroke="#bdbdbd" stroke-width="1"/>
+    <circle cx="0" cy="25" r="7" fill="#9e9e9e" stroke="#757575" stroke-width="0.5"/>
+    <circle cx="0" cy="25" r="5" fill="#424242"/>
+    <circle cx="0" cy="25" r="2" fill="#212121"/>
+    <rect x="-20" y="30" width="40" height="5" rx="2" ry="2" fill="#9e9e9e"/>
+    
+    <!-- Camera stand -->
+    <rect x="-2" y="35" width="4" height="10" fill="#9e9e9e"/>
+    <rect x="-10" y="45" width="20" height="2" fill="#9e9e9e"/>
+    
+    <!-- Direction arrows -->
+    <line x1="-5" y1="15" x2="-30" y2="-15" stroke="#2196f3" stroke-width="1" marker-end="url(#blueArrowSmall)"/>
+    <line x1="5" y1="15" x2="20" y2="-10" stroke="#2196f3" stroke-width="1" marker-end="url(#blueArrowSmall)"/>
+    <line x1="0" y1="15" x2="0" y2="-15" stroke="#2196f3" stroke-width="1" marker-end="url(#blueArrowSmall)"/>
+    
+    <!-- Pros/Cons -->
+    <rect x="-80" y="-20" width="160" height="60" rx="5" ry="5" fill="#e3f2fd" fill-opacity="0.5" stroke="#bbdefb" stroke-width="1"/>
+    <text x="0" y="-5" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#1976d2" text-anchor="middle" font-weight="bold">优点：</text>
+    <text x="0" y="10" font-family="'Microsoft YaHei', sans-serif" font-size="10" fill="#1976d2" text-anchor="middle">全方位展示，更全面的产品信息</text>
+    <text x="0" y="25" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#f44336" text-anchor="middle" font-weight="bold">缺点：</text>
+    <text x="0" y="40" font-family="'Microsoft YaHei', sans-serif" font-size="10" fill="#f44336" text-anchor="middle">需要拍摄多张，较费时间</text>
+  </g>
+  
+  <!-- Tip box at bottom -->
+  <rect x="125" y="380" width="550" height="60" rx="10" ry="10" fill="#e8f5e9" stroke="#c8e6c9" stroke-width="1.5"/>
+  <text x="400" y="405" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#2e7d32" text-anchor="middle" font-weight="bold">拍摄小秘诀</text>
+  <text x="400" y="425" font-family="'Microsoft YaHei', sans-serif" font-size="14" fill="#2e7d32" text-anchor="middle">尝试多个角度拍摄同一产品，选择最能突出其特点的角度</text>
+  
+  <!-- Definitions -->
+  <defs>
+    <marker id="blueArrow" viewBox="0 0 10 10" refX="5" refY="5"
+        markerWidth="6" markerHeight="6"
+        orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2196f3"/>
+    </marker>
+    
+    <marker id="blueArrowSmall" viewBox="0 0 10 10" refX="5" refY="5"
+        markerWidth="4" markerHeight="4"
+        orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2196f3"/>
+    </marker>
+  </defs>
+</svg>
+```
+
+#### 图11: 爆款商品摆拍案例分析
+
+```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <!-- Background -->
+  <rect width="800" height="500" fill="#f8f9fa" rx="10" ry="10"/>
+  
+  <!-- Title -->
+  <text x="400" y="50" font-family="'Microsoft YaHei', sans-serif" font-size="28" fill="#333" text-anchor="middle" font-weight="bold">爆款商品摆拍案例分析</text>
+  
+  <!-- Main content area -->
+  <rect x="50" y="80" width="700" height="400" rx="10" ry="10" fill="#fff" stroke="#eee" stroke-width="2"/>
+  
+  <!-- Product photo area -->
+  <rect x="75" y="110" width="350" height="350" rx="5" ry="5" fill="#f5f5f5"/>
+  
+  <!-- Cake photo mock -->
+  <ellipse cx="250" cy="285" rx="150" ry="30" fill="#e0e0e0" opacity="0.5"/>
+  <ellipse cx="250" cy="280" rx="120" ry="25" fill="#f5f5f5"/>
+  
+  <!-- Cake base -->
+  <ellipse cx="250" cy="260" rx="100" ry="20" fill="#a1887f"/>
+  <ellipse cx="250" cy="245" rx="95" ry="18" fill="#bcaaa4"/>
+  <ellipse cx="250" cy="235" rx="90" ry="15" fill="#d7ccc8"/>
+  
+  <!-- Cream layer -->
+  <ellipse cx="250" cy="220" rx="85" ry="15" fill="#fffde7"/>
+  
+  <!-- Strawberries -->
+  <ellipse cx="210" cy="205" rx="15" ry="10" fill="#e53935" stroke="#c62828" stroke-width="0.5"/>
+  <ellipse cx="245" cy="195" rx="15" ry="10" fill="#e53935" stroke="#c62828" stroke-width="0.5"/>
+  <ellipse cx="280" cy="200" rx="15" ry="10" fill="#e53935" stroke="#c62828" stroke-width="0.5"/>
+  
+  <!-- Green leaves -->
+  <path d="M210 195 C205 190, 200 190, 200 185 C200 180, 205 178, 210 180 Z" fill="#66bb6a"/>
+  <path d="M245 185 C240 180, 235 180, 235 175 C235 170, 240 168, 245 170 Z" fill="#66bb6a"/>
+  <path d="M280 190 C275 185, 270 185, 270 180 C270 175, 275 173, 280 175 Z" fill="#66bb6a"/>
+  
+  <!-- Sugar powder -->
+  <circle cx="220" cy="210" r="2" fill="#fff"/>
+  <circle cx="260" cy="215" r="2" fill="#fff"/>
+  <circle cx="230" cy="200" r="1.5" fill="#fff"/>
+  <circle cx="250" cy="210" r="1.5" fill="#fff"/>
+  <circle cx="270" cy="195" r="1.5" fill="#fff"/>
+  
+  <!-- Plate decoration -->
+  <path d="M160 280 C180 285, 200 287, 250 287 C300 287, 320 285, 340 280" fill="none" stroke="#bdbdbd" stroke-width="0.5" stroke-dasharray="1 1"/>
+  
+  <!-- Analysis annotations -->
+  <!-- 1. C-Position -->
+  <circle cx="250" cy="230" r="105" fill="none" stroke="#2196f3" stroke-width="2" stroke-dasharray="5 3"/>
+  <line x1="250" y1="230" x2="350" y2="150" stroke="#2196f3" stroke-width="1.5" marker-end="url(#blueArrow)"/>
+  <rect x="360" y="120" width="120" height="60" rx="5" ry="5" fill="#e3f2fd" stroke="#bbdefb" stroke-width="1"/>
+  <text x="420" y="140" font-family="'Microsoft YaHei', sans-serif" font-size="14" fill="#1565c0" text-anchor="middle" font-weight="bold">1. C位当道</text>
+  <text x="420" y="160" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#1565c0" text-anchor="middle">蛋糕位于画面正中</text>
+  
+  <!-- 2. Clean background -->
+  <rect x="100" y="180" width="20" height="20" fill="none" stroke="#4caf50" stroke-width="2"/>
+  <line x1="100" y1="180" x2="450" y2="180" stroke="#4caf50" stroke-width="1.5" marker-end="url(#greenArrow)"/>
+  <rect x="460" y="160" width="120" height="60" rx="5" ry="5" fill="#e8f5e9" stroke="#c8e6c9" stroke-width="1"/>
+  <text x="520" y="180" font-family="'Microsoft YaHei', sans-serif" font-size="14" fill="#2e7d32" text-anchor="middle" font-weight="bold">2. 背景简洁</text>
+  <text x="520" y="200" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#2e7d32" text-anchor="middle">纯色背景不抢镜</text>
+  
+  <!-- 3. Highlight strawberries -->
+  <ellipse cx="245" cy="195" rx="50" ry="25" fill="none" stroke="#f50057" stroke-width="2" stroke-dasharray="2 2"/>
+  <line x1="285" y1="185" x2="370" y2="220" stroke="#f50057" stroke-width="1.5" marker-end="url(#pinkArrow)"/>
+  <rect x="380" y="200" width="120" height="60" rx="5" ry="5" fill="#fce4ec" stroke="#f8bbd0" stroke-width="1"/>
+  <text x="440" y="220" font-family="'Microsoft YaHei', sans-serif" font-size="14" fill="#c2185b" text-anchor="middle" font-weight="bold">3. 亮点突出</text>
+  <text x="440" y="240" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#c2185b" text-anchor="middle">新鲜草莓吸引眼球</text>
+  
+  <!-- 4. Perfect angle -->
+  <path d="M150 280 C150 240, 200 200, 250 200 C300 200, 350 240, 350 280" fill="none" stroke="#ff9800" stroke-width="1.5" stroke-dasharray="4 2"/>
+  <line x1="160" y1="250" x2="100" y2="250" stroke="#ff9800" stroke-width="1.5" marker-end="url(#orangeArrow)"/>
+  <rect x="420" y="250" width="120" height="60" rx="5" ry="5" fill="#fff3e0" stroke="#ffe0b2" stroke-width="1"/>
+  <text x="480" y="270" font-family="'Microsoft YaHei', sans-serif" font-size="14" fill="#e65100" text-anchor="middle" font-weight="bold">4. 角度选择</text>
+  <text x="480" y="290" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#e65100" text-anchor="middle">略微俯视，突出层次</text>
+  
+  <!-- 5. Size appropriate -->
+  <rect x="130" y="150" width="240" height="240" fill="none" stroke="#673ab7" stroke-width="1.5" stroke-dasharray="3 2"/>
+  <line x1="370" y1="270" x2="440" y2="320" stroke="#673ab7" stroke-width="1.5" marker-end="url(#purpleArrow)"/>
+  <rect x="450" y="300" width="120" height="60" rx="5" ry="5" fill="#ede7f6" stroke="#d1c4e9" stroke-width="1"/>
+  <text x="510" y="320" font-family="'Microsoft YaHei', sans-serif" font-size="14" fill="#4527a0" text-anchor="middle" font-weight="bold">5. 尺寸适中</text>
+  <text x="510" y="340" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#4527a0" text-anchor="middle">产品大小恰到好处</text>
+  
+  <!-- 6. Appealing lighting -->
+  <path d="M175 175 L215 215 M225 165 L265 205 M275 170 L315 210" stroke="#ffc107" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="230" y1="160" x2="180" y2="120" stroke="#ffc107" stroke-width="1.5" marker-end="url(#yellowArrow)"/>
+  <rect x="190" y="90" width="120" height="60" rx="5" ry="5" fill="#fffde7" stroke="#fff9c4" stroke-width="1"/>
+  <text x="250" y="110" font-family="'Microsoft YaHei', sans-serif" font-size="14" fill="#ff8f00" text-anchor="middle" font-weight="bold">6. 光线明亮</text>
+  <text x="250" y="130" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#ff8f00" text-anchor="middle">自然光让色彩鲜艳</text>
+  
+  <!-- Overall result evaluation -->
+  <rect x="150" y="380" width="500" height="60" rx="10" ry="10" fill="#e8f5e9" stroke="#c8e6c9" stroke-width="1.5"/>
+  <text x="400" y="405" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#2e7d32" text-anchor="middle" font-weight="bold">为什么这张图片有吸引力？</text>
+  <text x="400" y="425" font-family="'Microsoft YaHei', sans-serif" font-size="14" fill="#2e7d32" text-anchor="middle">它完美结合了所有要素：位置居中、背景干净、特点突出、角度合适</text>
+  
+  <!-- Definitions -->
+  <defs>
+    <marker id="blueArrow" viewBox="0 0 10 10" refX="5" refY="5"
+        markerWidth="6" markerHeight="6"
+        orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2196f3"/>
+    </marker>
+    
+    <marker id="greenArrow" viewBox="0 0 10 10" refX="5" refY="5"
+        markerWidth="6" markerHeight="6"
+        orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#4caf50"/>
+    </marker>
+    
+    <marker id="pinkArrow" viewBox="0 0 10 10" refX="5" refY="5"
+        markerWidth="6" markerHeight="6"
+        orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#f50057"/>
+    </marker>
+    
+    <marker id="orangeArrow" viewBox="0 0 10 10" refX="5" refY="5"
+        markerWidth="6" markerHeight="6"
+        orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#ff9800"/>
+    </marker>
+    
+    <marker id="purpleArrow" viewBox="0 0 10 10" refX="5" refY="5"
+        markerWidth="6" markerHeight="6"
+        orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#673ab7"/>
+    </marker>
+    
+    <marker id="yellowArrow" viewBox="0 0 10 10" refX="5" refY="5"
+        markerWidth="6" markerHeight="6"
+        orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#ffc107"/>
+    </marker>
+  </defs>
+</svg>
+```
+
+#### 图12: 拍摄实施步骤：从零到一
+
+```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <!-- Background -->
+  <rect width="800" height="500" fill="#f8f9fa" rx="10" ry="10"/>
+  
+  <!-- Title -->
+  <text x="400" y="50" font-family="'Microsoft YaHei', sans-serif" font-size="28" fill="#333" text-anchor="middle" font-weight="bold">拍摄实施步骤：从零到一</text>
+  
+  <!-- Main content board -->
+  <rect x="50" y="80" width="700" height="400" rx="10" ry="10" fill="#fff" stroke="#eee" stroke-width="2"/>
+  
+  <!-- Step 1: Find clean space -->
+  <g transform="translate(160, 150)">
+    <!-- Step circle -->
+    <circle cx="-50" cy="0" r="25" fill="#1976d2" stroke="#1565c0" stroke-width="2"/>
+    <text x="-50" y="5" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#fff" text-anchor="middle" font-weight="bold">1</text>
+    
+    <!-- Step illustration -->
+    <rect x="-30" y="-40" width="80" height="80" rx="5" ry="5" fill="#e3f2fd" stroke="#bbdefb" stroke-width="1"/>
+    
+    <!-- Table surface -->
+    <rect x="-25" y="0" width="70" height="35" rx="2" ry="2" fill="#bcaaa4"/>
+    
+    <!-- Clean area -->
+    <rect x="-15" y="-30" width="50" height="50" rx="2" ry="2" fill="#fff" stroke="#64b5f6" stroke-width="2" stroke-dasharray="5 2"/>
+    
+    <!-- Messy items -->
+    <rect x="-22" y="5" width="15" height="10" fill="#81d4fa"/>
+    <rect x="20" y="10" width="20" height="15" fill="#ffcc80"/>
+    <rect x="-20" y="20" width="20" height="8" fill="#e6ee9c"/>
+    <rect x="10" y="25" width="25" height="5" fill="#ef9a9a"/>
+    
+    <!-- Hand cleaning -->
+    <path d="M10 -10 C30 -20, 50 -15, 65 5" fill="none" stroke="#f06292" stroke-width="2"/>
+    <path d="M60 0 L65 5 L60 10" fill="none" stroke="#f06292" stroke-width="2"/>
+    
+    <!-- Step text -->
+    <text x="0" y="60" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#1976d2" text-anchor="middle" font-weight="bold">找干净区域</text>
+    <text x="0" y="80" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#1976d2" text-anchor="middle">清理一块小舞台</text>
+  </g>
+  
+  <!-- Step 2: Position product -->
+  <g transform="translate(400, 150)">
+    <!-- Step circle -->
+    <circle cx="-50" cy="0" r="25" fill="#388e3c" stroke="#2e7d32" stroke-width="2"/>
+    <text x="-50" y="5" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#fff" text-anchor="middle" font-weight="bold">2</text>
+    
+    <!-- Step illustration -->
+    <rect x="-30" y="-40" width="80" height="80" rx="5" ry="5" fill="#e8f5e9" stroke="#c8e6c9" stroke-width="1"/>
+    
+    <!-- Table surface -->
+    <rect x="-25" y="0" width="70" height="35" rx="2" ry="2" fill="#bcaaa4"/>
+    
+    <!-- Clean area -->
+    <rect x="-20" y="-30" width="60" height="50" fill="#fff"/>
+    
+    <!-- Product in center -->
+    <rect x="-5" y="-15" width="10" height="20" rx="1" ry="1" fill="#90a4ae" stroke="#78909c" stroke-width="0.5"/>
+    <rect x="-7" y="-18" width="14" height="3" rx="1" ry="1" fill="#90a4ae" stroke="#78909c" stroke-width="0.5"/>
+    
+    <!-- Center indicator -->
+    <circle cx="0" cy="-5" r="15" fill="none" stroke="#4caf50" stroke-width="1" stroke-dasharray="2 1"/>
+    <line x1="-5" y1="-5" x2="5" y2="-5" stroke="#4caf50" stroke-width="0.5"/>
+    <line x1="0" y1="-10" x2="0" y2="0" stroke="#4caf50" stroke-width="0.5"/>
+    
+    <!-- Arrow showing placement -->
+    <path d="M-35 -15 C-25 -20, -15 -10, -8 -10" fill="none" stroke="#4caf50" stroke-width="1.5" stroke-dasharray="3 1" marker-end="url(#greenArrow)"/>
+    
+    <!-- Step text -->
+    <text x="0" y="60" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#388e3c" text-anchor="middle" font-weight="bold">放置产品</text>
+    <text x="0" y="80" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#388e3c" text-anchor="middle">将商品摆放C位</text>
+  </g>
+  
+  <!-- Step 3: Position camera -->
+  <g transform="translate(640, 150)">
+    <!-- Step circle -->
+    <circle cx="-50" cy="0" r="25" fill="#e64a19" stroke="#d84315" stroke-width="2"/>
+    <text x="-50" y="5" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#fff" text-anchor="middle" font-weight="bold">3</text>
+    
+    <!-- Step illustration -->
+    <rect x="-30" y="-40" width="80" height="80" rx="5" ry="5" fill="#fbe9e7" stroke="#ffccbc" stroke-width="1"/>
+    
+    <!-- Table surface -->
+    <rect x="-25" y="0" width="70" height="35" rx="2" ry="2" fill="#bcaaa4"/>
+    
+    <!-- Clean area -->
+    <rect x="-20" y="-30" width="60" height="50" fill="#fff"/>
+    
+    <!-- Product in center -->
+    <rect x="-5" y="-15" width="10" height="20" rx="1" ry="1" fill="#90a4ae" stroke="#78909c" stroke-width="0.5"/>
+    <rect x="-7" y="-18" width="14" height="3" rx="1" ry="1" fill="#90a4ae" stroke="#78909c" stroke-width="0.5"/>
+    
+    <!-- Hand with phone -->
+    <rect x="15" y="-25" width="20" height="35" rx="2" ry="2" fill="#e0e0e0" stroke="#bdbdbd" stroke-width="1"/>
+    <rect x="17" y="-22" width="16" height="28" rx="1" ry="1" fill="#424242"/>
+    <path d="M25 -22 C20 -40, 35 -35, 30 -22" fill="#ffcc80" stroke="#ffb74d" stroke-width="0.5"/>
+    
+    <!-- Camera angle indicator -->
+    <path d="M0 -5 L25 -10" fill="none" stroke="#ff5722" stroke-width="1" stroke-dasharray="2 1"/>
+    
+    <!-- Step text -->
+    <text x="0" y="60" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#e64a19" text-anchor="middle" font-weight="bold">相机对准</text>
+    <text x="0" y="80" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#e64a19" text-anchor="middle">手机靠近1-2拳距离</text>
+  </g>
+  
+  <!-- Step 4: Focus and capture -->
+  <g transform="translate(160, 300)">
+    <!-- Step circle -->
+    <circle cx="-50" cy="0" r="25" fill="#512da8" stroke="#4527a0" stroke-width="2"/>
+    <text x="-50" y="5" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#fff" text-anchor="middle" font-weight="bold">4</text>
+    
+    <!-- Step illustration -->
+    <rect x="-30" y="-40" width="80" height="80" rx="5" ry="5" fill="#ede7f6" stroke="#d1c4e9" stroke-width="1"/>
+    
+    <!-- Phone screen -->
+    <rect x="-25" y="-35" width="70" height="70" rx="3" ry="3" fill="#212121"/>
+    
+    <!-- Product on screen -->
+    <rect x="-5" y="-5" width="10" height="20" rx="1" ry="1" fill="#90a4ae" stroke="#78909c" stroke-width="0.5"/>
+    <rect x="-7" y="-8" width="14" height="3" rx="1" ry="1" fill="#90a4ae" stroke="#78909c" stroke-width="0.5"/>
+    
+    <!-- Focus indicator -->
+    <circle cx="0" cy="5" r="20" fill="none" stroke="#7e57c2" stroke-width="1.5" stroke-dasharray="3 1"/>
+    <line x1="-15" y1="5" x2="15" y2="5" stroke="#7e57c2" stroke-width="0.7"/>
+    <line x1="0" y1="-10" x2="0" y2="20" stroke="#7e57c2" stroke-width="0.7"/>
+    
+    <!-- Touch point -->
+    <circle cx="0" cy="5" r="5" fill="rgba(126,87,194,0.3)" stroke="#7e57c2" stroke-width="1"/>
+    <circle cx="0" cy="5" r="2" fill="#7e57c2"/>
+    
+    <!-- Step text -->
+    <text x="0" y="60" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#512da8" text-anchor="middle" font-weight="bold">点击对焦</text>
+    <text x="0" y="80" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#512da8" text-anchor="middle">手指轻点商品位置</text>
+  </g>
+  
+  <!-- Step 5: Check and adjust -->
+  <g transform="translate(400, 300)">
+    <!-- Step circle -->
+    <circle cx="-50" cy="0" r="25" fill="#00838f" stroke="#006064" stroke-width="2"/>
+    <text x="-50" y="5" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#fff" text-anchor="middle" font-weight="bold">5</text>
+    
+    <!-- Step illustration -->
+    <rect x="-30" y="-40" width="80" height="80" rx="5" ry="5" fill="#e0f7fa" stroke="#b2ebf2" stroke-width="1"/>
+    
+    <!-- Photo review screen -->
+    <rect x="-25" y="-35" width="70" height="70" rx="3" ry="3" fill="#eceff1"/>
+    
+    <!-- Product in photo -->
+    <rect x="-5" y="-5" width="10" height="20" rx="1" ry="1" fill="#90a4ae" stroke="#78909c" stroke-width="0.5"/>
+    <rect x="-7" y="-8" width="14" height="3" rx="1" ry="1" fill="#90a4ae" stroke="#78909c" stroke-width="0.5"/>
+    
+    <!-- Check items -->
+    <line x1="-15" y1="-25" x2="-5" y2="-15" stroke="#00acc1" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="-5" y1="-15" x2="5" y2="-25" stroke="#00acc1" stroke-width="1.5" stroke-linecap="round"/>
+    <text x="-10" y="-10" font-family="'Microsoft YaHei', sans-serif" font-size="8" fill="#00acc1" text-anchor="middle">居中</text>
+    
+    <line x1="15" y1="-25" x2="25" y2="-15" stroke="#00acc1" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="25" y1="-15" x2="35" y2="-25" stroke="#00acc1" stroke-width="1.5" stroke-linecap="round"/>
+    <text x="25" y="-10" font-family="'Microsoft YaHei', sans-serif" font-size="8" fill="#00acc1" text-anchor="middle">清晰</text>
+    
+    <line x1="-15" y1="20" x2="-5" y2="30" stroke="#00acc1" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="-5" y1="30" x2="5" y2="20" stroke="#00acc1" stroke-width="1.5" stroke-linecap="round"/>
+    <text x="-10" y="15" font-family="'Microsoft YaHei', sans-serif" font-size="8" fill="#00acc1" text-anchor="middle">光线</text>
+    
+    <line x1="15" y1="20" x2="25" y2="30" stroke="#00acc1" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="25" y1="30" x2="35" y2="20" stroke="#00acc1" stroke-width="1.5" stroke-linecap="round"/>
+    <text x="25" y="15" font-family="'Microsoft YaHei', sans-serif" font-size="8" fill="#00acc1" text-anchor="middle">背景</text>
+    
+    <!-- Step text -->
+    <text x="0" y="60" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#00838f" text-anchor="middle" font-weight="bold">检查调整</text>
+    <text x="0" y="80" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#00838f" text-anchor="middle">确保照片符合要求</text>
+  </g>
+  
+  <!-- Step 6: Share or post -->
+  <g transform="translate(640, 300)">
+    <!-- Step circle -->
+    <circle cx="-50" cy="0" r="25" fill="#c2185b" stroke="#ad1457" stroke-width="2"/>
+    <text x="-50" y="5" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#fff" text-anchor="middle" font-weight="bold">6</text>
+    
+    <!-- Step illustration -->
+    <rect x="-30" y="-40" width="80" height="80" rx="5" ry="5" fill="#fce4ec" stroke="#f8bbd0" stroke-width="1"/>
+    
+    <!-- Social media UI -->
+    <rect x="-25" y="-35" width="70" height="70" rx="3" ry="3" fill="#fff" stroke="#f48fb1" stroke-width="1"/>
+    
+    <!-- Post UI elements -->
+    <rect x="-20" y="-30" width="60" height="30" rx="2" ry="2" fill="#eceff1"/>
+    <rect x="-15" y="-25" width="50" height="20" rx="1" ry="1" fill="#cfd8dc"/>
+    
+    <!-- Product photo thumbnail -->
+    <rect x="-15" y="-25" width="20" height="20" rx="1" ry="1" fill="#fafafa" stroke="#f5f5f5" stroke-width="0.5"/>
+    <rect x="-12" y="-22" width="14" height="14" fill="#90a4ae"/>
+    
+    <!-- Share buttons -->
+    <rect x="-20" y="5" width="25" height="10" rx="5" ry="5" fill="#f06292"/>
+    <text x="-8" y="12" font-family="'Microsoft YaHei', sans-serif" font-size="7" fill="#fff" text-anchor="middle">分享</text>
+    
+    <rect x="15" y="5" width="25" height="10" rx="5" ry="5" fill="#f06292"/>
+    <text x="27" y="12" font-family="'Microsoft YaHei', sans-serif" font-size="7" fill="#fff" text-anchor="middle">发布</text>
+    
+    <!-- Social icons -->
+    <circle cx="-15" cy="25" r="5" fill="#2196f3"/>
+    <circle cx="0" cy="25" r="5" fill="#ff5722"/>
+    <circle cx="15" cy="25" r="5" fill="#4caf50"/>
+    <circle cx="30" cy="25" r="5" fill="#ffc107"/>
+    
+    <!-- Step text -->
+    <text x="0" y="60" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#c2185b" text-anchor="middle" font-weight="bold">分享作品</text>
+    <text x="0" y="80" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#c2185b" text-anchor="middle">将照片发布或保存</text>
+  </g>
+  
+  <!-- Key message at bottom -->
+  <rect x="150" y="410" width="500" height="50" rx="10" ry="10" fill="#e3f2fd" stroke="#bbdefb" stroke-width="1.5"/>
+  <text x="400" y="435" font-family="'Microsoft YaHei', sans-serif" font-size="16" fill="#1565c0" text-anchor="middle" font-weight="bold">记住简单公式：干净背景 + C位产品 + 点击对焦 = 专业摆拍</text>
+  <text x="400" y="455" font-family="'Microsoft YaHei', sans-serif" font-size="14" fill="#1565c0" text-anchor="middle">多练习，你也能拍出"爆款"级商品照！</text>
+  
+  <!-- Definitions -->
+  <defs>
+    <marker id="greenArrow" viewBox="0 0 10 10" refX="5" refY="5"
+        markerWidth="6" markerHeight="6"
+        orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#4caf50"/>
+    </marker>
+  </defs>
+</svg>
+```
+
+#### 图13: 商品摆放三要素：简单法则（总结图）
+
+```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <!-- Background -->
+  <rect width="800" height="500" fill="#f8f9fa" rx="10" ry="10"/>
+  
+  <!-- Title -->
+  <text x="400" y="50" font-family="'Microsoft YaHei', sans-serif" font-size="28" fill="#333" text-anchor="middle" font-weight="bold">商品摆放三要素：简单法则</text>
+  
+  <!-- Central phone illustration -->
+  <g transform="translate(400, 275)">
+    <!-- Phone outline -->
+    <rect x="-100" y="-150" width="200" height="300" rx="20" ry="20" fill="#fff" stroke="#ddd" stroke-width="8"/>
+    <circle cx="0" cy="-130" r="8" fill="#eee"/>
+    
+    <!-- Phone screen -->
+    <rect x="-85" y="-115" width="170" height="250" rx="5" ry="5" fill="#eef2f5"/>
+    
+    <!-- Product in center (cup) -->
+    <g>
+      <path d="M-30 -40 L-30 40 Q-30 50, -20 50 L20 50 Q30 50, 30 40 L30 -40 Z" fill="#fff" stroke="#666" stroke-width="2.5"/>
+      <path d="M-30 -40 Q-30 -50, -20 -50 L20 -50 Q30 -50, 30 -40" fill="none" stroke="#666" stroke-width="2.5"/>
+      <path d="M30 -20 L40 -15 L40 0 L30 5" fill="none" stroke="#666" stroke-width="2.5"/>
+      
+      <!-- Cup logo -->
+      <circle cx="0" cy="0" r="15" fill="#4285f4"/>
+      <path d="M-8 0 L-2 6 L12 -8" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+  
+  <!-- Key element 1: C Position -->
+  <g transform="translate(220, 150)">
+    <!-- Element circle background -->
+    <circle cx="0" cy="0" r="60" fill="#e3f2fd" stroke="#2196f3" stroke-width="3"/>
+    
+    <!-- Target/bullseye -->
+    <circle cx="0" cy="0" r="40" fill="none" stroke="#2196f3" stroke-width="2"/>
+    <circle cx="0" cy="0" r="25" fill="none" stroke="#2196f3" stroke-width="2"/>
+    <circle cx="0" cy="0" r="10" fill="#2196f3"/>
+    
+    <!-- Element title -->
+    <text x="0" y="-75" font-family="'Microsoft YaHei', sans-serif" font-size="22" fill="#1565c0" text-anchor="middle" font-weight="bold">要素一：C位当道</text>
+    
+    <!-- Element description -->
+    <rect x="-100" y="75" width="200" height="60" rx="10" ry="10" fill="#fff" stroke="#bbdefb" stroke-width="1.5"/>
+    <text x="0" y="95" font-family="'Microsoft YaHei', sans-serif" font-size="14" fill="#1976d2" text-anchor="middle" font-weight="bold">产品居中</text>
+    <text x="0" y="115" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#1976d2" text-anchor="middle">让产品在画面正中央</text>
+    <text x="0" y="130" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#1976d2" text-anchor="middle">大小适中，一眼能看到</text>
+    
+    <!-- Connection to phone -->
+    <path d="M70 0 C130 0, 200 100, 270 100" fill="none" stroke="#2196f3" stroke-width="2" stroke-dasharray="5 3"/>
+    <circle cx="265" cy="100" r="8" fill="#2196f3" opacity="0.3"/>
+  </g>
+  
+  <!-- Key element 2: Clean Background -->
+  <g transform="translate(580, 150)">
+    <!-- Element circle background -->
+    <circle cx="0" cy="0" r="60" fill="#e8f5e9" stroke="#4caf50" stroke-width="3"/>
+    
+    <!-- Clean background representation -->
+    <rect x="-35" y="-35" width="70" height="70" rx="5" ry="5" fill="#fff" stroke="#4caf50" stroke-width="2"/>
+    <rect x="-25" y="-25" width="20" height="15" rx="2" ry="2" fill="#a5d6a7" opacity="0.5"/>
+    <rect x="5" y="-25" width="15" height="15" rx="2" ry="2" fill="#a5d6a7" opacity="0.2"/>
+    <rect x="-25" y="5" width="15" height="15" rx="2" ry="2" fill="#a5d6a7" opacity="0.2"/>
+    <rect x="5" y="5" width="20" height="15" rx="2" ry="2" fill="#a5d6a7" opacity="0.5"/>
+    
+    <!-- Eraser/clean icon -->
+    <path d="M-25 -25 L20 20" fill="none" stroke="#4caf50" stroke-width="2"/>
+    <path d="M25 -25 L-20 20" fill="none" stroke="#4caf50" stroke-width="2"/>
+    
+    <!-- Element title -->
+    <text x="0" y="-75" font-family="'Microsoft YaHei', sans-serif" font-size="22" fill="#2e7d32" text-anchor="middle" font-weight="bold">要素二：背景简洁</text>
+    
+    <!-- Element description -->
+    <rect x="-100" y="75" width="200" height="60" rx="10" ry="10" fill="#fff" stroke="#c8e6c9" stroke-width="1.5"/>
+    <text x="0" y="95" font-family="'Microsoft YaHei', sans-serif" font-size="14" fill="#388e3c" text-anchor="middle" font-weight="bold">干净背景</text>
+    <text x="0" y="115" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#388e3c" text-anchor="middle">没有杂物抢镜</text>
+    <text x="0" y="130" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#388e3c" text-anchor="middle">纯色背景最佳</text>
+    
+    <!-- Connection to phone -->
+    <path d="M-70 0 C-130 0, -200 100, -270 100" fill="none" stroke="#4caf50" stroke-width="2" stroke-dasharray="5 3"/>
+    <circle cx="-265" cy="100" r="8" fill="#4caf50" opacity="0.3"/>
+  </g>
+  
+  <!-- Key element 3: Detail Highlight -->
+  <g transform="translate(400, 400)">
+    <!-- Element circle background -->
+    <circle cx="0" cy="0" r="60" fill="#fff3e0" stroke="#ff9800" stroke-width="3"/>
+    
+    <!-- Magnifying glass -->
+    <circle cx="0" cy="0" r="30" fill="none" stroke="#ff9800" stroke-width="2.5"/>
+    <line x1="25" y1="25" x2="45" y2="45" stroke="#ff9800" stroke-width="3" stroke-linecap="round"/>
+    <path d="M45 45 L50 50" stroke="#ff9800" stroke-width="4" stroke-linecap="round"/>
+    
+    <!-- Detail dot -->
+    <circle cx="0" cy="0" r="5" fill="#ff9800"/>
+    
+    <!-- Element title -->
+    <text x="0" y="-75" font-family="'Microsoft YaHei', sans-serif" font-size="22" fill="#e65100" text-anchor="middle" font-weight="bold">要素三：突出亮点</text>
+    
+    <!-- Element description -->
+    <rect x="-100" y="75" width="200" height="60" rx="10" ry="10" fill="#fff" stroke="#ffe0b2" stroke-width="1.5"/>
+    <text x="0" y="95" font-family="'Microsoft YaHei', sans-serif" font-size="14" fill="#ef6c00" text-anchor="middle" font-weight="bold">特写关键细节</text>
+    <text x="0" y="115" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#ef6c00" text-anchor="middle">展示产品最吸引人的特点</text>
+    <text x="0" y="130" font-family="'Microsoft YaHei', sans-serif" font-size="12" fill="#ef6c00" text-anchor="middle">多角度突出商品优势</text>
+    
+    <!-- Connection to phone -->
+    <path d="M0 -60 C0 -80, 0 -100, 0 -125" fill="none" stroke="#ff9800" stroke-width="2" stroke-dasharray="5 3"/>
+    <circle cx="0" cy="-120" r="8" fill="#ff9800" opacity="0.3"/>
+  </g>
+  
+  <!-- Final formula banner -->
+  <rect x="150" y="50" width="500" height="45" rx="22.5" ry="22.5" fill="#e1f5fe" stroke="#81d4fa" stroke-width="2"/>
+  <text x="400" y="80" font-family="'Microsoft YaHei', sans-serif" font-size="18" fill="#01579b" text-anchor="middle" font-weight="bold">宝贝站C位，背景清清爽，亮点来特写，咔嚓！就拍好！</text>
+</svg>
+```
+
+### 设计理念与教学价值
+
+这套可视化素材系统性地覆盖了"商品的摆放"这一主题的所有核心知识点，从C位概念、尺寸控制、对焦技巧、背景选择到特写拍摄和拍摄角度，每张图表都遵循了清晰的视觉层次和教学逻辑。
+
+这些图表的教学价值体现在：
+
+1. **直观展示抽象概念**：通过形象的图形和模拟手机画面，将"C位"、"清晰度"等抽象概念转化为视觉形象
+  
+2. **正反对比学习**：多处使用正面示范与反面案例对比，强化学生对正确做法的理解
+
+3. **系统化呈现知识**：从理论到实践，从单一要素到综合案例分析，层层推进
+
+4. **操作步骤可视化**：特别是第12张图的步骤引导，为学生提供了清晰的实操指南
+
+这套SVG图表既可以作为课堂PPT插图使用，也适合印制为学习手册或在线学习材料，帮助学生更好地掌握商品摆放的核心技巧。

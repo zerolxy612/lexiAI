@@ -44,6 +44,8 @@ import {
   DeleteDocumentRequest,
 } from '@refly/openapi-schema';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
+import path from 'node:path';
+import fs from 'node:fs';
 
 // TODO: unify with frontend
 export type ContentNodeType =
@@ -148,6 +150,8 @@ export interface Logger {
   debug(message: any, ...optionalParams: [...any, string?]): void;
 }
 
+const longResponseTxt = fs.readFileSync(path.join(__dirname, 'long-response.txt'), 'utf-8');
+
 export class SkillEngine {
   private config: SkillRunnableConfig;
 
@@ -168,10 +172,10 @@ export class SkillEngine {
   }
 
   chatModel(params?: Partial<ChatDeepSeekInput>, useDefaultChatModel = false): BaseChatModel {
-    if (process.env.MOCK_LLM_RESPONSE) {
+    if (!process.env.MOCK_LLM_RESPONSE) {
       return new FakeListChatModel({
-        responses: ['This is a test'],
-        sleep: 100,
+        responses: [longResponseTxt],
+        sleep: 3,
       });
     }
 
