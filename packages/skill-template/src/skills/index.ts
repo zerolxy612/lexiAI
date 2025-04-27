@@ -8,3 +8,4 @@ export * from './recommend-questions';
 export * from './custom-prompt';
 export * from './code-artifacts';
 export * from './mcp-agent';
+export * from './image-generation';
