@@ -5569,6 +5569,10 @@ export const ProviderItemSchema = {
       description: 'Provider category',
       $ref: '#/components/schemas/ProviderCategory',
     },
+    tier: {
+      description: 'Provider item tier',
+      $ref: '#/components/schemas/ModelTier',
+    },
     providerId: {
       type: 'string',
       description: 'Provider ID',

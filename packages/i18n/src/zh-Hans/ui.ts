@@ -75,7 +75,6 @@ const translations = {
     },
     login: '登录',
     share: '分享',
-    noMoreText: '已经到底啦~',
     uploadImage: '上传图片',
     uploadSuccess: '上传成功',
     uploadFailed: '上传失败',
@@ -129,7 +128,7 @@ const translations = {
     deselectAll: '取消全选',
     addNode: '添加节点',
     viewAll: '查看全部',
-    noMore: '已经到底啦~',
+    noMore: '已经到底啦',
     action: '操作',
   },
   verifyRules: {
@@ -1812,6 +1811,7 @@ const translations = {
       noProviders: '暂无供应商',
       addFirstProvider: '添加第一个供应商',
       deleteConfirm: '确定删除供应商 {{name}} 吗？',
+      selectProviderType: '请选择供应商类型',
       category: '类别',
       categoryPlaceholder: '请至少选择一个',
       categories: {
@@ -1867,6 +1867,11 @@ const translations = {
       relevanceThreshold: '相关性阈值',
       relevanceThresholdPlaceholder: '请设置相关性阈值',
       clickToSet: '点击设置',
+    },
+    modelTier: {
+      free: '免费',
+      t1: '高级',
+      t2: '标准',
     },
     parserConfig: {
       webSearch: '网页搜索',

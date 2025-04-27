@@ -16,7 +16,7 @@ export const ScrollLoading = (props: ScrollLoadingProps) => {
   if (!hasMore) {
     return (
       <div className="w-full flex justify-center py-6">
-        <span>{t('knowledgeLibrary.archive.item.noMoreText')}</span>
+        <span>{t('knowledgeLibrary.archive.item.noMore')}</span>
       </div>
     );
   }
@@ -44,7 +44,7 @@ export const EndMessage = () => {
   const { t } = useTranslation();
   return (
     <div className="w-full flex justify-center py-6">
-      <span>{t('knowledgeLibrary.archive.item.noMoreText')}</span>
+      <span>{t('knowledgeLibrary.archive.item.noMore')}</span>
     </div>
   );
 };

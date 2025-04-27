@@ -3906,6 +3906,10 @@ export type ProviderItem = {
    */
   category: ProviderCategory;
   /**
+   * Provider item tier
+   */
+  tier?: ModelTier;
+  /**
    * Provider ID
    */
   providerId: string;

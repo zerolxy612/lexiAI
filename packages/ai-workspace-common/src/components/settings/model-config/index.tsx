@@ -13,6 +13,7 @@ import {
   message,
   MenuProps,
   Divider,
+  Tag,
 } from 'antd';
 import { Spin } from '@refly-packages/ai-workspace-common/components/common/spin';
 import { LuPlus, LuSearch, LuGripVertical } from 'react-icons/lu';
@@ -28,6 +29,12 @@ import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautif
 import { ModelFormModal } from './model-form';
 
 const { Title } = Typography;
+
+const MODEL_TIER_TO_COLOR = {
+  free: 'green',
+  t1: 'blue',
+  t2: 'orange',
+};
 
 const ActionDropdown = ({
   model,
@@ -152,6 +159,18 @@ const ModelItem = memo(
                   type={'color'}
                 />
                 <div className="font-medium">{model.name}</div>
+
+                <Divider type="vertical" />
+                <div className="font-normal text-xs text-gray-500">{model.provider?.name}</div>
+
+                {model.tier && (
+                  <>
+                    <Divider type="vertical" />
+                    <Tag color={MODEL_TIER_TO_COLOR[model.tier]}>
+                      {t(`settings.modelTier.${model.tier}`)}
+                    </Tag>
+                  </>
+                )}
               </div>
 
               <div className="flex items-center gap-2">

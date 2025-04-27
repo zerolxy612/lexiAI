@@ -67,7 +67,6 @@ const translations = {
     },
     login: 'Login',
     share: 'Share',
-    noMoreText: 'No more~',
     uploadImage: 'Upload Image',
     uploadSuccess: 'Upload successful',
     uploadFailed: 'Upload failed',
@@ -120,6 +119,9 @@ const translations = {
     selectAll: 'Select All',
     deselectAll: 'Deselect All',
     addNode: 'Add Node',
+    viewAll: 'View All',
+    noMore: 'No more',
+    action: 'Action',
   },
   pages: {
     share: {
@@ -885,6 +887,8 @@ const translations = {
       unbindSuccessful: 'Unbind successfully!',
       failed: 'Failed to delete',
       deleteConfirmForDocument: 'Are you sure you want to delete this document?',
+      deleteConfirmForCanvas:
+        'Canvas {{canvas}} will be permanently deleted, are you sure to continue?',
       deleteConfirmForResource: 'Are you sure you want to delete this resource?',
       deleteConfirmForResourceProject: 'Are you sure to remove this resource from the project?',
       delete: 'Delete',
@@ -1998,7 +2002,6 @@ const translations = {
       payCancelDescription:
         'We were unable to successfully receive your payment. If you have any questions, please contact support@refly.ai',
     },
-
     modelProviders: {
       addProvider: 'Add Provider',
       editProvider: 'Edit Provider',
@@ -2019,6 +2022,7 @@ const translations = {
       noProviders: 'No providers',
       addFirstProvider: 'Add the first provider',
       deleteConfirm: 'Are you sure you want to delete the provider {{name}}?',
+      selectProviderType: 'Please select the provider type',
       category: 'Category',
       categoryPlaceholder: 'Please select at least one',
       categories: {
@@ -2030,7 +2034,6 @@ const translations = {
         embedding: 'Embedding',
       },
     },
-
     modelConfig: {
       title: 'Model Config',
       chatModels: 'Chat Models',
@@ -2075,6 +2078,11 @@ const translations = {
       relevanceThreshold: 'Relevance Threshold',
       relevanceThresholdPlaceholder: 'Please set the relevance threshold',
       clickToSet: 'Click to Set',
+    },
+    modelTier: {
+      free: 'Free',
+      t1: 'Premium',
+      t2: 'Standard',
     },
     parserConfig: {
       webSearch: 'Web Search',

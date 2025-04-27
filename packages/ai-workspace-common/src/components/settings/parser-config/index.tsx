@@ -42,18 +42,6 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
     setUserProfile: state.setUserProfile,
   }));
 
-  const [webSearchValue, setWebSearchValue] = useState<string>(
-    userProfile?.preferences?.webSearch?.providerId || DEFAULT_PROVIDERS.webSearch,
-  );
-
-  const [urlParsingValue, setUrlParsingValue] = useState<string>(
-    userProfile?.preferences?.urlParsing?.providerId || DEFAULT_PROVIDERS.urlParsing,
-  );
-
-  const [pdfParsingValue, setPdfParsingValue] = useState<string>(
-    userProfile?.preferences?.pdfParsing?.providerId || DEFAULT_PROVIDERS.pdfParsing,
-  );
-
   const { data, isLoading, refetch } = useListProviders({
     query: {
       enabled: true,
@@ -62,45 +50,80 @@ export const ParserConfig = memo(({ visible }: ParserConfigProps) => {
   const providers = data?.data || [];
 
   const webSearchProviders = useMemo(
-    () =>
-      providers?.filter((provider) =>
-        providerInfoList
-          .find((p) => p.key === provider?.providerKey)
-          ?.categories?.includes('webSearch'),
-      ),
+    () => providers?.filter((provider) => provider.categories?.includes('webSearch')),
     [providers],
   );
 
   const urlParsingProviders = useMemo(
-    () =>
-      providers?.filter((provider) =>
-        providerInfoList
-          .find((p) => p.key === provider?.providerKey)
-          ?.categories?.includes('urlParsing'),
-      ),
+    () => providers?.filter((provider) => provider.categories?.includes('urlParsing')),
     [providers],
   );
 
   const pdfParsingProviders = useMemo(
-    () =>
-      providers?.filter((provider) =>
-        providerInfoList
-          .find((p) => p.key === provider?.providerKey)
-          ?.categories?.includes('pdfParsing'),
-      ),
+    () => providers?.filter((provider) => provider.categories?.includes('pdfParsing')),
     [providers],
   );
 
+  // Derive provider values from userProfile and available providers
+  const defaultWebSearchValue = useMemo(
+    () =>
+      userProfile?.preferences?.webSearch?.providerId ||
+      (webSearchProviders?.length > 0 ? webSearchProviders[0]?.providerId : null),
+    [userProfile?.preferences?.webSearch?.providerId, webSearchProviders],
+  );
+
+  const defaultUrlParsingValue = useMemo(
+    () =>
+      userProfile?.preferences?.urlParsing?.providerId ||
+      (urlParsingProviders?.length > 0
+        ? urlParsingProviders[0]?.providerId
+        : DEFAULT_PROVIDERS.urlParsing),
+    [userProfile?.preferences?.urlParsing?.providerId, urlParsingProviders],
+  );
+
+  const defaultPdfParsingValue = useMemo(
+    () =>
+      userProfile?.preferences?.pdfParsing?.providerId ||
+      (pdfParsingProviders?.length > 0
+        ? pdfParsingProviders[0]?.providerId
+        : DEFAULT_PROVIDERS.pdfParsing),
+    [userProfile?.preferences?.pdfParsing?.providerId, pdfParsingProviders],
+  );
+
+  const [webSearchValue, setWebSearchValue] = useState<string>(defaultWebSearchValue);
+  const [urlParsingValue, setUrlParsingValue] = useState<string>(defaultUrlParsingValue);
+  const [pdfParsingValue, setPdfParsingValue] = useState<string>(defaultPdfParsingValue);
+
+  // Update state values when derived values change
+  useEffect(() => {
+    if (defaultWebSearchValue) {
+      setWebSearchValue(defaultWebSearchValue);
+    }
+  }, [defaultWebSearchValue]);
+
+  useEffect(() => {
+    if (defaultUrlParsingValue) {
+      setUrlParsingValue(defaultUrlParsingValue);
+    }
+  }, [defaultUrlParsingValue]);
+
+  useEffect(() => {
+    if (defaultPdfParsingValue) {
+      setPdfParsingValue(defaultPdfParsingValue);
+    }
+  }, [defaultPdfParsingValue]);
+
   const setCurrentProvider = useCallback((type: ParserCategory, provider: ProviderConfig) => {
+    const providerId = provider?.providerId;
     switch (type) {
       case 'webSearch':
-        setWebSearchValue(provider?.providerId || DEFAULT_PROVIDERS.webSearch);
+        setWebSearchValue(providerId || DEFAULT_PROVIDERS.webSearch);
         break;
       case 'urlParsing':
-        setUrlParsingValue(provider?.providerId || DEFAULT_PROVIDERS.urlParsing);
+        setUrlParsingValue(providerId || DEFAULT_PROVIDERS.urlParsing);
         break;
       case 'pdfParsing':
-        setPdfParsingValue(provider?.providerId || DEFAULT_PROVIDERS.pdfParsing);
+        setPdfParsingValue(providerId || DEFAULT_PROVIDERS.pdfParsing);
         break;
     }
   }, []);
