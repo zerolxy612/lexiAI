@@ -50,16 +50,16 @@ export class MCPAgent extends BaseSkill {
   configSchema: SkillTemplateConfigDefinition = {
     items: [
       {
-        key: 'mcpServers',
+        key: 'mcpServerUrls',
         inputMode: 'inputTextArea',
         defaultValue: '',
         labelDict: {
-          en: 'MCP Servers',
-          'zh-CN': 'MCP Servers',
+          en: 'MCP Server URLs',
+          'zh-CN': 'MCP服务器地址',
         },
         descriptionDict: {
           en: 'Comma-separated list of MCP server URLs',
-          'zh-CN': 'Comma-separated list of MCP server URLs',
+          'zh-CN': '以逗号分隔的MCP服务器URL列表',
         },
       },
       {
@@ -68,24 +68,11 @@ export class MCPAgent extends BaseSkill {
         defaultValue: true,
         labelDict: {
           en: 'Auto Connect',
-          'zh-CN': 'Auto Connect',
+          'zh-CN': '自动连接',
         },
         descriptionDict: {
           en: 'Automatically connect to MCP servers on startup',
-          'zh-CN': 'Automatically connect to MCP servers on startup',
-        },
-      },
-      {
-        key: 'useAdvancedPrompting',
-        inputMode: 'switch',
-        defaultValue: true,
-        labelDict: {
-          en: 'Use Advanced Prompting',
-          'zh-CN': 'Use Advanced Prompting',
-        },
-        descriptionDict: {
-          en: 'Enable sophisticated prompting for more accurate MCP capability selection',
-          'zh-CN': 'Enable sophisticated prompting for more accurate MCP capability selection',
+          'zh-CN': '启动时自动连接到MCP服务器',
         },
       },
       {
@@ -94,11 +81,11 @@ export class MCPAgent extends BaseSkill {
         defaultValue: 0.2,
         labelDict: {
           en: 'Model Temperature',
-          'zh-CN': 'Model Temperature',
+          'zh-CN': '模型温度',
         },
         descriptionDict: {
           en: 'Temperature for the model when making MCP decisions (0-1)',
-          'zh-CN': 'Temperature for the model when making MCP decisions (0-1)',
+          'zh-CN': '在进行MCP决策时模型的温度值（0-1）',
         },
         inputProps: {
           min: 0,
@@ -406,7 +393,7 @@ export class MCPAgent extends BaseSkill {
     config: SkillRunnableConfig,
   ): Promise<Partial<MCPAgentState>> => {
     const { messages = [], images = [] } = state;
-    const { locale = 'en', tplConfig } = config.configurable;
+    const { tplConfig } = config.configurable;
 
     // Get configuration values
     const mcpServersString = tplConfig?.mcpServers?.value as string;
