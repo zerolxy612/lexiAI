@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import {
   ActionStep,
   ActionStepMeta,
@@ -67,6 +67,9 @@ export const useInvokeAction = () => {
     onUpdateResult(skillEvent.resultId, updatedResult, skillEvent);
   };
 
+  // Optimize token usage updates by debouncing
+  const tokenUsageUpdateTimeoutRef = useRef<Record<string, number>>({});
+
   const onSkillTokenUsage = (skillEvent: SkillEvent) => {
     const { resultId, step, tokenUsage } = skillEvent;
     const { resultMap } = useActionResultStore.getState();
@@ -76,17 +79,30 @@ export const useInvokeAction = () => {
       return;
     }
 
-    const updatedStep: ActionStep = findOrCreateStep(result.steps ?? [], step);
-    updatedStep.tokenUsage = aggregateTokenUsage([...(updatedStep.tokenUsage ?? []), tokenUsage]);
+    // Clear existing timeout for this result
+    if (tokenUsageUpdateTimeoutRef.current[resultId]) {
+      clearTimeout(tokenUsageUpdateTimeoutRef.current[resultId]);
+    }
 
-    onUpdateResult(
-      resultId,
-      {
-        ...result,
-        steps: getUpdatedSteps(result.steps ?? [], updatedStep),
-      },
-      skillEvent,
-    );
+    // Debounce token usage updates to 500ms
+    tokenUsageUpdateTimeoutRef.current[resultId] = window.setTimeout(() => {
+      const currentResult = useActionResultStore.getState().resultMap[resultId];
+      if (!currentResult) return;
+
+      const updatedStep: ActionStep = findOrCreateStep(currentResult.steps ?? [], step);
+      updatedStep.tokenUsage = aggregateTokenUsage([...(updatedStep.tokenUsage ?? []), tokenUsage]);
+
+      onUpdateResult(
+        resultId,
+        {
+          ...currentResult,
+          steps: getUpdatedSteps(currentResult.steps ?? [], updatedStep),
+        },
+        skillEvent,
+      );
+
+      delete tokenUsageUpdateTimeoutRef.current[resultId];
+    }, 500);
   };
 
   const findOrCreateStep = (steps: ActionStep[], stepMeta: ActionStepMeta) => {
@@ -171,6 +187,20 @@ export const useInvokeAction = () => {
     }
   };
 
+  // Optimize stream updates with debouncing
+  const streamUpdateThrottleRef = useRef<
+    Record<
+      string,
+      {
+        timeout: number | null;
+        lastUpdate: number;
+        pendingContent: string;
+        pendingReasoningContent: string;
+        pendingArtifact?: Artifact;
+      }
+    >
+  >({});
+
   const onSkillStream = (skillEvent: SkillEvent) => {
     const { resultId, content, reasoningContent = '', step, artifact } = skillEvent;
     const { resultMap } = useActionResultStore.getState();
@@ -180,28 +210,105 @@ export const useInvokeAction = () => {
       return;
     }
 
-    // Regular stream content handling (non-code artifact)
-    const updatedStep: ActionStep = findOrCreateStep(result.steps ?? [], step);
-    updatedStep.content += content;
-
-    if (!updatedStep.reasoningContent) {
-      updatedStep.reasoningContent = reasoningContent;
-    } else {
-      updatedStep.reasoningContent += reasoningContent;
+    // Handle code artifact content if this is a code artifact stream
+    if (artifact) {
+      onSkillStreamArtifact(resultId, artifact, content);
     }
 
-    // Handle code artifact content if this is a code artifact stream
-    onSkillStreamArtifact(resultId, artifact, updatedStep.content);
+    // Setup throttling state if not exists
+    if (!streamUpdateThrottleRef.current[resultId]) {
+      streamUpdateThrottleRef.current[resultId] = {
+        timeout: null,
+        lastUpdate: 0,
+        pendingContent: '',
+        pendingReasoningContent: '',
+      };
+    }
 
-    onUpdateResult(
-      resultId,
-      {
+    const throttleState = streamUpdateThrottleRef.current[resultId];
+    const now = performance.now();
+    const THROTTLE_INTERVAL = 100; // 100ms between updates
+
+    // Accumulate content
+    throttleState.pendingContent += content;
+    throttleState.pendingReasoningContent += reasoningContent;
+    if (artifact) {
+      throttleState.pendingArtifact = artifact;
+    }
+
+    // Clear existing timeout
+    if (throttleState.timeout) {
+      clearTimeout(throttleState.timeout);
+      throttleState.timeout = null;
+    }
+
+    // If enough time has passed since last update, update immediately
+    if (now - throttleState.lastUpdate > THROTTLE_INTERVAL) {
+      const updatedStep: ActionStep = findOrCreateStep(result.steps ?? [], step);
+      updatedStep.content += throttleState.pendingContent;
+
+      if (!updatedStep.reasoningContent) {
+        updatedStep.reasoningContent = throttleState.pendingReasoningContent;
+      } else {
+        updatedStep.reasoningContent += throttleState.pendingReasoningContent;
+      }
+
+      const updatedResult = {
         ...result,
         status: 'executing' as const,
         steps: getUpdatedSteps(result.steps ?? [], updatedStep),
-      },
-      skillEvent,
-    );
+      };
+
+      onUpdateResult(resultId, updatedResult, {
+        ...skillEvent,
+        content: throttleState.pendingContent,
+        reasoningContent: throttleState.pendingReasoningContent,
+      });
+
+      // Reset accumulated content
+      throttleState.pendingContent = '';
+      throttleState.pendingReasoningContent = '';
+      throttleState.pendingArtifact = undefined;
+      throttleState.lastUpdate = now;
+    } else {
+      // Schedule update for later
+      throttleState.timeout = window.setTimeout(
+        () => {
+          const currentResult = useActionResultStore.getState().resultMap[resultId];
+          if (!currentResult) return;
+
+          const updatedStep: ActionStep = findOrCreateStep(currentResult.steps ?? [], step);
+          updatedStep.content += throttleState.pendingContent;
+
+          if (!updatedStep.reasoningContent) {
+            updatedStep.reasoningContent = throttleState.pendingReasoningContent;
+          } else {
+            updatedStep.reasoningContent += throttleState.pendingReasoningContent;
+          }
+
+          const updatedResult = {
+            ...currentResult,
+            status: 'executing' as const,
+            steps: getUpdatedSteps(currentResult.steps ?? [], updatedStep),
+          };
+
+          onUpdateResult(resultId, updatedResult, {
+            ...skillEvent,
+            content: throttleState.pendingContent,
+            reasoningContent: throttleState.pendingReasoningContent,
+            artifact: throttleState.pendingArtifact,
+          });
+
+          // Reset state
+          throttleState.pendingContent = '';
+          throttleState.pendingReasoningContent = '';
+          throttleState.pendingArtifact = undefined;
+          throttleState.lastUpdate = performance.now();
+          throttleState.timeout = null;
+        },
+        THROTTLE_INTERVAL - (now - throttleState.lastUpdate),
+      );
+    }
   };
 
   const onSkillStructedData = (skillEvent: SkillEvent) => {

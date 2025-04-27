@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { immer } from 'zustand/middleware/immer';
 import { useShallow } from 'zustand/react/shallow';
 import { ActionResult } from '@refly/openapi-schema';
 import { persist } from 'zustand/middleware';
@@ -16,7 +15,10 @@ interface PollingState {
 interface ActionResultState {
   resultMap: Record<string, ActionResult>;
   pollingStateMap: Record<string, PollingState>;
+  batchUpdateQueue: Array<{ resultId: string; result: ActionResult }>;
+  isBatchUpdateScheduled: boolean;
 
+  // Individual update actions
   updateActionResult: (resultId: string, result: ActionResult) => void;
   startPolling: (resultId: string, version: number) => void;
   stopPolling: (resultId: string) => void;
@@ -26,11 +28,20 @@ interface ActionResultState {
   startTimeout: (resultId: string) => void;
   updateLastEventTime: (resultId: string) => void;
   clearTimeout: (resultId: string) => void;
+
+  // Batched update actions
+  queueActionResultUpdate: (resultId: string, result: ActionResult) => void;
+  processBatchedUpdates: () => void;
+  batchPollingStateUpdates: (
+    updates: Array<{ resultId: string; state: Partial<PollingState> }>,
+  ) => void;
 }
 
 export const defaultState = {
   resultMap: {},
   pollingStateMap: {},
+  batchUpdateQueue: [],
+  isBatchUpdateScheduled: false,
 };
 
 const POLLING_STATE_INITIAL: PollingState = {
@@ -42,81 +53,254 @@ const POLLING_STATE_INITIAL: PollingState = {
   lastEventTime: null,
 };
 
+// Optimization: use selective updates instead of full immer for simple property changes
 export const useActionResultStore = create<ActionResultState>()(
   persist(
-    immer((set) => ({
+    (set, get) => ({
       ...defaultState,
 
-      updateActionResult: (resultId: string, result: ActionResult) =>
+      // Direct update (use sparingly - prefer queueActionResultUpdate)
+      updateActionResult: (resultId: string, result: ActionResult) => {
+        // Shallow update to avoid deep copying the entire store
         set((state) => {
-          state.resultMap[resultId] = result;
-        }),
+          return {
+            ...state,
+            resultMap: {
+              ...state.resultMap,
+              [resultId]: result,
+            },
+          };
+        });
+      },
 
-      startPolling: (resultId: string, version: number) =>
+      // Queue update for batching
+      queueActionResultUpdate: (resultId: string, result: ActionResult) => {
         set((state) => {
-          if (!state.pollingStateMap[resultId]) {
-            state.pollingStateMap[resultId] = { ...POLLING_STATE_INITIAL };
-          }
-          state.pollingStateMap[resultId].isPolling = true;
-          state.pollingStateMap[resultId].version = version;
-          state.pollingStateMap[resultId].lastPollTime = Date.now();
-        }),
+          // Add to queue
+          const updatedQueue = [...state.batchUpdateQueue, { resultId, result }];
 
-      stopPolling: (resultId: string) =>
-        set((state) => {
-          if (state.pollingStateMap[resultId]) {
-            state.pollingStateMap[resultId].isPolling = false;
-            state.pollingStateMap[resultId].timeoutStartTime = null;
-            state.pollingStateMap[resultId].lastEventTime = null;
-          }
-        }),
+          // Schedule processing if not already scheduled
+          if (!state.isBatchUpdateScheduled && updatedQueue.length === 1) {
+            setTimeout(() => {
+              get().processBatchedUpdates();
+            }, 50); // Batch updates with a 50ms delay
 
-      incrementErrorCount: (resultId: string) =>
-        set((state) => {
-          if (!state.pollingStateMap[resultId]) {
-            state.pollingStateMap[resultId] = { ...POLLING_STATE_INITIAL };
+            return {
+              ...state,
+              batchUpdateQueue: updatedQueue,
+              isBatchUpdateScheduled: true,
+            };
           }
-          state.pollingStateMap[resultId].notFoundErrorCount += 1;
-        }),
 
-      resetErrorCount: (resultId: string) =>
-        set((state) => {
-          if (state.pollingStateMap[resultId]) {
-            state.pollingStateMap[resultId].notFoundErrorCount = 0;
-          }
-        }),
+          return {
+            ...state,
+            batchUpdateQueue: updatedQueue,
+          };
+        });
+      },
 
-      updateLastPollTime: (resultId: string) =>
+      // Process all batched updates at once
+      processBatchedUpdates: () => {
         set((state) => {
-          if (state.pollingStateMap[resultId]) {
-            state.pollingStateMap[resultId].lastPollTime = Date.now();
+          if (state.batchUpdateQueue.length === 0) {
+            return {
+              ...state,
+              isBatchUpdateScheduled: false,
+            };
           }
-        }),
 
-      startTimeout: (resultId: string) =>
-        set((state) => {
-          if (!state.pollingStateMap[resultId]) {
-            state.pollingStateMap[resultId] = { ...POLLING_STATE_INITIAL };
-          }
-          state.pollingStateMap[resultId].timeoutStartTime = Date.now();
-          state.pollingStateMap[resultId].lastEventTime = Date.now();
-        }),
+          // Create new result map with all batched updates
+          const updatedResultMap = { ...state.resultMap };
 
-      updateLastEventTime: (resultId: string) =>
-        set((state) => {
-          if (state.pollingStateMap[resultId]) {
-            state.pollingStateMap[resultId].lastEventTime = Date.now();
+          for (const { resultId, result } of state.batchUpdateQueue) {
+            updatedResultMap[resultId] = result;
           }
-        }),
 
-      clearTimeout: (resultId: string) =>
+          return {
+            ...state,
+            resultMap: updatedResultMap,
+            batchUpdateQueue: [],
+            isBatchUpdateScheduled: false,
+          };
+        });
+      },
+
+      startPolling: (resultId: string, version: number) => {
         set((state) => {
-          if (state.pollingStateMap[resultId]) {
-            state.pollingStateMap[resultId].timeoutStartTime = null;
-            state.pollingStateMap[resultId].lastEventTime = null;
+          const currentPollingState = state.pollingStateMap[resultId] || {
+            ...POLLING_STATE_INITIAL,
+          };
+          return {
+            ...state,
+            pollingStateMap: {
+              ...state.pollingStateMap,
+              [resultId]: {
+                ...currentPollingState,
+                isPolling: true,
+                version,
+                lastPollTime: Date.now(),
+              },
+            },
+          };
+        });
+      },
+
+      stopPolling: (resultId: string) => {
+        set((state) => {
+          const currentPollingState = state.pollingStateMap[resultId];
+          if (!currentPollingState) return state;
+
+          return {
+            ...state,
+            pollingStateMap: {
+              ...state.pollingStateMap,
+              [resultId]: {
+                ...currentPollingState,
+                isPolling: false,
+                timeoutStartTime: null,
+                lastEventTime: null,
+              },
+            },
+          };
+        });
+      },
+
+      incrementErrorCount: (resultId: string) => {
+        set((state) => {
+          const currentPollingState = state.pollingStateMap[resultId] || {
+            ...POLLING_STATE_INITIAL,
+          };
+          return {
+            ...state,
+            pollingStateMap: {
+              ...state.pollingStateMap,
+              [resultId]: {
+                ...currentPollingState,
+                notFoundErrorCount: currentPollingState.notFoundErrorCount + 1,
+              },
+            },
+          };
+        });
+      },
+
+      resetErrorCount: (resultId: string) => {
+        set((state) => {
+          const currentPollingState = state.pollingStateMap[resultId];
+          if (!currentPollingState) return state;
+
+          return {
+            ...state,
+            pollingStateMap: {
+              ...state.pollingStateMap,
+              [resultId]: {
+                ...currentPollingState,
+                notFoundErrorCount: 0,
+              },
+            },
+          };
+        });
+      },
+
+      updateLastPollTime: (resultId: string) => {
+        set((state) => {
+          const currentPollingState = state.pollingStateMap[resultId];
+          if (!currentPollingState) return state;
+
+          return {
+            ...state,
+            pollingStateMap: {
+              ...state.pollingStateMap,
+              [resultId]: {
+                ...currentPollingState,
+                lastPollTime: Date.now(),
+              },
+            },
+          };
+        });
+      },
+
+      startTimeout: (resultId: string) => {
+        set((state) => {
+          const currentPollingState = state.pollingStateMap[resultId] || {
+            ...POLLING_STATE_INITIAL,
+          };
+          const now = Date.now();
+
+          return {
+            ...state,
+            pollingStateMap: {
+              ...state.pollingStateMap,
+              [resultId]: {
+                ...currentPollingState,
+                timeoutStartTime: now,
+                lastEventTime: now,
+              },
+            },
+          };
+        });
+      },
+
+      updateLastEventTime: (resultId: string) => {
+        set((state) => {
+          const currentPollingState = state.pollingStateMap[resultId];
+          if (!currentPollingState) return state;
+
+          return {
+            ...state,
+            pollingStateMap: {
+              ...state.pollingStateMap,
+              [resultId]: {
+                ...currentPollingState,
+                lastEventTime: Date.now(),
+              },
+            },
+          };
+        });
+      },
+
+      clearTimeout: (resultId: string) => {
+        set((state) => {
+          const currentPollingState = state.pollingStateMap[resultId];
+          if (!currentPollingState) return state;
+
+          return {
+            ...state,
+            pollingStateMap: {
+              ...state.pollingStateMap,
+              [resultId]: {
+                ...currentPollingState,
+                timeoutStartTime: null,
+                lastEventTime: null,
+              },
+            },
+          };
+        });
+      },
+
+      // Batched update for multiple polling state changes at once
+      batchPollingStateUpdates: (
+        updates: Array<{ resultId: string; state: Partial<PollingState> }>,
+      ) => {
+        set((state) => {
+          const newPollingStateMap = { ...state.pollingStateMap };
+
+          for (const update of updates) {
+            const { resultId, state: partialState } = update;
+            const currentState = newPollingStateMap[resultId] || { ...POLLING_STATE_INITIAL };
+
+            newPollingStateMap[resultId] = {
+              ...currentState,
+              ...partialState,
+            };
           }
-        }),
-    })),
+
+          return {
+            ...state,
+            pollingStateMap: newPollingStateMap,
+          };
+        });
+      },
+    }),
     {
       name: 'action-result-storage',
       partialize: (state) => ({
