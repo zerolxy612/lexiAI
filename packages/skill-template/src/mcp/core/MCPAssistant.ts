@@ -1,6 +1,6 @@
 import { buildSystemPrompt } from './prompt';
 import { McpService } from './MCPService';
-import { MCPCallToolResponse, MCPServer, MCPTool, MCPToolInputSchema } from './types';
+import { MCPCallToolResponse, MCPServer, MCPTool } from './types';
 
 /**
  * Assistant message type
@@ -223,45 +223,44 @@ export class MCPAssistant {
    * @param content 响应内容
    * @returns 工具响应数组
    */
-  parseToolUse(content: string): MCPToolResponse[] {
-    if (!content || !this.tools || this.tools.length === 0) {
+  parseToolUse(content: string, mcpTools: MCPTool[] = this.tools): MCPToolResponse[] {
+    if (!content || !mcpTools || mcpTools.length === 0) {
       return [];
     }
-
-    // Use global regex to match all tool calls
     const toolUsePattern =
       /<tool_use>([\s\S]*?)<name>([\s\S]*?)<\/name>([\s\S]*?)<arguments>([\s\S]*?)<\/arguments>([\s\S]*?)<\/tool_use>/g;
     const tools: MCPToolResponse[] = [];
+    let match: RegExpExecArray | null;
     let idx = 0;
 
-    // Find all tool call blocks
-    let match: any;
+    // Reset regex lastIndex to ensure we start from the beginning
+    toolUsePattern.lastIndex = 0;
+
+    // Find all tool use blocks
     // biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
     while ((match = toolUsePattern.exec(content)) !== null) {
+      // const fullMatch = match[0]
       const toolName = match[2].trim();
       const toolArgs = match[4].trim();
 
-      // Try to parse arguments as JSON
-      let parsedArgs: MCPToolInputSchema;
+      // Try to parse the arguments as JSON
+      let parsedArgs: any;
       try {
         parsedArgs = JSON.parse(toolArgs);
-      } catch (error) {
-        console.error(`Failed to parse tool arguments for ${toolName}:`, error);
-        match = toolUsePattern.exec(content);
-        continue;
+      } catch {
+        // If parsing fails, use the string as is
+        parsedArgs = toolArgs;
       }
-
-      // Find corresponding tool
-      const mcpTool = this.tools.find((tool) => tool.id === toolName);
+      // console.log(`Parsed arguments for tool "${toolName}":`, parsedArgs)
+      const mcpTool = mcpTools.find((tool) => tool.id === toolName);
       if (!mcpTool) {
-        console.error(`Tool "${toolName}" not found in available tools`);
-        match = toolUsePattern.exec(content);
+        console.error(`Tool "${toolName}" not found in MCP tools`);
         continue;
       }
 
       // Add to tools array
       tools.push({
-        id: `${toolName}-${idx++}`,
+        id: `${toolName}-${idx++}`, // Unique ID for each tool use
         tool: {
           ...mcpTool,
           inputSchema: parsedArgs,
@@ -269,9 +268,11 @@ export class MCPAssistant {
         status: 'pending',
       });
 
-      match = toolUsePattern.exec(content);
+      // 如果匹配的内容长度为0，手动增加lastIndex防止死循环
+      if (match[0].length === 0) {
+        toolUsePattern.lastIndex++;
+      }
     }
-
     return tools;
   }
 

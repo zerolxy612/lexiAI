@@ -133,8 +133,8 @@ export const AvailableTools = (tools: MCPTool[]) => {
     .map((tool) => {
       return `
 <tool>
-  <name>${tool.id}</name>
-  <description>${tool.description}</description>
+  <name>${`${tool.name}-${tool.id}`}</name>
+  <description>${`${tool.name}: ${tool.description || `it is a tool that can be used to ${tool.name}`}`}</description>
   <arguments>
     ${tool.inputSchema ? JSON.stringify(tool.inputSchema) : ''}
   </arguments>
