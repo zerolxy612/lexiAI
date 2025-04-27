@@ -35,7 +35,7 @@ import { useSelectedNodeZIndex } from '@refly-packages/ai-workspace-common/hooks
 export const ImageNode = memo(
   ({ id, data, isPreview, selected, hideActions, hideHandles, onNodeClick }: ImageNodeProps) => {
     const { metadata } = data ?? {};
-    const imageUrl = metadata?.imageUrl;
+    const imageUrl = metadata?.imageUrl ?? '';
     const showBorder = metadata?.showBorder ?? false;
     const showTitle = metadata?.showTitle ?? true;
     const [isHovered, setIsHovered] = useState(false);
