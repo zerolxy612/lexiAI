@@ -91,9 +91,24 @@ export const ProviderModal = React.memo(
         const providers = presetProviders || providerInfoList;
         const providerInfo = providers.find((p) => p.key === value);
 
-        if (providerInfo?.fieldConfig.baseUrl.defaultValue && !isEditMode) {
+        // Reset form fields except for providerKey and enabled
+        const enabled = form.getFieldValue('enabled');
+        form.resetFields();
+        form.setFieldsValue({
+          providerKey: value,
+          enabled: enabled ?? true,
+        });
+
+        // Set baseUrl to default value if available, otherwise clear it
+        if (providerInfo?.fieldConfig.baseUrl.defaultValue) {
           form.setFieldValue('baseUrl', providerInfo.fieldConfig.baseUrl.defaultValue);
+        } else {
+          form.setFieldValue('baseUrl', '');
         }
+
+        // Reset API key field
+        form.setFieldValue('apiKey', '');
+        setIsDefaultApiKey(false);
 
         // Set all available categories as default
         const providerCategories = providerInfo?.categories || [];
@@ -103,7 +118,7 @@ export const ProviderModal = React.memo(
           form.setFieldValue('categories', []);
         }
       },
-      [form, presetProviders, isEditMode],
+      [form, presetProviders],
     );
 
     useEffect(() => {

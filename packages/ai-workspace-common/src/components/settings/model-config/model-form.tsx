@@ -389,7 +389,7 @@ export const ModelFormModal = memo(
                       <Loading />
                     ) : (
                       <>
-                        <div className="max-h-60 overflow-y-auto">{menu}</div>
+                        <div className="max-h-50 overflow-y-auto">{menu}</div>
                         <div className="p-2 border-t border-gray-200">
                           <Button
                             type="text"

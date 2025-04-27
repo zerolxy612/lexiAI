@@ -1,5 +1,4 @@
 import { useTranslation } from 'react-i18next';
-import { useDeleteProviderItem } from '@refly-packages/ai-workspace-common/queries';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 import { useState, useMemo, useCallback, useEffect, memo } from 'react';
 import {
@@ -134,14 +133,14 @@ const ModelItem = memo(
           <div
             ref={provided.innerRef}
             {...provided.draggableProps}
-            className="mb-3 px-4 py-0.5 hover:bg-gray-50 rounded-md cursor-pointer border border-solid border-gray-100 group"
+            className="relative mb-3 px-5 py-0.5 hover:bg-gray-50 rounded-md cursor-pointer border border-solid border-gray-100 group"
           >
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div className="flex-1 flex items-center gap-2">
                 {draggable && (
                   <div
                     {...provided.dragHandleProps}
-                    className="p-1 text-gray-400 hover:text-green-600 group-hover:opacity-100 opacity-0 hidden group-hover:block transition-opacity duration-200"
+                    className="absolute left-0 top-0 h-full flex items-center p-1 text-gray-400 opacity-0 group-hover:opacity-100 hover:text-green-600 transition-opacity duration-200"
                   >
                     <LuGripVertical size={16} className="flex items-center" />
                   </div>
@@ -241,16 +240,15 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
     [modelItems],
   );
 
-  const deleteModelMutation = useDeleteProviderItem(null, {
-    onSuccess: (data) => {
+  const deleteProviderItem = async (itemId: string) => {
+    const res = await getClient().deleteProviderItem({
+      body: { itemId },
+    });
+    if (res.data.success) {
       message.success(t('common.deleteSuccess'));
-      console.log('data', data);
-      // setModelItems(modelItems.filter((item) => item.itemId !== data.itemId));
-    },
-    onError: (error) => {
-      console.error('Failed to delete model', error);
-    },
-  });
+      setModelItems(modelItems.filter((item) => item.itemId !== itemId));
+    }
+  };
 
   const handleAddModel = (category: ProviderCategory) => {
     setCategory(category);
@@ -281,9 +279,7 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
   };
 
   const handleDeleteModel = (itemId: string) => {
-    deleteModelMutation.mutate({
-      body: { itemId },
-    });
+    deleteProviderItem(itemId);
   };
 
   const handleToggleEnabled = async (model: ProviderItem, enabled: boolean) => {
