@@ -12,7 +12,7 @@ import { prepareContext } from '../scheduler/utils/context';
 import { buildFinalRequestMessages } from '../scheduler/utils/message';
 import { processQuery } from '../scheduler/utils/queryProcessor';
 import { MCPAssistant, Message, MessageRole, ChunkCallbackData } from '../mcp/core/MCPAssistant';
-import { MCPServer } from '../mcp/core/types';
+import { MCPServer, MCPTool } from '../mcp/core/types';
 
 /**
  * Extended state for MCP Connector skill
@@ -300,9 +300,12 @@ export class MCPAgent extends BaseSkill {
     success: boolean;
     connectedServers: string[];
     failedServers: string[];
+    loadedTools: Array<{ [x: string]: MCPTool[] }>;
   }> {
     const connectedServers: string[] = [];
     const failedServers: string[] = [];
+
+    const loadedTools: Array<{ [x: string]: MCPTool[] }> = [];
 
     // Notify about connection attempt
     this.emitEvent(
@@ -320,8 +323,9 @@ export class MCPAgent extends BaseSkill {
     // Connect to each server
     for (const serverConfig of serverConfigs) {
       try {
-        await assistant.addServer(serverConfig);
+        const tools = await assistant.addServer(serverConfig);
         connectedServers.push(serverConfig.baseUrl || serverConfig.id);
+        loadedTools.push({ [serverConfig.baseUrl || serverConfig.id]: tools });
 
         this.engine.logger.log(
           `Connected to MCP server: ${serverConfig.baseUrl || serverConfig.id}`,
@@ -358,6 +362,7 @@ export class MCPAgent extends BaseSkill {
       success: connectedServers.length > 0,
       connectedServers,
       failedServers,
+      loadedTools,
     };
   }
 
@@ -396,7 +401,7 @@ export class MCPAgent extends BaseSkill {
     const { tplConfig } = config.configurable;
 
     // Get configuration values
-    const mcpServersString = tplConfig?.mcpServers?.value as string;
+    const mcpServersString = tplConfig?.mcpServerUrls?.value as string;
     const serverUrls = mcpServersString
       .split(',')
       .map((url) => url.trim())
