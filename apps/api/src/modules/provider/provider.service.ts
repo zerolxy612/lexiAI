@@ -6,6 +6,7 @@ import {
   DeleteProviderRequest,
   ListProviderItemsData,
   ListProvidersData,
+  LLMModelConfig,
   ProviderCategory,
   UpsertProviderItemRequest,
   UpsertProviderRequest,
@@ -13,7 +14,7 @@ import {
   UserPreferences,
 } from '@refly/openapi-schema';
 import { Provider, ProviderItem } from '@/generated/client';
-import { genProviderItemID, genProviderID, providerInfoList } from '@refly/utils';
+import { genProviderItemID, genProviderID, providerInfoList, pick } from '@refly/utils';
 import { ProviderNotFoundError, ProviderItemNotFoundError, ParamsError } from '@refly/errors';
 import { SingleFlightCache } from '@/utils/cache';
 import { EncryptionService } from '@/modules/common/encryption.service';
@@ -88,14 +89,8 @@ export class ProviderService {
       },
     });
 
-    // Decrypt API keys for user providers
-    const decryptedUserProviders = providers.map((provider) => ({
-      ...provider,
-      apiKey: this.encryptionService.decrypt(provider.apiKey),
-    }));
-
     const { providers: globalProviders } = await this.globalProviderCache.get();
-    return [...globalProviders, ...decryptedUserProviders];
+    return [...globalProviders, ...providers];
   }
 
   async createProvider(user: User, param: UpsertProviderRequest) {
@@ -279,7 +274,7 @@ export class ProviderService {
     const { providerId, category, enabled } = param;
 
     // Fetch user's provider items
-    const userItems = await this.prisma.providerItem.findMany({
+    return this.prisma.providerItem.findMany({
       where: {
         uid: user.uid,
         providerId,
@@ -290,35 +285,10 @@ export class ProviderService {
       include: {
         provider: true,
       },
+      orderBy: {
+        order: 'asc',
+      },
     });
-
-    // Fetch global provider items
-    const { items: globalItems } = await this.globalProviderCache.get();
-
-    // Filter global items based on the same filters applied to user items
-    const filteredGlobalItems = globalItems.filter((item) => {
-      return (
-        (!providerId || item.providerId === providerId) &&
-        (!category || item.category === category) &&
-        (enabled === undefined || item.enabled === enabled)
-      );
-    });
-
-    // Create a map of user items by name for fast lookup
-    const userItemsByName = new Map();
-    for (const item of userItems) {
-      if (item?.name) {
-        userItemsByName.set(item.name, item);
-      }
-    }
-
-    // Filter out global items that have a user-specific counterpart with the same name
-    const uniqueGlobalItems = filteredGlobalItems.filter(
-      (globalItem) => !globalItem?.name || !userItemsByName.has(globalItem.name),
-    );
-
-    // Combine user-specific items and unique global items
-    return [...userItems, ...uniqueGlobalItems].sort((a, b) => a.order - b.order);
   }
 
   async findProviderItemById(user: User, itemId: string) {
@@ -343,32 +313,53 @@ export class ProviderService {
     };
   }
 
-  async findProviderItemByCategory(user: User, category: ProviderCategory) {
+  async prepareGlobalProviderItemsForUser(user: User) {
+    const { items } = await this.globalProviderCache.get();
+
+    await this.prisma.providerItem.createMany({
+      data: items
+        .filter((item) => item.enabled)
+        .map((item) => ({
+          itemId: genProviderItemID(),
+          uid: user.uid,
+          ...pick(item, ['providerId', 'category', 'name', 'enabled', 'config', 'tier']),
+        })),
+    });
+  }
+
+  async findProviderItemsByCategory(user: User, category: ProviderCategory) {
     // Prioritize user configured provider item
-    const item = await this.prisma.providerItem.findFirst({
+    const items = await this.prisma.providerItem.findMany({
       where: { uid: user.uid, category, deletedAt: null },
       include: {
         provider: true,
       },
     });
 
-    if (item) {
+    if (items.length > 0) {
       // Decrypt API key and return
-      return {
+      return items.map((item) => ({
         ...item,
         provider: {
           ...item.provider,
           apiKey: this.encryptionService.decrypt(item.provider.apiKey),
         },
-      };
+      }));
     }
 
-    // Fallback to global provider item
+    // Fallback to global provider items
     const { items: globalItems } = await this.globalProviderCache.get();
-    const globalItem = globalItems.find((item) => item.category === category);
+    return globalItems.filter((item) => item.category === category);
+  }
 
-    if (globalItem) {
-      return globalItem; // Already decrypted by the global provider cache
+  async findLLMProviderItemByModelID(user: User, modelId: string) {
+    const items = await this.findProviderItemsByCategory(user, 'llm');
+
+    for (const item of items) {
+      const config: LLMModelConfig = JSON.parse(item.config);
+      if (config.modelId === modelId) {
+        return item;
+      }
     }
 
     return null;

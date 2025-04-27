@@ -495,7 +495,10 @@ export class SkillService {
       uid,
       rawParam: JSON.stringify(param),
       modelInfo,
-      provider: providerPO2DTO(providerItem?.provider),
+      provider: {
+        ...providerPO2DTO(providerItem?.provider),
+        apiKey: providerItem?.provider?.apiKey,
+      },
     };
 
     if (existingResult) {
@@ -1115,14 +1118,17 @@ export class SkillService {
           }
           case 'on_chat_model_end':
             if (runMeta && chunk) {
-              const modelInfo = await this.subscription.getModelInfo(String(runMeta.ls_model_name));
-              if (!modelInfo) {
+              const providerItem = await this.providerService.findLLMProviderItemByModelID(
+                user,
+                String(runMeta.ls_model_name),
+              );
+              if (!providerItem) {
                 this.logger.error(`model not found: ${String(runMeta.ls_model_name)}`);
               }
               const usage: TokenUsageItem = {
-                tier: modelInfo?.tier,
-                modelProvider: modelInfo?.provider,
-                modelName: modelInfo?.name,
+                tier: providerItem?.tier,
+                modelProvider: providerItem?.provider?.name,
+                modelName: String(runMeta.ls_model_name),
                 inputTokens: chunk.usage_metadata?.input_tokens ?? 0,
                 outputTokens: chunk.usage_metadata?.output_tokens ?? 0,
               };

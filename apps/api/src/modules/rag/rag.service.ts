@@ -65,11 +65,12 @@ export class RAGService {
    * @returns The embeddings
    */
   async prepareEmbeddings(user: User): Promise<Embeddings> {
-    const providerItem = await this.providerService.findProviderItemByCategory(user, 'embedding');
-    if (!providerItem) {
+    const providerItems = await this.providerService.findProviderItemsByCategory(user, 'embedding');
+    if (!providerItems?.length) {
       throw new Error('No embedding provider configured');
     }
 
+    const providerItem = providerItems[0];
     const { provider, config } = providerItem;
     const { providerKey } = provider;
     const embeddingConfig: EmbeddingModelConfig = JSON.parse(config);
@@ -108,13 +109,14 @@ export class RAGService {
    * @returns The reranker
    */
   async prepareReranker(user: User) {
-    const providerItem = await this.providerService.findProviderItemByCategory(user, 'reranker');
+    const providerItems = await this.providerService.findProviderItemsByCategory(user, 'reranker');
 
     // Rerankers are optional, so return null if no provider item is found
-    if (!providerItem) {
+    if (!providerItems?.length) {
       return new FallbackReranker();
     }
 
+    const providerItem = providerItems[0];
     const { provider, config } = providerItem;
     const { providerKey } = provider;
     const rerankerConfig: RerankerConfig = JSON.parse(config);

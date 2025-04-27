@@ -106,7 +106,7 @@ export class EncryptionService {
 
       return decrypted.toString('utf8');
     } catch (error) {
-      this.logger.error(`Error decrypting data: ${error.message}`);
+      this.logger.warn(`Error decrypting data: ${error.message}`);
       return null; // Return null for failed decryption
     }
   }

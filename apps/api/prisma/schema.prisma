@@ -113,7 +113,7 @@ model ActionResult {
   /// Result title
   title          String       @default("") @map("title")
   /// Used model tier
-  tier           String       @default("") @map("tier")
+  tier           String?      @default("") @map("tier")
   /// Used model
   modelName      String?      @map("model_name")
   /// Action target type

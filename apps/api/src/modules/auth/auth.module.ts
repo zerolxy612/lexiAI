@@ -13,11 +13,13 @@ import { GithubOauthStrategy } from './strategy/github-oauth.strategy';
 import { GoogleOauthStrategy } from './strategy/google-oauth.strategy';
 
 import { QUEUE_SEND_VERIFICATION_EMAIL } from '../../utils/const';
+import { ProviderModule } from '../provider/provider.module';
 
 @Module({
   imports: [
     CommonModule,
     MiscModule,
+    ProviderModule,
     PassportModule.register({
       session: true,
     }),

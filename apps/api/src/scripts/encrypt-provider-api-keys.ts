@@ -40,14 +40,6 @@ async function bootstrap() {
 
         // Attempt to decrypt to see if it's already encrypted (will return null if it can't be decrypted)
         const testDecrypt = encryptionService.decrypt(provider.apiKey);
-        if (testDecrypt === null && provider.apiKey.length > 64) {
-          // Likely already encrypted but invalid format
-          logger.warn(
-            `Provider ${provider.providerId} has an API key that may already be encrypted but is invalid. Skipping.`,
-          );
-          skippedCount++;
-          continue;
-        }
 
         if (testDecrypt !== null && testDecrypt !== provider.apiKey) {
           // Already properly encrypted
