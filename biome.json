@@ -26,7 +26,8 @@
         "useConst": "error",
         "useTemplate": "error",
         "useImportType": "off",
-        "noNonNullAssertion": "off"
+        "noNonNullAssertion": "off",
+        "noUselessElse": "off"
       },
       "complexity": {
         "useOptionalChain": "error"

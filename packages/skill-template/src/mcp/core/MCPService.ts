@@ -1,0 +1,494 @@
+import crypto from 'node:crypto';
+
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import {
+  SSEClientTransport,
+  SSEClientTransportOptions,
+} from '@modelcontextprotocol/sdk/client/sse.js';
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory';
+import {
+  GetMCPPromptResponse,
+  GetResourceResponse,
+  MCPCallToolResponse,
+  MCPPrompt,
+  MCPResource,
+  MCPServer,
+  MCPTool,
+} from './types';
+
+import EventEmitter from 'node:events';
+
+import { CacheService } from './CacheService';
+import { Logger } from './Logger';
+import { CallBackServer } from '../oauth/callback';
+import { McpOAuthClientProvider } from '../oauth/provider';
+import {
+  StreamableHTTPClientTransport,
+  type StreamableHTTPClientTransportOptions,
+} from './MCPStreamableHttpClient';
+import { nanoid } from 'nanoid';
+
+// Generic type for caching wrapped functions
+type CachedFunction<T extends unknown[], R> = (...args: T) => Promise<R>;
+
+/**
+ * Higher-order function to add caching capability to any async function
+ * @param fn The original function to be wrapped with caching
+ * @param getCacheKey Function to generate a cache key from the function arguments
+ * @param ttl Time to live for the cache entry in milliseconds
+ * @param logPrefix Prefix for log messages
+ * @returns The wrapped function with caching capability
+ */
+function withCache<T extends unknown[], R>(
+  fn: (...args: T) => Promise<R>,
+  getCacheKey: (...args: T) => string,
+  ttl: number,
+  logPrefix: string,
+): CachedFunction<T, R> {
+  return async (...args: T): Promise<R> => {
+    const cacheKey = getCacheKey(...args);
+
+    if (CacheService.has(cacheKey)) {
+      Logger.info(`${logPrefix} loaded from cache`);
+      const cachedData = CacheService.get<R>(cacheKey);
+      if (cachedData) {
+        return cachedData;
+      }
+    }
+
+    const result = await fn(...args);
+    CacheService.set(cacheKey, result, ttl);
+    return result;
+  };
+}
+
+export class McpService {
+  private clients: Map<string, Client> = new Map();
+
+  private getServerKey(server: MCPServer): string {
+    return JSON.stringify({
+      baseUrl: server.baseUrl,
+      command: server.command,
+      args: server.args,
+      registryUrl: server.registryUrl,
+      env: server.env,
+      id: server.id,
+    });
+  }
+
+  constructor() {
+    this.initClient = this.initClient.bind(this);
+    this.listTools = this.listTools.bind(this);
+    this.callTool = this.callTool.bind(this);
+    this.listPrompts = this.listPrompts.bind(this);
+    this.getPrompt = this.getPrompt.bind(this);
+    this.listResources = this.listResources.bind(this);
+    this.getResource = this.getResource.bind(this);
+    this.closeClient = this.closeClient.bind(this);
+    this.removeServer = this.removeServer.bind(this);
+    this.restartServer = this.restartServer.bind(this);
+    this.stopServer = this.stopServer.bind(this);
+    this.cleanup = this.cleanup.bind(this);
+  }
+
+  async initClient(server: MCPServer): Promise<Client> {
+    const serverKey = this.getServerKey(server);
+
+    // Check if we already have a client for this server configuration
+    const existingClient = this.clients.get(serverKey);
+    if (existingClient) {
+      try {
+        // Check if the existing client is still connected
+        const pingResult = await existingClient.ping();
+        Logger.info(`[MCP] Ping result for ${server.name}:`, pingResult);
+        // If the ping fails, remove the client from the cache
+        // and create a new one
+        if (!pingResult) {
+          this.clients.delete(serverKey);
+        } else {
+          return existingClient;
+        }
+      } catch (error) {
+        Logger.error(`[MCP] Error pinging server ${server.name}:`, error);
+        this.clients.delete(serverKey);
+      }
+    }
+    // Create new client instance for each connection
+    const client = new Client({ name: 'refly-mcp-agent', version: '1.0.0' }, { capabilities: {} });
+
+    // let transport: StdioClientTransport | SSEClientTransport | InMemoryTransport | StreamableHTTPClientTransport
+    const authProvider = new McpOAuthClientProvider({
+      serverUrlHash: crypto
+        .createHash('md5')
+        .update(server.baseUrl || '')
+        .digest('hex'),
+    });
+
+    const initTransport = async (): Promise<
+      StdioClientTransport | SSEClientTransport | InMemoryTransport | StreamableHTTPClientTransport
+    > => {
+      if (server.baseUrl) {
+        if (server.type === 'streamableHttp') {
+          const options: StreamableHTTPClientTransportOptions = {
+            requestInit: {
+              headers: server.headers || {},
+            },
+            authProvider,
+          };
+          return new StreamableHTTPClientTransport(new URL(server.baseUrl!), options);
+        } else if (server.type === 'sse') {
+          const options: SSEClientTransportOptions = {
+            requestInit: {
+              headers: server.headers || {},
+            },
+            authProvider,
+          };
+          return new SSEClientTransport(new URL(server.baseUrl!), options);
+        } else {
+          throw new Error('Invalid server type');
+        }
+      } else {
+        throw new Error('Either baseUrl or command must be provided');
+      }
+    };
+
+    const handleAuth = async (
+      client: Client,
+      transport: SSEClientTransport | StreamableHTTPClientTransport,
+    ) => {
+      Logger.info(`[MCP] Starting OAuth flow for server: ${server.name}`);
+      // Create an event emitter for the OAuth callback
+      const events = new EventEmitter();
+
+      // Create a callback server
+      const callbackServer = new CallBackServer({
+        port: authProvider.config.callbackPort,
+        path: authProvider.config.callbackPath || '/oauth/callback',
+        events,
+      });
+
+      // Set a timeout to close the callback server
+      const timeoutId = setTimeout(() => {
+        Logger.warn(`[MCP] OAuth flow timed out for server: ${server.name}`);
+        callbackServer.close();
+      }, 300000); // 5 minutes timeout
+
+      try {
+        // Wait for the authorization code
+        const authCode = await callbackServer.waitForAuthCode();
+        Logger.info(`[MCP] Received auth code: ${authCode}`);
+
+        // Complete the OAuth flow
+        await transport.finishAuth(authCode);
+
+        Logger.info(`[MCP] OAuth flow completed for server: ${server.name}`);
+
+        const newTransport = await initTransport();
+        // Try to connect again
+        await client.connect(newTransport);
+
+        Logger.info(`[MCP] Successfully authenticated with server: ${server.name}`);
+      } catch (oauthError) {
+        Logger.error(`[MCP] OAuth authentication failed for server ${server.name}:`, oauthError);
+        throw new Error(
+          `OAuth authentication failed: ${oauthError instanceof Error ? oauthError.message : String(oauthError)}`,
+        );
+      } finally {
+        // Clear the timeout and close the callback server
+        clearTimeout(timeoutId);
+        callbackServer.close();
+      }
+    };
+
+    try {
+      const transport = await initTransport();
+      try {
+        await client.connect(transport);
+      } catch (error: any) {
+        if (
+          error instanceof Error &&
+          (error.name === 'UnauthorizedError' || error.message.includes('Unauthorized'))
+        ) {
+          Logger.info(`[MCP] Authentication required for server: ${server.name}`);
+          await handleAuth(client, transport as SSEClientTransport | StreamableHTTPClientTransport);
+        } else {
+          throw error;
+        }
+      }
+
+      // Store the new client in the cache
+      this.clients.set(serverKey, client);
+
+      Logger.info(`[MCP] Activated server: ${server.name}`);
+      return client;
+    } catch (error: any) {
+      Logger.error(`[MCP] Error activating server ${server.name}:`, error);
+      throw new Error(`[MCP] Error activating server ${server.name}: ${error.message}`);
+    }
+  }
+
+  async closeClient(serverKey: string) {
+    const client = this.clients.get(serverKey);
+    if (client) {
+      // Remove the client from the cache
+      await client.close();
+      Logger.info(`[MCP] Closed server: ${serverKey}`);
+      this.clients.delete(serverKey);
+      CacheService.remove(`mcp:list_tool:${serverKey}`);
+      Logger.info(`[MCP] Cleared cache for server: ${serverKey}`);
+    } else {
+      Logger.warn(`[MCP] No client found for server: ${serverKey}`);
+    }
+  }
+
+  async stopServer(server: MCPServer) {
+    const serverKey = this.getServerKey(server);
+    Logger.info(`[MCP] Stopping server: ${server.name}`);
+    await this.closeClient(serverKey);
+  }
+
+  async removeServer(server: MCPServer) {
+    const serverKey = this.getServerKey(server);
+    const existingClient = this.clients.get(serverKey);
+    if (existingClient) {
+      await this.closeClient(serverKey);
+    }
+  }
+
+  async restartServer(server: MCPServer) {
+    Logger.info(`[MCP] Restarting server: ${server.name}`);
+    const serverKey = this.getServerKey(server);
+    await this.closeClient(serverKey);
+    await this.initClient(server);
+  }
+
+  async cleanup() {
+    for (const [key] of this.clients) {
+      try {
+        await this.closeClient(key);
+      } catch (error) {
+        Logger.error(`[MCP] Failed to close client: ${error}`);
+      }
+    }
+  }
+
+  private async listToolsImpl(server: MCPServer): Promise<MCPTool[]> {
+    Logger.info(`[MCP] Listing tools for server: ${server.name}`);
+    const client = await this.initClient(server);
+    try {
+      const { tools } = await client.listTools();
+      const serverTools: MCPTool[] = [];
+      tools.map((tool: any) => {
+        const serverTool: MCPTool = {
+          ...tool,
+          id: `f${nanoid()}`,
+          serverId: server.id,
+          serverName: server.name,
+        };
+        serverTools.push(serverTool);
+      });
+      return serverTools;
+    } catch (error) {
+      Logger.error(`[MCP] Failed to list tools for server: ${server.name}`, error);
+      return [];
+    }
+  }
+
+  async listTools(server: MCPServer) {
+    const cachedListTools = withCache<[MCPServer], MCPTool[]>(
+      this.listToolsImpl.bind(this),
+      (server) => {
+        const serverKey = this.getServerKey(server);
+        return `mcp:list_tool:${serverKey}`;
+      },
+      5 * 60 * 1000, // 5 minutes TTL
+      `[MCP] Tools from ${server.name}`,
+    );
+
+    return cachedListTools(server);
+  }
+
+  /**
+   * Call a tool on an MCP server
+   */
+  public async callTool({
+    server,
+    name,
+    args,
+  }: { server: MCPServer; name: string; args: any }): Promise<MCPCallToolResponse> {
+    try {
+      Logger.info('[MCP] Calling:', server.name, name, args);
+      const client = await this.initClient(server);
+      const result = await client.callTool({ name, arguments: args });
+      return result as MCPCallToolResponse;
+    } catch (error) {
+      Logger.error(`[MCP] Error calling tool ${name} on ${server.name}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * List prompts available on an MCP server
+   */
+  private async listPromptsImpl(server: MCPServer): Promise<MCPPrompt[]> {
+    Logger.info(`[MCP] Listing prompts for server: ${server.name}`);
+    const client = await this.initClient(server);
+    try {
+      const { prompts } = await client.listPrompts();
+      const serverPrompts = prompts.map((prompt: any) => ({
+        ...prompt,
+        id: `p${nanoid()}`,
+        serverId: server.id,
+        serverName: server.name,
+      }));
+      return serverPrompts;
+    } catch (error) {
+      Logger.error(`[MCP] Failed to list prompts for server: ${server.name}`, error);
+      return [];
+    }
+  }
+
+  /**
+   * List prompts available on an MCP server with caching
+   */
+  public async listPrompts(server: MCPServer): Promise<MCPPrompt[]> {
+    const cachedListPrompts = withCache<[MCPServer], MCPPrompt[]>(
+      this.listPromptsImpl.bind(this),
+      (server) => {
+        const serverKey = this.getServerKey(server);
+        return `mcp:list_prompts:${serverKey}`;
+      },
+      60 * 60 * 1000, // 60 minutes TTL
+      `[MCP] Prompts from ${server.name}`,
+    );
+    return cachedListPrompts(server);
+  }
+
+  /**
+   * Get a specific prompt from an MCP server (implementation)
+   */
+  private async getPromptImpl(
+    server: MCPServer,
+    name: string,
+    args?: Record<string, any>,
+  ): Promise<GetMCPPromptResponse> {
+    Logger.info(`[MCP] Getting prompt ${name} from server: ${server.name}`);
+    const client = await this.initClient(server);
+    return await client.getPrompt({ name, arguments: args });
+  }
+
+  /**
+   * Get a specific prompt from an MCP server with caching
+   */
+  public async getPrompt({
+    server,
+    name,
+    args,
+  }: {
+    server: MCPServer;
+    name: string;
+    args?: Record<string, any>;
+  }): Promise<GetMCPPromptResponse> {
+    const cachedGetPrompt = withCache<
+      [MCPServer, string, Record<string, any> | undefined],
+      GetMCPPromptResponse
+    >(
+      this.getPromptImpl.bind(this),
+      (server, name, args) => {
+        const serverKey = this.getServerKey(server);
+        const argsKey = args ? JSON.stringify(args) : 'no-args';
+        return `mcp:get_prompt:${serverKey}:${name}:${argsKey}`;
+      },
+      30 * 60 * 1000, // 30 minutes TTL
+      `[MCP] Prompt ${name} from ${server.name}`,
+    );
+    return await cachedGetPrompt(server, name, args);
+  }
+
+  /**
+   * List resources available on an MCP server (implementation)
+   */
+  private async listResourcesImpl(server: MCPServer): Promise<MCPResource[]> {
+    Logger.info(`[MCP] Listing resources for server: ${server.name}`);
+    const client = await this.initClient(server);
+    try {
+      const result = await client.listResources();
+      const resources = result.resources || [];
+      const serverResources = (Array.isArray(resources) ? resources : []).map((resource: any) => ({
+        ...resource,
+        serverId: server.id,
+        serverName: server.name,
+      }));
+      return serverResources;
+    } catch (error) {
+      Logger.error(`[MCP] Failed to list resources for server: ${server.name}`, error);
+      return [];
+    }
+  }
+
+  /**
+   * List resources available on an MCP server with caching
+   */
+  public async listResources(server: MCPServer): Promise<MCPResource[]> {
+    const cachedListResources = withCache<[MCPServer], MCPResource[]>(
+      this.listResourcesImpl.bind(this),
+      (server) => {
+        const serverKey = this.getServerKey(server);
+        return `mcp:list_resources:${serverKey}`;
+      },
+      60 * 60 * 1000, // 60 minutes TTL
+      `[MCP] Resources from ${server.name}`,
+    );
+    return cachedListResources(server);
+  }
+
+  /**
+   * Get a specific resource from an MCP server (implementation)
+   */
+  private async getResourceImpl(server: MCPServer, uri: string): Promise<GetResourceResponse> {
+    Logger.info(`[MCP] Getting resource ${uri} from server: ${server.name}`);
+    const client = await this.initClient(server);
+    try {
+      const result = await client.readResource({ uri: uri });
+      const contents: MCPResource[] = [];
+      if (result.contents && result.contents.length > 0) {
+        // biome-ignore lint/complexity/noForEach: <explanation>
+        result.contents.forEach((content: any) => {
+          contents.push({
+            ...content,
+            serverId: server.id,
+            serverName: server.name,
+          });
+        });
+      }
+      return {
+        contents: contents,
+      };
+    } catch (error: any) {
+      Logger.error(`[MCP] Failed to get resource ${uri} from server: ${server.name}`, error);
+      throw new Error(
+        `Failed to get resource ${uri} from server: ${server.name}: ${error.message}`,
+      );
+    }
+  }
+
+  /**
+   * Get a specific resource from an MCP server with caching
+   */
+  public async getResource({
+    server,
+    uri,
+  }: { server: MCPServer; uri: string }): Promise<GetResourceResponse> {
+    const cachedGetResource = withCache<[MCPServer, string], GetResourceResponse>(
+      this.getResourceImpl.bind(this),
+      (server, uri) => {
+        const serverKey = this.getServerKey(server);
+        return `mcp:get_resource:${serverKey}:${uri}`;
+      },
+      30 * 60 * 1000, // 30 minutes TTL
+      `[MCP] Resource ${uri} from ${server.name}`,
+    );
+    return await cachedGetResource(server, uri);
+  }
+}
