@@ -238,8 +238,8 @@ export class MCPAssistant {
     let match: any;
     // biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
     while ((match = toolUsePattern.exec(content)) !== null) {
-      const toolName = match[1].trim();
-      const toolArgs = match[2].trim();
+      const toolName = match[2].trim();
+      const toolArgs = match[4].trim();
 
       // Try to parse arguments as JSON
       let parsedArgs: MCPToolInputSchema;
