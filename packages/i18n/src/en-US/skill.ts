@@ -169,6 +169,42 @@ const translations = {
       note: 'Note: If the image is not displayed on the canvas, please check your network connection or refresh the page. If the problem persists, you can try regenerating using the "Image ID".',
     },
   },
+  MCPAgent: {
+    name: 'MCP Agent',
+    description:
+      'Connect to MCP servers and intelligently leverage their capabilities to solve user queries',
+    placeholder: 'Enter your query for MCP interaction...',
+    steps: {
+      callMCPAgent: {
+        name: 'Call MCP Agent',
+      },
+    },
+    config: {
+      mcpServerUrls: {
+        label: 'MCP Server URLs',
+        description: 'Comma-separated list of MCP server URLs',
+      },
+      autoConnect: {
+        label: 'Auto Connect',
+        description: 'Automatically connect to MCP servers on startup',
+      },
+      modelTemperature: {
+        label: 'Model Temperature',
+        description: 'Temperature for the model when making MCP decisions (0-1)',
+      },
+    },
+    ui: {
+      connectedServers: 'Connected Servers',
+      availableTools: 'Available Tools',
+      queryResult: 'Query Result',
+      actionStatus: 'Action Status',
+      serverConnection: 'Server Connection',
+      connectionStatus: 'Connection Status',
+      reconnect: 'Reconnect',
+      disconnect: 'Disconnect',
+      note: 'Note: If you experience connection issues, try refreshing the page or check your server URLs. Ensure the MCP servers are online and accessible.',
+    },
+  },
 };
 
 export default translations;

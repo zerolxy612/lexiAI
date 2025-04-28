@@ -176,6 +176,41 @@ const translations = {
       note: '注意: 如果图像未显示在画板中，请检查网络连接或刷新页面。如果问题仍然存在，可以尝试使用"图像ID"重新生成。',
     },
   },
+  MCPAgent: {
+    name: 'MCP 代理',
+    description: '连接到MCP服务器并智能利用其功能解决用户查询',
+    placeholder: '输入您需要MCP交互的查询...',
+    steps: {
+      callMCPAgent: {
+        name: '调用MCP代理',
+      },
+    },
+    config: {
+      mcpServerUrls: {
+        label: 'MCP服务器地址',
+        description: '以逗号分隔的MCP服务器URL列表',
+      },
+      autoConnect: {
+        label: '自动连接',
+        description: '启动时自动连接到MCP服务器',
+      },
+      modelTemperature: {
+        label: '模型温度',
+        description: '在进行MCP决策时模型的温度值（0-1）',
+      },
+    },
+    ui: {
+      connectedServers: '已连接服务器',
+      availableTools: '可用工具',
+      queryResult: '查询结果',
+      actionStatus: '操作状态',
+      serverConnection: '服务器连接',
+      connectionStatus: '连接状态',
+      reconnect: '重新连接',
+      disconnect: '断开连接',
+      note: '注意：如果遇到连接问题，请尝试刷新页面或检查服务器地址。确保MCP服务器在线且可访问。',
+    },
+  },
 };
 
 export default translations;
