@@ -118,6 +118,7 @@ const translations = {
     selectAll: 'Select All',
     deselectAll: 'Deselect All',
     addNode: 'Add Node',
+    viewAll: 'View All',
   },
   pages: {
     share: {
@@ -881,6 +882,9 @@ const translations = {
       unbindSuccessful: 'Unbind successfully!',
       failed: 'Failed to delete',
       deleteConfirmForDocument: 'Are you sure you want to delete this document?',
+      deleteConfirmForCanvas:
+        'Canvas {{canvas}} will be permanently deleted. Do you want to continue?',
+      deleteConfirmForProject: 'Are you sure you want to delete this project?',
       deleteConfirmForResource: 'Are you sure you want to delete this resource?',
       deleteConfirmForResourceProject: 'Are you sure to remove this resource from the project?',
       delete: 'Delete',

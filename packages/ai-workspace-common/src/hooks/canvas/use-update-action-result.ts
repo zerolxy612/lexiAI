@@ -31,7 +31,7 @@ const generateFullNodeDataUpdates = (
   return {
     title: payload.title,
     entityId: payload.resultId,
-    contentPreview: processContentPreview(payload.steps.map((s) => s?.content || '')),
+    contentPreview: processContentPreview((payload?.steps || []).map((s) => s?.content || '')),
     metadata: {
       status: payload.status,
       errors: payload.errors,
