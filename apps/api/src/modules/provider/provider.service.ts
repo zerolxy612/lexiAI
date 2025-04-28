@@ -638,7 +638,7 @@ export class ProviderService {
     }
 
     const provider = await this.prisma.provider.findUnique({
-      where: { providerId, uid: user.uid, deletedAt: null },
+      where: { providerId, deletedAt: null, OR: [{ uid: user.uid }, { isGlobal: true }] },
     });
 
     if (!provider) {
