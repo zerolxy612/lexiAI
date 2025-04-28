@@ -298,10 +298,7 @@ export default memo(
     );
 
     return (
-      <div
-        className="flex flex-col h-full border border-gray-200 bg-white"
-        style={{ height: '100%' }}
-      >
+      <div className="flex flex-col h-full border border-gray-200 bg-white">
         {/* Top header with main tab navigation */}
         <div className="flex items-center justify-between h-12 border-b border-gray-200 bg-white py-2">
           {renderTabs}
@@ -357,7 +354,7 @@ export default memo(
 
         {/* Content area */}
         <div
-          className={`flex flex-grow overflow-auto ${layoutMode === 'split' ? 'flex-row' : 'flex-col '} rounded-md`}
+          className={`flex flex-grow overflow-auto ${layoutMode === 'split' ? 'flex-row' : 'flex-col'} rounded-md`}
         >
           {layoutMode === 'tabs' ? (
             <>

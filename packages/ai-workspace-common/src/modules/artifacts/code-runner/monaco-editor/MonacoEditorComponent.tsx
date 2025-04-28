@@ -46,65 +46,47 @@ const MonacoEditorComponent = React.memo(
       }
     }, [loadAttempt]);
 
-    // Use simple editor during generation to improve performance
-    // Skip complex Monaco initialization & syntax highlighting while content is changing rapidly
-    if (isGenerating) {
-      return (
-        <div className="h-full" style={{ minHeight: '500px' }}>
-          <SimpleTextEditor
-            content={content}
-            language={language}
-            type={type}
-            readOnly={readOnly}
-            isGenerating={isGenerating}
-            canvasReadOnly={canvasReadOnly}
-            onChange={onChange}
-          />
-        </div>
-      );
-    }
-
     // Switch CDN when current one fails
-    useEffect(() => {
-      // Skip if we're using the fallback editor already
-      if (useFallbackEditor) return;
+    // useEffect(() => {
+    //   // Skip if we're using the fallback editor already
+    //   if (useFallbackEditor) return;
 
-      const currentCDN = getCurrentCDN();
+    //   const currentCDN = getCurrentCDN();
 
-      // Try another CDN if we have more attempts
-      if (loadAttempt > 0 && loadAttempt < MAX_LOAD_ATTEMPTS) {
-        console.log(`Trying alternative Monaco CDN (attempt ${loadAttempt}): ${currentCDN}`);
+    //   // Try another CDN if we have more attempts
+    //   if (loadAttempt > 0 && loadAttempt < MAX_LOAD_ATTEMPTS) {
+    //     console.log(`Trying alternative Monaco CDN (attempt ${loadAttempt}): ${currentCDN}`);
 
-        // Configure loader with new CDN
-        try {
-          const { loader } = require('@monaco-editor/react');
-          loader.config({
-            paths: {
-              vs: currentCDN,
-            },
-            'vs/nls': {
-              availableLanguages: {},
-            },
-          });
-        } catch (error) {
-          console.error('Failed to reconfigure Monaco loader:', error);
-          // If we can't even reconfigure, move to next attempt
-          if (loadAttempt < MAX_LOAD_ATTEMPTS - 1) {
-            setLoadAttempt(loadAttempt + 1);
-          } else {
-            // Last attempt failed, use fallback editor
-            setUseFallbackEditor(true);
-            setLoadingError('Failed to load editor after multiple attempts');
-          }
-        }
-      }
+    //     // Configure loader with new CDN
+    //     try {
+    //       const { loader } = require('@monaco-editor/react');
+    //       loader.config({
+    //         paths: {
+    //           vs: currentCDN,
+    //         },
+    //         'vs/nls': {
+    //           availableLanguages: {},
+    //         },
+    //       });
+    //     } catch (error) {
+    //       console.error('Failed to reconfigure Monaco loader:', error);
+    //       // If we can't even reconfigure, move to next attempt
+    //       if (loadAttempt < MAX_LOAD_ATTEMPTS - 1) {
+    //         setLoadAttempt(loadAttempt + 1);
+    //       } else {
+    //         // Last attempt failed, use fallback editor
+    //         setUseFallbackEditor(true);
+    //         setLoadingError('Failed to load editor after multiple attempts');
+    //       }
+    //     }
+    //   }
 
-      // If we've reached max attempts, use fallback editor
-      if (loadAttempt >= MAX_LOAD_ATTEMPTS - 1) {
-        setUseFallbackEditor(true);
-        setLoadingError('Failed to load editor after multiple attempts');
-      }
-    }, [loadAttempt, useFallbackEditor, getCurrentCDN]);
+    //   // If we've reached max attempts, use fallback editor
+    //   if (loadAttempt >= MAX_LOAD_ATTEMPTS - 1) {
+    //     setUseFallbackEditor(true);
+    //     setLoadingError('Failed to load editor after multiple attempts');
+    //   }
+    // }, [loadAttempt, useFallbackEditor, getCurrentCDN]);
 
     // Debounced onChange handler to prevent too frequent updates
     const debouncedOnChange = useMemo(
@@ -180,7 +162,7 @@ const MonacoEditorComponent = React.memo(
           folding: false,
           // Enable lazy loading of content
           largeFileOptimizations: true,
-          // Reduce the max tokenization line length
+          // Reduce max tokenization line length
           maxTokenizationLineLength: 2000,
         });
 
@@ -252,11 +234,12 @@ const MonacoEditorComponent = React.memo(
       }
     }, [content, isEditorReady]);
 
-    // If we've exhausted all fallbacks and need to use the textarea
-    if (useFallbackEditor) {
+    // Use simple editor during generation to improve performance
+    // Skip complex Monaco initialization & syntax highlighting while content is changing rapidly
+    if (isGenerating) {
       return (
-        <div className="h-full" style={{ minHeight: '500px' }}>
-          <FallbackEditor
+        <div className="h-full">
+          <SimpleTextEditor
             content={content}
             language={language}
             type={type}
@@ -272,7 +255,7 @@ const MonacoEditorComponent = React.memo(
     // Handle fallback logic when Editor can't be loaded
     if (loadingError) {
       return (
-        <div className="h-full" style={{ minHeight: '500px' }}>
+        <div className="h-full">
           <div className="h-full flex items-center justify-center bg-gray-50 text-gray-700 p-4 rounded border border-gray-200">
             <div className="text-center">
               <p className="mb-2 font-medium">{t('codeArtifact.editor.loadError')}</p>
@@ -296,6 +279,33 @@ const MonacoEditorComponent = React.memo(
         </div>
       );
     }
+
+    // If we've exhausted all fallbacks and need to use the textarea
+    if (useFallbackEditor) {
+      return (
+        <div className="h-full">
+          <FallbackEditor
+            content={content}
+            language={language}
+            type={type}
+            readOnly={readOnly}
+            isGenerating={isGenerating}
+            canvasReadOnly={canvasReadOnly}
+            onChange={onChange}
+          />
+        </div>
+      );
+    }
+
+    // Add generation indicator when Monaco is forced during generation
+    const generationIndicator = isGenerating && (
+      <div className="bg-blue-50 text-blue-800 px-4 py-2 text-sm flex items-center justify-between">
+        <div className="flex items-center">
+          <div className="mr-2 w-3 h-3 bg-blue-500 rounded-full animate-pulse" />
+          {t('codeArtifact.editor.generatingContent')}
+        </div>
+      </div>
+    );
 
     // Create editor props with the onError handler
     const editorProps = {
@@ -358,7 +368,8 @@ const MonacoEditorComponent = React.memo(
 
     // Return the editor with container styles that prevent double scrollbars
     return (
-      <div className="h-full overflow-hidden" style={{ minHeight: '500px' }}>
+      <div className="h-full overflow-hidden">
+        {generationIndicator}
         {/* Use type assertion to work around type issues with onError prop */}
         {React.createElement(Editor, editorProps as any)}
       </div>
