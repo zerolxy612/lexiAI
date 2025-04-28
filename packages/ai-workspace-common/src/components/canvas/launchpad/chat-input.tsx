@@ -1,5 +1,5 @@
 import { AutoComplete, AutoCompleteProps, Input } from 'antd';
-import { memo, useRef, useMemo, useState, useCallback, forwardRef } from 'react';
+import { memo, useRef, useMemo, useState, useCallback, forwardRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { RefTextAreaType } from '@arco-design/web-react/es/Input/textarea';
 import { useSearchStoreShallow } from '@refly-packages/ai-workspace-common/stores/search';
@@ -44,6 +44,12 @@ const ChatInputComponent = forwardRef<HTMLDivElement, ChatInputProps>(
     const { t } = useTranslation();
     const { readonly } = useCanvasContext();
     const [isDragging, setIsDragging] = useState(false);
+    const [isMac, setIsMac] = useState(false);
+
+    useEffect(() => {
+      // Detect if user is on macOS
+      setIsMac(navigator.platform.toUpperCase().indexOf('MAC') >= 0);
+    }, []);
 
     const inputRef = useRef<RefTextAreaType>(null);
     const hasMatchedOptions = useRef(false);
@@ -109,7 +115,7 @@ const ChatInputComponent = forwardRef<HTMLDivElement, ChatInputProps>(
           return;
         }
 
-        // When the user presses Ctrl+/ key, open the skill selector
+        // When the user presses Ctrl+/ or Cmd+/ key, open the skill selector
         if (e.key === '/' && (e.ctrlKey || e.metaKey)) {
           e.preventDefault();
           setQuery(`${query}/`);
@@ -259,6 +265,29 @@ const ChatInputComponent = forwardRef<HTMLDivElement, ChatInputProps>(
       }, 0);
     }, [onFocus, readonly]);
 
+    // Get placeholder dynamically based on OS
+    const getPlaceholder = useCallback(
+      (skillName: string | null) => {
+        const defaultValue = isMac
+          ? t('commonQnA.placeholderMac', {
+              ns: 'skill',
+              defaultValue: t('commonQnA.placeholder', { ns: 'skill' }),
+            })
+          : t('commonQnA.placeholder', { ns: 'skill' });
+
+        return skillName
+          ? t(`${skillName}.placeholder${isMac ? 'Mac' : ''}`, {
+              ns: 'skill',
+              defaultValue: t(`${skillName}.placeholder`, {
+                ns: 'skill',
+                defaultValue,
+              }),
+            })
+          : defaultValue;
+      },
+      [t, isMac],
+    );
+
     return (
       <div
         ref={ref}
@@ -336,14 +365,7 @@ const ChatInputComponent = forwardRef<HTMLDivElement, ChatInputProps>(
                 inputClassName,
                 readonly && 'cursor-not-allowed !text-black !bg-transparent',
               )}
-              placeholder={
-                selectedSkillName
-                  ? t(`${selectedSkillName}.placeholder`, {
-                      ns: 'skill',
-                      defaultValue: t('commonQnA.placeholder', { ns: 'skill' }),
-                    })
-                  : t('commonQnA.placeholder', { ns: 'skill' })
-              }
+              placeholder={getPlaceholder(selectedSkillName)}
               autoSize={{
                 minRows: 1,
                 maxRows: maxRows ?? 6,
@@ -372,14 +394,7 @@ const ChatInputComponent = forwardRef<HTMLDivElement, ChatInputProps>(
               inputClassName,
               readonly && 'cursor-not-allowed !text-black !bg-transparent',
             )}
-            placeholder={
-              selectedSkillName
-                ? t(`${selectedSkillName}.placeholder`, {
-                    ns: 'skill',
-                    defaultValue: t('commonQnA.placeholder', { ns: 'skill' }),
-                  })
-                : t('commonQnA.placeholder', { ns: 'skill' })
-            }
+            placeholder={getPlaceholder(selectedSkillName)}
             autoSize={{
               minRows: 1,
               maxRows: maxRows ?? 6,

@@ -98,7 +98,9 @@ export const useAddNode = () => {
       );
       if (existingNode) {
         if (existingNode.type !== 'skillResponse') {
-          message.warning(t('canvas.action.nodeAlreadyExists', { type: t(`common.${node.type}`) }));
+          message.warning(
+            t('canvas.action.nodeAlreadyExists', { type: t(`canvas.nodeTypes.${node.type}`) }),
+          );
         }
         setSelectedNode(existingNode);
         setNodeCenter(existingNode.id);

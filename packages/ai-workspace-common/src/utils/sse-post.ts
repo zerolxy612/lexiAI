@@ -234,32 +234,33 @@ export const ssePost = async ({
 
         bufferStr += decoder.decode(value, { stream: true });
         const lines = bufferStr.split('\n');
+        let skillEvent: SkillEvent;
 
         try {
           for (const message of lines ?? []) {
             if (message.startsWith('data: ')) {
               try {
-                const skillEvent = JSON.parse(message.substring(6)) as SkillEvent;
+                skillEvent = JSON.parse(message.substring(6)) as SkillEvent;
                 batchedEvents.push(skillEvent);
-
-                // Prioritize critical events
-                if (skillEvent?.event === 'error' || skillEvent?.event === 'end') {
-                  // Process immediately for critical events
-                  if (!batchTimer && !processingBatch) {
-                    scheduleBatchProcessing();
-                  }
-                } else if (batchedEvents.length >= BATCH_SIZE) {
-                  // Process when batch is full
-                  scheduleBatchProcessing();
-                } else if (batchedEvents.length === 1) {
-                  // Start the batch timer if this is the first event in a new batch
-                  scheduleBatchProcessing();
-                }
               } catch (err) {
                 console.log('Parse error:', {
                   message: message.substring(6),
                   error: err,
                 });
+              }
+
+              // Prioritize critical events
+              if (skillEvent?.event === 'error' || skillEvent?.event === 'end') {
+                // Process immediately for critical events
+                if (!batchTimer && !processingBatch) {
+                  scheduleBatchProcessing();
+                }
+              } else if (batchedEvents.length >= BATCH_SIZE) {
+                // Process when batch is full
+                scheduleBatchProcessing();
+              } else if (batchedEvents.length === 1) {
+                // Start the batch timer if this is the first event in a new batch
+                scheduleBatchProcessing();
               }
             }
           }
