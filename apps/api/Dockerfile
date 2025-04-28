@@ -2,6 +2,7 @@
 FROM node:20-alpine@sha256:b5b9467fe7b33aad47f1ec3f6e0646a658f85f05c18d4243024212a91f3b7554 AS builder
 WORKDIR /app
 COPY . .
+ENV CYPRESS_INSTALL_BINARY=0
 RUN npm install -g pnpm
 RUN pnpm install
 RUN pnpm build:api
