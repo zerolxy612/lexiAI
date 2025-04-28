@@ -8,6 +8,7 @@ import {
   ListProviderItemsData,
   ListProvidersData,
   LLMModelConfig,
+  ModelTier,
   ProviderCategory,
   ProviderItemOption,
   UpsertProviderItemRequest,
@@ -654,6 +655,7 @@ export class ProviderService {
         .map((item) => ({
           name: item.name,
           category: item.category as ProviderCategory,
+          tier: item.tier as ModelTier,
           config: JSON.parse(item.config || '{}'),
         }));
     }
