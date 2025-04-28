@@ -239,9 +239,12 @@ export const ModelFormModal = memo(
     const handleCreateProviderSuccess = useCallback((provider: Provider) => {
       refetch();
       if (provider?.enabled) {
+        resetFormExcludeField(['providerId']);
         form.setFieldsValue({
           providerId: provider.providerId,
+          enabled: true,
         });
+        setSelectedProviderId(provider.providerId);
       }
     }, []);
 
@@ -277,14 +280,12 @@ export const ModelFormModal = memo(
     }, [selectedProviderId, providerOptions]);
 
     if (!selectedProviderId && providerOptions?.[0]?.value) {
-      console.log('setkkkkkk', providerOptions?.[0]?.value);
       setSelectedProviderId(providerOptions?.[0]?.value);
       form.setFieldsValue({ providerId: providerOptions?.[0]?.value });
     }
 
     const resetFormExcludeField = (fields: string[]) => {
       const values = form.getFieldsValue();
-      console.log('values', values);
       form.resetFields();
       for (const field of fields) {
         form.setFieldsValue({ [field]: values[field] });
@@ -297,19 +298,13 @@ export const ModelFormModal = memo(
         form.setFieldsValue({ enabled: true });
         const provider = providerOptions.find((p) => p.value === value);
         setSelectedProviderId(provider?.value);
-
-        // Only fetch if not in cache
-        if (!getCachedOptions(value)) {
-          refetchProviderItemOptions();
-        }
       },
-      [providerOptions, form, refetchProviderItemOptions, getCachedOptions],
+      [providerOptions, form],
     );
 
     // Handle model ID selection
     const handleModelIdChange = useCallback(
-      (value: string, option: any) => {
-        console.log('option', value, option);
+      (_value: string, option: any) => {
         resetFormExcludeField(['providerId', 'modelId']);
         form.setFieldsValue({ name: option.name, enabled: true });
       },
@@ -387,7 +382,6 @@ export const ModelFormModal = memo(
             refetchProviderItemOptions();
           }
         }
-        console.log('modelIdOptions', modelIdOptions);
       }
     }, [isOpen]);
 
@@ -593,6 +587,7 @@ export const ModelFormModal = memo(
                 />
               ) : (
                 <AutoComplete
+                  placeholder={t('settings.modelConfig.modelIdPlaceholder')}
                   options={modelIdOptions}
                   filterOption={true}
                   onSelect={handleModelIdChange}
