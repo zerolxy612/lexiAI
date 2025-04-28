@@ -998,8 +998,6 @@ export class SkillService {
 
     const throttledCodeArtifactUpdate = throttle(
       async ({ entityId, content }: ArtifactOutput) => {
-        this.logger.log(`Updating code artifact ${entityId}, content: ${content}`);
-
         // Extract code content and attributes from content string
         const {
           content: codeContent,
@@ -1077,10 +1075,12 @@ export class SkillService {
                     event: 'stream',
                     resultId,
                     content,
-                    reasoningContent,
+                    reasoningContent: reasoningContent || undefined,
                     step: runMeta?.step,
                     artifact: {
-                      ...artifact,
+                      entityId: artifact.entityId,
+                      type: artifact.type,
+                      title: artifact.title,
                       status: 'generating',
                     },
                   });
