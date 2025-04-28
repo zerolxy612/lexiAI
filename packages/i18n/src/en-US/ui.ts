@@ -611,7 +611,7 @@ const translations = {
       title: 'Plans and Pricing',
       subtitle: 'Embark on your AI content creation journey with Refly',
       description:
-        'Sign up and enjoy a unlimited trial with 30 standard model calls per day. No credit card required.',
+        'Sign up and enjoy a unlimited trial with 50 standard model calls per day. No credit card required.',
       limitedOffer:
         'Now 50% off forever with annual subscription! Price adjustment and unlimited plan discontinuation on March 16th, 00:00 UTC',
     },
@@ -713,7 +713,7 @@ const translations = {
     faq: {
       title: 'Frequently Asked Questions',
       Q1: 'Can Refly be used for free?',
-      A1: 'As an open-source project, for individual users, you can self-deploy the community version to use all our  features. To enable more users to quickly start and experience Refly, we provide all registered users with knowledge base quota of 10 files and daily access to 3 pro model requests and 30 standard model requests. If you wish to experience advanced models or increase the usage amount, you can upgrade to a paid subscription plan.',
+      A1: 'As an open-source project, for individual users, you can self-deploy the community version to use all our  features. To enable more users to quickly start and experience Refly, we provide all registered users with knowledge base quota of 100 files and daily access to 5 pro model requests and 50 standard model requests. If you wish to experience advanced models or increase the usage amount, you can upgrade to a paid subscription plan.',
       Q2: 'What payment methods do you support?',
       A2: 'We support bank cards, Alipay, Amazon Pay, and Cash App Pay. The supported payment methods may be subject to change at any time. Please refer to the payment methods displayed in the Stripe checkout page for the most accurate information.',
       Q3: 'How can I change or cancel my subscription plan?',
@@ -1838,6 +1838,7 @@ const translations = {
       modelConfig: 'Model Config',
       parserConfig: 'Parser Config',
       resourceParser: 'Resource Parser',
+      defaultModel: 'Default Model',
       account: 'Account',
       language: 'Language',
       subscription: 'Subscription',
@@ -2046,7 +2047,7 @@ const translations = {
       name: 'Model Name',
       namePlaceholder: 'Please enter the name of the model',
       modelId: 'Model ID',
-      modelIdPlaceholder: 'Please set the model ID',
+      modelIdPlaceholder: 'Please  the model ID',
       enable: 'Enable',
       enabled: 'Enabled',
       disable: 'Disable',
@@ -2097,6 +2098,21 @@ const translations = {
       updateConfigSuccessfully: 'Config updated successfully!',
       updateConfigFailed: 'Failed to update config. Please try again!',
       settingPlaceholder: 'Not configured',
+    },
+    defaultModel: {
+      title: 'Default Model',
+      chat: 'Default Q&A Model',
+      queryAnalysis: 'Question Analysis & Context Processing',
+      titleGeneration: 'Smart Title Generator',
+      noModel: 'Not Set',
+      updateSuccessfully: 'Update successfully!',
+      updateFailed: 'Update failed, please try again!',
+      description: {
+        chat: "We'll use this model to answer your questions when you don't specify a particular one.",
+        queryAnalysis:
+          'Helps understand your questions better and optimizes the input context. (Choose a fast and economical model for efficiency.)',
+        titleGeneration: 'Creates suitable titles for your documents or canvases.',
+      },
     },
   },
   contentDetail: {

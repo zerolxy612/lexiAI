@@ -12,6 +12,7 @@ import { Subscription } from '@refly-packages/ai-workspace-common/components/set
 import { ModelProviders } from '@refly-packages/ai-workspace-common/components/settings/model-providers';
 import { ModelConfig } from '@refly-packages/ai-workspace-common/components/settings/model-config';
 import { ParserConfig } from '@refly-packages/ai-workspace-common/components/settings/parser-config';
+import { DefaultModel } from '@refly-packages/ai-workspace-common/components/settings/default-model';
 
 import { RiAccountBoxLine } from 'react-icons/ri';
 import { HiOutlineLanguage } from 'react-icons/hi2';
@@ -24,6 +25,8 @@ import {
   IconWorldConfig,
   IconCloud,
 } from '@refly-packages/ai-workspace-common/components/common/icon';
+import { GrCube } from 'react-icons/gr';
+
 import { subscriptionEnabled } from '@refly-packages/ai-workspace-common/utils/env';
 import { useEffect } from 'react';
 
@@ -67,6 +70,14 @@ export const SettingModal = (props: SettingModalProps) => {
       icon: <IconWorldConfig style={iconStyle} />,
       children: (
         <ParserConfig visible={settingsModalActiveTab === SettingsModalActiveTab.ParserConfig} />
+      ),
+    },
+    {
+      key: 'defaultModel',
+      label: t('settings.tabs.defaultModel'),
+      icon: <GrCube style={iconStyle} />,
+      children: (
+        <DefaultModel visible={settingsModalActiveTab === SettingsModalActiveTab.DefaultModel} />
       ),
     },
     ...(subscriptionEnabled

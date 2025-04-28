@@ -395,7 +395,7 @@ const translations = {
     pricing: {
       title: '计划与定价',
       subtitle: '踏上您的 AI 内容创作之旅',
-      description: '注册并体验每天 30 次标准模型调用的无限期试用套餐。无需绑定信用卡。',
+      description: '注册并体验每天 50 次标准模型调用的无限期试用套餐。无需绑定信用卡。',
       limitedOffer: '现在订阅年度计划永久五折！3月16日上午8点（北京时间）调整价格并取消无限套餐',
     },
     footer: {
@@ -489,7 +489,7 @@ const translations = {
     faq: {
       title: '常见问题',
       Q1: 'Refly 可以免费使用吗？',
-      A1: 'Refly 作为开源项目，对于个人用户，您可以通过自行部署社区版使用其所有功能。为了更多用户快速上手体验 Refly，我们为所有注册用户提供 10 个知识库文件存储额度，以及每天3次高级模型调用和30次基础模型调用。如果您需要体验进阶模型或扩大用量，可升级付费订阅套餐。',
+      A1: 'Refly 作为开源项目，对于个人用户，您可以通过自行部署社区版使用其所有功能。为了更多用户快速上手体验 Refly，我们为所有注册用户提供 100 个知识库文件存储额度，以及每天 5 次高级模型调用和 50 次基础模型调用。如果您需要体验进阶模型或扩大用量，可升级付费订阅套餐。',
       Q2: '你们支持哪些付款方式？',
       A2: '我们支持银行卡、支付宝、Amazon Pay 和 Cash App Pay。支持的付款方式可能随时有变，请以 Stripe 收银台显示的付款方式为准。',
       Q3: '如何更改或取消订阅方案？',
@@ -1631,6 +1631,7 @@ const translations = {
       modelConfig: '模型配置',
       parserConfig: '解析配置',
       resourceParser: '资源解析',
+      defaultModel: '默认模型',
       account: '账号',
       language: '语言',
       subscription: '订阅',
@@ -1886,6 +1887,21 @@ const translations = {
       updateConfigSuccessfully: '配置更新成功！',
       updateConfigFailed: '配置更新失败，请重试！',
       settingPlaceholder: ' 未配置',
+    },
+    defaultModel: {
+      title: '默认模型',
+      chat: '默认问答模型',
+      queryAnalysis: '问题分析与上下文处理',
+      titleGeneration: '智能标题生成',
+      noModel: '未设置',
+      updateSuccessfully: '更新成功！',
+      updateFailed: '更新失败，请重试！',
+      description: {
+        chat: '当您没有指定具体模型时，我们将用这个模型为您解答问题。',
+        queryAnalysis:
+          '帮助更好地理解您的问题，同时优化处理输入的上下文内容（推荐使用处理速度快且经济的模型）。',
+        titleGeneration: '为文档或画布自动生成合适的标题。',
+      },
     },
   },
   contentDetail: {
