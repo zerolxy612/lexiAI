@@ -210,11 +210,6 @@ export const useInvokeAction = () => {
       return;
     }
 
-    // Handle code artifact content if this is a code artifact stream
-    if (artifact) {
-      onSkillStreamArtifact(resultId, artifact, content);
-    }
-
     // Setup throttling state if not exists
     if (!streamUpdateThrottleRef.current[resultId]) {
       streamUpdateThrottleRef.current[resultId] = {
@@ -258,6 +253,11 @@ export const useInvokeAction = () => {
         status: 'executing' as const,
         steps: getUpdatedSteps(result.steps ?? [], updatedStep),
       };
+
+      // Handle code artifact content if this is a code artifact stream
+      if (artifact) {
+        onSkillStreamArtifact(resultId, artifact, updatedStep.content);
+      }
 
       onUpdateResult(resultId, updatedResult, {
         ...skillEvent,
