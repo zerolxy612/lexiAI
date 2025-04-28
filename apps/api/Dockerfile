@@ -9,9 +9,11 @@ RUN rm -rf node_modules && \
     find . -type d -name node_modules -exec rm -rf {} + 2>/dev/null || true
 RUN pnpm install --prod --ignore-scripts
 
+# wkhtmltopdf stage
+FROM surnet/alpine-wkhtmltopdf:3.20.3-0.12.6-small AS wkhtmltopdf
+
 # Production stage
-FROM node:20-alpine@sha256:b5b9467fe7b33aad47f1ec3f6e0646a658f85f05c18d4243024212a91f3b7554
-FROM surnet/alpine-wkhtmltopdf:3.20.3-0.12.6-small as wkhtmltopdf
+FROM node:20-alpine@sha256:b5b9467fe7b33aad47f1ec3f6e0646a658f85f05c18d4243024212a91f3b7554 AS production
 WORKDIR /app
 RUN apk add --no-cache \
     curl \
@@ -28,7 +30,7 @@ RUN apk add --no-cache \
     ttf-droid \
     ttf-freefont \
     ttf-liberation
-# Copy wkhtmltopdf files from docker-wkhtmltopdf image
+# Copy wkhtmltopdf files from wkhtmltopdf stage
 COPY --from=wkhtmltopdf /bin/wkhtmltopdf /bin/wkhtmltopdf
 
 # Install pandoc
