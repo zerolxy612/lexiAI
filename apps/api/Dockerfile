@@ -30,7 +30,17 @@ RUN apk add --no-cache \
     ttf-dejavu \
     ttf-droid \
     ttf-freefont \
-    ttf-liberation
+    ttf-liberation \
+    # more fonts
+    && apk add --no-cache --virtual .build-deps \
+    msttcorefonts-installer \
+    # Install microsoft fonts
+    && update-ms-fonts \
+    && fc-cache -f \
+    # Clean up when done
+    && rm -rf /tmp/* \
+    && apk del .build-deps
+
 # Copy wkhtmltopdf files from wkhtmltopdf stage
 COPY --from=wkhtmltopdf /bin/wkhtmltopdf /bin/wkhtmltopdf
 
