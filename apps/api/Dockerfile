@@ -27,19 +27,14 @@ RUN apk add --no-cache \
     ca-certificates \
     fontconfig \
     freetype \
-    ttf-dejavu \
-    ttf-droid \
-    ttf-freefont \
-    ttf-liberation \
-    # more fonts
-    && apk add --no-cache --virtual .build-deps \
-    msttcorefonts-installer \
-    # Install microsoft fonts
-    && update-ms-fonts \
-    && fc-cache -f \
-    # Clean up when done
-    && rm -rf /tmp/* \
-    && apk del .build-deps
+    font-terminus \
+    font-inconsolata \
+    font-dejavu \
+    font-noto \
+    font-noto-cjk \
+    font-awesome \
+    font-noto-extra \
+    && fc-cache -f
 
 # Copy wkhtmltopdf files from wkhtmltopdf stage
 COPY --from=wkhtmltopdf /bin/wkhtmltopdf /bin/wkhtmltopdf
