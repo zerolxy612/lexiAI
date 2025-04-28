@@ -11,8 +11,8 @@ import { GraphState } from '../scheduler/types';
 import { prepareContext } from '../scheduler/utils/context';
 import { buildFinalRequestMessages } from '../scheduler/utils/message';
 import { processQuery } from '../scheduler/utils/queryProcessor';
-import { MCPAssistant, Message, MessageRole, ChunkCallbackData } from '../mcp/core/MCPAssistant';
-import { MCPServer, MCPTool } from '../mcp/core/types';
+import { ChunkCallbackData, MCPServer, MCPTool, Message, MessageRole } from '../mcp/core/types';
+import { MCPAssistant } from '../mcp/core/MCPAssistant';
 
 /**
  * Extended state for MCP Connector skill

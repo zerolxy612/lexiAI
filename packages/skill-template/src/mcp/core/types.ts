@@ -1,3 +1,5 @@
+import { McpService } from './MCPService';
+
 export type MCPArgType = 'string' | 'list' | 'number';
 export type MCPEnvType = 'string' | 'number';
 export type MCPArgParameter = { [key: string]: MCPArgType };
@@ -80,13 +82,6 @@ export interface MCPConfig {
   servers: MCPServer[];
 }
 
-export interface MCPToolResponse {
-  id: string; // tool call id, it should be unique
-  tool: MCPTool; // tool info
-  status: string; // 'invoking' | 'done'
-  response?: any;
-}
-
 export interface MCPToolResultContent {
   type: 'text' | 'image' | 'audio' | 'resource';
   text?: string;
@@ -127,4 +122,80 @@ export interface QuickPhrase {
   createdAt: number;
   updatedAt: number;
   order?: number;
+}
+
+/**
+ * Assistant message type
+ */
+export enum MessageRole {
+  SYSTEM = 'system',
+  USER = 'user',
+  ASSISTANT = 'assistant',
+}
+
+/**
+ * Assistant message interface
+ */
+export interface Message {
+  /** Message role */
+  role: MessageRole;
+  /** Message content */
+  content: string;
+}
+
+/**
+ * Tool call extraction result
+ */
+export interface ToolCallExtraction {
+  /** Tool name */
+  name: string;
+  /** Tool arguments */
+  arguments: Record<string, any>;
+  /** Raw extraction text */
+  rawText: string;
+}
+
+/**
+ * Tool response status
+ */
+export type ToolResponseStatus = 'pending' | 'invoking' | 'done' | 'error';
+
+/**
+ * Tool response
+ */
+export interface MCPToolResponse {
+  /** Response ID */
+  id: string;
+  /** Tool */
+  tool: MCPTool;
+  /** Response status */
+  status: ToolResponseStatus;
+  /** Tool call response */
+  response?: MCPCallToolResponse;
+}
+
+/**
+ * Callback data
+ */
+export interface ChunkCallbackData {
+  /** Text content */
+  text?: string;
+  /** Tool response */
+  mcpToolResponse?: MCPToolResponse[];
+}
+
+/**
+ * MCP assistant options
+ */
+export interface MCPAssistantOptions {
+  /** Whether to auto-inject tools */
+  autoInjectTools?: boolean;
+  /** Custom system prompt */
+  customSystemPrompt?: string;
+  /** Large model provider function */
+  modelProvider: (messages: Message[]) => Promise<string>;
+  /** Progress callback function */
+  onChunk?: (data: ChunkCallbackData) => void;
+  /** MCP client instance (optional) */
+  client?: McpService;
 }
