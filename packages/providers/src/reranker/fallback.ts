@@ -16,15 +16,13 @@ export class FallbackReranker extends BaseReranker {
    * @returns Reranked search results with simple scoring
    */
   async rerank(
-    query: string,
+    _query: string,
     results: SearchResult[],
     options?: {
       topN?: number;
       relevanceThreshold?: number;
     },
   ): Promise<SearchResult[]> {
-    this.logger.log(`Using fallback reranker for query: ${query}`);
-
     // Apply the fallback ranking strategy from base class
     const rerankedResults = this.defaultFallback(results);
 

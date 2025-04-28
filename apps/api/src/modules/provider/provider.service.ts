@@ -4,6 +4,7 @@ import {
   BatchUpsertProviderItemsRequest,
   DeleteProviderItemRequest,
   DeleteProviderRequest,
+  EmbeddingModelConfig,
   ListProviderItemOptionsData,
   ListProviderItemsData,
   ListProvidersData,
@@ -11,6 +12,7 @@ import {
   ModelTier,
   ProviderCategory,
   ProviderItemOption,
+  RerankerModelConfig,
   UpsertProviderItemRequest,
   UpsertProviderRequest,
   User,
@@ -22,6 +24,13 @@ import { ProviderNotFoundError, ProviderItemNotFoundError, ParamsError } from '@
 import { SingleFlightCache } from '@/utils/cache';
 import { EncryptionService } from '@/modules/common/encryption.service';
 import pLimit from 'p-limit';
+import {
+  getEmbeddings,
+  Embeddings,
+  FallbackReranker,
+  getReranker,
+  getChatModel,
+} from '@refly/providers';
 
 interface GlobalProviderConfig {
   providers: Provider[];
@@ -330,7 +339,7 @@ export class ProviderService {
     });
   }
 
-  async findProviderItemsByCategory(user: User, category: ProviderCategory) {
+  private async findProviderItemsByCategory(user: User, category: ProviderCategory) {
     // Prioritize user configured provider item
     const items = await this.prisma.providerItem.findMany({
       where: { uid: user.uid, category, deletedAt: null },
@@ -363,6 +372,102 @@ export class ProviderService {
       if (config.modelId === modelId) {
         return item;
       }
+    }
+
+    return null;
+  }
+
+  async prepareChatModel(user: User, modelId: string) {
+    const item = await this.findLLMProviderItemByModelID(user, modelId);
+    if (!item) {
+      throw new Error('No chat model configured');
+    }
+
+    const { provider, config } = item;
+    const chatConfig: LLMModelConfig = JSON.parse(config);
+
+    return getChatModel(provider, chatConfig, this.logger);
+  }
+
+  /**
+   * Prepare embeddings to use according to provider configuration
+   * @param user The user to prepare embeddings for
+   * @returns The embeddings
+   */
+  async prepareEmbeddings(user: User): Promise<Embeddings> {
+    const providerItems = await this.findProviderItemsByCategory(user, 'embedding');
+    if (!providerItems?.length) {
+      throw new Error('No embedding provider configured');
+    }
+
+    const providerItem = providerItems[0];
+    const { provider, config } = providerItem;
+    const embeddingConfig: EmbeddingModelConfig = JSON.parse(config);
+
+    return getEmbeddings(provider, embeddingConfig);
+  }
+
+  /**
+   * Prepare reranker to use according to provider configuration
+   * @param user The user to prepare reranker for
+   * @returns The reranker
+   */
+  async prepareReranker(user: User) {
+    const providerItems = await this.findProviderItemsByCategory(user, 'reranker');
+
+    // Rerankers are optional, so return null if no provider item is found
+    if (!providerItems?.length) {
+      return new FallbackReranker();
+    }
+
+    const providerItem = providerItems[0];
+    const { provider, config } = providerItem;
+    const rerankerConfig: RerankerModelConfig = JSON.parse(config);
+
+    return getReranker(provider, rerankerConfig);
+  }
+
+  async findDefaultProviderItem(
+    user: User,
+    scene: 'chat' | 'titleGeneration' | 'queryAnalysis',
+  ): Promise<ProviderItem> {
+    const { preferences } = await this.prisma.user.findUnique({
+      where: { uid: user.uid },
+      select: {
+        preferences: true,
+      },
+    });
+
+    const userPreferences: UserPreferences = JSON.parse(preferences || '{}');
+    const { defaultModel } = userPreferences;
+
+    let itemId: string | null = null;
+    if (scene === 'chat' && defaultModel?.chat) {
+      itemId = defaultModel.chat.itemId;
+    }
+    if (scene === 'titleGeneration' && defaultModel?.titleGeneration) {
+      itemId = defaultModel.titleGeneration.itemId;
+    }
+    if (scene === 'queryAnalysis' && defaultModel?.queryAnalysis) {
+      itemId = defaultModel.queryAnalysis.itemId;
+    }
+
+    if (itemId) {
+      const providerItem = await this.prisma.providerItem.findUnique({
+        where: { itemId, uid: user.uid, deletedAt: null },
+      });
+      if (providerItem) {
+        return providerItem;
+      }
+    }
+
+    // Fallback to the first available item
+    this.logger.log(
+      `Default provider item for scene ${scene} not found, fallback to the first available model`,
+    );
+    const availableItems = await this.findProviderItemsByCategory(user, 'llm');
+    if (availableItems.length > 0) {
+      return availableItems[0];
     }
 
     return null;

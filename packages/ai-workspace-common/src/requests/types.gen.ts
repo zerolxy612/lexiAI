@@ -1693,6 +1693,24 @@ export type ProviderConfig = {
 };
 
 /**
+ * Default model config
+ */
+export type DefaultModelConfig = {
+  /**
+   * Default chat model to use
+   */
+  chat?: ProviderItem;
+  /**
+   * Query analysis and context processing model
+   */
+  queryAnalysis?: ProviderItem;
+  /**
+   * Title generation model for canvas and documents
+   */
+  titleGeneration?: ProviderItem;
+};
+
+/**
  * User preferences
  */
 export type UserPreferences = {
@@ -1716,6 +1734,10 @@ export type UserPreferences = {
    * PDF parsing config
    */
   pdfParsing?: ProviderConfig;
+  /**
+   * Default model config
+   */
+  defaultModel?: DefaultModelConfig;
 };
 
 /**

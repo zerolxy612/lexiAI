@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 import { SearchResult } from '@refly/openapi-schema';
 import { BaseReranker } from './base';
 
@@ -15,7 +14,6 @@ interface JinaRerankerResponse {
 /**
  * Jina-specific implementation of the reranker
  */
-@Injectable()
 export class JinaReranker extends BaseReranker {
   private readonly apiEndpoint = 'https://api.jina.ai/v1/rerank';
 
@@ -70,7 +68,6 @@ export class JinaReranker extends BaseReranker {
       }
 
       const data: JinaRerankerResponse = await res.json();
-      this.logger.debug(`Jina reranker results: ${JSON.stringify(data)}`);
 
       // Process results and filter by relevance threshold
       return data.results
@@ -83,7 +80,7 @@ export class JinaReranker extends BaseReranker {
           } as SearchResult;
         });
     } catch (e) {
-      this.logger.error(`Reranker failed, fallback to default: ${e.stack}`);
+      console.error(`Reranker failed, fallback to default: ${e.stack}`);
       // Use the fallback from the base class
       return this.defaultFallback(results);
     }

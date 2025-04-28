@@ -4169,12 +4169,24 @@ components:
         providerKey:
           type: string
           description: Provider key
+    DefaultModelConfig:
+      type: object
+      description: Default model config
+      properties:
+        chat:
+          description: Default chat model to use
+          $ref: '#/components/schemas/ProviderItem'
+        queryAnalysis:
+          description: Query analysis and context processing model
+          $ref: '#/components/schemas/ProviderItem'
+        titleGeneration:
+          description: Title generation model for canvas and documents
+          $ref: '#/components/schemas/ProviderItem'
     UserPreferences:
       type: object
       description: User preferences
       properties:
         operationMode:
-          type: string
           description: Operation mode
           $ref: '#/components/schemas/OperationMode'
         disableHoverCard:
@@ -4182,17 +4194,17 @@ components:
           description: Whether to disable hover tutorial
           default: false
         webSearch:
-          type: object
           description: Web search config
           $ref: '#/components/schemas/ProviderConfig'
         urlParsing:
-          type: object
           description: URL parsing config
           $ref: '#/components/schemas/ProviderConfig'
         pdfParsing:
-          type: object
           description: PDF parsing config
           $ref: '#/components/schemas/ProviderConfig'
+        defaultModel:
+          description: Default model config
+          $ref: '#/components/schemas/DefaultModelConfig'
     OnboardingStatus:
       type: string
       description: Onboarding status

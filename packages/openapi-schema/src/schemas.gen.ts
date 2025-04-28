@@ -2154,12 +2154,30 @@ export const ProviderConfigSchema = {
   },
 } as const;
 
+export const DefaultModelConfigSchema = {
+  type: 'object',
+  description: 'Default model config',
+  properties: {
+    chat: {
+      description: 'Default chat model to use',
+      $ref: '#/components/schemas/ProviderItem',
+    },
+    queryAnalysis: {
+      description: 'Query analysis and context processing model',
+      $ref: '#/components/schemas/ProviderItem',
+    },
+    titleGeneration: {
+      description: 'Title generation model for canvas and documents',
+      $ref: '#/components/schemas/ProviderItem',
+    },
+  },
+} as const;
+
 export const UserPreferencesSchema = {
   type: 'object',
   description: 'User preferences',
   properties: {
     operationMode: {
-      type: 'string',
       description: 'Operation mode',
       $ref: '#/components/schemas/OperationMode',
     },
@@ -2169,19 +2187,20 @@ export const UserPreferencesSchema = {
       default: false,
     },
     webSearch: {
-      type: 'object',
       description: 'Web search config',
       $ref: '#/components/schemas/ProviderConfig',
     },
     urlParsing: {
-      type: 'object',
       description: 'URL parsing config',
       $ref: '#/components/schemas/ProviderConfig',
     },
     pdfParsing: {
-      type: 'object',
       description: 'PDF parsing config',
       $ref: '#/components/schemas/ProviderConfig',
+    },
+    defaultModel: {
+      description: 'Default model config',
+      $ref: '#/components/schemas/DefaultModelConfig',
     },
   },
 } as const;

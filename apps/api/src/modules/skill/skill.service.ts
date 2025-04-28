@@ -421,8 +421,8 @@ export class SkillService {
     param.input ||= { query: '' };
     param.skillName ||= 'commonQnA';
 
-    const defaultModel = await this.subscription.getDefaultModel();
-    param.modelName ||= defaultModel?.name;
+    const defaultModel = await this.providerService.findDefaultProviderItem(user, 'chat');
+    param.modelItemId ||= defaultModel?.itemId;
 
     const modelItemId = param.modelItemId;
     const providerItem = await this.providerService.findProviderItemById(user, modelItemId);
@@ -801,7 +801,7 @@ export class SkillService {
 
     const { resultId, version } = data.result;
 
-    const defaultModel = await this.subscription.getDefaultModel();
+    const defaultModel = await this.providerService.findDefaultProviderItem(user, 'chat');
     this.skillEngine.setOptions({ defaultModel: defaultModel?.name });
 
     try {

@@ -59,6 +59,7 @@
     "@qdrant/js-client-rest": "^1.9.0",
     "@refly/errors": "workspace:*",
     "@refly/openapi-schema": "workspace:*",
+    "@refly/providers": "workspace:*",
     "@refly/skill-template": "workspace:*",
     "@refly/utils": "workspace:*",
     "@sentry/cli": "^2.31.2",

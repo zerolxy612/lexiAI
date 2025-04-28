@@ -1,22 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Document, DocumentInterface } from '@langchain/core/documents';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
-import { Embeddings } from '@langchain/core/embeddings';
-import { OpenAIEmbeddings } from '@langchain/openai';
-import { FireworksEmbeddings } from '@langchain/community/embeddings/fireworks';
 import { MemoryVectorStore } from 'langchain/vectorstores/memory';
 import { cleanMarkdownForIngest } from '@refly/utils';
 import * as avro from 'avsc';
-
-import { EmbeddingModelConfig, SearchResult, User } from '@refly/openapi-schema';
+import { SearchResult, User } from '@refly/openapi-schema';
 import { HybridSearchParam, ContentPayload, DocumentPayload } from './rag.dto';
 import { QdrantService } from '../common/qdrant.service';
 import { Condition, PointStruct } from '../common/qdrant.dto';
 import { genResourceUuid } from '../../utils';
-import { JinaEmbeddings } from '../../utils/embeddings/jina';
 import { ProviderService } from '@/modules/provider/provider.service';
-import { JinaReranker, RerankerConfig } from '@/utils/reranker';
-import { FallbackReranker } from '@/utils/reranker/fallback';
 
 // Define Avro schema for vector points (must match the one used for serialization)
 const avroSchema = avro.Type.forSchema({
@@ -59,76 +52,6 @@ export class RAGService {
     });
   }
 
-  /**
-   * Prepare embeddings to use according to provider configuration
-   * @param user The user to prepare embeddings for
-   * @returns The embeddings
-   */
-  async prepareEmbeddings(user: User): Promise<Embeddings> {
-    const providerItems = await this.providerService.findProviderItemsByCategory(user, 'embedding');
-    if (!providerItems?.length) {
-      throw new Error('No embedding provider configured');
-    }
-
-    const providerItem = providerItems[0];
-    const { provider, config } = providerItem;
-    const { providerKey } = provider;
-    const embeddingConfig: EmbeddingModelConfig = JSON.parse(config);
-
-    switch (providerKey) {
-      case 'fireworks':
-        return new FireworksEmbeddings({
-          model: embeddingConfig.modelId,
-          batchSize: embeddingConfig.batchSize,
-          maxRetries: 3,
-          apiKey: provider.apiKey,
-        });
-      case 'openai':
-        return new OpenAIEmbeddings({
-          model: embeddingConfig.modelId,
-          batchSize: embeddingConfig.batchSize,
-          dimensions: embeddingConfig.dimensions,
-          apiKey: provider.apiKey,
-        });
-      case 'jina':
-        return new JinaEmbeddings({
-          model: embeddingConfig.modelId,
-          batchSize: embeddingConfig.batchSize,
-          dimensions: embeddingConfig.dimensions,
-          apiKey: provider.apiKey,
-          maxRetries: 3,
-        });
-      default:
-        throw new Error(`Unsupported embeddings provider: ${provider.providerKey}`);
-    }
-  }
-
-  /**
-   * Prepare reranker to use according to provider configuration
-   * @param user The user to prepare reranker for
-   * @returns The reranker
-   */
-  async prepareReranker(user: User) {
-    const providerItems = await this.providerService.findProviderItemsByCategory(user, 'reranker');
-
-    // Rerankers are optional, so return null if no provider item is found
-    if (!providerItems?.length) {
-      return new FallbackReranker();
-    }
-
-    const providerItem = providerItems[0];
-    const { provider, config } = providerItem;
-    const { providerKey } = provider;
-    const rerankerConfig: RerankerConfig = JSON.parse(config);
-
-    switch (providerKey) {
-      case 'jina':
-        return new JinaReranker(rerankerConfig);
-      default:
-        throw new Error(`Unsupported reranker provider: ${provider.providerKey}`);
-    }
-  }
-
   async chunkText(text: string) {
     return await this.splitter.splitText(cleanMarkdownForIngest(text));
   }
@@ -153,7 +76,7 @@ export class RAGService {
     }
 
     // Create a temporary MemoryVectorStore for this operation
-    const embeddings = await this.prepareEmbeddings(user);
+    const embeddings = await this.providerService.prepareEmbeddings(user);
     const tempMemoryVectorStore = new MemoryVectorStore(embeddings);
 
     // Prepare the document
@@ -291,7 +214,7 @@ export class RAGService {
 
     // Compute embeddings only for new or modified chunks
     if (chunksNeedingEmbeddings.length > 0) {
-      const embeddings = await this.prepareEmbeddings(user);
+      const embeddings = await this.providerService.prepareEmbeddings(user);
       const vectors = await embeddings.embedDocuments(chunksNeedingEmbeddings);
 
       // Create points for chunks with new embeddings
@@ -410,7 +333,7 @@ export class RAGService {
 
   async retrieve(user: User, param: HybridSearchParam): Promise<ContentPayload[]> {
     if (!param.vector) {
-      const embeddings = await this.prepareEmbeddings(user);
+      const embeddings = await this.providerService.prepareEmbeddings(user);
       param.vector = await embeddings.embedQuery(param.query);
       // param.vector = Array(256).fill(0);
     }
@@ -467,13 +390,11 @@ export class RAGService {
     options?: { topN?: number; relevanceThreshold?: number },
   ): Promise<SearchResult[]> {
     try {
-      const reranker = await this.prepareReranker(user);
+      const reranker = await this.providerService.prepareReranker(user);
       return await reranker.rerank(query, results, options);
     } catch (e) {
-      this.logger.error(`Reranker failed, fallback to default: ${e.stack}`);
-      // When falling back, maintain the original order but add default relevance scores
-      const fallbackReranker = new FallbackReranker();
-      return fallbackReranker.rerank(query, results, options);
+      this.logger.error(`Reranker failed, fallback to original results: ${e.stack}`);
+      return results;
     }
   }
 
