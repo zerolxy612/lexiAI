@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 import {
   ActionStep,
   ActionStepMeta,
@@ -31,6 +31,7 @@ import { useFindWebsite } from './use-find-website';
 import { codeArtifactEmitter } from '@refly-packages/ai-workspace-common/events/codeArtifact';
 import { useReactFlow } from '@xyflow/react';
 import { detectActualTypeFromType } from '@refly-packages/ai-workspace-common/modules/artifacts/code-runner/artifact-type-util';
+import { deletedNodesEmitter } from '@refly-packages/ai-workspace-common/events/deleted-nodes';
 
 export const useInvokeAction = () => {
   const { addNode } = useAddNode();
@@ -39,8 +40,23 @@ export const useInvokeAction = () => {
 
   const globalAbortControllerRef = { current: null as AbortController | null };
   const globalIsAbortedRef = { current: false as boolean };
+  const deletedNodeIdsRef = useRef<Set<string>>(new Set());
 
   const { refetchUsage } = useSubscriptionUsage();
+
+  useEffect(() => {
+    const handleNodeDeleted = (entityId: string) => {
+      if (entityId) {
+        deletedNodeIdsRef.current.add(entityId);
+      }
+    };
+
+    deletedNodesEmitter.on('nodeDeleted', handleNodeDeleted);
+
+    return () => {
+      deletedNodesEmitter.off('nodeDeleted', handleNodeDeleted);
+    };
+  }, []);
 
   const { createTimeoutHandler } = useActionPolling();
   const onUpdateResult = useUpdateActionResult();
@@ -144,8 +160,12 @@ export const useInvokeAction = () => {
 
       const actualType = detectActualTypeFromType(type as CodeArtifactType);
 
-      // If node doesn't exist, create it
-      if (!existingNode) {
+      const throttleState = streamUpdateThrottleRef.current[resultId];
+      if (
+        !existingNode &&
+        !throttleState?.codeArtifactCreated &&
+        !deletedNodeIdsRef.current.has(artifact.entityId)
+      ) {
         addNode(
           {
             type: artifact.type,
@@ -197,6 +217,7 @@ export const useInvokeAction = () => {
         pendingContent: string;
         pendingReasoningContent: string;
         pendingArtifact?: Artifact;
+        codeArtifactCreated?: boolean;
       }
     >
   >({});
@@ -262,6 +283,7 @@ export const useInvokeAction = () => {
         // Handle code artifact content if this is a code artifact stream
         if (throttleState.pendingArtifact) {
           onSkillStreamArtifact(resultId, throttleState.pendingArtifact, updatedStep.content);
+          throttleState.codeArtifactCreated = true;
         }
 
         onUpdateResult(resultId, updatedResult, {
@@ -405,6 +427,10 @@ export const useInvokeAction = () => {
 
   const onSkillCreateNode = (skillEvent: SkillEvent) => {
     const { node, resultId } = skillEvent;
+    if (node.data?.entityId && deletedNodeIdsRef.current.has(node.data.entityId)) {
+      return;
+    }
+
     addNode(
       {
         type: node.type,
@@ -442,7 +468,10 @@ export const useInvokeAction = () => {
     const artifacts = result.steps?.flatMap((s) => s.artifacts);
     if (artifacts?.length) {
       for (const artifact of artifacts) {
-        // Special handling for code artifacts - set activeTab to preview
+        if (deletedNodeIdsRef.current.has(artifact.entityId)) {
+          continue;
+        }
+
         if (artifact.type === 'codeArtifact') {
           setNodeDataByEntity(
             {
@@ -530,6 +559,8 @@ export const useInvokeAction = () => {
 
   const invokeAction = useCallback(
     (payload: SkillNodeMeta, target: Entity) => {
+      deletedNodeIdsRef.current = new Set();
+
       payload.resultId ||= genActionResultID();
       payload.selectedSkill ||= { name: 'commonQnA' };
 
