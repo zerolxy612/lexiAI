@@ -76,6 +76,7 @@ import {
   listModels,
   listPages,
   listProjects,
+  listProviderItemOptions,
   listProviderItems,
   listProviders,
   listResources,
@@ -469,6 +470,18 @@ export const UseListProviderItemsKeyFn = (
   clientOptions: Options<unknown, true> = {},
   queryKey?: Array<unknown>,
 ) => [useListProviderItemsKey, ...(queryKey ?? [clientOptions])];
+export type ListProviderItemOptionsDefaultResponse = Awaited<
+  ReturnType<typeof listProviderItemOptions>
+>['data'];
+export type ListProviderItemOptionsQueryResult<
+  TData = ListProviderItemOptionsDefaultResponse,
+  TError = unknown,
+> = UseQueryResult<TData, TError>;
+export const useListProviderItemOptionsKey = 'ListProviderItemOptions';
+export const UseListProviderItemOptionsKeyFn = (
+  clientOptions: Options<unknown, true>,
+  queryKey?: Array<unknown>,
+) => [useListProviderItemOptionsKey, ...(queryKey ?? [clientOptions])];
 export type ServeStaticDefaultResponse = Awaited<ReturnType<typeof serveStatic>>['data'];
 export type ServeStaticQueryResult<
   TData = ServeStaticDefaultResponse,

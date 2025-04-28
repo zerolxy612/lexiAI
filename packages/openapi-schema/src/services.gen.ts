@@ -295,6 +295,9 @@ import type {
   ListProviderItemsData,
   ListProviderItemsError,
   ListProviderItemsResponse2,
+  ListProviderItemOptionsData,
+  ListProviderItemOptionsError,
+  ListProviderItemOptionsResponse2,
   CreateProviderItemData,
   CreateProviderItemError,
   CreateProviderItemResponse,
@@ -1891,6 +1894,23 @@ export const listProviderItems = <ThrowOnError extends boolean = false>(
   >({
     ...options,
     url: '/provider/item/list',
+  });
+};
+
+/**
+ * List provider item options
+ * List all available provider item options for a given provider
+ */
+export const listProviderItemOptions = <ThrowOnError extends boolean = false>(
+  options: Options<ListProviderItemOptionsData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).get<
+    ListProviderItemOptionsResponse2,
+    ListProviderItemOptionsError,
+    ThrowOnError
+  >({
+    ...options,
+    url: '/provider/item/option/list',
   });
 };
 

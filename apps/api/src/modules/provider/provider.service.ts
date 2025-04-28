@@ -4,10 +4,12 @@ import {
   BatchUpsertProviderItemsRequest,
   DeleteProviderItemRequest,
   DeleteProviderRequest,
+  ListProviderItemOptionsData,
   ListProviderItemsData,
   ListProvidersData,
   LLMModelConfig,
   ProviderCategory,
+  ProviderItemOption,
   UpsertProviderItemRequest,
   UpsertProviderRequest,
   User,
@@ -428,6 +430,17 @@ export class ProviderService {
       throw new ProviderNotFoundError();
     }
 
+    // Validate config if provider is global
+    let finalConfig = config;
+    if (provider.isGlobal) {
+      const options = await this.listProviderItemOptions(user, { providerId, category });
+      const option = options.find((option) => option.name === name);
+      if (!option) {
+        throw new ParamsError(`Unknown provider item name: ${name}`);
+      }
+      finalConfig = option.config;
+    }
+
     const itemId = genProviderItemID();
 
     return this.prisma.providerItem.create({
@@ -439,7 +452,7 @@ export class ProviderService {
         enabled,
         order,
         uid: user.uid,
-        config: JSON.stringify(config),
+        config: JSON.stringify(finalConfig),
       },
     });
   }
@@ -612,5 +625,61 @@ export class ProviderService {
         deletedAt: new Date(),
       },
     });
+  }
+
+  async listProviderItemOptions(
+    user: User,
+    param: ListProviderItemOptionsData['query'],
+  ): Promise<ProviderItemOption[]> {
+    const { providerId, category } = param;
+
+    if (!providerId) {
+      throw new ParamsError('Provider ID is required');
+    }
+
+    const provider = await this.prisma.provider.findUnique({
+      where: { providerId, uid: user.uid, deletedAt: null },
+    });
+
+    if (!provider) {
+      throw new ProviderNotFoundError();
+    }
+
+    if (provider.isGlobal) {
+      const { items: globalItems } = await this.globalProviderCache.get();
+      return globalItems
+        .filter(
+          (item) => item.providerId === providerId && (!category || item.category === category),
+        )
+        .map((item) => ({
+          name: item.name,
+          category: item.category as ProviderCategory,
+          config: JSON.parse(item.config || '{}'),
+        }));
+    }
+
+    try {
+      const res = await fetch(`${provider.baseUrl}/models`, {
+        headers: {
+          ...(provider.apiKey ? { Authorization: `Bearer ${provider.apiKey}` } : {}),
+        },
+      });
+
+      const data = await res.json();
+
+      return data.data.map(
+        (model) =>
+          ({
+            name: model.name || model.id,
+            category,
+            config: { modelId: model.id, modelName: model.name || model.id },
+          }) as ProviderItemOption,
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Failed to list provider item options for provider ${providerId}: ${error.stack}`,
+      );
+      return [];
+    }
   }
 }

@@ -1023,11 +1023,6 @@ export class SubscriptionService implements OnModuleInit {
     this.modelListSyncedAt = new Date();
     return models;
   }
-
-  async getModelInfo(modelName: string) {
-    const modelList = await this.getModelList();
-    return modelList.find((model) => model.name === modelName);
-  }
 }
 
 const startOfDay = (date: Date) => {

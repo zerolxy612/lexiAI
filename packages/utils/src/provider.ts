@@ -35,7 +35,7 @@ export const providerInfoList: ProviderInfo[] = [
       apiKey: { presence: 'optional' },
       baseUrl: {
         presence: 'required',
-        defaultValue: 'http://localhost:11434',
+        defaultValue: 'http://localhost:11434/v1',
       },
     },
   },

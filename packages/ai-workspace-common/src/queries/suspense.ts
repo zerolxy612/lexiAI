@@ -29,6 +29,7 @@ import {
   listModels,
   listPages,
   listProjects,
+  listProviderItemOptions,
   listProviderItems,
   listProviders,
   listResources,
@@ -83,6 +84,8 @@ import {
   ListPagesError,
   ListProjectsData,
   ListProjectsError,
+  ListProviderItemOptionsData,
+  ListProviderItemOptionsError,
   ListProviderItemsData,
   ListProviderItemsError,
   ListProvidersData,
@@ -600,6 +603,23 @@ export const useListProviderItemsSuspense = <
     queryKey: Common.UseListProviderItemsKeyFn(clientOptions, queryKey),
     queryFn: () =>
       listProviderItems({ ...clientOptions }).then((response) => response.data as TData) as TData,
+    ...options,
+  });
+export const useListProviderItemOptionsSuspense = <
+  TData = Common.ListProviderItemOptionsDefaultResponse,
+  TError = ListProviderItemOptionsError,
+  TQueryKey extends Array<unknown> = unknown[],
+>(
+  clientOptions: Options<ListProviderItemOptionsData, true>,
+  queryKey?: TQueryKey,
+  options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
+) =>
+  useSuspenseQuery<TData, TError>({
+    queryKey: Common.UseListProviderItemOptionsKeyFn(clientOptions, queryKey),
+    queryFn: () =>
+      listProviderItemOptions({ ...clientOptions }).then(
+        (response) => response.data as TData,
+      ) as TData,
     ...options,
   });
 export const useServeStaticSuspense = <

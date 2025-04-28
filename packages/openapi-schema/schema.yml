@@ -2296,6 +2296,32 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ListProviderItemsResponse'
+  /provider/item/option/list:
+    get:
+      tags:
+        - provider
+      summary: List provider item options
+      description: List all available provider item options for a given provider
+      operationId: listProviderItemOptions
+      parameters:
+        - name: providerId
+          in: query
+          description: Provider ID
+          required: true
+          schema:
+            type: string
+        - name: category
+          in: query
+          description: Provider category
+          schema:
+            $ref: '#/components/schemas/ProviderCategory'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListProviderItemOptionsResponse'
   /provider/item/create:
     post:
       tags:
@@ -6414,6 +6440,23 @@ components:
         - $ref: '#/components/schemas/LLMModelConfig'
         - $ref: '#/components/schemas/EmbeddingModelConfig'
         - $ref: '#/components/schemas/RerankerModelConfig'
+    ProviderItemOption:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Provider item name
+        category:
+          description: Provider category
+          $ref: '#/components/schemas/ProviderCategory'
+        tier:
+          type: string
+          description: Provider item tier
+          $ref: '#/components/schemas/ModelTier'
+        config:
+          type: object
+          description: Provider item config
+          $ref: '#/components/schemas/ProviderItemConfig'
     ProviderItem:
       type: object
       required:
@@ -6501,6 +6544,15 @@ components:
         providerId:
           type: string
           description: Provider ID
+    ListProviderItemOptionsResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProviderItemOption'
     ListProviderItemsResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'

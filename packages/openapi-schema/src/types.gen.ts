@@ -3888,6 +3888,25 @@ export type RerankerModelConfig = {
 
 export type ProviderItemConfig = LLMModelConfig | EmbeddingModelConfig | RerankerModelConfig;
 
+export type ProviderItemOption = {
+  /**
+   * Provider item name
+   */
+  name?: string;
+  /**
+   * Provider category
+   */
+  category?: ProviderCategory;
+  /**
+   * Provider item tier
+   */
+  tier?: ModelTier;
+  /**
+   * Provider item config
+   */
+  config?: ProviderItemConfig;
+};
+
 export type ProviderItem = {
   /**
    * Provider item ID
@@ -3971,6 +3990,10 @@ export type DeleteProviderRequest = {
    * Provider ID
    */
   providerId: string;
+};
+
+export type ListProviderItemOptionsResponse = BaseResponse & {
+  data?: Array<ProviderItemOption>;
 };
 
 export type ListProviderItemsResponse = BaseResponse & {
@@ -5213,6 +5236,23 @@ export type ListProviderItemsData = {
 export type ListProviderItemsResponse2 = ListProviderItemsResponse;
 
 export type ListProviderItemsError = unknown;
+
+export type ListProviderItemOptionsData = {
+  query: {
+    /**
+     * Provider category
+     */
+    category?: ProviderCategory;
+    /**
+     * Provider ID
+     */
+    providerId: string;
+  };
+};
+
+export type ListProviderItemOptionsResponse2 = ListProviderItemOptionsResponse;
+
+export type ListProviderItemOptionsError = unknown;
 
 export type CreateProviderItemData = {
   body: UpsertProviderItemRequest;

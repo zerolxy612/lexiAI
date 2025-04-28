@@ -5549,6 +5549,30 @@ export const ProviderItemConfigSchema = {
   ],
 } as const;
 
+export const ProviderItemOptionSchema = {
+  type: 'object',
+  properties: {
+    name: {
+      type: 'string',
+      description: 'Provider item name',
+    },
+    category: {
+      description: 'Provider category',
+      $ref: '#/components/schemas/ProviderCategory',
+    },
+    tier: {
+      type: 'string',
+      description: 'Provider item tier',
+      $ref: '#/components/schemas/ModelTier',
+    },
+    config: {
+      type: 'object',
+      description: 'Provider item config',
+      $ref: '#/components/schemas/ProviderItemConfig',
+    },
+  },
+} as const;
+
 export const ProviderItemSchema = {
   type: 'object',
   required: ['itemId', 'name', 'providerId', 'category', 'enabled'],
@@ -5674,6 +5698,25 @@ export const DeleteProviderRequestSchema = {
       description: 'Provider ID',
     },
   },
+} as const;
+
+export const ListProviderItemOptionsResponseSchema = {
+  allOf: [
+    {
+      $ref: '#/components/schemas/BaseResponse',
+    },
+    {
+      type: 'object',
+      properties: {
+        data: {
+          type: 'array',
+          items: {
+            $ref: '#/components/schemas/ProviderItemOption',
+          },
+        },
+      },
+    },
+  ],
 } as const;
 
 export const ListProviderItemsResponseSchema = {

@@ -10,6 +10,7 @@ import {
   DeleteProviderItemResponse,
   DeleteProviderRequest,
   DeleteProviderResponse,
+  ListProviderItemOptionsResponse,
   ListProviderItemsResponse,
   ListProvidersResponse,
   ProviderCategory,
@@ -130,5 +131,19 @@ export class ProviderController {
   ): Promise<DeleteProviderItemResponse> {
     await this.providerService.deleteProviderItem(user, body);
     return buildSuccessResponse();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/item/option/list')
+  async listProviderItemOptions(
+    @LoginedUser() user: UserModel,
+    @Query('providerId') providerId: string,
+    @Query('category') category: ProviderCategory,
+  ): Promise<ListProviderItemOptionsResponse> {
+    const options = await this.providerService.listProviderItemOptions(user, {
+      providerId,
+      category,
+    });
+    return buildSuccessResponse(options);
   }
 }

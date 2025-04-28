@@ -29,6 +29,7 @@ import {
   listModels,
   listPages,
   listProjects,
+  listProviderItemOptions,
   listProviderItems,
   listProviders,
   listResources,
@@ -57,6 +58,7 @@ import {
   ListLabelInstancesData,
   ListPagesData,
   ListProjectsData,
+  ListProviderItemOptionsData,
   ListProviderItemsData,
   ListProvidersData,
   ListResourcesData,
@@ -329,6 +331,14 @@ export const ensureUseListProviderItemsData = (
   queryClient.ensureQueryData({
     queryKey: Common.UseListProviderItemsKeyFn(clientOptions),
     queryFn: () => listProviderItems({ ...clientOptions }).then((response) => response.data),
+  });
+export const ensureUseListProviderItemOptionsData = (
+  queryClient: QueryClient,
+  clientOptions: Options<ListProviderItemOptionsData, true>,
+) =>
+  queryClient.ensureQueryData({
+    queryKey: Common.UseListProviderItemOptionsKeyFn(clientOptions),
+    queryFn: () => listProviderItemOptions({ ...clientOptions }).then((response) => response.data),
   });
 export const ensureUseServeStaticData = (
   queryClient: QueryClient,

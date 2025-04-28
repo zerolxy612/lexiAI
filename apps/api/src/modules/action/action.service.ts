@@ -1,18 +1,19 @@
 import { ActionDetail } from '../action/action.dto';
 import { PrismaService } from '../common/prisma.service';
-import { SubscriptionService } from '../subscription/subscription.service';
 import { Injectable } from '@nestjs/common';
 import { ActionResultNotFoundError } from '@refly/errors';
 import { ActionResult } from '@/generated/client';
 import { EntityType, GetActionResultData, User } from '@refly/openapi-schema';
 import { batchReplaceRegex, genActionResultID, pick } from '@refly/utils';
 import pLimit from 'p-limit';
+import { ProviderService } from '../provider/provider.service';
+import { providerItem2ModelInfo } from '@/modules/provider/provider.dto';
 
 @Injectable()
 export class ActionService {
   constructor(
     private readonly prisma: PrismaService,
-    private subscriptionService: SubscriptionService,
+    private readonly providerService: ProviderService,
   ) {}
 
   async getActionResult(user: User, param: GetActionResultData['query']): Promise<ActionDetail> {
@@ -46,8 +47,8 @@ export class ActionService {
       return updatedResult;
     }
 
-    const modelList = await this.subscriptionService.getModelList();
-    const modelInfo = modelList.find((model) => model.name === result.modelName);
+    const item = await this.providerService.findLLMProviderItemByModelID(user, result.modelName);
+    const modelInfo = providerItem2ModelInfo(item);
 
     const steps = await this.prisma.actionStep.findMany({
       where: {
