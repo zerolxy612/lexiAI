@@ -76,14 +76,29 @@ export const useActionResultStore = create<ActionResultState>()(
       // Queue update for batching
       queueActionResultUpdate: (resultId: string, result: ActionResult) => {
         set((state) => {
-          // Add to queue
-          const updatedQueue = [...state.batchUpdateQueue, { resultId, result }];
+          // Check if there's already an update for this resultId in the queue
+          const existingUpdateIndex = state.batchUpdateQueue.findIndex(
+            (item) => item.resultId === resultId,
+          );
+
+          const updatedQueue = [...state.batchUpdateQueue];
+
+          if (existingUpdateIndex !== -1) {
+            // Replace the existing update with the new one to avoid duplicate updates
+            updatedQueue[existingUpdateIndex] = { resultId, result };
+          } else {
+            // Add to queue if no existing update
+            updatedQueue.push({ resultId, result });
+          }
 
           // Schedule processing if not already scheduled
-          if (!state.isBatchUpdateScheduled && updatedQueue.length === 1) {
-            setTimeout(() => {
-              get().processBatchedUpdates();
-            }, 50); // Batch updates with a 50ms delay
+          if (!state.isBatchUpdateScheduled && updatedQueue.length > 0) {
+            // Use requestAnimationFrame for better synchronization with browser rendering
+            window.setTimeout(() => {
+              window.requestAnimationFrame(() => {
+                get().processBatchedUpdates();
+              });
+            }, 100); // Increased batching delay for better performance
 
             return {
               ...state,
@@ -112,7 +127,15 @@ export const useActionResultStore = create<ActionResultState>()(
           // Create new result map with all batched updates
           const updatedResultMap = { ...state.resultMap };
 
+          // First group updates by resultId to ensure we only process the latest update for each result
+          const latestUpdates = new Map<string, ActionResult>();
+
           for (const { resultId, result } of state.batchUpdateQueue) {
+            latestUpdates.set(resultId, result);
+          }
+
+          // Apply all updates at once
+          for (const [resultId, result] of latestUpdates.entries()) {
             updatedResultMap[resultId] = result;
           }
 

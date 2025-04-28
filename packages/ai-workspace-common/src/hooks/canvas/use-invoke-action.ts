@@ -222,7 +222,7 @@ export const useInvokeAction = () => {
 
     const throttleState = streamUpdateThrottleRef.current[resultId];
     const now = performance.now();
-    const THROTTLE_INTERVAL = 100; // 100ms between updates
+    const THROTTLE_INTERVAL = 250; // Increased from 100ms to 250ms for less frequent updates
 
     // Accumulate content
     throttleState.pendingContent += content;
@@ -237,74 +237,87 @@ export const useInvokeAction = () => {
       throttleState.timeout = null;
     }
 
-    // If enough time has passed since last update, update immediately
-    if (now - throttleState.lastUpdate > THROTTLE_INTERVAL) {
-      const updatedStep: ActionStep = findOrCreateStep(result.steps ?? [], step);
-      updatedStep.content += throttleState.pendingContent;
+    // If enough time has passed since last update or we have a lot of content, update immediately
+    if (
+      now - throttleState.lastUpdate > THROTTLE_INTERVAL ||
+      throttleState.pendingContent.length > 1000
+    ) {
+      // Use requestAnimationFrame to align with browser's render cycle
+      requestAnimationFrame(() => {
+        const updatedStep: ActionStep = findOrCreateStep(result.steps ?? [], step);
+        updatedStep.content += throttleState.pendingContent;
 
-      if (!updatedStep.reasoningContent) {
-        updatedStep.reasoningContent = throttleState.pendingReasoningContent;
-      } else {
-        updatedStep.reasoningContent += throttleState.pendingReasoningContent;
-      }
+        if (!updatedStep.reasoningContent) {
+          updatedStep.reasoningContent = throttleState.pendingReasoningContent;
+        } else {
+          updatedStep.reasoningContent += throttleState.pendingReasoningContent;
+        }
 
-      const updatedResult = {
-        ...result,
-        status: 'executing' as const,
-        steps: getUpdatedSteps(result.steps ?? [], updatedStep),
-      };
+        const updatedResult = {
+          ...result,
+          status: 'executing' as const,
+          steps: getUpdatedSteps(result.steps ?? [], updatedStep),
+        };
 
-      // Handle code artifact content if this is a code artifact stream
-      if (artifact) {
-        onSkillStreamArtifact(resultId, artifact, updatedStep.content);
-      }
+        // Handle code artifact content if this is a code artifact stream
+        if (throttleState.pendingArtifact) {
+          onSkillStreamArtifact(resultId, throttleState.pendingArtifact, updatedStep.content);
+        }
 
-      onUpdateResult(resultId, updatedResult, {
-        ...skillEvent,
-        content: throttleState.pendingContent,
-        reasoningContent: throttleState.pendingReasoningContent,
+        onUpdateResult(resultId, updatedResult, {
+          ...skillEvent,
+          content: throttleState.pendingContent,
+          reasoningContent: throttleState.pendingReasoningContent,
+        });
+
+        // Reset accumulated content
+        throttleState.pendingContent = '';
+        throttleState.pendingReasoningContent = '';
+        throttleState.pendingArtifact = undefined;
+        throttleState.lastUpdate = now;
       });
-
-      // Reset accumulated content
-      throttleState.pendingContent = '';
-      throttleState.pendingReasoningContent = '';
-      throttleState.pendingArtifact = undefined;
-      throttleState.lastUpdate = now;
     } else {
       // Schedule update for later
       throttleState.timeout = window.setTimeout(
         () => {
-          const currentResult = useActionResultStore.getState().resultMap[resultId];
-          if (!currentResult) return;
+          requestAnimationFrame(() => {
+            const currentResult = useActionResultStore.getState().resultMap[resultId];
+            if (!currentResult) return;
 
-          const updatedStep: ActionStep = findOrCreateStep(currentResult.steps ?? [], step);
-          updatedStep.content += throttleState.pendingContent;
+            const updatedStep: ActionStep = findOrCreateStep(currentResult.steps ?? [], step);
+            updatedStep.content += throttleState.pendingContent;
 
-          if (!updatedStep.reasoningContent) {
-            updatedStep.reasoningContent = throttleState.pendingReasoningContent;
-          } else {
-            updatedStep.reasoningContent += throttleState.pendingReasoningContent;
-          }
+            if (!updatedStep.reasoningContent) {
+              updatedStep.reasoningContent = throttleState.pendingReasoningContent;
+            } else {
+              updatedStep.reasoningContent += throttleState.pendingReasoningContent;
+            }
 
-          const updatedResult = {
-            ...currentResult,
-            status: 'executing' as const,
-            steps: getUpdatedSteps(currentResult.steps ?? [], updatedStep),
-          };
+            const updatedResult = {
+              ...currentResult,
+              status: 'executing' as const,
+              steps: getUpdatedSteps(currentResult.steps ?? [], updatedStep),
+            };
 
-          onUpdateResult(resultId, updatedResult, {
-            ...skillEvent,
-            content: throttleState.pendingContent,
-            reasoningContent: throttleState.pendingReasoningContent,
-            artifact: throttleState.pendingArtifact,
+            // Handle the artifact content processing if needed
+            if (throttleState.pendingArtifact) {
+              onSkillStreamArtifact(resultId, throttleState.pendingArtifact, updatedStep.content);
+            }
+
+            onUpdateResult(resultId, updatedResult, {
+              ...skillEvent,
+              content: throttleState.pendingContent,
+              reasoningContent: throttleState.pendingReasoningContent,
+              artifact: throttleState.pendingArtifact,
+            });
+
+            // Reset state
+            throttleState.pendingContent = '';
+            throttleState.pendingReasoningContent = '';
+            throttleState.pendingArtifact = undefined;
+            throttleState.lastUpdate = performance.now();
+            throttleState.timeout = null;
           });
-
-          // Reset state
-          throttleState.pendingContent = '';
-          throttleState.pendingReasoningContent = '';
-          throttleState.pendingArtifact = undefined;
-          throttleState.lastUpdate = performance.now();
-          throttleState.timeout = null;
         },
         THROTTLE_INTERVAL - (now - throttleState.lastUpdate),
       );

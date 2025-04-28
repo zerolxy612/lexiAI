@@ -6,13 +6,13 @@ import { isDesktop, serverOrigin } from './env';
 import { scrollToBottom } from '@refly-packages/ai-workspace-common/utils/ui';
 import throttle from 'lodash.throttle';
 
-// 使用 lodash.throttle 创建节流版本的滚动函数
+// Create throttled version of scrollToBottom function
 const throttledScrollToBottom = throttle(() => {
-  // 使用 requestAnimationFrame 确保在最佳时机执行滚动
+  // Use requestAnimationFrame to ensure scrolling happens at the best time
   window.requestAnimationFrame(() => {
     scrollToBottom();
   });
-}, 300); // 每300ms最多执行一次
+}, 300); // Execute at most once every 300ms
 
 const makeSSERequest = async (
   payload: InvokeSkillRequest,
@@ -88,33 +88,35 @@ export const ssePost = async ({
     let isSkillFirstMessage = true;
     let bufferStr = '';
 
-    // Batch processing variables
-    let batchedEvents: SkillEvent[] = [];
+    // Improved batching configuration
+    const batchedEvents: SkillEvent[] = [];
     let processingBatch = false;
-    const BATCH_SIZE = 15; // Increased from 5 to 15 for better performance
-    const BATCH_INTERVAL = 150; // Increased from 100ms to 150ms to reduce update frequency
+    const BATCH_SIZE = 30; // Maximum number of events to process at once
+    const BATCH_INTERVAL = 250; // Time between batch processing in ms
     let lastProcessTime = 0;
-    const THROTTLE_TIMEOUT = 50; // Minimum time between processing batches
+    const THROTTLE_TIMEOUT = 100; // Minimum time between batch processing
 
-    // Process batched events with improved throttling
+    // Process accumulated events in batches
     const processBatch = () => {
       if (batchedEvents.length === 0 || processingBatch) return;
 
       const now = performance.now();
+      // Skip if not enough time has passed and batch isn't very large
       if (now - lastProcessTime < THROTTLE_TIMEOUT && batchedEvents.length < BATCH_SIZE * 2) {
-        return; // Skip processing if throttled and not too many events
+        return;
       }
 
       processingBatch = true;
       lastProcessTime = now;
 
-      // Process all events in the current batch
+      // Get all events to process and clear the batch
       const eventsToProcess = [...batchedEvents];
-      batchedEvents = [];
+      batchedEvents.length = 0;
 
-      // Group events by type to optimize processing
+      // Group events by type for more efficient processing
       const eventsByType: Record<string, SkillEvent[]> = {};
 
+      // Group events by type
       for (const event of eventsToProcess) {
         const eventType = event?.event || 'unknown';
         if (!eventsByType[eventType]) {
@@ -123,95 +125,102 @@ export const ssePost = async ({
         eventsByType[eventType].push(event);
       }
 
-      // Process events by type to optimize handler calls
-      if (eventsByType.start?.length) {
-        for (const event of eventsByType.start) {
+      // Use requestAnimationFrame to sync with browser rendering
+      requestAnimationFrame(() => {
+        // Handle start events
+        if (eventsByType.start?.length) {
+          const lastStartEvent = eventsByType.start[eventsByType.start.length - 1];
           if (isSkillFirstMessage) {
-            onSkillStart(event);
+            onSkillStart(lastStartEvent);
           }
         }
-      }
 
-      if (eventsByType.log?.length) {
-        for (const event of eventsByType.log) {
-          onSkillLog(event);
+        // Handle log events
+        if (eventsByType.log?.length) {
+          for (const event of eventsByType.log) {
+            onSkillLog(event);
+          }
         }
-      }
 
-      if (eventsByType.stream?.length) {
-        for (const event of eventsByType.stream) {
-          onSkillStream(event);
+        // Handle stream events - combine content when possible
+        if (eventsByType.stream?.length) {
+          // Use the last event as a template
+          const lastEvent = eventsByType.stream[eventsByType.stream.length - 1];
+          // Create a copy to avoid mutation issues
+          const combinedEvent = { ...lastEvent };
+
+          // Combine all content
+          combinedEvent.content = eventsByType.stream.map((e) => e.content || '').join('');
+
+          // Combine reasoning content
+          combinedEvent.reasoningContent = eventsByType.stream
+            .map((e) => e.reasoningContent || '')
+            .join('');
+
+          onSkillStream(combinedEvent);
         }
-      }
 
-      if (eventsByType.artifact?.length) {
-        for (const event of eventsByType.artifact) {
-          onSkillArtifact(event);
+        // Process remaining event types (less performance-critical)
+        if (eventsByType.artifact?.length) {
+          for (const event of eventsByType.artifact) {
+            onSkillArtifact(event);
+          }
         }
-      }
 
-      if (eventsByType.structured_data?.length) {
-        for (const event of eventsByType.structured_data) {
-          onSkillStructedData(event);
+        if (eventsByType.structured_data?.length) {
+          for (const event of eventsByType.structured_data) {
+            onSkillStructedData(event);
+          }
         }
-      }
 
-      if (eventsByType.create_node?.length) {
-        for (const event of eventsByType.create_node) {
-          onSkillCreateNode(event);
+        if (eventsByType.create_node?.length) {
+          for (const event of eventsByType.create_node) {
+            onSkillCreateNode(event);
+          }
         }
-      }
 
-      if (eventsByType.token_usage?.length) {
-        for (const event of eventsByType.token_usage) {
-          onSkillTokenUsage?.(event);
+        if (eventsByType.token_usage?.length) {
+          for (const event of eventsByType.token_usage) {
+            onSkillTokenUsage?.(event);
+          }
         }
-      }
 
-      if (eventsByType.end?.length) {
-        for (const event of eventsByType.end) {
-          onSkillEnd(event);
-          isSkillFirstMessage = true;
+        if (eventsByType.end?.length) {
+          for (const event of eventsByType.end) {
+            onSkillEnd(event);
+            isSkillFirstMessage = true;
+          }
         }
-      }
 
-      if (eventsByType.error?.length) {
-        for (const event of eventsByType.error) {
-          onSkillError?.(event);
+        if (eventsByType.error?.length) {
+          for (const event of eventsByType.error) {
+            onSkillError?.(event);
+          }
         }
-      }
 
-      // 使用节流版本的滚动函数，在每个批处理后调用
-      if (eventsToProcess.length > 0) {
-        throttledScrollToBottom();
-      }
+        // Scroll after processing if needed
+        if (eventsToProcess.length > 0) {
+          throttledScrollToBottom();
+        }
 
-      processingBatch = false;
+        processingBatch = false;
+      });
     };
 
-    // Use requestAnimationFrame with debouncing for smoother UI updates
+    // Schedule batch processing
     let batchTimer: number | null = null;
-    let animationFrameId: number | null = null;
 
     const scheduleBatchProcessing = () => {
-      if (batchTimer) {
-        return; // Already scheduled
-      }
+      if (batchTimer !== null) return; // Already scheduled
 
       batchTimer = window.setTimeout(() => {
-        if (animationFrameId) {
-          window.cancelAnimationFrame(animationFrameId);
+        processBatch();
+        batchTimer = null;
+
+        // Schedule next batch if there are pending events
+        if (batchedEvents.length > 0) {
+          scheduleBatchProcessing();
         }
-
-        animationFrameId = window.requestAnimationFrame(() => {
-          processBatch();
-          batchTimer = null;
-          animationFrameId = null;
-
-          if (batchedEvents.length > 0) {
-            scheduleBatchProcessing();
-          }
-        });
       }, BATCH_INTERVAL);
     };
 
@@ -234,13 +243,15 @@ export const ssePost = async ({
 
         bufferStr += decoder.decode(value, { stream: true });
         const lines = bufferStr.split('\n');
-        let skillEvent: SkillEvent;
+        bufferStr = lines[lines.length - 1]; // Keep the last incomplete line
 
         try {
-          for (const message of lines ?? []) {
+          // Process all complete lines
+          for (let i = 0; i < lines.length - 1; i++) {
+            const message = lines[i];
             if (message.startsWith('data: ')) {
               try {
-                skillEvent = JSON.parse(message.substring(6)) as SkillEvent;
+                const skillEvent = JSON.parse(message.substring(6)) as SkillEvent;
                 batchedEvents.push(skillEvent);
               } catch (err) {
                 console.log('Parse error:', {
@@ -248,26 +259,15 @@ export const ssePost = async ({
                   error: err,
                 });
               }
-
-              // Prioritize critical events
-              if (skillEvent?.event === 'error' || skillEvent?.event === 'end') {
-                // Process immediately for critical events
-                if (!batchTimer && !processingBatch) {
-                  scheduleBatchProcessing();
-                }
-              } else if (batchedEvents.length >= BATCH_SIZE) {
-                // Process when batch is full
-                scheduleBatchProcessing();
-              } else if (batchedEvents.length === 1) {
-                // Start the batch timer if this is the first event in a new batch
-                scheduleBatchProcessing();
-              }
             }
           }
 
-          bufferStr = lines[lines.length - 1];
+          // Schedule batch processing if we have events
+          if (batchedEvents.length > 0 && batchTimer === null) {
+            scheduleBatchProcessing();
+          }
         } catch (err) {
-          onSkillError(err);
+          onSkillError?.(err);
           onCompleted?.(true);
           hasError = true;
           return;

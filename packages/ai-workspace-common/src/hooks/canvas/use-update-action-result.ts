@@ -163,8 +163,9 @@ const isNodeDataEqual = (
 };
 
 export const useUpdateActionResult = () => {
-  const { updateActionResult } = useActionResultStoreShallow((state) => ({
+  const { queueActionResultUpdate, updateActionResult } = useActionResultStoreShallow((state) => ({
     updateActionResult: state.updateActionResult,
+    queueActionResultUpdate: state.queueActionResultUpdate,
   }));
   const { getNodes } = useReactFlow();
   const setNodeDataByEntity = useSetNodeDataByEntity();
@@ -183,7 +184,7 @@ export const useUpdateActionResult = () => {
   const throttledNodeUpdate = useCallback(
     (resultId: string, nodeData: Partial<CanvasNodeData<ResponseNodeMeta>>) => {
       const now = performance.now();
-      const throttleTime = 100; // Minimum 100ms between visual updates
+      const throttleTime = 200; // Increased from 100ms to 200ms for better performance
 
       // Clear any pending timeout
       if (throttleRef.current.timeoutId) {
@@ -196,20 +197,25 @@ export const useUpdateActionResult = () => {
 
       // If enough time has passed since last update, apply immediately
       if (now - throttleRef.current.lastUpdateTime > throttleTime) {
-        setNodeDataByEntity({ type: 'skillResponse', entityId: resultId }, nodeData);
-        throttleRef.current.lastUpdateTime = now;
-        throttleRef.current.pendingUpdate = null;
+        // Use requestAnimationFrame to align with browser's render cycle
+        requestAnimationFrame(() => {
+          setNodeDataByEntity({ type: 'skillResponse', entityId: resultId }, nodeData);
+          throttleRef.current.lastUpdateTime = now;
+          throttleRef.current.pendingUpdate = null;
+        });
       } else {
         // Otherwise schedule update for later
         throttleRef.current.timeoutId = window.setTimeout(
           () => {
-            if (throttleRef.current.pendingUpdate) {
-              const { resultId, data } = throttleRef.current.pendingUpdate;
-              setNodeDataByEntity({ type: 'skillResponse', entityId: resultId }, data);
-              throttleRef.current.lastUpdateTime = performance.now();
-              throttleRef.current.pendingUpdate = null;
-              throttleRef.current.timeoutId = null;
-            }
+            requestAnimationFrame(() => {
+              if (throttleRef.current.pendingUpdate) {
+                const { resultId, data } = throttleRef.current.pendingUpdate;
+                setNodeDataByEntity({ type: 'skillResponse', entityId: resultId }, data);
+                throttleRef.current.lastUpdateTime = performance.now();
+                throttleRef.current.pendingUpdate = null;
+                throttleRef.current.timeoutId = null;
+              }
+            });
           },
           throttleTime - (now - throttleRef.current.lastUpdateTime),
         );
@@ -220,15 +226,44 @@ export const useUpdateActionResult = () => {
 
   return useCallback(
     (resultId: string, payload: ActionResult, event?: SkillEvent) => {
-      // Always update the action result in the store
-      actionEmitter.emit('updateResult', { resultId, payload });
-      updateActionResult(resultId, payload);
+      // Determine if this is a critical update that needs immediate processing
+      const isCriticalUpdate =
+        event?.event === 'error' ||
+        event?.event === 'end' ||
+        payload.status === 'failed' ||
+        payload.status === 'finish';
+
+      // Use different update strategies based on update type
+      if (isCriticalUpdate) {
+        // Critical updates go directly to the store
+        actionEmitter.emit('updateResult', { resultId, payload });
+        updateActionResult(resultId, payload);
+      } else {
+        // Non-critical updates use batched queue
+        actionEmitter.emit('updateResult', { resultId, payload });
+        queueActionResultUpdate(resultId, payload);
+      }
 
       // Update canvas node data when the target is canvas
       if (payload.targetType === 'canvas') {
-        const nodeData = event
-          ? generatePartialNodeDataUpdates(payload, event)
-          : generateFullNodeDataUpdates(payload);
+        // Optimize node data generation for different event types
+        const nodeData =
+          event && event.event === 'stream'
+            ? {
+                // For stream events, just update content-related fields
+                contentPreview: processContentPreview(
+                  payload.steps?.map((s) => s?.content || '') || [],
+                ),
+                metadata: {
+                  status: payload.status,
+                  reasoningContent: processContentPreview(
+                    payload.steps?.map((s) => s?.reasoningContent || '') || [],
+                  ),
+                },
+              }
+            : event
+              ? generatePartialNodeDataUpdates(payload, event)
+              : generateFullNodeDataUpdates(payload);
 
         // Only get current node data if we need to compare
         const nodes = getNodes();
@@ -245,6 +280,6 @@ export const useUpdateActionResult = () => {
         }
       }
     },
-    [updateActionResult, getNodes, throttledNodeUpdate],
+    [updateActionResult, queueActionResultUpdate, getNodes, throttledNodeUpdate],
   );
 };
