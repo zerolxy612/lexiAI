@@ -4,21 +4,29 @@ import { BaseSkill, BaseSkillState, baseStateGraphArgs, SkillRunnableConfig } fr
 import { Icon, SkillInvocationConfig, SkillTemplateConfigDefinition } from '@refly/openapi-schema';
 
 // Import MCP modules
-
-import { AIMessage } from '@langchain/core/messages';
-import { Runnable, RunnableConfig } from '@langchain/core/runnables';
+import { AIMessage, BaseMessage } from '@langchain/core/messages';
+import { Runnable } from '@langchain/core/runnables';
 import { GraphState } from '../scheduler/types';
 import { prepareContext } from '../scheduler/utils/context';
 import { buildFinalRequestMessages } from '../scheduler/utils/message';
 import { processQuery } from '../scheduler/utils/queryProcessor';
-import { ChunkCallbackData, MCPServer, MCPTool, Message, MessageRole } from '../mcp/core/types';
+import {
+  ChunkCallbackData,
+  MCPServer,
+  MCPTool,
+  Message,
+  MessageRole,
+  MCPToolResponse,
+} from '../mcp/core/types';
 import { MCPAssistant } from '../mcp/core/MCPAssistant';
+import { safeStringifyJSON } from '@refly/utils';
+import { IContext } from '../scheduler/types';
 
 /**
  * Extended state for MCP Connector skill
  */
 interface MCPAgentState extends BaseSkillState {
-  mcpActionResult?: any;
+  mcpActionResult?: Message[];
 }
 
 /**
@@ -129,7 +137,6 @@ export class MCPAgent extends BaseSkill {
     // Create a new assistant
     const assistant = new MCPAssistant({
       autoInjectTools: true,
-      // customSystemPrompt: this.buildCustomSystemPrompt(config),
       modelProvider: (messages) => this.callModel(messages, config),
       onChunk: (data) => this.handleChunk(data, config),
     });
@@ -156,7 +163,6 @@ export class MCPAgent extends BaseSkill {
         [MessageRole.ASSISTANT]: 'assistant',
       };
 
-      // Create BaseMessage-compatible object
       return {
         role: roleMap[msg.role],
         content: msg.content,
@@ -166,13 +172,16 @@ export class MCPAgent extends BaseSkill {
     // Get temperature setting
     const temperature = (config.configurable.tplConfig?.modelTemperature?.value as number) || 0.2;
 
+    // Set current step for model call
+    config.metadata.step = { name: 'mcpAssistantModelCall' };
+
     // Call model
     const model = this.engine.chatModel({ temperature });
-    const response = await model.invoke(baseMessages as any, {
+    const response = await model.invoke(baseMessages, {
       ...config,
       metadata: {
         ...config.metadata,
-        step: { name: 'mcpAssistantModelCall' },
+        ...config.configurable.currentSkill,
       },
     });
 
@@ -188,16 +197,12 @@ export class MCPAgent extends BaseSkill {
    * @param config Skill configuration
    */
   private handleChunk(data: ChunkCallbackData, config: SkillRunnableConfig): void {
-    // Handle text chunks
+    // Handle text chunks for streaming
     if (data.text) {
       this.emitEvent(
         {
-          log: {
-            key: 'mcp_chunk',
-            titleArgs: {
-              content: data.text,
-            },
-          },
+          content: data.text,
+          event: 'stream',
         },
         config,
       );
@@ -205,54 +210,65 @@ export class MCPAgent extends BaseSkill {
 
     // Handle tool response chunks
     if (data.mcpToolResponse) {
-      // Find tools being executed
-      const executing = data.mcpToolResponse.filter((tool) => tool.status === 'invoking');
+      this.handleToolResponses(data.mcpToolResponse, config);
+    }
+  }
+
+  /**
+   * Process tool responses and emit structured data
+   * @param toolResponses Array of tool response objects
+   * @param config Skill configuration
+   */
+  private handleToolResponses(toolResponses: MCPToolResponse[], config: SkillRunnableConfig): void {
+    // 收集不同状态的工具
+    const executing = toolResponses.filter((tool) => tool.status === 'invoking');
+    const completed = toolResponses.filter((tool) => tool.status === 'done');
+    const errors = toolResponses.filter((tool) => tool.status === 'error');
+
+    // 批量处理工具状态变化，减少事件发送次数
+    if (executing.length > 0 || completed.length > 0 || errors.length > 0) {
+      // 构建工具状态变化摘要
+      const statusSummary: Record<string, any> = {};
+
       if (executing.length > 0) {
-        this.emitEvent(
-          {
-            log: {
-              key: 'mcp_tool_executing',
-              titleArgs: {
-                tool: executing[0].tool.name,
-              },
-            },
-          },
-          config,
-        );
+        statusSummary.executing = executing.map((t) => t.tool.name);
       }
 
-      // Find completed tools
-      const completed = data.mcpToolResponse.filter((tool) => tool.status === 'done');
       if (completed.length > 0) {
-        this.emitEvent(
-          {
-            log: {
-              key: 'mcp_tool_completed',
-              titleArgs: {
-                tool: completed[0].tool.name,
-              },
-            },
-          },
-          config,
-        );
+        statusSummary.completed = completed.map((t) => t.tool.name);
       }
 
-      // Find error tools
-      const errors = data.mcpToolResponse.filter((tool) => tool.status === 'error');
       if (errors.length > 0) {
-        this.emitEvent(
-          {
-            log: {
-              key: 'mcp_tool_error',
-              titleArgs: {
-                tool: errors[0].tool.name,
-                error: errors[0].response?.content[0]?.text || 'Unknown error',
-              },
+        statusSummary.errors = errors.map((t) => ({
+          name: t.tool.name,
+          error: t.response?.content[0]?.text || 'Unknown error',
+        }));
+      }
+
+      // 只发送一次工具状态变化事件，包含所有状态
+      this.emitEvent(
+        {
+          event: 'log',
+          log: {
+            key: 'mcp_tools_status',
+            titleArgs: {
+              executing: statusSummary.executing?.length || 0,
+              completed: statusSummary.completed?.length || 0,
+              errors: statusSummary.errors?.length || 0,
+            },
+            descriptionArgs: {
+              tools: JSON.stringify(statusSummary),
             },
           },
-          config,
-        );
-      }
+        },
+        config,
+      );
+    }
+
+    // 记录工具错误到日志（仍然保留，因为错误信息对排查问题很重要）
+    for (const tool of errors) {
+      const errorMessage = tool.response?.content[0]?.text || 'Unknown error';
+      this.engine.logger.error(`Tool ${tool.tool.name} error: ${errorMessage}`);
     }
   }
 
@@ -300,55 +316,21 @@ export class MCPAgent extends BaseSkill {
     success: boolean;
     connectedServers: string[];
     failedServers: string[];
-    loadedTools: Array<{ [x: string]: MCPTool[] }>;
+    loadedTools: MCPTool[];
   }> {
     const connectedServers: string[] = [];
     const failedServers: string[] = [];
+    const loadedTools: MCPTool[] = [];
 
-    const loadedTools: Array<{ [x: string]: MCPTool[] }> = [];
-
-    // Notify about connection attempt
-    this.emitEvent(
-      {
-        log: {
-          key: 'connecting_mcp_servers',
-          titleArgs: {
-            count: serverConfigs.length,
-          },
-        },
-      },
-      config,
-    );
-
-    // Connect to each server
-    for (const serverConfig of serverConfigs) {
-      try {
-        const tools = await assistant.addServer(serverConfig);
-        connectedServers.push(serverConfig.baseUrl || serverConfig.id);
-        loadedTools.push({ [serverConfig.baseUrl || serverConfig.id]: tools });
-
-        this.engine.logger.log(
-          `Connected to MCP server: ${serverConfig.baseUrl || serverConfig.id}`,
-        );
-      } catch (error) {
-        failedServers.push(serverConfig.baseUrl || serverConfig.id);
-
-        this.engine.logger.error(
-          `Failed to connect to MCP server ${serverConfig.baseUrl || serverConfig.id}: ${error}`,
-        );
-      }
-    }
-
-    // Log connection results
-    if (failedServers.length > 0) {
-      const errorMessage = `Failed to connect to ${failedServers.length} MCP server(s): ${failedServers.join(', ')}`;
-      this.engine.logger.warn(errorMessage);
+    // 只发送一个连接尝试事件，精简日志
+    if (serverConfigs.length > 0) {
       this.emitEvent(
         {
+          event: 'log',
           log: {
-            key: 'mcp_connection_error',
+            key: 'connecting_mcp_servers',
             titleArgs: {
-              error: errorMessage,
+              count: serverConfigs.length,
             },
           },
         },
@@ -356,7 +338,46 @@ export class MCPAgent extends BaseSkill {
       );
     }
 
-    this.engine.logger.log(`Successfully connected to ${connectedServers.length} MCP server(s)`);
+    // Connect to each server
+    for (const serverConfig of serverConfigs) {
+      try {
+        const tools = await assistant.addServer(serverConfig);
+        connectedServers.push(serverConfig.baseUrl || serverConfig.id);
+        loadedTools.push(...tools);
+
+        this.engine.logger.log(
+          `Connected to MCP server: ${serverConfig.baseUrl || serverConfig.id}`,
+        );
+
+        // 不再为每个服务器单独发送连接成功事件
+      } catch (error) {
+        failedServers.push(serverConfig.baseUrl || serverConfig.id);
+        this.engine.logger.error(
+          `Failed to connect to MCP server ${serverConfig.baseUrl || serverConfig.id}: ${error}`,
+        );
+        // 不再为每个失败的服务器单独发送事件
+      }
+    }
+
+    // 只发送一次汇总事件，包含所有连接结果
+    this.emitEvent(
+      {
+        event: 'log',
+        log: {
+          key: 'mcp_connection_summary',
+          titleArgs: {
+            total: serverConfigs.length,
+            connected: connectedServers.length,
+            failed: failedServers.length,
+          },
+          descriptionArgs: {
+            totalTools: loadedTools.length,
+            failedServers: failedServers.join(', '),
+          },
+        },
+      },
+      config,
+    );
 
     return {
       success: connectedServers.length > 0,
@@ -398,14 +419,19 @@ export class MCPAgent extends BaseSkill {
     config: SkillRunnableConfig,
   ): Promise<Partial<MCPAgentState>> => {
     const { messages = [], images = [] } = state;
-    const { tplConfig } = config.configurable;
+    const { tplConfig, project } = config.configurable;
+
+    // Extract customInstructions from project if available
+    const customInstructions = project?.customInstructions;
 
     // Get configuration values
     const mcpServersString = tplConfig?.mcpServerUrls?.value as string;
     const serverUrls = mcpServersString
-      .split(',')
-      .map((url) => url.trim())
-      .filter((url) => url.length > 0);
+      ? mcpServersString
+          .split(',')
+          .map((url) => url.trim())
+          .filter((url) => url.length > 0)
+      : [];
 
     const autoConnect = tplConfig?.autoConnect?.value !== false;
 
@@ -413,7 +439,7 @@ export class MCPAgent extends BaseSkill {
     const sessionId = `session-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
 
     // Set initial step
-    config.metadata.step = { name: 'processQuery' };
+    config.metadata.step = { name: 'analyzeQuery' };
 
     // Process the query
     const { query, optimizedQuery, usedChatHistory, mentionedContext, remainingTokens } =
@@ -423,8 +449,31 @@ export class MCPAgent extends BaseSkill {
         state,
       });
 
+    // 简化query处理事件，只在有优化时才发送事件
+    if (optimizedQuery && optimizedQuery !== query) {
+      this.emitEvent(
+        {
+          event: 'log',
+          log: {
+            key: 'query_processed',
+            titleArgs: {
+              original: query.substring(0, 50) + (query.length > 50 ? '...' : ''),
+              optimized:
+                optimizedQuery.substring(0, 50) + (optimizedQuery.length > 50 ? '...' : ''),
+            },
+          },
+        },
+        config,
+      );
+    }
+
     // If no servers or auto-connect disabled, answer directly
     if (!autoConnect || serverUrls.length === 0) {
+      // 简化这里的事件，使用更简洁的形式
+      this.engine.logger.log(
+        `Using direct answer mode: ${!autoConnect ? 'auto-connect disabled' : 'no servers configured'}`,
+      );
+
       return this.handleDirectAnswer(
         query,
         optimizedQuery,
@@ -434,6 +483,7 @@ export class MCPAgent extends BaseSkill {
         images,
         messages,
         config,
+        customInstructions,
       );
     }
 
@@ -448,14 +498,7 @@ export class MCPAgent extends BaseSkill {
 
     // If connection failed, answer directly
     if (!connectionResult.success) {
-      this.emitEvent(
-        {
-          log: {
-            key: 'no_mcp_servers',
-          },
-        },
-        config,
-      );
+      this.engine.logger.warn('No MCP servers connected, falling back to direct answer');
 
       return this.handleDirectAnswer(
         query,
@@ -466,6 +509,7 @@ export class MCPAgent extends BaseSkill {
         images,
         messages,
         config,
+        customInstructions,
       );
     }
 
@@ -473,11 +517,19 @@ export class MCPAgent extends BaseSkill {
       // Set MCP processing step
       config.metadata.step = { name: 'processMCPQuery' };
 
+      // 精简处理查询事件
+      this.engine.logger.log(`Processing query with MCP: ${optimizedQuery || query}`);
+
       // Run the assistant with the query
       const assistantResponse = await assistant.run(query);
 
       // Get all messages for context
       const mcpActionResult = assistant.getMessages();
+
+      // 简化MCP结果事件
+      this.engine.logger.log(
+        `MCP execution complete: ${mcpActionResult.length} messages generated`,
+      );
 
       // Create response message
       const responseMessage = new AIMessage({ content: assistantResponse });
@@ -490,9 +542,10 @@ export class MCPAgent extends BaseSkill {
       // Log error
       this.engine.logger.error(`Error in MCPAssistant processing: ${error}`);
 
-      // Fall back to direct answer
+      // 简化错误事件
       this.emitEvent(
         {
+          event: 'log',
           log: {
             key: 'mcp_processing_error',
             titleArgs: {
@@ -503,6 +556,7 @@ export class MCPAgent extends BaseSkill {
         config,
       );
 
+      // Fall back to direct answer
       return this.handleDirectAnswer(
         query,
         optimizedQuery,
@@ -512,6 +566,7 @@ export class MCPAgent extends BaseSkill {
         images,
         messages,
         config,
+        customInstructions,
       );
     } finally {
       // Clean up the assistant after use
@@ -534,24 +589,26 @@ export class MCPAgent extends BaseSkill {
    * @param images Images
    * @param messages Messages
    * @param config Skill configuration
+   * @param customInstructions Custom instructions from project
    * @returns Updated graph state
    */
   private async handleDirectAnswer(
     query: string,
     optimizedQuery: string,
-    usedChatHistory: any[],
-    mentionedContext: any,
+    usedChatHistory: BaseMessage[],
+    mentionedContext: IContext,
     remainingTokens: number,
     images: string[],
-    messages: any[],
+    messages: BaseMessage[],
     config: SkillRunnableConfig,
+    customInstructions?: string,
   ): Promise<Partial<MCPAgentState>> {
     const { locale = 'en' } = config.configurable;
 
     // Prepare context for direct answering
     config.metadata.step = { name: 'prepareContext' };
 
-    const { contextStr } = await prepareContext(
+    const { contextStr, sources } = await prepareContext(
       {
         query: optimizedQuery,
         mentionedContext,
@@ -566,13 +623,23 @@ export class MCPAgent extends BaseSkill {
       },
     );
 
+    // 简化上下文源事件，只在找到源且有上下文时才发送
+    if (sources?.length > 0 && contextStr) {
+      this.engine.logger.log(
+        `Found ${sources.length} context sources with ${contextStr.length} characters`,
+      );
+    }
+
     // Use simple module for direct answering
     const module = {
       buildSystemPrompt: () =>
         'You are a helpful assistant. Answer the user query based on your knowledge and the provided context if any.',
-      buildContextUserPrompt: (context) => context,
-      buildUserPrompt: ({ originalQuery }) => originalQuery,
+      buildContextUserPrompt: (context: string) => context,
+      buildUserPrompt: ({ originalQuery }: { originalQuery: string }) => originalQuery,
     };
+
+    // Set answer generation step
+    config.metadata.step = { name: 'generateDirectAnswer' };
 
     // Build request messages
     const requestMessages = buildFinalRequestMessages({
@@ -586,22 +653,29 @@ export class MCPAgent extends BaseSkill {
       originalQuery: query,
       optimizedQuery,
       modelInfo: config?.configurable?.modelInfo,
+      customInstructions,
     });
 
-    // Call model directly
-    const model = this.engine.chatModel();
+    // Call model directly with lower temperature for direct answers
+    const model = this.engine.chatModel({ temperature: 0.1 });
     const responseMessage = await model.invoke(requestMessages, {
       ...config,
       metadata: {
         ...config.metadata,
-        step: { name: 'directAnswer' },
+        ...config.configurable.currentSkill,
       },
     });
 
-    // Return type is Partial<MCPAgentState>
+    // 精简响应事件，只记录响应长度到日志
+    const responseLength =
+      typeof responseMessage.content === 'string'
+        ? responseMessage.content.length
+        : safeStringifyJSON(responseMessage.content).length;
+
+    this.engine.logger.log(`Generated direct answer with ${responseLength} characters`);
+
     return {
       messages: [responseMessage],
-      // mcpActionResult property can also be set to null or other values here
       mcpActionResult: null,
     };
   }
@@ -610,7 +684,7 @@ export class MCPAgent extends BaseSkill {
    * Define the workflow for this skill
    * @returns The compiled runnable
    */
-  toRunnable(): Runnable<any, any, RunnableConfig> {
+  toRunnable(): Runnable<GraphState, unknown> {
     // Create a simple linear workflow
     const workflow = new StateGraph<MCPAgentState>({
       channels: this.graphState,

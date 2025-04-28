@@ -201,7 +201,6 @@ export class MCPAssistant {
         status: 'pending',
       });
 
-      // 如果匹配的内容长度为0，手动增加lastIndex防止死循环
       if (match[0].length === 0) {
         toolUsePattern.lastIndex++;
       }
