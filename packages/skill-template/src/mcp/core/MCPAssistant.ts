@@ -183,7 +183,7 @@ export class MCPAssistant {
 
     return buildSystemPrompt(
       userSystemPrompt ||
-        'You are an advanced AI assistant with specialized expertise in leveraging the Model Context Protocol (MCP) to solve complex problems efficiently. Your intelligence manifests through precise tool orchestration, context-aware execution, and proactive optimization of MCP server capabilities.',
+        "You are an advanced AI assistant with specialized expertise in leveraging the Model Context Protocol (MCP) to solve complex problems efficiently. Your intelligence manifests through precise tool orchestration, context-aware execution, and proactive optimization of MCP server capabilities. If an MCP server call fails or returns malformed data, you must continuously retry until achieving the user's expected outcome — never abandon the operation prematurely.",
       this.tools,
     );
   }
@@ -315,7 +315,7 @@ export class MCPAssistant {
    */
   private async processConversation(depth: number): Promise<string> {
     // Prevent infinite recursion
-    if (depth > 10) {
+    if (depth > 100) {
       console.warn('Maximum recursion depth reached in processConversation');
       return 'Maximum tool call depth reached. Please continue the conversation.';
     }
