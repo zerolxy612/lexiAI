@@ -9,6 +9,9 @@ import {
   DefaultValuePipe,
   UseInterceptors,
   UploadedFile,
+  Res,
+  Req,
+  StreamableFile,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -40,6 +43,7 @@ import { LoginedUser } from '../../utils/decorators/user.decorator';
 import { documentPO2DTO, resourcePO2DTO, referencePO2DTO } from './knowledge.dto';
 import { ParamsError } from '@refly/errors';
 import { safeParseJSON } from '@refly/utils';
+import { Response, Request } from 'express';
 
 @Controller('v1/knowledge')
 export class KnowledgeController {
@@ -201,6 +205,36 @@ export class KnowledgeController {
   ): Promise<GetDocumentDetailResponse> {
     const document = await this.knowledgeService.getDocumentDetail(user, { docId });
     return buildSuccessResponse(documentPO2DTO(document));
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('document/export/document')
+  async exportDocument(
+    @LoginedUser() user: User,
+    @Query('docId') docId: string,
+    @Query('format') format: 'markdown' | 'docx' | 'pdf',
+    @Res({ passthrough: true }) res: Response,
+    @Req() req: Request,
+  ): Promise<StreamableFile> {
+    const data = await this.knowledgeService.exportDocument(user, { docId, format });
+
+    const origin = req.headers.origin;
+    let contentType = 'text/markdown';
+
+    if (format === 'docx') {
+      contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    } else if (format === 'pdf') {
+      contentType = 'application/pdf';
+    }
+
+    res.set({
+      'Content-Type': contentType,
+      'Access-Control-Allow-Origin': origin || '*',
+      'Access-Control-Allow-Credentials': 'true',
+      'Cross-Origin-Resource-Policy': 'cross-origin',
+    });
+
+    return new StreamableFile(data);
   }
 
   @UseGuards(JwtAuthGuard)

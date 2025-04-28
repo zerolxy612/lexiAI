@@ -1,5 +1,5 @@
-import { FC, useCallback, useMemo, memo } from 'react';
-import { Button, Dropdown, Modal } from 'antd';
+import { FC, useCallback, useMemo, useState, memo } from 'react';
+import { Button, Dropdown, Modal, message } from 'antd';
 import type { MenuProps } from 'antd';
 import { TFunction } from 'i18next';
 import {
@@ -46,6 +46,8 @@ import getClient from '@refly-packages/ai-workspace-common/requests/proxiedReque
 import { useUpdateNodeTitle } from '@refly-packages/ai-workspace-common/hooks/use-update-node-title';
 import { NodeHeader } from '@refly-packages/ai-workspace-common/components/canvas/nodes/skill-response';
 import { NodeHeader as CommonNodeHeader } from '@refly-packages/ai-workspace-common/components/canvas/nodes/shared/node-header';
+import { useExportDocument } from '@refly-packages/ai-workspace-common/hooks/use-export-document';
+import { useDebouncedCallback } from 'use-debounce';
 
 // Get icon component based on node type and metadata
 const getNodeIcon = (node: CanvasNode<any>) => {
@@ -152,6 +154,9 @@ export const NodePreviewHeader: FC<NodePreviewHeaderProps> = memo(
     const { deleteResource } = useDeleteResource();
     const { deleteDocument } = useDeleteDocument();
     const { downloadFile } = useDownloadFile();
+    const { exportDocument } = useExportDocument();
+    const [isExporting, setIsExporting] = useState(false);
+    const [_popupVisible, setPopupVisible] = useState(false);
 
     const handleDeleteFile = useCallback(() => {
       Modal.confirm({
@@ -181,6 +186,61 @@ export const NodePreviewHeader: FC<NodePreviewHeaderProps> = memo(
         metadata: node.data?.metadata,
       });
     }, [node, addToContext]);
+
+    const handleExportDocument = useDebouncedCallback(async (type: 'markdown' | 'docx' | 'pdf') => {
+      if (isExporting) return;
+
+      try {
+        setIsExporting(true);
+        let mimeType = '';
+        let extension = '';
+
+        // 添加加载提示
+        const loadingMessage = message.loading({
+          content: t('workspace.exporting'),
+          duration: 0,
+        });
+        const content = await exportDocument(node.data?.entityId, type);
+        // 关闭加载提示
+        loadingMessage();
+
+        switch (type) {
+          case 'markdown':
+            mimeType = 'text/markdown';
+            extension = 'md';
+            break;
+          case 'docx':
+            mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+            extension = 'docx';
+            break;
+          case 'pdf':
+            mimeType = 'application/pdf';
+            extension = 'pdf';
+            break;
+        }
+
+        // 创建Blob对象
+        const blob = new Blob([content], { type: mimeType });
+        // 创建下载链接
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${node.data?.title || t('common.untitled')}.${extension}`;
+        document.body.appendChild(a);
+        a.click();
+
+        // 清理
+        URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        message.success(t('workspace.exportSuccess'));
+      } catch (error) {
+        console.error('Export error:', error);
+        message.error(t('workspace.exportFailed'));
+      } finally {
+        setIsExporting(false);
+        setPopupVisible(false);
+      }
+    }, 300);
 
     const { canvasId, readonly } = useCanvasContext();
     const updateNodePreviewTitle = useUpdateNodeTitle();
@@ -255,6 +315,32 @@ export const NodePreviewHeader: FC<NodePreviewHeaderProps> = memo(
             </div>
           ),
           onClick: handleDownload,
+        },
+        node.type === 'document' && {
+          key: 'exportDocument',
+          label: (
+            <div className="flex items-center flex-grow">
+              <IconDownloadFile size={16} className="mr-2" />
+              {t('workspace.exportAs')}
+            </div>
+          ),
+          children: [
+            {
+              key: 'exportDocumentToMarkdown',
+              label: t('workspace.exportDocumentToMarkdown'),
+              onClick: () => handleExportDocument('markdown'),
+            },
+            {
+              key: 'exportDocumentToDocx',
+              label: t('workspace.exportDocumentToDocx'),
+              onClick: () => handleExportDocument('docx'),
+            },
+            {
+              key: 'exportDocumentToPdf',
+              label: t('workspace.exportDocumentToPdf'),
+              onClick: () => handleExportDocument('pdf'),
+            },
+          ],
         },
         {
           type: 'divider',
