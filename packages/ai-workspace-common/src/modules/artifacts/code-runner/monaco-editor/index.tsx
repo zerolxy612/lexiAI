@@ -4,7 +4,7 @@ import { Button } from 'antd';
 import { CodeArtifactType } from '@refly/openapi-schema';
 import debounce from 'lodash.debounce';
 import { useTranslation } from 'react-i18next';
-import './monaco-editor.scss';
+import './index.scss';
 
 // Function to map CodeArtifactType to appropriate Monaco editor language
 const getLanguageFromType = (type: CodeArtifactType, language: string): string => {
@@ -196,47 +196,6 @@ const MonacoEditor = React.memo(
           return PRIMARY_CDN;
       }
     }, [loadAttempt]);
-
-    // Add custom CSS to prevent double scrollbars
-    useEffect(() => {
-      // Create a style element
-      const styleEl = document.createElement('style');
-      const styleId = 'monaco-scrollbar-fix';
-
-      // Skip if style already exists
-      if (document.getElementById(styleId)) {
-        return;
-      }
-
-      // Set an ID to avoid duplicates
-      styleEl.id = styleId;
-
-      // Add CSS rules to prevent double scrollbars
-      styleEl.innerHTML = `
-      .monaco-editor .overflow-guard {
-        width: 100% !important;
-        height: 100% !important;
-      }
-      .monaco-scrollable-element {
-        width: 100% !important;
-        height: 100% !important;
-      }
-      .monaco-editor .scrollbar {
-        z-index: 50 !important;
-      }
-    `;
-      // Append the style element to the document head
-      document.head.appendChild(styleEl);
-
-      // Clean up on unmount
-      return () => {
-        // Only remove if it's the style we added
-        const style = document.getElementById(styleId);
-        if (style) {
-          document.head.removeChild(style);
-        }
-      };
-    }, []);
 
     // Use simple editor during generation to improve performance
     // Skip complex Monaco initialization & syntax highlighting while content is changing rapidly

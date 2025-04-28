@@ -3,7 +3,7 @@ import { FiRefreshCw, FiDownload, FiCopy, FiCode, FiEye, FiShare2 } from 'react-
 import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { Button, Tooltip, Divider, message, Select } from 'antd';
 import Renderer from './render';
-import MonacoEditor from './render/MonacoEditor';
+import MonacoEditor from './monaco-editor';
 import { useTranslation } from 'react-i18next';
 import { CodeArtifactType } from '@refly/openapi-schema';
 import { copyToClipboard } from '@refly-packages/ai-workspace-common/utils';
