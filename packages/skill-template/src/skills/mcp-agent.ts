@@ -198,21 +198,23 @@ export class MCPAgent extends BaseSkill {
    */
   private handleChunk(data: ChunkCallbackData, config: SkillRunnableConfig): void {
     // Handle text chunks for streaming
-    if (data.text) {
-      this.emitEvent(
-        {
-          content: data.text,
-          event: 'stream',
-        },
-        config,
-      );
-    }
+    // if (data.text) {
+    //   this.emitEvent(
+    //     {
+    //       content: data.text,
+    //       event: 'stream',
+    //     },
+    //     config,
+    //   );
+    // }
 
     // Handle tool response chunks
     if (data.mcpToolResponse) {
       this.handleToolResponses(data.mcpToolResponse, config);
     }
   }
+
+  messageIndex = 0;
 
   /**
    * Process tool responses and emit structured data
@@ -228,41 +230,77 @@ export class MCPAgent extends BaseSkill {
     // 批量处理工具状态变化，减少事件发送次数
     if (executing.length > 0 || completed.length > 0 || errors.length > 0) {
       // 构建工具状态变化摘要
-      const statusSummary: Record<string, any> = {};
 
       if (executing.length > 0) {
-        statusSummary.executing = executing.map((t) => t.tool.name);
+        for (const t of executing) {
+          // Set initial step
+          config.metadata.step = { name: `${t.tool.name}-${this.messageIndex}` };
+
+          this.emitEvent(
+            {
+              event: 'log',
+              log: {
+                key: t.tool.name,
+                titleArgs: {
+                  ...t,
+                },
+                descriptionArgs: {
+                  ...t,
+                },
+              },
+            },
+            config,
+          );
+        }
       }
 
       if (completed.length > 0) {
-        statusSummary.completed = completed.map((t) => t.tool.name);
+        for (const t of completed) {
+          // Set initial step
+          config.metadata.step = { name: `${t.tool.name}-${this.messageIndex}` };
+          this.messageIndex++;
+
+          this.emitEvent(
+            {
+              event: 'log',
+              log: {
+                key: t.tool.name,
+                titleArgs: {
+                  ...t,
+                },
+                descriptionArgs: {
+                  ...t,
+                },
+              },
+            },
+            config,
+          );
+        }
       }
 
       if (errors.length > 0) {
-        statusSummary.errors = errors.map((t) => ({
-          name: t.tool.name,
-          error: t.response?.content[0]?.text || 'Unknown error',
-        }));
-      }
+        for (const t of errors) {
+          // Set initial step
+          config.metadata.step = { name: `${t.tool.name}-${this.messageIndex}` };
+          this.messageIndex++;
 
-      // 只发送一次工具状态变化事件，包含所有状态
-      this.emitEvent(
-        {
-          event: 'log',
-          log: {
-            key: 'mcp_tools_status',
-            titleArgs: {
-              executing: statusSummary.executing?.length || 0,
-              completed: statusSummary.completed?.length || 0,
-              errors: statusSummary.errors?.length || 0,
+          this.emitEvent(
+            {
+              event: 'log',
+              log: {
+                key: t.tool.name,
+                titleArgs: {
+                  ...t,
+                },
+                descriptionArgs: {
+                  ...t,
+                },
+              },
             },
-            descriptionArgs: {
-              tools: JSON.stringify(statusSummary),
-            },
-          },
-        },
-        config,
-      );
+            config,
+          );
+        }
+      }
     }
 
     // 记录工具错误到日志（仍然保留，因为错误信息对排查问题很重要）
