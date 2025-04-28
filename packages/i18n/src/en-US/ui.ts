@@ -1533,6 +1533,8 @@ const translations = {
       generatingContent: 'AI is generating content',
       generatingPlaceholder: 'Content is being generated...',
       fallbackMode: 'Simple Editor Mode',
+      contentTruncated:
+        'Showing only the last {{chars}} characters of {{total}} total. Full content will be displayed when generation completes.',
     },
     copySuccess: 'Code copied to clipboard',
     copyError: 'Failed to copy code',

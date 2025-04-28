@@ -1,6 +1,9 @@
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MonacoEditorProps } from './types';
+
+// Default maximum characters to show during generation
+const DEFAULT_MAX_GENERATION_DISPLAY = 5000;
 
 // Simple text editor for displaying content without syntax highlighting
 // Used during content generation to improve performance
@@ -21,6 +24,20 @@ const SimpleTextEditor = ({
     [onChange],
   );
 
+  // Truncate content during generation if it's too long
+  const displayContent = useMemo(() => {
+    if (!isGenerating || !content || content.length <= DEFAULT_MAX_GENERATION_DISPLAY) {
+      return content;
+    }
+
+    // Only show the last N characters during generation
+    return content.slice(-DEFAULT_MAX_GENERATION_DISPLAY);
+  }, [content, isGenerating]);
+
+  // Check if content is truncated
+  const isContentTruncated =
+    isGenerating && content && content.length > DEFAULT_MAX_GENERATION_DISPLAY;
+
   return (
     <div className="h-full flex flex-col bg-white">
       {isGenerating && (
@@ -29,10 +46,21 @@ const SimpleTextEditor = ({
           {t('codeArtifact.editor.generatingContent')}
         </div>
       )}
+
+      {isContentTruncated && (
+        <div className="bg-yellow-50 text-yellow-800 px-4 py-2 text-sm">
+          {t('codeArtifact.editor.contentTruncated', {
+            chars: DEFAULT_MAX_GENERATION_DISPLAY,
+            total: content.length,
+          }) ||
+            `Showing only the last ${DEFAULT_MAX_GENERATION_DISPLAY} characters of ${content.length} total. Full content will be displayed when generation completes.`}
+        </div>
+      )}
+
       <textarea
         ref={textareaRef}
         className="w-full h-full p-4 font-mono text-sm resize-none focus:outline-none focus:ring-1 focus:ring-blue-500 bg-gray-50"
-        value={content}
+        value={displayContent}
         onChange={handleChange}
         readOnly={readOnly || isGenerating || canvasReadOnly}
         style={{
