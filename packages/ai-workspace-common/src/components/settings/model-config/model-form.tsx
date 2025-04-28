@@ -1,7 +1,21 @@
-import { useCallback, useEffect, useMemo, memo, useState } from 'react';
+import { useCallback, useEffect, useMemo, memo, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useListProviders } from '@refly-packages/ai-workspace-common/queries';
-import { Button, Input, Modal, Form, Switch, Select, message, InputNumber, Checkbox } from 'antd';
+import {
+  useListProviders,
+  useListProviderItemOptions,
+} from '@refly-packages/ai-workspace-common/queries';
+import {
+  Button,
+  Input,
+  Modal,
+  Form,
+  Switch,
+  Select,
+  message,
+  InputNumber,
+  Checkbox,
+  AutoComplete,
+} from 'antd';
 import { ProviderCategory, ProviderItem } from '@refly/openapi-schema';
 import { providerInfoList } from '@refly/utils';
 import { IconPlus } from '@refly-packages/ai-workspace-common/components/common/icon';
@@ -17,19 +31,33 @@ export const ModelFormModal = memo(
     model,
     onSuccess,
     filterProviderCategory,
+    shouldRefetch,
     disabledEnableControl = false,
   }: {
     isOpen: boolean;
     onClose: () => void;
     model?: ProviderItem | null;
     onSuccess: (category: ProviderCategory, type: 'create' | 'update', model: ProviderItem) => void;
-    filterProviderCategory?: ProviderCategory;
+    filterProviderCategory: ProviderCategory;
     disabledEnableControl?: boolean;
+    shouldRefetch?: boolean;
   }) => {
     const { t } = useTranslation();
     const [form] = Form.useForm();
     const isEditMode = !!model;
     const [isProviderModalOpen, setIsProviderModalOpen] = useState(false);
+    const [selectedProviderId, setSelectedProviderId] = useState<any>(null);
+
+    const modelIdOptionsCache = useRef<Record<string, any[]>>({});
+
+    const getCachedOptions = useCallback((providerId: string) => {
+      return modelIdOptionsCache.current[providerId];
+    }, []);
+
+    const setCachedOptions = useCallback((providerId: string, options: any[]) => {
+      modelIdOptionsCache.current[providerId] = options;
+    }, []);
+
     const {
       data: providersResponse,
       isLoading: isProvidersLoading,
@@ -91,6 +119,70 @@ export const ModelFormModal = memo(
       },
       [filterProviderCategory],
     );
+
+    const {
+      data: providerItemOptions,
+      refetch: refetchProviderItemOptions,
+      isLoading: loadingItemOptions,
+    } = useListProviderItemOptions(
+      {
+        query: {
+          category: filterProviderCategory as ProviderCategory,
+          providerId: selectedProviderId,
+        },
+      },
+      null,
+      {
+        enabled: !!selectedProviderId && !getCachedOptions(selectedProviderId),
+      },
+    );
+
+    // Update cache when new options are fetched
+    useEffect(() => {
+      if (providerItemOptions?.data && selectedProviderId) {
+        const options = providerItemOptions.data.map((item) => ({
+          label: item.config?.modelId || '',
+          value: item.config?.modelId || '',
+          ...item,
+        }));
+        setCachedOptions(selectedProviderId, options);
+      }
+    }, [providerItemOptions, selectedProviderId, setCachedOptions]);
+
+    // Get current model options based on the selected provider
+    const modelIdOptions = useMemo(() => {
+      if (!selectedProviderId) return [];
+
+      // If we have cached data, return it
+      const cachedOptions = getCachedOptions(selectedProviderId);
+      if (cachedOptions) {
+        return cachedOptions;
+      }
+
+      // If we're loading data, return empty array
+      if (loadingItemOptions) {
+        return [];
+      }
+
+      // If we have fresh data, update cache and return it
+      if (providerItemOptions?.data) {
+        const options = providerItemOptions.data.map((item) => ({
+          label: item.config?.modelId || '',
+          value: item.config?.modelId || '',
+          ...item,
+        }));
+        setCachedOptions(selectedProviderId, options);
+        return options;
+      }
+
+      return [];
+    }, [
+      selectedProviderId,
+      loadingItemOptions,
+      providerItemOptions?.data,
+      getCachedOptions,
+      setCachedOptions,
+    ]);
 
     const createModelMutation = useCallback(
       async (values: any) => {
@@ -169,6 +261,7 @@ export const ModelFormModal = memo(
     const providerOptions = useMemo(() => {
       return (
         providersResponse?.data?.map((provider) => ({
+          isGlobal: provider?.isGlobal,
           categories: provider?.categories,
           providerKey: provider?.providerKey,
           label: provider?.name || provider?.providerId,
@@ -178,6 +271,50 @@ export const ModelFormModal = memo(
         return provider.categories?.includes(filterProviderCategory as ProviderCategory);
       });
     }, [providersResponse, filterProviderCategory]);
+
+    const currentProvider = useMemo(() => {
+      return providerOptions.find((p) => p.value === selectedProviderId);
+    }, [selectedProviderId, providerOptions]);
+
+    if (!selectedProviderId && providerOptions?.[0]?.value) {
+      console.log('setkkkkkk', providerOptions?.[0]?.value);
+      setSelectedProviderId(providerOptions?.[0]?.value);
+      form.setFieldsValue({ providerId: providerOptions?.[0]?.value });
+    }
+
+    const resetFormExcludeField = (fields: string[]) => {
+      const values = form.getFieldsValue();
+      console.log('values', values);
+      form.resetFields();
+      for (const field of fields) {
+        form.setFieldsValue({ [field]: values[field] });
+      }
+    };
+
+    const handleProviderChange = useCallback(
+      (value: string) => {
+        resetFormExcludeField(['providerId']);
+        form.setFieldsValue({ enabled: true });
+        const provider = providerOptions.find((p) => p.value === value);
+        setSelectedProviderId(provider?.value);
+
+        // Only fetch if not in cache
+        if (!getCachedOptions(value)) {
+          refetchProviderItemOptions();
+        }
+      },
+      [providerOptions, form, refetchProviderItemOptions, getCachedOptions],
+    );
+
+    // Handle model ID selection
+    const handleModelIdChange = useCallback(
+      (value: string, option: any) => {
+        console.log('option', value, option);
+        resetFormExcludeField(['providerId', 'modelId']);
+        form.setFieldsValue({ name: option.name, enabled: true });
+      },
+      [form, resetFormExcludeField],
+    );
 
     useEffect(() => {
       if (isOpen) {
@@ -227,6 +364,13 @@ export const ModelFormModal = memo(
           }
 
           form.setFieldsValue(formValues);
+
+          // Check if we need to fetch provider item options
+          const providerId = formValues.providerId;
+          setSelectedProviderId(providerId);
+          if (providerId && !getCachedOptions(providerId)) {
+            refetchProviderItemOptions();
+          }
         } else {
           form.resetFields();
           form.setFieldsValue({
@@ -234,15 +378,24 @@ export const ModelFormModal = memo(
             providerId: providerOptions?.[0]?.value,
             capabilities: [],
           });
-        }
-      }
-    }, [model, isOpen, form, filterProviderCategory]);
 
-    useEffect(() => {
-      if (isOpen) {
-        refetch();
+          setSelectedProviderId(providerOptions?.[0]?.value);
+
+          // Check if we need to fetch provider item options for the default provider
+          const providerId = providerOptions?.[0]?.value;
+          if (providerId && !getCachedOptions(providerId)) {
+            refetchProviderItemOptions();
+          }
+        }
+        console.log('modelIdOptions', modelIdOptions);
       }
     }, [isOpen]);
+
+    useEffect(() => {
+      if (shouldRefetch) {
+        refetch();
+      }
+    }, [shouldRefetch]);
 
     const renderCategorySpecificFields = useMemo(() => {
       if (filterProviderCategory === 'llm') {
@@ -383,6 +536,7 @@ export const ModelFormModal = memo(
                 placeholder={t('settings.modelConfig.providerPlaceholder')}
                 loading={isProvidersLoading}
                 options={providerOptions}
+                onChange={handleProviderChange}
                 dropdownRender={(menu) => (
                   <>
                     {isProvidersLoading ? (
@@ -412,7 +566,38 @@ export const ModelFormModal = memo(
               label={t('settings.modelConfig.modelId')}
               rules={[{ required: true, message: t('settings.modelConfig.modelIdPlaceholder') }]}
             >
-              <Input placeholder={t('settings.modelConfig.modelIdPlaceholder')} />
+              {currentProvider?.isGlobal ? (
+                <Select
+                  placeholder={t('settings.modelConfig.modelIdPlaceholder')}
+                  showSearch
+                  optionFilterProp="value"
+                  options={modelIdOptions}
+                  notFoundContent={
+                    loadingItemOptions &&
+                    selectedProviderId &&
+                    !getCachedOptions(selectedProviderId) ? (
+                      <Loading />
+                    ) : null
+                  }
+                  loading={
+                    loadingItemOptions &&
+                    selectedProviderId &&
+                    !getCachedOptions(selectedProviderId)
+                  }
+                  onChange={handleModelIdChange}
+                  disabled={
+                    loadingItemOptions &&
+                    selectedProviderId &&
+                    !getCachedOptions(selectedProviderId)
+                  }
+                />
+              ) : (
+                <AutoComplete
+                  options={modelIdOptions}
+                  filterOption={true}
+                  onSelect={handleModelIdChange}
+                />
+              )}
             </Form.Item>
 
             <Form.Item

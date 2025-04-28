@@ -2046,7 +2046,7 @@ const translations = {
       name: 'Model Name',
       namePlaceholder: 'Please enter the name of the model',
       modelId: 'Model ID',
-      modelIdPlaceholder: 'Please enter the model ID',
+      modelIdPlaceholder: 'Please set the model ID',
       enable: 'Enable',
       enabled: 'Enabled',
       disable: 'Disable',

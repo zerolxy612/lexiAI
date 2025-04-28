@@ -1835,7 +1835,7 @@ const translations = {
       name: '模型名称',
       namePlaceholder: '请输入模型名称',
       modelId: '模型ID',
-      modelIdPlaceholder: '请输入模型ID',
+      modelIdPlaceholder: '请设置模型ID',
       enable: '启用',
       enabled: '是否启用',
       disable: '禁用',

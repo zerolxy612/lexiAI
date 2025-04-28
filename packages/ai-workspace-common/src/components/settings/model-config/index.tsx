@@ -522,6 +522,7 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
 
       {/* Modal for Create and Edit */}
       <ModelFormModal
+        shouldRefetch={visible}
         isOpen={isModalOpen}
         filterProviderCategory={category}
         onClose={() => {
