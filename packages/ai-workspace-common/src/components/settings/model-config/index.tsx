@@ -14,6 +14,7 @@ import {
   MenuProps,
   Divider,
   Tag,
+  Modal,
 } from 'antd';
 import { Spin } from '@refly-packages/ai-workspace-common/components/common/spin';
 import { LuPlus, LuSearch, LuGripVertical } from 'react-icons/lu';
@@ -27,6 +28,7 @@ import { LLMModelConfig, ProviderCategory, ProviderItem } from '@refly/openapi-s
 import { ModelIcon } from '@lobehub/icons';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { ModelFormModal } from './model-form';
+import { useUserStoreShallow } from '@refly-packages/ai-workspace-common/stores/user';
 
 const { Title } = Typography;
 
@@ -107,7 +109,7 @@ const ModelItem = memo(
   }: {
     model: ProviderItem;
     onEdit: (model: ProviderItem) => void;
-    onDelete: (itemId: string) => void;
+    onDelete: (model: ProviderItem) => void;
     onToggleEnabled: (model: ProviderItem, enabled: boolean) => void;
     isSubmitting: boolean;
     index: number;
@@ -131,8 +133,8 @@ const ModelItem = memo(
     }, [model, onEdit]);
 
     const handleDelete = useCallback(() => {
-      onDelete(model.itemId);
-    }, [model.itemId, onDelete]);
+      onDelete(model);
+    }, [model, onDelete]);
 
     return (
       <Draggable draggableId={model.itemId} index={index}>
@@ -214,6 +216,62 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingModel, setEditingModel] = useState<ProviderItem | null>(null);
 
+  const { userProfile, setUserProfile } = useUserStoreShallow((state) => ({
+    userProfile: state.userProfile,
+    setUserProfile: state.setUserProfile,
+  }));
+  const defaultPreferences = userProfile?.preferences || {};
+  const defaultModel = defaultPreferences.defaultModel || {};
+  const chatModel = defaultModel.chat;
+  const queryAnalysisModel = defaultModel.queryAnalysis;
+  const titleGenerationModel = defaultModel.titleGeneration;
+
+  const getDefaultModelType = (itemId: string) => {
+    const type = [];
+    if (itemId === chatModel?.itemId) {
+      type.push('chat');
+    }
+    if (itemId === queryAnalysisModel?.itemId) {
+      type.push('queryAnalysis');
+    }
+    if (itemId === titleGenerationModel?.itemId) {
+      type.push('titleGeneration');
+    }
+    return type;
+  };
+
+  const updateDefaultModel = useCallback(
+    async (types: ('chat' | 'queryAnalysis' | 'titleGeneration')[], model: ProviderItem | null) => {
+      const updatedDefaultModel = {
+        ...defaultModel,
+      };
+      for (const type of types) {
+        updatedDefaultModel[type] = model;
+      }
+
+      const updatedPreferences = {
+        ...defaultPreferences,
+        defaultModel: updatedDefaultModel,
+      };
+
+      setUserProfile({
+        ...userProfile,
+        preferences: updatedPreferences,
+      });
+
+      const res = await getClient().updateSettings({
+        body: {
+          preferences: updatedPreferences,
+        },
+      });
+
+      if (res?.data?.success) {
+        message.success(t('settings.defaultModel.syncSuccessfully'));
+      }
+    },
+    [defaultModel, defaultPreferences, setUserProfile, userProfile, t],
+  );
+
   const batchUpdateProviderItems = async (items: ProviderItem[]) => {
     const res = await getClient().batchUpdateProviderItems({
       body: { items: items.map((item, index) => ({ ...item, order: index })) },
@@ -259,6 +317,26 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
     [modelItems],
   );
 
+  const beforeDeleteProviderItem = async (model: ProviderItem) => {
+    const type = getDefaultModelType(model.itemId);
+    if (type.length) {
+      Modal.confirm({
+        title: t('settings.modelConfig.deleteSyncConfirm', {
+          name: model.name || t('common.untitled'),
+        }),
+        onOk: () => deleteProviderItem(model.itemId),
+        okText: t('common.confirm'),
+        cancelText: t('common.cancel'),
+        okButtonProps: {
+          danger: true,
+        },
+        cancelButtonProps: {
+          className: 'hover:!text-green-600 hover:!border-green-600',
+        },
+      });
+    }
+  };
+
   const deleteProviderItem = async (itemId: string) => {
     const res = await getClient().deleteProviderItem({
       body: { itemId },
@@ -266,6 +344,10 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
     if (res.data.success) {
       message.success(t('common.deleteSuccess'));
       setModelItems(modelItems.filter((item) => item.itemId !== itemId));
+      const types = getDefaultModelType(itemId);
+      if (types.length) {
+        updateDefaultModel(types, null);
+      }
     }
   };
 
@@ -297,8 +379,8 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
     }
   };
 
-  const handleDeleteModel = (itemId: string) => {
-    deleteProviderItem(itemId);
+  const handleDeleteModel = (model: ProviderItem) => {
+    beforeDeleteProviderItem(model);
   };
 
   const handleToggleEnabled = async (model: ProviderItem, enabled: boolean) => {
@@ -317,6 +399,11 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
         setModelItems([
           ...modelItems.map((item) => (item.itemId === model.itemId ? { ...model } : item)),
         ]);
+
+        const types = getDefaultModelType(model.itemId);
+        if (types.length) {
+          updateDefaultModel(types, model);
+        }
       }
     } else if (categoryType === 'embedding') {
       setEmbedding(model);

@@ -1831,6 +1831,8 @@ const translations = {
       addModel: '添加模型',
       editModel: '编辑模型',
       deleteConfirm: '确定删除模型 {{name}} 吗？',
+      deleteSyncConfirm:
+        '模型 {{name}} 已被应用到默认模型配置中，删除后需要重新配置默认模型，确定删除吗？',
       provider: '供应商',
       providerPlaceholder: '请选择供应商',
       name: '模型名称',
@@ -1895,6 +1897,7 @@ const translations = {
       titleGeneration: '智能标题生成',
       noModel: '未设置',
       updateSuccessfully: '更新成功！',
+      syncSuccessfully: '默认模型配置同步更新成功！',
       updateFailed: '更新失败，请重试！',
       description: {
         chat: '当您没有指定具体模型时，我们将用这个模型为您解答问题。',

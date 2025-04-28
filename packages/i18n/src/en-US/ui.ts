@@ -2041,6 +2041,8 @@ const translations = {
       otherModels: 'Other Models',
       addModel: 'Add Model',
       editModel: 'Edit Model',
+      deleteSyncConfirm:
+        'Are you sure you want to delete the model {{name}}? It has been applied to the default model configuration and needs to be reconfigured.',
       deleteConfirm: 'Are you sure you want to delete the model {{name}}?',
       provider: 'Provider',
       providerPlaceholder: 'Please select the provider',
@@ -2106,6 +2108,7 @@ const translations = {
       titleGeneration: 'Smart Title Generator',
       noModel: 'Not Set',
       updateSuccessfully: 'Update successfully!',
+      syncSuccessfully: 'Default model configuration updated successfully!',
       updateFailed: 'Update failed, please try again!',
       description: {
         chat: "We'll use this model to answer your questions when you don't specify a particular one.",
