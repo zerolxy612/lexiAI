@@ -172,9 +172,6 @@ export class MCPAgent extends BaseSkill {
     // Get temperature setting
     const temperature = (config.configurable.tplConfig?.modelTemperature?.value as number) || 0.2;
 
-    // Set current step for model call
-    config.metadata.step = { name: 'mcpAssistantModelCall' };
-
     // Call model
     const model = this.engine.chatModel({ temperature });
     const response = await model.invoke(baseMessages, {
@@ -234,14 +231,14 @@ export class MCPAgent extends BaseSkill {
       if (completed.length > 0) {
         for (const t of completed) {
           // Set initial step
-          config.metadata.step = { name: `${t.tool.name}-${this.messageIndex}` };
-          this.messageIndex++;
+
+          config.metadata.step = { name: `${t.tool.name}-${this.messageIndex++}` };
 
           this.emitEvent(
             {
               event: 'log',
               log: {
-                key: t.tool.name,
+                key: 'mcpCallingFinish',
                 titleArgs: {
                   ...t.tool,
                   status: t.status,
@@ -249,7 +246,8 @@ export class MCPAgent extends BaseSkill {
                 descriptionArgs: {
                   ...t.tool,
                   status: t.status,
-                  response: t.response,
+
+                  json: { params: t.tool.inputSchema, response: t.response },
                 },
                 ...{ status: 'finish' },
               },
@@ -262,14 +260,13 @@ export class MCPAgent extends BaseSkill {
       if (errors.length > 0) {
         for (const t of errors) {
           // Set initial step
-          config.metadata.step = { name: `${t.tool.name}-${this.messageIndex}` };
-          this.messageIndex++;
+          config.metadata.step = { name: `${t.tool.name}-${this.messageIndex++}` };
 
           this.emitEvent(
             {
               event: 'log',
               log: {
-                key: t.tool.name,
+                key: 'mcpCallingError',
                 titleArgs: {
                   ...t.tool,
                   status: t.status,
@@ -277,7 +274,7 @@ export class MCPAgent extends BaseSkill {
                 descriptionArgs: {
                   ...t.tool,
                   status: t.status,
-                  response: t.response,
+                  json: { params: t.tool.inputSchema, response: t.response },
                 },
                 ...{ status: 'error' },
               },
@@ -542,6 +539,8 @@ export class MCPAgent extends BaseSkill {
 
       // 精简处理查询事件
       this.engine.logger.log(`Processing query with MCP: ${optimizedQuery || query}`);
+
+      config.metadata.step = { name: 'mcpAssistantModelCalling' };
 
       // Run the assistant with the query
       const assistantResponse = await assistant.run(query);

@@ -19,6 +19,7 @@ import { IContextItem } from '@refly-packages/ai-workspace-common/stores/context
 import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/canvas';
 import { getParsedReasoningContent } from '@refly/utils/content-parser';
 import { IconThinking } from '@refly-packages/ai-workspace-common/components/common/icon';
+import ReactJson from 'react-json-prettify';
 
 const parseStructuredData = (structuredData: Record<string, unknown>, field: string) => {
   return typeof structuredData[field] === 'string'
@@ -72,11 +73,15 @@ const LogBox = memo(
                   ns: 'skillLog',
                   defaultValue: log.key,
                 }),
-                description: t(`${log.key}.description`, {
-                  ...log.descriptionArgs,
-                  ns: 'skillLog',
-                  defaultValue: '',
-                }),
+                description: log?.descriptionArgs?.json ? (
+                  <ReactJson json={log?.descriptionArgs?.json} />
+                ) : (
+                  t(`${log.key}.description`, {
+                    ...log.descriptionArgs,
+                    ns: 'skillLog',
+                    defaultValue: '',
+                  })
+                ),
                 status: log.status === 'error' ? 'error' : 'finish',
               }))}
             />
