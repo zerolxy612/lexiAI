@@ -27,10 +27,15 @@ RUN apk add --no-cache \
     ca-certificates \
     fontconfig \
     freetype \
-    ttf-dejavu \
-    ttf-droid \
-    ttf-freefont \
-    ttf-liberation
+    font-terminus \
+    font-inconsolata \
+    font-dejavu \
+    font-noto \
+    font-noto-cjk \
+    font-awesome \
+    font-noto-extra \
+    && fc-cache -f
+
 # Copy wkhtmltopdf files from wkhtmltopdf stage
 COPY --from=wkhtmltopdf /bin/wkhtmltopdf /bin/wkhtmltopdf
 
