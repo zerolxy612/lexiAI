@@ -630,8 +630,8 @@ export class SkillService {
         .map((item) => {
           const codeArtifact = item.codeArtifact;
           // For long code content, preserve beginning and end
-          const MAX_CONTENT_LENGTH = 2000;
-          const PRESERVED_SECTION_LENGTH = 800;
+          const MAX_CONTENT_LENGTH = 10000;
+          const PRESERVED_SECTION_LENGTH = 2000;
 
           let processedContent = codeArtifact.content;
 
