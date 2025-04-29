@@ -69,44 +69,52 @@ git clone git@github.com:<github_username>/refly.git
 
 Refly requires the following dependencies to build:
 
-- [Docker](https://www.docker.com/)
-- [Docker Compose](https://docs.docker.com/compose/install/)
-- [Node.js v20.x (LTS)](http://nodejs.org)
+- [Docker](https://www.docker.com/): 20.10.0 or higher
+- [Node.js](http://nodejs.org): 20.19.0 (LTS)
 
-### 4. Installation
+We strongly recommend to install Node.js via [nvm](https://github.com/nvm-sh/nvm):
 
-Refly consists of multiple packages managed in a monorepo structure. The main components are:
+```shell
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh | bash
+source ~/.bashrc  # if you are using zsh, source ~/.zshrc instead
+nvm install 20.19.0
+```
 
-1. Web Application (`apps/web/`): The main web interface
-2. API Server (`apps/api/`): The backend server
-3. AI Workspace Common (`packages/ai-workspace-common/`): Shared AI workspace UI components
-4. i18n (`packages/i18n/`): Internationalization support
+Make sure all dependencies are ready:
 
-Follow these steps to install:
+```shell
+docker version
+node -v # v20.19.0
+pnpm -v # 10.9.0 or higher
+```
+
+### 4. Development
 
 1. Spin up all the middlewares:
 
 ```bash
-cd deploy/docker
-docker-compose -f docker-compose.middleware.yml up -d
+docker compose -f deploy/docker/docker-compose.middleware.yml up -d
+docker ps | grep refly_ # check that all middleware containers are healthy
 ```
 
-2. Install dependencies:
+> If there are unhealthy containers, you should check the container logs and search for corresponding solutions. If the problem persists, feel free to raise an issue in our repo.
+
+2. Install npm dependencies:
 
 ```bash
 corepack enable
 pnpm install
 ```
 
-3. Set up environment variables for both API and web:
+> If `corepack` is not available, you can also install pnpm via `npm install -g pnpm`.
+
+3. Set up environment variables from the root directory:
 
 ```bash
-cp apps/web/.env.example apps/web/.env
-cp apps/api/.env.example apps/api/.env
+pnpm copy-env:develop
 ```
 
-4. Start developing:
-
+4. Start developing from the root directory:
 
 ```bash
 pnpm build
@@ -114,6 +122,8 @@ pnpm dev
 ```
 
 You can visit [http://localhost:5173](http://localhost:5173/) to start developing Refly.
+
+> The `dev` script in the root will run the `dev` script in the `apps/web`, `apps/api`, `apps/extension` concurrently. If you only want to run one of them, you can `cd` into the corresponding directory and run the `dev` script there.
 
 ## Developing
 

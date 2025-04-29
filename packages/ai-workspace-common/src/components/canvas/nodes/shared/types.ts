@@ -54,7 +54,7 @@ export interface ResourceNodeMeta {
 }
 
 export interface CodeArtifactNodeMeta {
-  status?: 'generating' | 'finish' | 'failed';
+  status?: 'generating' | 'finish' | 'failed' | 'executing';
   shareId?: string;
   previewUrl?: string;
   previewStorageKey?: string;
@@ -115,6 +115,8 @@ export type ImageNodeMeta = {
   imageType: string;
   imageUrl: string;
   storageKey: string;
+  showBorder?: boolean;
+  showTitle?: boolean;
   sizeMode?: 'compact' | 'adaptive';
   style?: React.CSSProperties;
   originalWidth?: number;

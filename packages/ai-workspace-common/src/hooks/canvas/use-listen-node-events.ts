@@ -15,7 +15,7 @@ export const useListenNodeOperationEvents = () => {
   const { getNodes, getEdges } = useReactFlow();
 
   // Only use canvas store if in interactive mode and not readonly
-  const { previewNode } = useNodePreviewControl({ canvasId });
+  const { previewNode, closeNodePreviewByEntityId } = useNodePreviewControl({ canvasId });
 
   const jumpToDescendantNode = useCallback(
     (entityId: string, descendantNodeType: CanvasNodeType, shouldPreview?: boolean) => {
@@ -70,12 +70,19 @@ export const useListenNodeOperationEvents = () => {
       jumpToDescendantNode(entityId, descendantNodeType, shouldPreview);
     };
 
+    const handleCloseNodePreviewByEntityId = ({ entityId }) => {
+      if (readonly) return;
+      closeNodePreviewByEntityId(entityId);
+    };
+
     nodeOperationsEmitter.on('addNode', handleAddNode);
     nodeOperationsEmitter.on('jumpToDescendantNode', handleJumpToNode);
+    nodeOperationsEmitter.on('closeNodePreviewByEntityId', handleCloseNodePreviewByEntityId);
 
     return () => {
       nodeOperationsEmitter.off('addNode', handleAddNode);
       nodeOperationsEmitter.off('jumpToDescendantNode', handleJumpToNode);
+      nodeOperationsEmitter.off('closeNodePreviewByEntityId', handleCloseNodePreviewByEntityId);
     };
-  }, [addNode, readonly]);
+  }, [addNode, readonly, previewNode, closeNodePreviewByEntityId]);
 };

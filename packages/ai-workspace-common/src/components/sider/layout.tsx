@@ -62,7 +62,7 @@ export const SiderLogo = (props: {
   setCollapse: (collapse: boolean) => void;
 }) => {
   const { navigate, setCollapse, source } = props;
-  const [starCount, setStarCount] = useState('913');
+  const [starCount, setStarCount] = useState('');
 
   useEffect(() => {
     // Fetch GitHub star count
@@ -90,14 +90,16 @@ export const SiderLogo = (props: {
           </span>
         </div>
 
-        <Button
-          type="default"
-          icon={<FaGithub className="h-3.5 w-3.5" />}
-          onClick={() => window.open('https://github.com/refly-ai/refly', '_blank')}
-          className="flex h-6 items-center gap-0.5 bg-white px-1.5 text-xs font-bold"
-        >
-          {starCount}
-        </Button>
+        {starCount && (
+          <Button
+            type="default"
+            icon={<FaGithub className="h-3.5 w-3.5" />}
+            onClick={() => window.open('https://github.com/refly-ai/refly', '_blank')}
+            className="flex h-6 items-center gap-0.5 bg-white px-1.5 text-xs font-bold"
+          >
+            {starCount}
+          </Button>
+        )}
       </div>
       {source === 'sider' && (
         <div>
@@ -151,7 +153,7 @@ export const NewCanvasItem = () => {
   const { debouncedCreateCanvas, isCreating: createCanvasLoading } = useCreateCanvas();
 
   return (
-    <div className="w-full px-1" onClick={debouncedCreateCanvas}>
+    <div className="w-full" onClick={debouncedCreateCanvas}>
       <Button
         className="w-full justify-start px-2"
         key="newCanvas"
@@ -172,11 +174,7 @@ export const NewProjectItem = () => {
 
   return (
     <>
-      <div
-        key="newProject"
-        className="w-full px-1"
-        onClick={() => setCreateProjectModalVisible(true)}
-      >
+      <div key="newProject" className="w-full" onClick={() => setCreateProjectModalVisible(true)}>
         <Button
           type="text"
           icon={<IconPlus className="text-green-600" />}

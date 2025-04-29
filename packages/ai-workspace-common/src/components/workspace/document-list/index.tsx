@@ -10,11 +10,13 @@ import type { MenuProps, DropdownProps } from 'antd';
 import {
   IconMoreHorizontal,
   IconDelete,
+  IconDownloadFile,
   IconDocumentFilled,
   IconCreateDocument,
 } from '@refly-packages/ai-workspace-common/components/common/icon';
 
 import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useDebouncedCallback } from 'use-debounce';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 import type { Document } from '@refly/openapi-schema';
 import { LOCALE } from '@refly/common-types';
@@ -23,23 +25,26 @@ import { useTranslation } from 'react-i18next';
 import { useFetchDataList } from '@refly-packages/ai-workspace-common/hooks/use-fetch-data-list';
 import { Spin } from '@refly-packages/ai-workspace-common/components/common/spin';
 import { useSiderStoreShallow } from '@refly-packages/ai-workspace-common/stores/sider';
-import { useAddNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-node';
 import { useDeleteDocument } from '@refly-packages/ai-workspace-common/hooks/canvas/use-delete-document';
 import { Markdown } from '@refly-packages/ai-workspace-common/components/markdown';
 import { NODE_COLORS } from '@refly-packages/ai-workspace-common/components/canvas/nodes/shared/colors';
 import { LuPlus } from 'react-icons/lu';
-import { useCreateDocument } from '@refly-packages/ai-workspace-common/hooks/canvas/use-create-document';
 import { useMatch } from 'react-router-dom';
-
+import { useExportDocument } from '@refly-packages/ai-workspace-common/hooks/use-export-document';
+import { nodeOperationsEmitter } from '@refly-packages/ai-workspace-common/events/nodeOperations';
+import { useCreateDocumentPurely } from '@refly-packages/ai-workspace-common/hooks/canvas/use-create-document-purely';
+import { useGetProjectCanvasId } from '@refly-packages/ai-workspace-common/hooks/use-get-project-canvasId';
 const ActionDropdown = ({ doc, afterDelete }: { doc: Document; afterDelete: () => void }) => {
   const { t } = useTranslation();
   const [popupVisible, setPopupVisible] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const { deleteDocument } = useDeleteDocument();
-  const { addNode } = useAddNode();
+  const { exportDocument } = useExportDocument();
   const { setShowLibraryModal } = useSiderStoreShallow((state) => ({
     setShowLibraryModal: state.setShowLibraryModal,
   }));
   const isShareCanvas = useMatch('/share/canvas/:canvasId');
+  const { isCanvasOpen } = useGetProjectCanvasId();
 
   const handleDelete = async () => {
     const success = await deleteDocument(doc.docId);
@@ -50,9 +55,64 @@ const ActionDropdown = ({ doc, afterDelete }: { doc: Document; afterDelete: () =
     }
   };
 
+  const handleExportDocument = useDebouncedCallback(async (type: 'markdown' | 'docx' | 'pdf') => {
+    if (isExporting) return;
+
+    try {
+      setIsExporting(true);
+      let mimeType = '';
+      let extension = '';
+
+      // 添加加载提示
+      const loadingMessage = message.loading({
+        content: t('workspace.exporting'),
+        duration: 0,
+      });
+      const content = await exportDocument(doc.docId, type);
+      // 关闭加载提示
+      loadingMessage();
+
+      switch (type) {
+        case 'markdown':
+          mimeType = 'text/markdown';
+          extension = 'md';
+          break;
+        case 'docx':
+          mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+          extension = 'docx';
+          break;
+        case 'pdf':
+          mimeType = 'application/pdf';
+          extension = 'pdf';
+          break;
+      }
+
+      // 创建Blob对象
+      const blob = new Blob([content], { type: mimeType });
+      // 创建下载链接
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${doc.title || t('common.untitled')}.${extension}`;
+      document.body.appendChild(a);
+      a.click();
+
+      // 清理
+      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      message.success(t('workspace.exportSuccess'));
+    } catch (error) {
+      console.error('Export error:', error);
+      message.error(t('workspace.exportFailed'));
+    } finally {
+      setIsExporting(false);
+      setPopupVisible(false);
+    }
+  }, 300);
+
   const handleAddToCanvas = () => {
-    addNode(
-      {
+    nodeOperationsEmitter.emit('addNode', {
+      node: {
         type: 'document',
         data: {
           title: doc.title,
@@ -60,10 +120,9 @@ const ActionDropdown = ({ doc, afterDelete }: { doc: Document; afterDelete: () =
           contentPreview: doc.contentPreview,
         },
       },
-      [],
-      true,
-      true,
-    );
+      shouldPreview: true,
+      needSetCenter: true,
+    });
     setShowLibraryModal(false);
   };
 
@@ -76,7 +135,39 @@ const ActionDropdown = ({ doc, afterDelete }: { doc: Document; afterDelete: () =
         </div>
       ),
       key: 'addToCanvas',
-      onClick: () => handleAddToCanvas(),
+      onClick: () => {
+        if (isCanvasOpen) {
+          handleAddToCanvas();
+        } else {
+          message.error(t('workspace.noCanvasSelected'));
+        }
+      },
+    },
+    {
+      label: (
+        <div className="flex items-center flex-grow">
+          <IconDownloadFile size={16} className="mr-2" />
+          {t('workspace.exportAs')}
+        </div>
+      ),
+      key: 'exportDocument',
+      children: [
+        {
+          label: t('workspace.exportDocumentToMarkdown'),
+          key: 'exportDocumentToMarkdown',
+          onClick: () => handleExportDocument('markdown'),
+        },
+        {
+          label: t('workspace.exportDocumentToDocx'),
+          key: 'exportDocumentToDocx',
+          onClick: () => handleExportDocument('docx'),
+        },
+        {
+          label: t('workspace.exportDocumentToPdf'),
+          key: 'exportDocumentToPdf',
+          onClick: () => handleExportDocument('pdf'),
+        },
+      ],
     },
     {
       label: (
@@ -154,10 +245,9 @@ const DocumentCard = ({ item, onDelete }: { item: Document; onDelete: () => void
 
 const DocumentList = () => {
   const { t } = useTranslation();
-  const { createSingleDocumentInCanvas } = useCreateDocument();
-  const { showLibraryModal, setShowLibraryModal } = useSiderStoreShallow((state) => ({
+  const { createDocument, isCreating } = useCreateDocumentPurely();
+  const { showLibraryModal } = useSiderStoreShallow((state) => ({
     showLibraryModal: state.showLibraryModal,
-    setShowLibraryModal: state.setShowLibraryModal,
   }));
 
   const { dataList, setDataList, loadMore, reload, hasMore, isRequesting } = useFetchDataList({
@@ -198,11 +288,11 @@ const DocumentList = () => {
     <div className="h-full flex items-center justify-center">
       <Empty description={t('common.empty')}>
         <Button
+          loading={isCreating}
           className="text-[#00968F]"
           icon={<IconCreateDocument className="-mr-1 flex items-center justify-center" />}
           onClick={() => {
-            createSingleDocumentInCanvas();
-            setShowLibraryModal(false);
+            createDocument(t('common.untitled'), '', reload);
           }}
         >
           {t('canvas.toolbar.createDocument')}

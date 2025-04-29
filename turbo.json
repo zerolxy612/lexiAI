@@ -7,10 +7,22 @@
       "env": ["*"],
       "dependsOn": ["sync-db-schema"]
     },
+    "dev:electron": {
+      "cache": false,
+      "persistent": true,
+      "env": ["*"],
+      "dependsOn": ["sync-db-schema"]
+    },
     "start": {
       "cache": false,
       "persistent": true,
       "env": ["*"]
+    },
+    "start:electron": {
+      "cache": false,
+      "persistent": true,
+      "env": ["*"],
+      "dependsOn": ["build:electron"]
     },
     "sync-db-schema": {
       "cache": false,
@@ -20,12 +32,28 @@
       "cache": false,
       "persistent": false
     },
+    "copy-env:develop": {
+      "cache": false,
+      "persistent": false
+    },
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**"],
       "env": ["*"]
     },
-    "codegen": {},
+    "build:electron": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist-electron/**"],
+      "env": ["*"]
+    },
+    "package:electron": {
+      "dependsOn": ["build:electron"],
+      "outputs": ["release/**"],
+      "env": ["*"]
+    },
+    "codegen": {
+      "cache": false
+    },
     "clean": {
       "cache": false,
       "outputs": ["packages/*/build"]

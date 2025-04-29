@@ -4,7 +4,7 @@ import { HiLink } from 'react-icons/hi';
 import { HiOutlineXMark } from 'react-icons/hi2';
 import { Spin } from '@refly-packages/ai-workspace-common/components/common/spin';
 import { isUrl } from '@refly/utils/isUrl';
-import { genUniqueId } from '@refly-packages/utils/id';
+import { genUniqueId } from '@refly/utils/id';
 import {
   LinkMeta,
   useImportResourceStore,
@@ -14,12 +14,12 @@ import {
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 import { UpsertResourceRequest } from '@refly/openapi-schema';
 import { useTranslation } from 'react-i18next';
-import { useAddNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-node';
 import { useSubscriptionUsage } from '@refly-packages/ai-workspace-common/hooks/use-subscription-usage';
 import { StorageLimit } from './storageLimit';
 import { getAvailableFileCount } from '@refly/utils/quota';
 import { useGetProjectCanvasId } from '@refly-packages/ai-workspace-common/hooks/use-get-project-canvasId';
 import { useUpdateSourceList } from '@refly-packages/ai-workspace-common/hooks/canvas/use-update-source-list';
+import { nodeOperationsEmitter } from '@refly-packages/ai-workspace-common/events/nodeOperations';
 
 const { TextArea } = Input;
 
@@ -34,11 +34,11 @@ export const ImportFromWeblink = () => {
       insertNodePosition: state.insertNodePosition,
     }));
 
-  const { projectId } = useGetProjectCanvasId();
+  const { projectId, isCanvasOpen } = useGetProjectCanvasId();
+
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(projectId || null);
   const { updateSourceList } = useUpdateSourceList();
 
-  const { addNode } = useAddNode();
   const { refetchUsage, storageUsage } = useSubscriptionUsage();
 
   const [saveLoading, setSaveLoading] = useState(false);
@@ -141,32 +141,37 @@ export const ImportFromWeblink = () => {
     setImportResourceModalVisible(false);
     setLinkStr('');
 
-    const resources =
-      data && Array.isArray(data.data)
-        ? data.data.map((resource) => ({
-            id: resource.resourceId,
-            title: resource.title,
-            domain: 'resource',
-            contentPreview: resource.contentPreview,
-          }))
-        : [];
-    resources.forEach((resource, index) => {
-      const nodePosition = insertNodePosition
-        ? {
-            x: insertNodePosition?.x + index * 300,
-            y: insertNodePosition?.y,
-          }
-        : null;
-      addNode({
-        type: 'resource',
-        data: {
-          title: resource.title,
-          entityId: resource.id,
-          contentPreview: resource.contentPreview,
-        },
-        position: nodePosition,
+    if (isCanvasOpen) {
+      const resources =
+        data && Array.isArray(data.data)
+          ? data.data.map((resource) => ({
+              id: resource.resourceId,
+              title: resource.title,
+              domain: 'resource',
+              contentPreview: resource.contentPreview,
+            }))
+          : [];
+      resources.forEach((resource, index) => {
+        const nodePosition = insertNodePosition
+          ? {
+              x: insertNodePosition?.x + index * 300,
+              y: insertNodePosition?.y,
+            }
+          : null;
+
+        nodeOperationsEmitter.emit('addNode', {
+          node: {
+            type: 'resource',
+            data: {
+              title: resource.title,
+              entityId: resource.id,
+              contentPreview: resource.contentPreview,
+            },
+            position: nodePosition,
+          },
+        });
       });
-    });
+    }
 
     updateSourceList(data && Array.isArray(data.data) ? data.data : [], currentProjectId);
   };
@@ -249,7 +254,7 @@ export const ImportFromWeblink = () => {
             disabled={disableSave()}
             loading={saveLoading}
           >
-            {t('common.saveToCanvas')}
+            {isCanvasOpen ? t('common.saveToCanvas') : t('common.save')}
           </Button>
         </div>
       </div>

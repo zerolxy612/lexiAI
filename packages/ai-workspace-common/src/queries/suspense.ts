@@ -5,6 +5,7 @@ import { UseQueryOptions, useSuspenseQuery } from '@tanstack/react-query';
 import {
   checkSettingsField,
   exportCanvas,
+  exportDocument,
   getActionResult,
   getAuthConfig,
   getCanvasData,
@@ -12,6 +13,8 @@ import {
   getCodeArtifactDetail,
   getCollabToken,
   getDocumentDetail,
+  getPageByCanvasId,
+  getPageDetail,
   getProjectDetail,
   getResourceDetail,
   getSettings,
@@ -25,6 +28,7 @@ import {
   listLabelClasses,
   listLabelInstances,
   listModels,
+  listPages,
   listProjects,
   listResources,
   listShares,
@@ -38,6 +42,8 @@ import {
   CheckSettingsFieldError,
   ExportCanvasData,
   ExportCanvasError,
+  ExportDocumentData,
+  ExportDocumentError,
   GetActionResultData,
   GetActionResultError,
   GetAuthConfigError,
@@ -50,6 +56,10 @@ import {
   GetCollabTokenError,
   GetDocumentDetailData,
   GetDocumentDetailError,
+  GetPageByCanvasIdData,
+  GetPageByCanvasIdError,
+  GetPageDetailData,
+  GetPageDetailError,
   GetProjectDetailData,
   GetProjectDetailError,
   GetResourceDetailData,
@@ -70,6 +80,8 @@ import {
   ListLabelInstancesData,
   ListLabelInstancesError,
   ListModelsError,
+  ListPagesData,
+  ListPagesError,
   ListProjectsData,
   ListProjectsError,
   ListResourcesData,
@@ -84,6 +96,51 @@ import {
   ServeStaticError,
 } from '../requests/types.gen';
 import * as Common from './common';
+export const useListPagesSuspense = <
+  TData = Common.ListPagesDefaultResponse,
+  TError = ListPagesError,
+  TQueryKey extends Array<unknown> = unknown[],
+>(
+  clientOptions: Options<ListPagesData, true> = {},
+  queryKey?: TQueryKey,
+  options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
+) =>
+  useSuspenseQuery<TData, TError>({
+    queryKey: Common.UseListPagesKeyFn(clientOptions, queryKey),
+    queryFn: () =>
+      listPages({ ...clientOptions }).then((response) => response.data as TData) as TData,
+    ...options,
+  });
+export const useGetPageDetailSuspense = <
+  TData = Common.GetPageDetailDefaultResponse,
+  TError = GetPageDetailError,
+  TQueryKey extends Array<unknown> = unknown[],
+>(
+  clientOptions: Options<GetPageDetailData, true>,
+  queryKey?: TQueryKey,
+  options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
+) =>
+  useSuspenseQuery<TData, TError>({
+    queryKey: Common.UseGetPageDetailKeyFn(clientOptions, queryKey),
+    queryFn: () =>
+      getPageDetail({ ...clientOptions }).then((response) => response.data as TData) as TData,
+    ...options,
+  });
+export const useGetPageByCanvasIdSuspense = <
+  TData = Common.GetPageByCanvasIdDefaultResponse,
+  TError = GetPageByCanvasIdError,
+  TQueryKey extends Array<unknown> = unknown[],
+>(
+  clientOptions: Options<GetPageByCanvasIdData, true>,
+  queryKey?: TQueryKey,
+  options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
+) =>
+  useSuspenseQuery<TData, TError>({
+    queryKey: Common.UseGetPageByCanvasIdKeyFn(clientOptions, queryKey),
+    queryFn: () =>
+      getPageByCanvasId({ ...clientOptions }).then((response) => response.data as TData) as TData,
+    ...options,
+  });
 export const useGetAuthConfigSuspense = <
   TData = Common.GetAuthConfigDefaultResponse,
   TError = GetAuthConfigError,
@@ -264,6 +321,21 @@ export const useGetDocumentDetailSuspense = <
     queryKey: Common.UseGetDocumentDetailKeyFn(clientOptions, queryKey),
     queryFn: () =>
       getDocumentDetail({ ...clientOptions }).then((response) => response.data as TData) as TData,
+    ...options,
+  });
+export const useExportDocumentSuspense = <
+  TData = Common.ExportDocumentDefaultResponse,
+  TError = ExportDocumentError,
+  TQueryKey extends Array<unknown> = unknown[],
+>(
+  clientOptions: Options<ExportDocumentData, true>,
+  queryKey?: TQueryKey,
+  options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
+) =>
+  useSuspenseQuery<TData, TError>({
+    queryKey: Common.UseExportDocumentKeyFn(clientOptions, queryKey),
+    queryFn: () =>
+      exportDocument({ ...clientOptions }).then((response) => response.data as TData) as TData,
     ...options,
   });
 export const useListProjectsSuspense = <

@@ -24,7 +24,7 @@ import { useNodeHoverEffect } from '@refly-packages/ai-workspace-common/hooks/ca
 import { useCanvasData } from '@refly-packages/ai-workspace-common/hooks/canvas/use-canvas-data';
 import { useAddNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-node';
 import { useDeleteResource } from '@refly-packages/ai-workspace-common/hooks/canvas/use-delete-resource';
-import { genSkillID } from '@refly-packages/utils/id';
+import { genSkillID } from '@refly/utils/id';
 import { IContextItem } from '@refly-packages/ai-workspace-common/stores/context-panel';
 import { NodeResizer as NodeResizerComponent } from './shared/node-resizer';
 import {
@@ -41,6 +41,7 @@ import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/ca
 import { useSubscriptionUsage } from '@refly-packages/ai-workspace-common/hooks/use-subscription-usage';
 import { NODE_COLORS } from '@refly-packages/ai-workspace-common/components/canvas/nodes/shared/colors';
 import { useUpdateNodeTitle } from '@refly-packages/ai-workspace-common/hooks/use-update-node-title';
+import { useSelectedNodeZIndex } from '@refly-packages/ai-workspace-common/hooks/canvas/use-selected-node-zIndex';
 import cn from 'classnames';
 
 const NodeContent = memo(
@@ -89,6 +90,7 @@ export const ResourceNode = memo(
     const { edges } = useCanvasData();
     const setNodeDataByEntity = useSetNodeDataByEntity();
     const { getNode } = useReactFlow();
+    useSelectedNodeZIndex(id, selected);
     const updateNodeTitle = useUpdateNodeTitle();
 
     const { resourceType, indexStatus, sizeMode = 'adaptive' } = data?.metadata ?? {};

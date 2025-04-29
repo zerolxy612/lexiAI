@@ -196,6 +196,27 @@ export const CanvasMenu = ({
     }
   }, [selectedCanvases, projectId, t, onRemoveCanvases]);
 
+  const removeCanvasFromProject = useCallback(
+    async (canvasId: string) => {
+      const res = await getClient().deleteProjectItems({
+        body: {
+          projectId,
+          items: [
+            {
+              entityType: 'canvas',
+              entityId: canvasId,
+            },
+          ],
+        },
+      });
+      if (res?.data?.success) {
+        message.success(t('project.action.removeItemsSuccess'));
+        onRemoveCanvases?.([canvasId]);
+      }
+    },
+    [projectId, t, onRemoveCanvases],
+  );
+
   const handleCanvasClick = useCallback(
     (canvasId: string, canvas: SiderData) => {
       if (isMultiSelectMode) {
@@ -335,7 +356,11 @@ export const CanvasMenu = ({
                               onClick={(e) => e.stopPropagation()}
                             />
                             {!isMultiSelectMode && (
-                              <CanvasActionDropdown canvasId={item.id} canvasName={item.name} />
+                              <CanvasActionDropdown
+                                canvasId={item.id}
+                                canvasName={item.name}
+                                handleRemoveFromProject={() => removeCanvasFromProject(item.id)}
+                              />
                             )}
                           </div>
                         </div>

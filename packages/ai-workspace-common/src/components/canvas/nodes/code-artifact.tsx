@@ -31,15 +31,20 @@ import { NodeResizer as NodeResizerComponent } from './shared/node-resizer';
 import { IconCodeArtifact } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { useInsertToDocument } from '@refly-packages/ai-workspace-common/hooks/canvas/use-insert-to-document';
 import { useAddNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-node';
-import { genSkillID } from '@refly-packages/utils/id';
+import { genSkillID } from '@refly/utils/id';
 import { IContextItem } from '@refly-packages/ai-workspace-common/stores/context-panel';
 import { useChatStore } from '@refly-packages/ai-workspace-common/stores/chat';
-import { CodeArtifact, Skill } from '@refly/openapi-schema';
+import { CodeArtifact, CodeArtifactType, Skill } from '@refly/openapi-schema';
 import Renderer from '@refly-packages/ai-workspace-common/modules/artifacts/code-runner/render';
 import { useGetCodeArtifactDetail } from '@refly-packages/ai-workspace-common/queries/queries';
 import { useFetchShareData } from '@refly-packages/ai-workspace-common/hooks/use-fetch-share-data';
 import { useUserStoreShallow } from '@refly-packages/ai-workspace-common/stores/user';
 import { useUpdateNodeTitle } from '@refly-packages/ai-workspace-common/hooks/use-update-node-title';
+import { useSelectedNodeZIndex } from '@refly-packages/ai-workspace-common/hooks/canvas/use-selected-node-zIndex';
+import { codeArtifactEmitter } from '@refly-packages/ai-workspace-common/events/codeArtifact';
+import { detectActualTypeFromType } from '@refly-packages/ai-workspace-common/modules/artifacts/code-runner/artifact-type-util';
+import { useSetNodeDataByEntity } from '@refly-packages/ai-workspace-common/hooks/canvas/use-set-node-data-by-entity';
+
 interface NodeContentProps {
   status: 'generating' | 'finish' | 'failed';
   entityId: string;
@@ -105,6 +110,8 @@ export const CodeArtifactNode = memo(
     const { addNode } = useAddNode();
     const { t } = useTranslation();
     const updateNodeTitle = useUpdateNodeTitle();
+    useSelectedNodeZIndex(id, selected);
+    const setNodeDataByEntity = useSetNodeDataByEntity();
 
     const { sizeMode = 'adaptive' } = data?.metadata ?? {};
 
@@ -124,6 +131,35 @@ export const CodeArtifactNode = memo(
     const node = useMemo(() => getNode(id), [id, getNode]);
 
     const { readonly } = useCanvasContext();
+
+    // Listen for statusUpdate events to update node metadata
+    useEffect(() => {
+      const handleStatusUpdate = (eventData: {
+        artifactId: string;
+        status: 'finish' | 'generating';
+        type: CodeArtifactType;
+      }) => {
+        if (eventData.artifactId === data?.entityId) {
+          // Update node metadata when status changes
+          setNodeDataByEntity(
+            { type: 'codeArtifact', entityId: eventData.artifactId },
+            {
+              metadata: {
+                status: eventData.status,
+                activeTab: eventData.status === 'finish' ? 'preview' : 'code',
+                type: detectActualTypeFromType(eventData.type),
+              },
+            },
+          );
+        }
+      };
+
+      codeArtifactEmitter.on('statusUpdate', handleStatusUpdate);
+
+      return () => {
+        codeArtifactEmitter.off('statusUpdate', handleStatusUpdate);
+      };
+    }, [data?.entityId, setNodeDataByEntity]);
 
     const { containerStyle, handleResize } = useNodeSize({
       id,

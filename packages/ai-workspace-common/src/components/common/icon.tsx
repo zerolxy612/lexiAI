@@ -56,8 +56,9 @@ import {
   RiImageAiLine,
   RiExpandDiagonalLine,
   RiGuideLine,
+  RiSlideshow2Line,
 } from 'react-icons/ri';
-import { RxEnterFullScreen } from 'react-icons/rx';
+import { RxEnterFullScreen, RxExitFullScreen } from 'react-icons/rx';
 import { PiAtom } from 'react-icons/pi';
 import { TiDocumentDelete } from 'react-icons/ti';
 import { AiOutlineLoading3Quarters } from 'react-icons/ai';
@@ -144,6 +145,7 @@ export const IconExit = RxExit;
 export const IconExpand = RiExpandDiagonalLine;
 export const IconShrink = AiOutlineShrink;
 export const IconWideMode = RxEnterFullScreen;
+export const IconExitWideMode = RxExitFullScreen;
 export const IconDocumentation = LuBookOpen;
 export const IconMouse = MdOutlineMouse;
 export const IconTouchpad = LuTouchpad;
@@ -170,7 +172,7 @@ export const IconRight = LuChevronRight;
 export const IconUser = LuUserRound;
 export const IconRemove = MdOutlineRemoveCircleOutline;
 export const IconFiles = LuFileStack;
-
+export const IconSlideshow = RiSlideshow2Line;
 export const IconChrome = ChromeIcon;
 export const ModelProviderIcons = {
   openai: OpenAIIcon,

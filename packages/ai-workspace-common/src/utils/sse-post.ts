@@ -1,9 +1,18 @@
 import { InvokeSkillRequest, SkillEvent } from '@refly/openapi-schema';
-import { scrollToBottom } from '@refly-packages/ai-workspace-common/utils/ui';
 import { extractBaseResp } from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 import { ConnectionError, AuthenticationExpiredError } from '@refly/errors';
 import { refreshToken } from './auth';
-import { serverOrigin } from './env';
+import { isDesktop, serverOrigin } from './env';
+import { scrollToBottom } from '@refly-packages/ai-workspace-common/utils/ui';
+import throttle from 'lodash.throttle';
+
+// Create throttled version of scrollToBottom function
+const throttledScrollToBottom = throttle(() => {
+  // Use requestAnimationFrame to ensure scrolling happens at the best time
+  window.requestAnimationFrame(() => {
+    scrollToBottom();
+  });
+}, 300); // Execute at most once every 300ms
 
 const makeSSERequest = async (
   payload: InvokeSkillRequest,
@@ -15,7 +24,7 @@ const makeSSERequest = async (
     headers: {
       'Content-Type': 'application/json',
     },
-    credentials: 'include',
+    credentials: isDesktop() ? 'omit' : 'include',
     signal: controller.signal,
     body: JSON.stringify(payload),
   });
@@ -79,6 +88,142 @@ export const ssePost = async ({
     let isSkillFirstMessage = true;
     let bufferStr = '';
 
+    // Improved batching configuration
+    const batchedEvents: SkillEvent[] = [];
+    let processingBatch = false;
+    const BATCH_SIZE = 30; // Maximum number of events to process at once
+    const BATCH_INTERVAL = 250; // Time between batch processing in ms
+    let lastProcessTime = 0;
+    const THROTTLE_TIMEOUT = 100; // Minimum time between batch processing
+
+    // Process accumulated events in batches
+    const processBatch = () => {
+      if (batchedEvents.length === 0 || processingBatch) return;
+
+      const now = performance.now();
+      // Skip if not enough time has passed and batch isn't very large
+      if (now - lastProcessTime < THROTTLE_TIMEOUT && batchedEvents.length < BATCH_SIZE * 2) {
+        return;
+      }
+
+      processingBatch = true;
+      lastProcessTime = now;
+
+      // Get all events to process and clear the batch
+      const eventsToProcess = [...batchedEvents];
+      batchedEvents.length = 0;
+
+      // Group events by type for more efficient processing
+      const eventsByType: Record<string, SkillEvent[]> = {};
+
+      // Group events by type
+      for (const event of eventsToProcess) {
+        const eventType = event?.event || 'unknown';
+        if (!eventsByType[eventType]) {
+          eventsByType[eventType] = [];
+        }
+        eventsByType[eventType].push(event);
+      }
+
+      // Use requestAnimationFrame to sync with browser rendering
+      requestAnimationFrame(() => {
+        // Handle start events
+        if (eventsByType.start?.length) {
+          const lastStartEvent = eventsByType.start[eventsByType.start.length - 1];
+          if (isSkillFirstMessage) {
+            onSkillStart(lastStartEvent);
+          }
+        }
+
+        // Handle log events
+        if (eventsByType.log?.length) {
+          for (const event of eventsByType.log) {
+            onSkillLog(event);
+          }
+        }
+
+        // Handle stream events - combine content when possible
+        if (eventsByType.stream?.length) {
+          // Use the last event as a template
+          const lastEvent = eventsByType.stream[eventsByType.stream.length - 1];
+          // Create a copy to avoid mutation issues
+          const combinedEvent = { ...lastEvent };
+
+          // Combine all content
+          combinedEvent.content = eventsByType.stream.map((e) => e.content || '').join('');
+
+          // Combine reasoning content
+          combinedEvent.reasoningContent = eventsByType.stream
+            .map((e) => e.reasoningContent || '')
+            .join('');
+
+          onSkillStream(combinedEvent);
+        }
+
+        // Process remaining event types (less performance-critical)
+        if (eventsByType.artifact?.length) {
+          for (const event of eventsByType.artifact) {
+            onSkillArtifact(event);
+          }
+        }
+
+        if (eventsByType.structured_data?.length) {
+          for (const event of eventsByType.structured_data) {
+            onSkillStructedData(event);
+          }
+        }
+
+        if (eventsByType.create_node?.length) {
+          for (const event of eventsByType.create_node) {
+            onSkillCreateNode(event);
+          }
+        }
+
+        if (eventsByType.token_usage?.length) {
+          for (const event of eventsByType.token_usage) {
+            onSkillTokenUsage?.(event);
+          }
+        }
+
+        if (eventsByType.end?.length) {
+          for (const event of eventsByType.end) {
+            onSkillEnd(event);
+            isSkillFirstMessage = true;
+          }
+        }
+
+        if (eventsByType.error?.length) {
+          for (const event of eventsByType.error) {
+            onSkillError?.(event);
+          }
+        }
+
+        // Scroll after processing if needed
+        if (eventsToProcess.length > 0) {
+          throttledScrollToBottom();
+        }
+
+        processingBatch = false;
+      });
+    };
+
+    // Schedule batch processing
+    let batchTimer: number | null = null;
+
+    const scheduleBatchProcessing = () => {
+      if (batchTimer !== null) return; // Already scheduled
+
+      batchTimer = window.setTimeout(() => {
+        processBatch();
+        batchTimer = null;
+
+        // Schedule next batch if there are pending events
+        if (batchedEvents.length > 0) {
+          scheduleBatchProcessing();
+        }
+      }, BATCH_INTERVAL);
+    };
+
     const read = async () => {
       let hasError = false;
       try {
@@ -88,63 +233,43 @@ export const ssePost = async ({
         const { done, value } = await reader.read();
 
         if (done) {
+          // Process any remaining events
+          processBatch();
           onCompleted?.();
-
+          // Final scroll to bottom
+          scrollToBottom();
           return;
         }
 
         bufferStr += decoder.decode(value, { stream: true });
         const lines = bufferStr.split('\n');
-        let skillEvent: SkillEvent;
+        bufferStr = lines[lines.length - 1]; // Keep the last incomplete line
 
         try {
-          for (const message of lines ?? []) {
+          // Process all complete lines
+          for (let i = 0; i < lines.length - 1; i++) {
+            const message = lines[i];
             if (message.startsWith('data: ')) {
               try {
-                skillEvent = JSON.parse(message.substring(6)) as SkillEvent;
+                const skillEvent = JSON.parse(message.substring(6)) as SkillEvent;
+                batchedEvents.push(skillEvent);
               } catch (err) {
                 console.log('Parse error:', {
                   message: message.substring(6),
                   error: err,
                 });
-                // return;
               }
-
-              if (skillEvent?.event === 'start') {
-                if (isSkillFirstMessage) {
-                  onSkillStart(skillEvent);
-                }
-              } else if (skillEvent?.event === 'log') {
-                onSkillLog(skillEvent);
-              } else if (skillEvent?.event === 'end') {
-                onSkillEnd(skillEvent);
-                isSkillFirstMessage = true;
-              } else if (skillEvent?.event === 'stream') {
-                onSkillStream(skillEvent);
-              } else if (skillEvent?.event === 'artifact') {
-                onSkillArtifact(skillEvent);
-              } else if (skillEvent?.event === 'structured_data') {
-                onSkillStructedData(skillEvent);
-              } else if (skillEvent?.event === 'create_node') {
-                onSkillCreateNode(skillEvent);
-              } else if (skillEvent?.event === 'token_usage') {
-                onSkillTokenUsage?.(skillEvent);
-              } else if (skillEvent?.event === 'error') {
-                onSkillError?.(skillEvent);
-              }
-              setTimeout(() => {
-                // 滑动到底部
-                scrollToBottom();
-              });
             }
           }
 
-          bufferStr = lines[lines.length - 1];
+          // Schedule batch processing if we have events
+          if (batchedEvents.length > 0 && batchTimer === null) {
+            scheduleBatchProcessing();
+          }
         } catch (err) {
-          onSkillError(err);
+          onSkillError?.(err);
           onCompleted?.(true);
           hasError = true;
-
           return;
         }
 
@@ -174,7 +299,7 @@ export const ssePost = async ({
       });
     }
   } finally {
-    // 清理资源
+    // Clean up resources
     if (reader) {
       try {
         await reader.cancel();

@@ -36,6 +36,203 @@ tags:
   - name: misc
     description: Miscellaneous endpoints
 paths:
+  /pages:
+    get:
+      tags:
+        - pages
+      summary: List user pages
+      description: List all pages for a user
+      operationId: listPages
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: number
+            default: 1
+        - name: pageSize
+          in: query
+          description: Page size
+          schema:
+            type: number
+            default: 20
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListPagesResponse'
+
+  /pages/{pageId}:
+    get:
+      tags:
+        - pages
+      summary: Get page detail
+      description: Get detail of a specific page
+      operationId: getPageDetail
+      parameters:
+        - name: pageId
+          in: path
+          required: true
+          description: Page ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageDetailResponse'
+    put:
+      tags:
+        - pages
+      summary: Update a page
+      description: Update a specific page
+      operationId: updatePage
+      parameters:
+        - name: pageId
+          in: path
+          required: true
+          description: Page ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePageRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdatePageResponse'
+    delete:
+      tags:
+        - pages
+      summary: Delete a page
+      description: Delete a specific page
+      operationId: deletePage
+      parameters:
+        - name: pageId
+          in: path
+          required: true
+          description: Page ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletePageResponse'
+
+  /pages/{pageId}/share:
+    post:
+      tags:
+        - pages
+      summary: Share a page
+      description: Create a share link for a specific page
+      operationId: sharePage
+      parameters:
+        - name: pageId
+          in: path
+          required: true
+          description: Page ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SharePageResponse'
+
+  /pages/{pageId}/nodes/{nodeId}:
+    delete:
+      tags:
+        - pages
+      summary: Delete a node from a page
+      description: Remove a specific node from a page
+      operationId: deletePageNode
+      parameters:
+        - name: pageId
+          in: path
+          required: true
+          description: Page ID
+          schema:
+            type: string
+        - name: nodeId
+          in: path
+          required: true
+          description: Node ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletePageNodeResponse'
+
+  /pages/canvas/{canvasId}:
+    get:
+      tags:
+        - pages
+      summary: Get page by canvas ID
+      description: Retrieve the page associated with a specific canvas
+      operationId: getPageByCanvasId
+      parameters:
+        - name: canvasId
+          in: path
+          required: true
+          description: Canvas ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CanvasPageResponse'
+
+  /pages/canvas/{canvasId}/nodes:
+    post:
+      tags:
+        - pages
+      summary: Add nodes to canvas page
+      description: Add nodes to a page associated with a specific canvas. If no page exists, a new one will be created.
+      operationId: addNodesToCanvasPage
+      parameters:
+        - name: canvasId
+          in: path
+          required: true
+          description: Canvas ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddPageNodesRequest'
+      responses:
+        '201':
+          description: Nodes added to canvas page successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddPageNodesResponse'
+
+
   /auth/config:
     get:
       tags:
@@ -803,6 +1000,46 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetDocumentDetailResponse'
+  /knowledge/document/export/document:
+    get:
+      tags:
+        - knowledge
+      summary: Export document to Markdown, DOCX or PDF format
+      description: Export a document to Markdown, DOCX or PDF format
+      operationId: exportDocument
+      parameters:
+        - name: docId
+          in: query
+          description: Export document ID to retrieve
+          required: true
+          schema:
+            type: string
+            example: d-g30e1b80b5g1itbemc0g5jj3
+        - name: format
+          in: query
+          description: Export format
+          required: false
+          schema:
+            type: string
+            enum: [markdown, docx, pdf]
+            default: markdown
+            example: markdown
+      responses:
+        '200':
+          description: operation success
+          content:
+            text/markdown:
+              schema:
+                type: string
+                format: binary
+            application/vnd.openxmlformats-officedocument.wordprocessingml.document:
+              schema:
+                type: string
+                format: binary
+            application/pdf:
+              schema:
+                type: string
+                format: binary
   /knowledge/document/update:
     post:
       tags:
@@ -2047,8 +2284,257 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ConvertResponse'
+
 components:
   schemas:
+
+    Page:
+      type: object
+      required:
+        - pageId
+        - title
+        - createdAt
+        - updatedAt
+      properties:
+        pageId:
+          type: string
+          description: Page ID
+          example: pg-g30e1b80b5g1itbemc0g5jj3
+        title:
+          type: string
+          description: Page title
+          example: My Page
+        description:
+          type: string
+          description: Page description
+        status:
+          type: string
+          description: Page status
+          enum:
+            - draft
+            - published
+        canvasId:
+          type: string
+          description: Canvas ID associated with this page
+          example: cv-g30e1b80b5g1itbemc0g5jj3
+        coverUrl:
+          type: string
+          description: Page cover URL
+        createdAt:
+          type: string
+          format: date-time
+          description: Page creation time
+        updatedAt:
+          type: string
+          format: date-time
+          description: Page last update time
+
+    PageNodeRelation:
+      type: object
+      required:
+        - relationId
+        - nodeId
+        - nodeType
+        - entityId
+        - orderIndex
+      properties:
+        relationId:
+          type: string
+          description: Relation ID
+        pageId:
+          type: string
+          description: Page ID
+        nodeId:
+          type: string
+          description: Node ID
+        nodeType:
+          type: string
+          description: Node type
+        entityId:
+          type: string
+          description: Entity ID
+        orderIndex:
+          type: integer
+          description: Order index
+        nodeData:
+          description: Node data
+          $ref: '#/components/schemas/CanvasNodeData'
+
+    PageDetail:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Page'
+        - type: object
+          properties:
+            nodeRelations:
+              type: array
+              description: List of node relations
+              items:
+                $ref: '#/components/schemas/PageNodeRelation'
+            pageConfig:
+              type: object
+              description: Page configuration
+
+    UpdatePageRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Page title
+        description:
+          type: string
+          description: Page description
+        nodeRelations:
+          type: array
+          description: List of node relations with updated order
+          items:
+            type: object
+            properties:
+              nodeId:
+                type: string
+                description: Node ID
+              orderIndex:
+                type: integer
+                description: New order index
+
+    UpdatePageResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              allOf:
+                - $ref: '#/components/schemas/Page'
+                - type: object
+                  properties:
+                    nodeRelations:
+                      type: array
+                      description: List of node relations
+                      items:
+                        $ref: '#/components/schemas/PageNodeRelation'
+
+    DeletePageResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                pageId:
+                  type: string
+                  description: ID of the deleted page
+                canvasId:
+                  type: string
+                  description: Canvas ID associated with the deleted page
+
+    SharePageResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                pageId:
+                  type: string
+                  description: Page ID
+                canvasId:
+                  type: string
+                  description: Canvas ID associated with the page
+                shareId:
+                  type: string
+                  description: Share ID
+                shareUrl:
+                  type: string
+                  description: Share URL
+
+    DeletePageNodeResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                pageId:
+                  type: string
+                  description: Page ID
+                canvasId:
+                  type: string
+                  description: Canvas ID associated with the page
+                nodeId:
+                  type: string
+                  description: ID of the deleted node
+
+    ListPagesResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                total:
+                  type: integer
+                  description: Total number of pages
+                pages:
+                  type: array
+                  description: List of pages
+                  items:
+                    $ref: '#/components/schemas/Page'
+
+    PageDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/PageDetail'
+
+    AddPageNodesRequest:
+      type: object
+      required:
+        - nodeIds
+      properties:
+        nodeIds:
+          type: array
+          description: List of node IDs to add to the page
+          items:
+            type: string
+
+    AddPageNodesResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                page:
+                  $ref: '#/components/schemas/Page'
+                nodeRelations:
+                  type: array
+                  description: List of node relations
+                  items:
+                    $ref: '#/components/schemas/PageNodeRelation'
+
+    CanvasPageResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                page:
+                  $ref: '#/components/schemas/Page'
+                nodeRelations:
+                  type: array
+                  description: List of node relations
+                  items:
+                    $ref: '#/components/schemas/PageNodeRelation'
+
     User:
       type: object
       description: Refly user, used as JWT payload
@@ -2385,6 +2871,7 @@ components:
         - project
         - skillResponse
         - codeArtifact
+        - page
     Entity:
       type: object
       description: Entity
@@ -2610,6 +3097,9 @@ components:
             precision:
               type: number
               description: Decimal precision for number input
+            passwordType:
+              type: boolean
+              description: Whether to display as password input
     DynamicConfigValue:
       type: object
       description: Dynamic config value

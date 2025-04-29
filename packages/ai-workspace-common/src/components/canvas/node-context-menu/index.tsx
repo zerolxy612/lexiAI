@@ -60,7 +60,12 @@ export const NodeContextMenu: FC<NodeContextMenuProps> = ({
         e.preventDefault();
       }}
     >
-      <NodeActionMenu nodeId={nodeId} nodeType={nodeType} onClose={() => setOpen(false)} />
+      <NodeActionMenu
+        nodeId={nodeId}
+        nodeType={nodeType}
+        onClose={() => setOpen(false)}
+        hasFixedHeight
+      />
     </div>
   );
 };

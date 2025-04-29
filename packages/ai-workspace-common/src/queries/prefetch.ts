@@ -5,6 +5,7 @@ import { type QueryClient } from '@tanstack/react-query';
 import {
   checkSettingsField,
   exportCanvas,
+  exportDocument,
   getActionResult,
   getAuthConfig,
   getCanvasData,
@@ -12,6 +13,8 @@ import {
   getCodeArtifactDetail,
   getCollabToken,
   getDocumentDetail,
+  getPageByCanvasId,
+  getPageDetail,
   getProjectDetail,
   getResourceDetail,
   getSettings,
@@ -25,6 +28,7 @@ import {
   listLabelClasses,
   listLabelInstances,
   listModels,
+  listPages,
   listProjects,
   listResources,
   listShares,
@@ -36,11 +40,14 @@ import {
 import {
   CheckSettingsFieldData,
   ExportCanvasData,
+  ExportDocumentData,
   GetActionResultData,
   GetCanvasDataData,
   GetCanvasDetailData,
   GetCodeArtifactDetailData,
   GetDocumentDetailData,
+  GetPageByCanvasIdData,
+  GetPageDetailData,
   GetProjectDetailData,
   GetResourceDetailData,
   ListCanvasesData,
@@ -48,6 +55,7 @@ import {
   ListDocumentsData,
   ListLabelClassesData,
   ListLabelInstancesData,
+  ListPagesData,
   ListProjectsData,
   ListResourcesData,
   ListSharesData,
@@ -55,6 +63,30 @@ import {
   ListSkillTriggersData,
 } from '../requests/types.gen';
 import * as Common from './common';
+export const prefetchUseListPages = (
+  queryClient: QueryClient,
+  clientOptions: Options<ListPagesData, true> = {},
+) =>
+  queryClient.prefetchQuery({
+    queryKey: Common.UseListPagesKeyFn(clientOptions),
+    queryFn: () => listPages({ ...clientOptions }).then((response) => response.data),
+  });
+export const prefetchUseGetPageDetail = (
+  queryClient: QueryClient,
+  clientOptions: Options<GetPageDetailData, true>,
+) =>
+  queryClient.prefetchQuery({
+    queryKey: Common.UseGetPageDetailKeyFn(clientOptions),
+    queryFn: () => getPageDetail({ ...clientOptions }).then((response) => response.data),
+  });
+export const prefetchUseGetPageByCanvasId = (
+  queryClient: QueryClient,
+  clientOptions: Options<GetPageByCanvasIdData, true>,
+) =>
+  queryClient.prefetchQuery({
+    queryKey: Common.UseGetPageByCanvasIdKeyFn(clientOptions),
+    queryFn: () => getPageByCanvasId({ ...clientOptions }).then((response) => response.data),
+  });
 export const prefetchUseGetAuthConfig = (
   queryClient: QueryClient,
   clientOptions: Options<unknown, true> = {},
@@ -151,6 +183,14 @@ export const prefetchUseGetDocumentDetail = (
   queryClient.prefetchQuery({
     queryKey: Common.UseGetDocumentDetailKeyFn(clientOptions),
     queryFn: () => getDocumentDetail({ ...clientOptions }).then((response) => response.data),
+  });
+export const prefetchUseExportDocument = (
+  queryClient: QueryClient,
+  clientOptions: Options<ExportDocumentData, true>,
+) =>
+  queryClient.prefetchQuery({
+    queryKey: Common.UseExportDocumentKeyFn(clientOptions),
+    queryFn: () => exportDocument({ ...clientOptions }).then((response) => response.data),
   });
 export const prefetchUseListProjects = (
   queryClient: QueryClient,

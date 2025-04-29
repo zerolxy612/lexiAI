@@ -6,7 +6,6 @@ import { useImportResourceStoreShallow } from '@refly-packages/ai-workspace-comm
 import { CanvasNodeType, SearchDomain } from '@refly/openapi-schema';
 import { ContextItem } from '@refly-packages/ai-workspace-common/types/context';
 import { useAddNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-node';
-import { ImportResourceModal } from '@refly-packages/ai-workspace-common/components/import-resource';
 import { SourceListModal } from '@refly-packages/ai-workspace-common/components/source-list/source-list-modal';
 import { useKnowledgeBaseStoreShallow } from '@refly-packages/ai-workspace-common/stores/knowledge-base';
 import { getRuntime } from '@refly/utils/env';
@@ -29,7 +28,7 @@ import { useContextPanelStoreShallow } from '@refly-packages/ai-workspace-common
 import { useEdgeVisible } from '@refly-packages/ai-workspace-common/hooks/canvas/use-edge-visible';
 import { ToolButton, type ToolbarItem } from './tool-button';
 import { HoverCard } from '@refly-packages/ai-workspace-common/components/hover-card';
-import { genMemoID, genSkillID } from '@refly-packages/utils/id';
+import { genMemoID, genSkillID } from '@refly/utils/id';
 import { useHoverCard } from '@refly-packages/ai-workspace-common/hooks/use-hover-card';
 import { useCreateCodeArtifact } from '@refly-packages/ai-workspace-common/hooks/use-create-code-artifact';
 import { getDefaultContentForType } from '@refly-packages/ai-workspace-common/modules/artifacts/code-runner/artifact-type-util';
@@ -509,7 +508,6 @@ export const CanvasToolbar = memo<ToolbarProps>(({ onToolSelect, nodeLength }) =
         return <SearchListWrapper key={tool.value} tool={tool} handleConfirm={handleConfirm} />;
       })}
 
-      <ImportResourceModal />
       {modals.sourceList && <SourceListModal classNames="source-list-modal" />}
     </div>
   );

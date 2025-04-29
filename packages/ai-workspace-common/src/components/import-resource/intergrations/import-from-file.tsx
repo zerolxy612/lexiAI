@@ -6,19 +6,19 @@ import { useImportResourceStoreShallow } from '@refly-packages/ai-workspace-comm
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 import type { Resource } from '@refly/openapi-schema';
 import { useTranslation } from 'react-i18next';
-import { useAddNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-node';
 import { useSubscriptionUsage } from '@refly-packages/ai-workspace-common/hooks/use-subscription-usage';
 import { StorageLimit } from './storageLimit';
 import type { RcFile } from 'antd/es/upload/interface';
-import { genResourceID } from '@refly-packages/utils/id';
+import { genResourceID } from '@refly/utils/id';
 import { LuInfo } from 'react-icons/lu';
-import { getAvailableFileCount } from '@refly-packages/utils/quota';
+import { getAvailableFileCount } from '@refly/utils/quota';
 import { useSubscriptionStoreShallow } from '@refly-packages/ai-workspace-common/stores/subscription';
 import { GrUnlock } from 'react-icons/gr';
 import { useUserStoreShallow } from '@refly-packages/ai-workspace-common/stores/user';
 import { subscriptionEnabled } from '@refly-packages/ai-workspace-common/utils/env';
 import { useGetProjectCanvasId } from '@refly-packages/ai-workspace-common/hooks/use-get-project-canvasId';
 import { useUpdateSourceList } from '@refly-packages/ai-workspace-common/hooks/canvas/use-update-source-list';
+import { nodeOperationsEmitter } from '@refly-packages/ai-workspace-common/events/nodeOperations';
 
 const { Dragger } = Upload;
 
@@ -49,11 +49,10 @@ export const ImportFromFile = () => {
     setSubscribeModalVisible: state.setSubscribeModalVisible,
   }));
 
-  const { projectId } = useGetProjectCanvasId();
+  const { projectId, isCanvasOpen } = useGetProjectCanvasId();
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(projectId || null);
   const { updateSourceList } = useUpdateSourceList();
 
-  const { addNode } = useAddNode();
   const { refetchUsage, storageUsage, fileParsingUsage } = useSubscriptionUsage();
 
   const [saveLoading, setSaveLoading] = useState(false);
@@ -163,34 +162,39 @@ export const ImportFromFile = () => {
     message.success(t('common.putSuccess'));
     setImportResourceModalVisible(false);
 
-    const resources = Array.isArray(data.data)
-      ? (data.data as Resource[]).map((resource) => ({
-          id: resource.resourceId,
-          title: resource.title,
-          domain: 'resource',
-          contentPreview: resource.contentPreview,
-        }))
-      : [];
+    if (isCanvasOpen) {
+      const resources = Array.isArray(data.data)
+        ? (data.data as Resource[]).map((resource) => ({
+            id: resource.resourceId,
+            title: resource.title,
+            domain: 'resource',
+            contentPreview: resource.contentPreview,
+          }))
+        : [];
 
-    for (const [index, resource] of resources.entries()) {
-      const nodePosition = insertNodePosition
-        ? {
-            x: insertNodePosition.x + index * 300,
-            y: insertNodePosition.y,
-          }
-        : null;
-      addNode({
-        type: 'resource',
-        data: {
-          title: resource.title,
-          entityId: resource.id,
-          contentPreview: resource.contentPreview,
-          metadata: {
-            resourceType: 'file',
+      for (const [index, resource] of resources.entries()) {
+        const nodePosition = insertNodePosition
+          ? {
+              x: insertNodePosition.x + index * 300,
+              y: insertNodePosition.y,
+            }
+          : null;
+
+        nodeOperationsEmitter.emit('addNode', {
+          node: {
+            type: 'resource',
+            data: {
+              title: resource.title,
+              entityId: resource.id,
+              contentPreview: resource.contentPreview,
+              metadata: {
+                resourceType: 'file',
+              },
+            },
+            position: nodePosition,
           },
-        },
-        position: nodePosition,
-      });
+        });
+      }
     }
 
     updateSourceList(Array.isArray(data.data) ? (data.data as Resource[]) : [], currentProjectId);
@@ -269,7 +273,7 @@ export const ImportFromFile = () => {
         <div className="flex items-center gap-x-[8px] flex-shrink-0">
           <Button onClick={() => setImportResourceModalVisible(false)}>{t('common.cancel')}</Button>
           <Button type="primary" onClick={handleSave} disabled={disableSave} loading={saveLoading}>
-            {t('common.saveToCanvas')}
+            {isCanvasOpen ? t('common.saveToCanvas') : t('common.save')}
           </Button>
         </div>
       </div>

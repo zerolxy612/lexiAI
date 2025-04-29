@@ -20,7 +20,7 @@ import {
   cleanupNodeEvents,
 } from '@refly-packages/ai-workspace-common/events/nodeActions';
 import { useAddNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-node';
-import { genSkillID } from '@refly-packages/utils/id';
+import { genSkillID } from '@refly/utils/id';
 import { IContextItem } from '@refly-packages/ai-workspace-common/stores/context-panel';
 import { useAddToContext } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-to-context';
 import { useDeleteNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-delete-node';
@@ -30,16 +30,20 @@ import { useEditorPerformance } from '@refly-packages/ai-workspace-common/contex
 import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/canvas';
 import cn from 'classnames';
 import { ImagePreview } from '@refly-packages/ai-workspace-common/components/common/image-preview';
+import { useSelectedNodeZIndex } from '@refly-packages/ai-workspace-common/hooks/canvas/use-selected-node-zIndex';
 
 export const ImageNode = memo(
   ({ id, data, isPreview, selected, hideActions, hideHandles, onNodeClick }: ImageNodeProps) => {
     const { metadata } = data ?? {};
-    const imageUrl = metadata?.imageUrl;
+    const imageUrl = metadata?.imageUrl ?? '';
+    const showBorder = metadata?.showBorder ?? false;
+    const showTitle = metadata?.showTitle ?? true;
     const [isHovered, setIsHovered] = useState(false);
     const [isPreviewModalVisible, setIsPreviewModalVisible] = useState(false);
     const { handleMouseEnter: onHoverStart, handleMouseLeave: onHoverEnd } = useNodeHoverEffect(id);
     const targetRef = useRef<HTMLDivElement>(null);
     const { getNode } = useReactFlow();
+    useSelectedNodeZIndex(id, selected);
     const { addNode } = useAddNode();
     const { addToContext } = useAddToContext();
     const { deleteNode } = useDeleteNode();
@@ -210,7 +214,7 @@ export const ImageNode = memo(
             className={`
                 w-full
                 h-full
-                ${getNodeCommonStyles({ selected: !isPreview && selected, isHovered })}
+                ${showBorder ? getNodeCommonStyles({ selected: !isPreview && selected, isHovered }) : ''}
               `}
           >
             {!isPreview && !hideHandles && (
@@ -234,16 +238,22 @@ export const ImageNode = memo(
               </>
             )}
 
-            <div className={cn('flex flex-col h-full relative p-3 box-border', MAX_HEIGHT_CLASS)}>
-              <NodeHeader
-                title={data.title}
-                Icon={IconImage}
-                iconBgColor="#02b0c7"
-                canEdit={!readonly}
-                updateTitle={onTitleChange}
-              />
-
-              <div className="w-full rounded-lg overflow-y-auto">
+            <div className={cn('flex flex-col h-full relative box-border', MAX_HEIGHT_CLASS)}>
+              <div className="relative w-full rounded-lg overflow-y-auto">
+                {showTitle && isHovered && (
+                  <div
+                    className="absolute top-0 left-0 right-0 z-10 rounded-t-lg px-1"
+                    style={{ textShadow: '0px 0px 3px #ffffff' }}
+                  >
+                    <NodeHeader
+                      title={data.title}
+                      Icon={IconImage}
+                      iconBgColor="#02b0c7"
+                      canEdit={!readonly}
+                      updateTitle={onTitleChange}
+                    />
+                  </div>
+                )}
                 <img
                   onClick={readonly ? handlePreview : undefined}
                   src={imageUrl}

@@ -3,7 +3,7 @@ import { useStoreApi, XYPosition } from '@xyflow/react';
 import { CanvasNodeType } from '@refly/openapi-schema';
 import { message } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { genUniqueId } from '@refly-packages/utils/id';
+import { genUniqueId } from '@refly/utils/id';
 import { useCanvasStore } from '@refly-packages/ai-workspace-common/stores/canvas';
 import {
   CanvasNodeData,
@@ -19,6 +19,11 @@ import { purgeContextItems } from '@refly-packages/ai-workspace-common/utils/map
 import { useNodePreviewControl } from '@refly-packages/ai-workspace-common/hooks/canvas';
 import { CanvasNode } from '@refly-packages/ai-workspace-common/components/canvas/nodes';
 import { adoptUserNodes } from '@xyflow/system';
+
+// Define the maximum number of nodes allowed in a canvas
+const MAX_NODES_PER_CANVAS = 500;
+// Define the threshold at which to show warning (e.g., 98% of max)
+const WARNING_THRESHOLD = 0.98;
 
 const deduplicateNodes = (nodes: any[]) => {
   const uniqueNodesMap = new Map();
@@ -61,13 +66,41 @@ export const useAddNode = () => {
         return undefined;
       }
 
+      // Check for node limit
+      const nodeCount = nodes?.length ?? 0;
+
+      // If we're at the max limit, show error and return
+      if (nodeCount >= MAX_NODES_PER_CANVAS) {
+        message.error(
+          t('canvas.action.nodeLimitReached', {
+            max: MAX_NODES_PER_CANVAS,
+          }),
+        );
+        return undefined;
+      }
+
+      // If we're approaching the limit, show warning but continue
+      if (
+        nodeCount + 1 >= Math.ceil(MAX_NODES_PER_CANVAS * WARNING_THRESHOLD) &&
+        nodeCount < MAX_NODES_PER_CANVAS
+      ) {
+        message.warning(
+          t('canvas.action.approachingNodeLimit', {
+            current: nodeCount + 1,
+            max: MAX_NODES_PER_CANVAS,
+          }),
+        );
+      }
+
       // Check for existing node
       const existingNode = nodes.find(
         (n) => n.type === node.type && n.data?.entityId === node.data?.entityId,
       );
       if (existingNode) {
         if (existingNode.type !== 'skillResponse') {
-          message.warning(t('canvas.action.nodeAlreadyExists', { type: t(`common.${node.type}`) }));
+          message.warning(
+            t('canvas.action.nodeAlreadyExists', { type: t(`canvas.nodeTypes.${node.type}`) }),
+          );
         }
         setSelectedNode(existingNode);
         setNodeCenter(existingNode.id);

@@ -27,13 +27,11 @@ import {
   useCanvasContext,
 } from '@refly-packages/ai-workspace-common/context/canvas';
 import { useEdgeStyles } from './constants';
-import { useSiderStoreShallow } from '@refly-packages/ai-workspace-common/stores/sider';
 import {
   useCanvasStore,
   useCanvasStoreShallow,
 } from '@refly-packages/ai-workspace-common/stores/canvas';
 import { BigSearchModal } from '@refly-packages/ai-workspace-common/components/search/modal';
-import { CanvasListModal } from '@refly-packages/ai-workspace-common/components/workspace/canvas-list-modal';
 import { useCanvasNodesStore } from '@refly-packages/ai-workspace-common/stores/canvas-nodes';
 import { Spin } from '@refly-packages/ai-workspace-common/components/common/spin';
 import { LayoutControl } from './layout-control';
@@ -63,7 +61,8 @@ import { EmptyGuide } from './empty-guide';
 import { useReflyPilotReset } from '@refly-packages/ai-workspace-common/hooks/canvas/use-refly-pilot-reset';
 import HelperLines from './common/helper-line/index';
 import { useListenNodeOperationEvents } from '@refly-packages/ai-workspace-common/hooks/canvas/use-listen-node-events';
-import { LibraryModal } from '@refly-packages/ai-workspace-common/components/workspace/library-modal';
+import { runtime } from '@refly-packages/ai-workspace-common/utils/env';
+import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 
 const GRID_SIZE = 10;
 
@@ -162,6 +161,20 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
   );
   const selectedNodes = nodes.filter((node) => node.selected) || [];
 
+  const getPageByCanvasId = useCallback(async () => {
+    if (!canvasId) return;
+
+    const res = await getClient().getPageByCanvasId({
+      path: { canvasId },
+    });
+    if (res?.data?.success) {
+      const pageData = res.data.data;
+      if (pageData?.page?.pageId) {
+        setCanvasPage(canvasId, pageData.page.pageId);
+      }
+    }
+  }, [canvasId]);
+
   const {
     onNodesChange,
     truncateAllNodesContent,
@@ -181,29 +194,30 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
     }
   }, [canvasId, truncateAllNodesContent]);
 
-  const { showPreview } = useCanvasStoreShallow((state) => ({
-    showPreview: state.showPreview,
-  }));
-
-  const { showCanvasListModal, setShowCanvasListModal } = useSiderStoreShallow((state) => ({
-    showCanvasListModal: state.showCanvasListModal,
-    showLibraryModal: state.showLibraryModal,
-    setShowCanvasListModal: state.setShowCanvasListModal,
-    setShowLibraryModal: state.setShowLibraryModal,
-  }));
-
   const reactFlowInstance = useReactFlow();
 
   const { pendingNode, clearPendingNode } = useCanvasNodesStore();
   const { provider, readonly, shareNotFound, shareLoading } = useCanvasContext();
 
-  const { config, operatingNodeId, setOperatingNodeId, setInitialFitViewCompleted } =
-    useCanvasStoreShallow((state) => ({
-      config: state.config[canvasId],
-      operatingNodeId: state.operatingNodeId,
-      setOperatingNodeId: state.setOperatingNodeId,
-      setInitialFitViewCompleted: state.setInitialFitViewCompleted,
-    }));
+  const {
+    config,
+    operatingNodeId,
+    setOperatingNodeId,
+    setInitialFitViewCompleted,
+    showPreview,
+    setCanvasPage,
+    showSlideshow,
+    setShowSlideshow,
+  } = useCanvasStoreShallow((state) => ({
+    config: state.config[canvasId],
+    operatingNodeId: state.operatingNodeId,
+    setOperatingNodeId: state.setOperatingNodeId,
+    setInitialFitViewCompleted: state.setInitialFitViewCompleted,
+    showPreview: state.showPreview,
+    setCanvasPage: state.setCanvasPage,
+    showSlideshow: state.showSlideshow,
+    setShowSlideshow: state.setShowSlideshow,
+  }));
   const hasCanvasSynced = config?.localSyncedAt > 0 && config?.remoteSyncedAt > 0;
 
   const { handleNodePreview } = useNodePreviewControl({ canvasId });
@@ -399,8 +413,8 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
   const unhealthyStartTimeRef = useRef<number | null>(null);
 
   useEffect(() => {
-    // Skip if no provider
-    if (!provider) return;
+    // Skip if no provider or in desktop mode
+    if (!provider || runtime === 'desktop') return;
 
     // Clear timeout state if provider becomes connected
     if (provider.status === 'connected') {
@@ -443,6 +457,13 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
   }, [provider?.status]);
 
   useEffect(() => {
+    if (!readonly) {
+      getPageByCanvasId();
+    }
+    if (showSlideshow) {
+      setShowSlideshow(false);
+    }
+
     const unsubscribe = locateToNodePreviewEmitter.on(
       'locateToNodePreview',
       ({ canvasId: emittedCanvasId, id }) => {
@@ -929,7 +950,6 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
           </div>
         )}
 
-        <CanvasListModal visible={showCanvasListModal} setVisible={setShowCanvasListModal} />
         <BigSearchModal />
 
         <MenuPopper open={menuOpen} position={menuPosition} setOpen={setMenuOpen} />
@@ -974,11 +994,6 @@ export const Canvas = (props: { canvasId: string; readonly?: boolean }) => {
   const { canvasId, readonly } = props;
   const setCurrentCanvasId = useCanvasStoreShallow((state) => state.setCurrentCanvasId);
 
-  const { showLibraryModal, setShowLibraryModal } = useSiderStoreShallow((state) => ({
-    showLibraryModal: state.showLibraryModal,
-    setShowLibraryModal: state.setShowLibraryModal,
-  }));
-
   useEffect(() => {
     if (readonly) {
       return;
@@ -996,7 +1011,6 @@ export const Canvas = (props: { canvasId: string; readonly?: boolean }) => {
       <ReactFlowProvider>
         <CanvasProvider readonly={readonly} canvasId={canvasId}>
           <Flow canvasId={canvasId} />
-          <LibraryModal visible={showLibraryModal} setVisible={setShowLibraryModal} />
         </CanvasProvider>
       </ReactFlowProvider>
     </EditorPerformanceProvider>
