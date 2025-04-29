@@ -2518,6 +2518,7 @@ const translations = {
     customInstructions: 'Custom Instructions',
     waitingUploadCover: 'Waiting for upload cover',
     askProject: 'Ask Project',
+    noProjects: 'No projects available',
     knowledgeToggle: {
       enabledDesc:
         'Ask Project is currently enabled. Knowledge from files in "{{projectName}}" will be used as reference when asking questions.',
