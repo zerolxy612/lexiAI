@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { addEdge, useReactFlow } from '@xyflow/react';
 import { genUniqueId } from '@refly/utils/id';
 import { genSkillID } from '@refly/utils/id';
@@ -12,9 +12,44 @@ export function useDragToCreateNode() {
   const { setNodes, setEdges, screenToFlowPosition } = useReactFlow();
   const { t } = useTranslation();
 
+  // Track if we're actually dragging or just clicking
+  const isDraggingRef = useRef(false);
+  const startPositionRef = useRef({ x: 0, y: 0 });
+
+  // Track when connection starts (mouse down on handle)
+  const onConnectStart = useCallback((event) => {
+    isDraggingRef.current = false;
+    if ('clientX' in event && 'clientY' in event) {
+      startPositionRef.current = { x: event.clientX, y: event.clientY };
+    } else if (event?.touches?.[0]) {
+      startPositionRef.current = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+    }
+  }, []);
+
   // Handle when a connection attempt ends without a valid target
   const onConnectEnd = useCallback(
     (event, connectionState) => {
+      // Determine if this was a drag or just a click
+      let currentPosition = { x: 0, y: 0 };
+      if ('clientX' in event && 'clientY' in event) {
+        currentPosition = { x: event.clientX, y: event.clientY };
+      } else if (event?.changedTouches?.[0]) {
+        currentPosition = {
+          x: event.changedTouches[0].clientX,
+          y: event.changedTouches[0].clientY,
+        };
+      }
+
+      // Calculate distance moved to determine if it was a drag
+      const dx = currentPosition.x - startPositionRef.current.x;
+      const dy = currentPosition.y - startPositionRef.current.y;
+      const distanceMoved = Math.sqrt(dx * dx + dy * dy);
+
+      // If distance moved is very small, consider it a click and don't create a node
+      if (distanceMoved < 10) {
+        return;
+      }
+
       // Only create a skill node if the connection is invalid
       // and we have connection state information
       if (!connectionState || connectionState.isValid) {
@@ -131,6 +166,7 @@ export function useDragToCreateNode() {
   );
 
   return {
+    onConnectStart,
     onConnectEnd,
   };
 }

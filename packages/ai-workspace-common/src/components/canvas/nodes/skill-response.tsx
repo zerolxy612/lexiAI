@@ -9,7 +9,6 @@ import { useState, useCallback, useRef, useEffect, memo } from 'react';
 import { CustomHandle } from './shared/custom-handle';
 import { LuChevronRight } from 'react-icons/lu';
 import { getNodeCommonStyles } from './index';
-import { ActionButtons } from './shared/action-buttons';
 import { useInvokeAction } from '@refly-packages/ai-workspace-common/hooks/canvas/use-invoke-action';
 import { useNodeHoverEffect } from '@refly-packages/ai-workspace-common/hooks/canvas/use-node-hover';
 import { useDeleteNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-delete-node';
@@ -49,7 +48,6 @@ import {
 } from '@refly-packages/ai-workspace-common/hooks/canvas/use-node-size';
 import { ContentPreview } from './shared/content-preview';
 import { useActionPolling } from '@refly-packages/ai-workspace-common/hooks/canvas/use-action-polling';
-import { useEditorPerformance } from '@refly-packages/ai-workspace-common/context/editor-performance';
 import cn from 'classnames';
 import { ReasoningContentPreview } from './shared/reasoning-content-preview';
 import { useUpdateNodeTitle } from '@refly-packages/ai-workspace-common/hooks/use-update-node-title';
@@ -217,14 +215,11 @@ export const SkillResponseNode = memo(
     data,
     selected,
     id,
-    hideActions = false,
     isPreview = false,
     hideHandles = false,
     onNodeClick,
   }: SkillResponseNodeProps) => {
     const [isHovered, setIsHovered] = useState(false);
-    const { draggingNodeId } = useEditorPerformance();
-    const isDragging = draggingNodeId === id;
     useSelectedNodeZIndex(id, selected);
 
     const { operatingNodeId } = useCanvasStoreShallow((state) => ({
@@ -651,28 +646,26 @@ export const SkillResponseNode = memo(
           style={isPreview ? { width: 288, height: 200 } : containerStyle}
           onClick={onNodeClick}
         >
-          {!isPreview && !hideActions && !isDragging && !readonly && (
-            <ActionButtons type="skillResponse" nodeId={id} isNodeHovered={selected && isHovered} />
-          )}
-
           <div className={`h-full flex flex-col ${getNodeCommonStyles({ selected, isHovered })}`}>
             {!isPreview && !hideHandles && (
               <>
                 <CustomHandle
                   id={`${id}-target`}
+                  nodeId={id}
                   type="target"
                   position={Position.Left}
                   isConnected={isTargetConnected}
                   isNodeHovered={isHovered}
-                  nodeType="response"
+                  nodeType="skillResponse"
                 />
                 <CustomHandle
                   id={`${id}-source`}
+                  nodeId={id}
                   type="source"
                   position={Position.Right}
                   isConnected={isSourceConnected}
                   isNodeHovered={isHovered}
-                  nodeType="response"
+                  nodeType="skillResponse"
                 />
               </>
             )}

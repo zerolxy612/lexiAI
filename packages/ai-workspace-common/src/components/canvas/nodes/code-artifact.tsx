@@ -5,7 +5,6 @@ import Moveable from 'react-moveable';
 import { CanvasNode, CodeArtifactNodeProps } from './shared/types';
 import { CustomHandle } from './shared/custom-handle';
 import { getNodeCommonStyles } from './index';
-import { ActionButtons } from './shared/action-buttons';
 import { useAddToContext } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-to-context';
 import { useDeleteNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-delete-node';
 import { time } from '@refly-packages/ai-workspace-common/utils/time';
@@ -26,7 +25,6 @@ import {
 } from '@refly-packages/ai-workspace-common/hooks/canvas/use-node-size';
 import { NodeHeader } from './shared/node-header';
 import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/canvas';
-import { useEditorPerformance } from '@refly-packages/ai-workspace-common/context/editor-performance';
 import { NodeResizer as NodeResizerComponent } from './shared/node-resizer';
 import { IconCodeArtifact } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { useInsertToDocument } from '@refly-packages/ai-workspace-common/hooks/canvas/use-insert-to-document';
@@ -46,7 +44,7 @@ import { detectActualTypeFromType } from '@refly-packages/ai-workspace-common/mo
 import { useSetNodeDataByEntity } from '@refly-packages/ai-workspace-common/hooks/canvas/use-set-node-data-by-entity';
 
 interface NodeContentProps {
-  status: 'generating' | 'finish' | 'failed';
+  status: 'generating' | 'finish' | 'failed' | 'executing';
   entityId: string;
   shareId?: string;
   legacyData?: CodeArtifact;
@@ -94,15 +92,7 @@ const NodeContent = memo(
 );
 
 export const CodeArtifactNode = memo(
-  ({
-    id,
-    data,
-    isPreview,
-    selected,
-    hideActions,
-    hideHandles,
-    onNodeClick,
-  }: CodeArtifactNodeProps) => {
+  ({ id, data, isPreview, selected, hideHandles, onNodeClick }: CodeArtifactNodeProps) => {
     const [isHovered, setIsHovered] = useState(false);
     const [isResizing] = useState(false);
     const { edges } = useCanvasData();
@@ -125,9 +115,7 @@ export const CodeArtifactNode = memo(
       operatingNodeId: state.operatingNodeId,
     }));
 
-    const { draggingNodeId } = useEditorPerformance();
     const isOperating = operatingNodeId === id;
-    const isDragging = draggingNodeId === id;
     const node = useMemo(() => getNode(id), [id, getNode]);
 
     const { readonly } = useCanvasContext();
@@ -365,10 +353,6 @@ export const CodeArtifactNode = memo(
           style={isPreview ? { width: 288, height: 200 } : containerStyle}
           onClick={onNodeClick}
         >
-          {!isPreview && !hideActions && !isDragging && !readonly && (
-            <ActionButtons type="codeArtifact" nodeId={id} isNodeHovered={selected && isHovered} />
-          )}
-
           <div
             className={`h-full flex flex-col ${getNodeCommonStyles({ selected, isHovered })} ${isResizing ? 'pointer-events-none' : ''}`}
           >
@@ -376,19 +360,21 @@ export const CodeArtifactNode = memo(
               <>
                 <CustomHandle
                   id={`${id}-target`}
+                  nodeId={id}
                   type="target"
                   position={Position.Left}
                   isConnected={isTargetConnected}
                   isNodeHovered={isHovered}
-                  nodeType="response"
+                  nodeType="codeArtifact"
                 />
                 <CustomHandle
                   id={`${id}-source`}
+                  nodeId={id}
                   type="source"
                   position={Position.Right}
                   isConnected={isSourceConnected}
                   isNodeHovered={isHovered}
-                  nodeType="response"
+                  nodeType="codeArtifact"
                 />
               </>
             )}

@@ -1244,6 +1244,8 @@ const translations = {
       nodeNotFound: 'Source node not found or has been deleted. Please add it to the canvas first.',
     },
     nodeActions: {
+      dragToConnect: 'Drag to Connect',
+      clickToAdd: 'Click to Add',
       createMemo: 'Create Empty Memo',
       createMemoDescription:
         'Create an empty memo for quick recording ideas, supporting Markdown format',

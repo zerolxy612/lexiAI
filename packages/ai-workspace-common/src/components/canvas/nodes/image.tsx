@@ -1,7 +1,6 @@
 import { memo, useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { useReactFlow, Position } from '@xyflow/react';
 import { CanvasNode, ImageNodeProps } from './shared/types';
-import { ActionButtons } from './shared/action-buttons';
 import { useNodeHoverEffect } from '@refly-packages/ai-workspace-common/hooks/canvas/use-node-hover';
 import {
   useNodeSize,
@@ -26,14 +25,13 @@ import { useAddToContext } from '@refly-packages/ai-workspace-common/hooks/canva
 import { useDeleteNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-delete-node';
 import Moveable from 'react-moveable';
 import { useSetNodeDataByEntity } from '@refly-packages/ai-workspace-common/hooks/canvas/use-set-node-data-by-entity';
-import { useEditorPerformance } from '@refly-packages/ai-workspace-common/context/editor-performance';
 import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/canvas';
 import cn from 'classnames';
 import { ImagePreview } from '@refly-packages/ai-workspace-common/components/common/image-preview';
 import { useSelectedNodeZIndex } from '@refly-packages/ai-workspace-common/hooks/canvas/use-selected-node-zIndex';
 
 export const ImageNode = memo(
-  ({ id, data, isPreview, selected, hideActions, hideHandles, onNodeClick }: ImageNodeProps) => {
+  ({ id, data, isPreview, selected, hideHandles, onNodeClick }: ImageNodeProps) => {
     const { metadata } = data ?? {};
     const imageUrl = metadata?.imageUrl ?? '';
     const showBorder = metadata?.showBorder ?? false;
@@ -53,9 +51,7 @@ export const ImageNode = memo(
       operatingNodeId: state.operatingNodeId,
     }));
 
-    const { draggingNodeId } = useEditorPerformance();
     const isOperating = operatingNodeId === id;
-    const isDragging = draggingNodeId === id;
     const node = useMemo(() => getNode(id), [id, getNode]);
     const { readonly } = useCanvasContext();
 
@@ -206,10 +202,6 @@ export const ImageNode = memo(
             'nodrag nopan select-text': isOperating,
           })}
         >
-          {!isPreview && !hideActions && !isDragging && !readonly && (
-            <ActionButtons type="image" nodeId={id} isNodeHovered={selected && isHovered} />
-          )}
-
           <div
             className={`
                 w-full
@@ -221,6 +213,7 @@ export const ImageNode = memo(
               <>
                 <CustomHandle
                   id={`${id}-target`}
+                  nodeId={id}
                   type="target"
                   position={Position.Left}
                   isConnected={false}
@@ -229,6 +222,7 @@ export const ImageNode = memo(
                 />
                 <CustomHandle
                   id={`${id}-source`}
+                  nodeId={id}
                   type="source"
                   position={Position.Right}
                   isConnected={false}

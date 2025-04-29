@@ -1061,6 +1061,8 @@ const translations = {
       nodeNotFound: '源节点未找到或已被删除，请先添加到画布',
     },
     nodeActions: {
+      dragToConnect: '拖拽连线',
+      clickToAdd: '点击添加',
       createMemo: '创建空备忘录',
       createMemoDescription: '创建一个空备忘录，用于快速记录想法，支持 Markdown 格式',
       copy: '复制节点内容',

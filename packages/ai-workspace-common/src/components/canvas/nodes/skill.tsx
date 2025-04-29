@@ -12,7 +12,6 @@ import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/ca
 import { useChatStoreShallow } from '@refly-packages/ai-workspace-common/stores/chat';
 import { useCanvasData } from '@refly-packages/ai-workspace-common/hooks/canvas/use-canvas-data';
 import { useNodeHoverEffect } from '@refly-packages/ai-workspace-common/hooks/canvas/use-node-hover';
-import { ActionButtons } from './shared/action-buttons';
 import { cleanupNodeEvents } from '@refly-packages/ai-workspace-common/events/nodeActions';
 import { nodeActionEmitter } from '@refly-packages/ai-workspace-common/events/nodeActions';
 import { createNodeEventName } from '@refly-packages/ai-workspace-common/events/nodeActions';
@@ -28,7 +27,6 @@ import { NodeResizer as NodeResizerComponent } from './shared/node-resizer';
 import classNames from 'classnames';
 import Moveable from 'react-moveable';
 import { useUploadImage } from '@refly-packages/ai-workspace-common/hooks/use-upload-image';
-import { useEditorPerformance } from '@refly-packages/ai-workspace-common/context/editor-performance';
 import { useContextUpdateByEdges } from '@refly-packages/ai-workspace-common/hooks/canvas/use-debounced-context-update';
 import { ChatPanel } from '@refly-packages/ai-workspace-common/components/canvas/node-chat-panel';
 import { useSetNodeDataByEntity } from '@refly-packages/ai-workspace-common/hooks/canvas';
@@ -59,9 +57,7 @@ export const SkillNode = memo(
     const { operatingNodeId } = useCanvasStoreShallow((state) => ({
       operatingNodeId: state.operatingNodeId,
     }));
-    const { draggingNodeId } = useEditorPerformance();
     const isOperating = operatingNodeId === id;
-    const isDragging = draggingNodeId === id;
     const node = useMemo(() => getNode(id), [id, getNode]);
     const { canvasId, readonly } = useCanvasContext();
 
@@ -380,14 +376,12 @@ export const SkillNode = memo(
           })}
           style={safeContainerStyle}
         >
-          {!isDragging && !readonly && (
-            <ActionButtons type="skill" nodeId={id} isNodeHovered={selected && isHovered} />
-          )}
           <div className={`w-full h-full  ${getNodeCommonStyles({ selected, isHovered })}`}>
             {
               <>
                 <CustomHandle
                   id={`${id}-target`}
+                  nodeId={id}
                   type="target"
                   position={Position.Left}
                   isConnected={isTargetConnected}
@@ -396,6 +390,7 @@ export const SkillNode = memo(
                 />
                 <CustomHandle
                   id={`${id}-source`}
+                  nodeId={id}
                   type="source"
                   position={Position.Right}
                   isConnected={isSourceConnected}
