@@ -2932,6 +2932,30 @@ export type SkillContextDocumentItem = {
 };
 
 /**
+ * Skill context code artifact item
+ */
+export type SkillContextCodeArtifactItem = {
+  /**
+   * Artifact ID
+   */
+  artifactId?: string;
+  /**
+   * Code artifact
+   */
+  codeArtifact?: CodeArtifact;
+  /**
+   * Whether this code artifact is current
+   */
+  isCurrent?: boolean;
+  /**
+   * Code artifact context metadata
+   */
+  metadata?: {
+    [key: string]: unknown;
+  };
+};
+
+/**
  * Skill context content item
  */
 export type SkillContextContentItem = {
@@ -2975,6 +2999,10 @@ export type SkillContext = {
    * Context documents
    */
   documents?: Array<SkillContextDocumentItem>;
+  /**
+   * Context code artifacts
+   */
+  codeArtifacts?: Array<SkillContextCodeArtifactItem>;
   /**
    * Context content list
    */

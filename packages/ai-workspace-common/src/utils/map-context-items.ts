@@ -117,7 +117,6 @@ export const convertContextItemsToInvokeParams = (
   items: IContextItem[],
   getHistory: (item: IContextItem) => ActionResult[],
   getMemo?: (item: IContextItem) => { content: string; title: string }[],
-  getCodeArtifact?: (item: IContextItem) => { content: string; title: string }[],
   getImages?: (
     item: IContextItem,
   ) => { storageKey: string; title: string; entityId: string; metadata: any }[],
@@ -156,24 +155,9 @@ export const convertContextItemsToInvokeParams = (
         })),
       ) ?? [];
 
-  // Create content list with code artifacts
-  const codeArtifactContentList =
-    purgedItems
-      ?.filter((item) => item.type === 'codeArtifact' && getCodeArtifact)
-      ?.flatMap((item) =>
-        getCodeArtifact(item).map((code) => ({
-          content: code.content,
-          metadata: {
-            domain: 'codeArtifact',
-            entityId: item.entityId,
-            title: code.title,
-          },
-        })),
-      ) ?? [];
-
   // Combine all content lists and deduplicate by content and entityId
   const combinedContentList = deduplicate(
-    [...selectionContentList, ...memoContentList, ...codeArtifactContentList],
+    [...selectionContentList, ...memoContentList],
     (item) => `${item.metadata.entityId}-${item.content.substring(0, 100)}`,
   );
 
@@ -212,6 +196,23 @@ export const convertContextItemsToInvokeParams = (
           },
         })),
       (item) => item.docId,
+    ),
+    codeArtifacts: deduplicate(
+      purgedItems
+        ?.filter((item) => item?.type === 'codeArtifact')
+        .map((item) => ({
+          artifactId: item.entityId,
+          codeArtifact: {
+            artifactId: item.entityId,
+            title: item.title,
+            type: item.metadata?.artifactType ?? 'unknown',
+          },
+          isCurrent: item.isCurrentContext,
+          metadata: {
+            ...item.metadata,
+          },
+        })),
+      (item) => item.artifactId,
     ),
     urls: deduplicate(
       purgedItems

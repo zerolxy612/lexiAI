@@ -5269,6 +5269,22 @@ components:
         metadata:
           type: object
           description: Canvas context metadata
+    SkillContextCodeArtifactItem:
+      type: object
+      description: Skill context code artifact item
+      properties:
+        artifactId:
+          type: string
+          description: Artifact ID
+        codeArtifact:
+          description: Code artifact
+          $ref: '#/components/schemas/CodeArtifact'
+        isCurrent:
+          type: boolean
+          description: Whether this code artifact is current
+        metadata:
+          type: object
+          description: Code artifact context metadata
     SkillContextContentItem:
       type: object
       description: Skill context content item
@@ -5307,6 +5323,11 @@ components:
           description: Context documents
           items:
             $ref: '#/components/schemas/SkillContextDocumentItem'
+        codeArtifacts:
+          type: array
+          description: Context code artifacts
+          items:
+            $ref: '#/components/schemas/SkillContextCodeArtifactItem'
         contentList:
           type: array
           description: Context content list
