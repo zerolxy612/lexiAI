@@ -780,6 +780,7 @@ const translations = {
       contentSelector: '内容划线选择器',
       addContext: '添加上下文',
       createMemo: '创建备忘录',
+      askAI: '问问 AI',
       clearContext: '清空',
       addToContext: '引用提问',
       resource: '资源',

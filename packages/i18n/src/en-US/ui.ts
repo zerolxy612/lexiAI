@@ -956,6 +956,7 @@ const translations = {
       clearSelector: 'Clear Selection',
       addContext: 'Add Context',
       createMemo: 'Create Memo',
+      askAI: 'Ask AI',
       clearContext: 'Clear',
       addToContext: 'Quote',
       resource: 'Resource',
