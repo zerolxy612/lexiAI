@@ -1342,6 +1342,13 @@ const translations = {
       fontLigatures: '连字',
       theme: '主题',
       loading: '编辑器加载中...',
+      useFallback: '使用文本编辑器',
+      loadError: '编辑器加载失败',
+      generatingContent: 'AI 正在生成内容',
+      generatingPlaceholder: '内容生成中...',
+      fallbackMode: '简易编辑器模式',
+      contentTruncated:
+        '内容较长，仅显示最后 {{chars}} 个字符（共 {{total}} 个字符）。生成完成后将显示完整内容。',
     },
     copySuccess: '代码已复制到剪贴板',
     copyError: '复制代码失败',

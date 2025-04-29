@@ -9,6 +9,7 @@ import { truncateContent, MAX_CONTENT_PREVIEW_LENGTH } from '../../utils/content
 import { getHelperLines } from '../../components/canvas/common/helper-line/util';
 import { CanvasNode } from '@refly-packages/ai-workspace-common/components/canvas/nodes';
 import { adoptUserNodes } from '@xyflow/system';
+import { deletedNodesEmitter } from '@refly-packages/ai-workspace-common/events/deleted-nodes';
 
 // Add snap threshold constant
 const SNAP_THRESHOLD = 10;
@@ -109,6 +110,14 @@ export const useNodeOperations = () => {
       if (deletedNodes.length > 0) {
         for (const change of deletedNodes) {
           const nodeId = change.id;
+
+          // Find the node that's being deleted to get its entityId
+          const deletedNode = nodes.find((node) => node.id === nodeId);
+          if (deletedNode?.data?.entityId) {
+            // Emit event for deleted node to track it for preventing recreation
+            deletedNodesEmitter.emit('nodeDeleted', deletedNode.data.entityId);
+          }
+
           // Remove from context items and node previews
           removeContextItem(nodeId);
           removeNodePreview(canvasId, nodeId);
@@ -136,6 +145,7 @@ export const useNodeOperations = () => {
       removeNodePreview,
       customApplyNodeChanges,
       debouncedHandleUpdateCanvasMiniMap,
+      // Use deletedNodesEmitter event emitter to track deleted nodes
     ],
   );
 

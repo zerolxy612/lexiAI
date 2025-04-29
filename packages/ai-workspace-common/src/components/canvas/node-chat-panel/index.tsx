@@ -1,7 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Form } from '@arco-design/web-react';
 import { Button } from 'antd';
-import { IconClose } from '@arco-design/web-react/icon';
 
 import { ChatInput } from '@refly-packages/ai-workspace-common/components/canvas/launchpad/chat-input';
 import { getSkillIcon } from '@refly-packages/ai-workspace-common/components/common/icon';
@@ -100,12 +99,13 @@ const NodeHeader = memo(
           <Button
             type="text"
             size="small"
-            className="p-0"
-            icon={<IconClose />}
+            className="p-0 px-1"
             onClick={() => {
               setSelectedSkill?.(null);
             }}
-          />
+          >
+            {t('common.cancel')}
+          </Button>
         )}
       </div>
     );

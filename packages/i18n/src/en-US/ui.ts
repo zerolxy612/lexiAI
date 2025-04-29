@@ -118,6 +118,7 @@ const translations = {
     selectAll: 'Select All',
     deselectAll: 'Deselect All',
     addNode: 'Add Node',
+    viewAll: 'View All',
   },
   pages: {
     share: {
@@ -888,6 +889,9 @@ const translations = {
       unbindSuccessful: 'Unbind successfully!',
       failed: 'Failed to delete',
       deleteConfirmForDocument: 'Are you sure you want to delete this document?',
+      deleteConfirmForCanvas:
+        'Canvas {{canvas}} will be permanently deleted. Do you want to continue?',
+      deleteConfirmForProject: 'Are you sure you want to delete this project?',
       deleteConfirmForResource: 'Are you sure you want to delete this resource?',
       deleteConfirmForResourceProject: 'Are you sure to remove this resource from the project?',
       delete: 'Delete',
@@ -1531,6 +1535,13 @@ const translations = {
       fontLigatures: 'Font Ligatures',
       theme: 'Theme',
       loading: 'Loading editor...',
+      useFallback: 'Use Text Editor',
+      loadError: 'Failed to load editor',
+      generatingContent: 'AI is generating content',
+      generatingPlaceholder: 'Content is being generated...',
+      fallbackMode: 'Simple Editor Mode',
+      contentTruncated:
+        'Showing only the last {{chars}} characters of {{total}} total. Full content will be displayed when generation completes.',
     },
     copySuccess: 'Code copied to clipboard',
     copyError: 'Failed to copy code',
