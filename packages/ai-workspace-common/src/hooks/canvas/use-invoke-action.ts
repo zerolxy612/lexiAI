@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 import {
   ActionStep,
   ActionStepMeta,
@@ -31,6 +31,7 @@ import { useFindWebsite } from './use-find-website';
 import { codeArtifactEmitter } from '@refly-packages/ai-workspace-common/events/codeArtifact';
 import { useReactFlow } from '@xyflow/react';
 import { detectActualTypeFromType } from '@refly-packages/ai-workspace-common/modules/artifacts/code-runner/artifact-type-util';
+import { deletedNodesEmitter } from '@refly-packages/ai-workspace-common/events/deleted-nodes';
 
 export const useInvokeAction = () => {
   const { addNode } = useAddNode();
@@ -39,8 +40,23 @@ export const useInvokeAction = () => {
 
   const globalAbortControllerRef = { current: null as AbortController | null };
   const globalIsAbortedRef = { current: false as boolean };
+  const deletedNodeIdsRef = useRef<Set<string>>(new Set());
 
   const { refetchUsage } = useSubscriptionUsage();
+
+  useEffect(() => {
+    const handleNodeDeleted = (entityId: string) => {
+      if (entityId) {
+        deletedNodeIdsRef.current.add(entityId);
+      }
+    };
+
+    deletedNodesEmitter.on('nodeDeleted', handleNodeDeleted);
+
+    return () => {
+      deletedNodesEmitter.off('nodeDeleted', handleNodeDeleted);
+    };
+  }, []);
 
   const { createTimeoutHandler } = useActionPolling();
   const onUpdateResult = useUpdateActionResult();
@@ -67,6 +83,9 @@ export const useInvokeAction = () => {
     onUpdateResult(skillEvent.resultId, updatedResult, skillEvent);
   };
 
+  // Optimize token usage updates by debouncing
+  const tokenUsageUpdateTimeoutRef = useRef<Record<string, number>>({});
+
   const onSkillTokenUsage = (skillEvent: SkillEvent) => {
     const { resultId, step, tokenUsage } = skillEvent;
     const { resultMap } = useActionResultStore.getState();
@@ -76,17 +95,30 @@ export const useInvokeAction = () => {
       return;
     }
 
-    const updatedStep: ActionStep = findOrCreateStep(result.steps ?? [], step);
-    updatedStep.tokenUsage = aggregateTokenUsage([...(updatedStep.tokenUsage ?? []), tokenUsage]);
+    // Clear existing timeout for this result
+    if (tokenUsageUpdateTimeoutRef.current[resultId]) {
+      clearTimeout(tokenUsageUpdateTimeoutRef.current[resultId]);
+    }
 
-    onUpdateResult(
-      resultId,
-      {
-        ...result,
-        steps: getUpdatedSteps(result.steps ?? [], updatedStep),
-      },
-      skillEvent,
-    );
+    // Debounce token usage updates to 500ms
+    tokenUsageUpdateTimeoutRef.current[resultId] = window.setTimeout(() => {
+      const currentResult = useActionResultStore.getState().resultMap[resultId];
+      if (!currentResult) return;
+
+      const updatedStep: ActionStep = findOrCreateStep(currentResult.steps ?? [], step);
+      updatedStep.tokenUsage = aggregateTokenUsage([...(updatedStep.tokenUsage ?? []), tokenUsage]);
+
+      onUpdateResult(
+        resultId,
+        {
+          ...currentResult,
+          steps: getUpdatedSteps(currentResult.steps ?? [], updatedStep),
+        },
+        skillEvent,
+      );
+
+      delete tokenUsageUpdateTimeoutRef.current[resultId];
+    }, 500);
   };
 
   const findOrCreateStep = (steps: ActionStep[], stepMeta: ActionStepMeta) => {
@@ -128,8 +160,12 @@ export const useInvokeAction = () => {
 
       const actualType = detectActualTypeFromType(type as CodeArtifactType);
 
-      // If node doesn't exist, create it
-      if (!existingNode) {
+      const throttleState = streamUpdateThrottleRef.current[resultId];
+      if (
+        !existingNode &&
+        !throttleState?.codeArtifactCreated &&
+        !deletedNodeIdsRef.current.has(artifact.entityId)
+      ) {
         addNode(
           {
             type: artifact.type,
@@ -171,6 +207,21 @@ export const useInvokeAction = () => {
     }
   };
 
+  // Optimize stream updates with debouncing
+  const streamUpdateThrottleRef = useRef<
+    Record<
+      string,
+      {
+        timeout: number | null;
+        lastUpdate: number;
+        pendingContent: string;
+        pendingReasoningContent: string;
+        pendingArtifact?: Artifact;
+        codeArtifactCreated?: boolean;
+      }
+    >
+  >({});
+
   const onSkillStream = (skillEvent: SkillEvent) => {
     const { resultId, content, reasoningContent = '', step, artifact } = skillEvent;
     const { resultMap } = useActionResultStore.getState();
@@ -180,28 +231,119 @@ export const useInvokeAction = () => {
       return;
     }
 
-    // Regular stream content handling (non-code artifact)
-    const updatedStep: ActionStep = findOrCreateStep(result.steps ?? [], step);
-    updatedStep.content += content;
-
-    if (!updatedStep.reasoningContent) {
-      updatedStep.reasoningContent = reasoningContent;
-    } else {
-      updatedStep.reasoningContent += reasoningContent;
+    // Setup throttling state if not exists
+    if (!streamUpdateThrottleRef.current[resultId]) {
+      streamUpdateThrottleRef.current[resultId] = {
+        timeout: null,
+        lastUpdate: 0,
+        pendingContent: '',
+        pendingReasoningContent: '',
+      };
     }
 
-    // Handle code artifact content if this is a code artifact stream
-    onSkillStreamArtifact(resultId, artifact, updatedStep.content);
+    const throttleState = streamUpdateThrottleRef.current[resultId];
+    const now = performance.now();
+    const THROTTLE_INTERVAL = 250; // Increased from 100ms to 250ms for less frequent updates
 
-    onUpdateResult(
-      resultId,
-      {
-        ...result,
-        status: 'executing' as const,
-        steps: getUpdatedSteps(result.steps ?? [], updatedStep),
-      },
-      skillEvent,
-    );
+    // Accumulate content
+    throttleState.pendingContent += content;
+    throttleState.pendingReasoningContent += reasoningContent;
+    if (artifact) {
+      throttleState.pendingArtifact = artifact;
+    }
+
+    // Clear existing timeout
+    if (throttleState.timeout) {
+      clearTimeout(throttleState.timeout);
+      throttleState.timeout = null;
+    }
+
+    // If enough time has passed since last update or we have a lot of content, update immediately
+    if (
+      now - throttleState.lastUpdate > THROTTLE_INTERVAL ||
+      throttleState.pendingContent.length > 1000
+    ) {
+      // Use requestAnimationFrame to align with browser's render cycle
+      requestAnimationFrame(() => {
+        const updatedStep: ActionStep = findOrCreateStep(result.steps ?? [], step);
+        updatedStep.content += throttleState.pendingContent;
+
+        if (!updatedStep.reasoningContent) {
+          updatedStep.reasoningContent = throttleState.pendingReasoningContent;
+        } else {
+          updatedStep.reasoningContent += throttleState.pendingReasoningContent;
+        }
+
+        const updatedResult = {
+          ...result,
+          status: 'executing' as const,
+          steps: getUpdatedSteps(result.steps ?? [], updatedStep),
+        };
+
+        // Handle code artifact content if this is a code artifact stream
+        if (throttleState.pendingArtifact) {
+          onSkillStreamArtifact(resultId, throttleState.pendingArtifact, updatedStep.content);
+          throttleState.codeArtifactCreated = true;
+        }
+
+        onUpdateResult(resultId, updatedResult, {
+          ...skillEvent,
+          content: throttleState.pendingContent,
+          reasoningContent: throttleState.pendingReasoningContent,
+        });
+
+        // Reset accumulated content
+        throttleState.pendingContent = '';
+        throttleState.pendingReasoningContent = '';
+        throttleState.pendingArtifact = undefined;
+        throttleState.lastUpdate = now;
+      });
+    } else {
+      // Schedule update for later
+      throttleState.timeout = window.setTimeout(
+        () => {
+          requestAnimationFrame(() => {
+            const currentResult = useActionResultStore.getState().resultMap[resultId];
+            if (!currentResult) return;
+
+            const updatedStep: ActionStep = findOrCreateStep(currentResult.steps ?? [], step);
+            updatedStep.content += throttleState.pendingContent;
+
+            if (!updatedStep.reasoningContent) {
+              updatedStep.reasoningContent = throttleState.pendingReasoningContent;
+            } else {
+              updatedStep.reasoningContent += throttleState.pendingReasoningContent;
+            }
+
+            const updatedResult = {
+              ...currentResult,
+              status: 'executing' as const,
+              steps: getUpdatedSteps(currentResult.steps ?? [], updatedStep),
+            };
+
+            // Handle the artifact content processing if needed
+            if (throttleState.pendingArtifact) {
+              onSkillStreamArtifact(resultId, throttleState.pendingArtifact, updatedStep.content);
+            }
+
+            onUpdateResult(resultId, updatedResult, {
+              ...skillEvent,
+              content: throttleState.pendingContent,
+              reasoningContent: throttleState.pendingReasoningContent,
+              artifact: throttleState.pendingArtifact,
+            });
+
+            // Reset state
+            throttleState.pendingContent = '';
+            throttleState.pendingReasoningContent = '';
+            throttleState.pendingArtifact = undefined;
+            throttleState.lastUpdate = performance.now();
+            throttleState.timeout = null;
+          });
+        },
+        THROTTLE_INTERVAL - (now - throttleState.lastUpdate),
+      );
+    }
   };
 
   const onSkillStructedData = (skillEvent: SkillEvent) => {
@@ -285,6 +427,10 @@ export const useInvokeAction = () => {
 
   const onSkillCreateNode = (skillEvent: SkillEvent) => {
     const { node, resultId } = skillEvent;
+    if (node.data?.entityId && deletedNodeIdsRef.current.has(node.data.entityId)) {
+      return;
+    }
+
     addNode(
       {
         type: node.type,
@@ -322,7 +468,10 @@ export const useInvokeAction = () => {
     const artifacts = result.steps?.flatMap((s) => s.artifacts);
     if (artifacts?.length) {
       for (const artifact of artifacts) {
-        // Special handling for code artifacts - set activeTab to preview
+        if (deletedNodeIdsRef.current.has(artifact.entityId)) {
+          continue;
+        }
+
         if (artifact.type === 'codeArtifact') {
           setNodeDataByEntity(
             {
@@ -410,6 +559,8 @@ export const useInvokeAction = () => {
 
   const invokeAction = useCallback(
     (payload: SkillNodeMeta, target: Entity) => {
+      deletedNodeIdsRef.current = new Set();
+
       payload.resultId ||= genActionResultID();
       payload.selectedSkill ||= { name: 'commonQnA' };
 

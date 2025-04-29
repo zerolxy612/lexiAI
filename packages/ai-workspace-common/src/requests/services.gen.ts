@@ -125,6 +125,9 @@ import type {
   GetDocumentDetailData,
   GetDocumentDetailError,
   GetDocumentDetailResponse2,
+  ExportDocumentData,
+  ExportDocumentError,
+  ExportDocumentResponse,
   UpdateDocumentData,
   UpdateDocumentError,
   UpdateDocumentResponse,
@@ -919,6 +922,21 @@ export const getDocumentDetail = <ThrowOnError extends boolean = false>(
     ...options,
     url: '/knowledge/document/detail',
   });
+};
+
+/**
+ * Export document to Markdown, DOCX or PDF format
+ * Export a document to Markdown, DOCX or PDF format
+ */
+export const exportDocument = <ThrowOnError extends boolean = false>(
+  options: Options<ExportDocumentData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).get<ExportDocumentResponse, ExportDocumentError, ThrowOnError>(
+    {
+      ...options,
+      url: '/knowledge/document/export/document',
+    },
+  );
 };
 
 /**

@@ -130,19 +130,6 @@ const SVGRenderer = memo(
                 }
               }
               
-              console.log('SVG dimensions measurements:', {
-                widthAttr,
-                heightAttr,
-                styleWidth,
-                styleHeight,
-                viewBoxWidth,
-                viewBoxHeight,
-                boundingWidth,
-                boundingHeight,
-                maxChildWidth,
-                maxChildHeight
-              });
-              
               // Determine the original dimensions (before any scaling)
               let originalWidth = 0;
               let originalHeight = 0;

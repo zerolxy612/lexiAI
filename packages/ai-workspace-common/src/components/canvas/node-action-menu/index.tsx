@@ -1,6 +1,6 @@
 import { Button, Divider, message, Modal } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { FC, useCallback, useMemo, useEffect, useState } from 'react';
+import { FC, useCallback, useMemo, useEffect, useState, useRef } from 'react';
 import { useReactFlow } from '@xyflow/react';
 import {
   IconRerun,
@@ -27,6 +27,7 @@ import {
   Target,
   Layout,
   Edit,
+  ChevronDown,
 } from 'lucide-react';
 import { GrClone } from 'react-icons/gr';
 import { locateToNodePreviewEmitter } from '@refly-packages/ai-workspace-common/events/locateToNodePreview';
@@ -47,6 +48,8 @@ import { useHoverCard } from '@refly-packages/ai-workspace-common/hooks/use-hove
 import { useNodePreviewControl } from '@refly-packages/ai-workspace-common/hooks/canvas';
 import { useGetNodeContent } from '@refly-packages/ai-workspace-common/hooks/canvas/use-get-node-content';
 import { useAddNodeToSlide } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-node-to-slide';
+
+import './index.scss';
 
 interface MenuItem {
   key?: string;
@@ -70,6 +73,7 @@ interface NodeActionMenuProps {
   isCreatingDocument?: boolean;
   isMultiSelection?: boolean;
   onHoverCardStateChange?: (isHovered: boolean) => void;
+  hasFixedHeight?: boolean;
 }
 
 const getChildNodes = (id: string, nodes: CanvasNode[]) => {
@@ -87,6 +91,7 @@ export const NodeActionMenu: FC<NodeActionMenuProps> = ({
   onClose,
   isMultiSelection,
   onHoverCardStateChange,
+  hasFixedHeight = false,
 }) => {
   const { t } = useTranslation();
   const { getNode, getNodes } = useReactFlow();
@@ -820,59 +825,104 @@ export const NodeActionMenu: FC<NodeActionMenuProps> = ({
   const menuItems = useMemo(() => getMenuItems(activeDocumentId), [activeDocumentId, getMenuItems]);
 
   const { hoverCardEnabled } = useHoverCard();
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [hasMoreContent, setHasMoreContent] = useState(false);
+
+  const checkScrollPosition = useCallback(() => {
+    const container = contentRef.current;
+    if (container) {
+      const { scrollHeight, scrollTop, clientHeight } = container;
+      // Check if we're not at the bottom and there's content to scroll
+      setHasMoreContent(
+        scrollHeight > clientHeight && scrollHeight - scrollTop - clientHeight > 10,
+      );
+    }
+  }, []);
+
+  const scrollToBottom = useCallback(() => {
+    const container = contentRef.current;
+    if (container) {
+      container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+    }
+  }, []);
+
+  // Check scroll position on initial render and when content changes
+  useEffect(() => {
+    checkScrollPosition();
+    const container = contentRef.current;
+    if (container) {
+      container.addEventListener('scroll', checkScrollPosition);
+    }
+
+    return () => {
+      if (container) {
+        container.removeEventListener('scroll', checkScrollPosition);
+      }
+    };
+  }, [checkScrollPosition, menuItems]);
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-2 w-[200px] border border-[rgba(0,0,0,0.06)]">
-      {menuItems.map((item) => {
-        if (item?.type === 'divider') {
-          return <Divider key={item.key} className="my-1 h-[1px] bg-gray-100" />;
-        }
+    <div className="bg-white rounded-lg shadow-lg p-2 w-[200px] border border-[rgba(0,0,0,0.06)] relative">
+      <div
+        ref={contentRef}
+        className={`node-action-menu-content ${hasFixedHeight ? 'max-h-[200px] overflow-y-auto' : ''}`}
+      >
+        {menuItems.map((item) => {
+          if (item?.type === 'divider') {
+            return <Divider key={item.key} className="my-1 h-[1px] bg-gray-100" />;
+          }
 
-        const button = (
-          <Button
-            key={item.key}
-            className={`
-              w-full
-              h-8
-              flex
-              items-center
-              gap-2
-              px-2
-              rounded
-              text-sm
-              transition-colors
-              text-gray-700 hover:bg-gray-50 hover:text-gray-700
-              ${item.danger ? '!text-red-600 hover:bg-red-50' : ''}
-              ${item.primary ? '!text-primary-600 hover:bg-primary-50' : ''}
-              ${item.loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-            `}
-            type="text"
-            icon={<item.icon className="w-4 h-4 flex items-center justify-center" />}
-            loading={item.loading}
-            onClick={item.onClick}
-            disabled={item.disabled}
-          >
-            <span className="flex-1 text-left truncate">{item.label}</span>
-          </Button>
-        );
-
-        if (item.hoverContent && hoverCardEnabled) {
-          return (
-            <HoverCard
+          const button = (
+            <Button
               key={item.key}
-              title={item.hoverContent.title}
-              description={item.hoverContent.description}
-              videoUrl={item.hoverContent.videoUrl}
-              placement="right"
-              onOpenChange={(open) => onHoverCardStateChange?.(open)}
+              className={`
+                w-full
+                h-8
+                flex
+                items-center
+                gap-2
+                px-2
+                rounded
+                text-sm
+                transition-colors
+                text-gray-700 hover:bg-gray-50 hover:text-gray-700
+                ${item.danger ? '!text-red-600 hover:bg-red-50' : ''}
+                ${item.primary ? '!text-primary-600 hover:bg-primary-50' : ''}
+                ${item.loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+              `}
+              type="text"
+              icon={<item.icon className="w-4 h-4 flex items-center justify-center" />}
+              loading={item.loading}
+              onClick={item.onClick}
+              disabled={item.disabled}
             >
-              {button}
-            </HoverCard>
+              <span className="flex-1 text-left truncate">{item.label}</span>
+            </Button>
           );
-        }
 
-        return button;
-      })}
+          if (item.hoverContent && hoverCardEnabled) {
+            return (
+              <HoverCard
+                key={item.key}
+                title={item.hoverContent.title}
+                description={item.hoverContent.description}
+                videoUrl={item.hoverContent.videoUrl}
+                placement="right"
+                onOpenChange={(open) => onHoverCardStateChange?.(open)}
+              >
+                {button}
+              </HoverCard>
+            );
+          }
+
+          return button;
+        })}
+      </div>
+      {hasFixedHeight && hasMoreContent && (
+        <div className="scroll-indicator" onClick={scrollToBottom}>
+          <ChevronDown className="w-4 h-4" />
+        </div>
+      )}
     </div>
   );
 };

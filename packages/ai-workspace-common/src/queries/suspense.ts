@@ -5,6 +5,7 @@ import { UseQueryOptions, useSuspenseQuery } from '@tanstack/react-query';
 import {
   checkSettingsField,
   exportCanvas,
+  exportDocument,
   getActionResult,
   getAuthConfig,
   getCanvasData,
@@ -41,6 +42,8 @@ import {
   CheckSettingsFieldError,
   ExportCanvasData,
   ExportCanvasError,
+  ExportDocumentData,
+  ExportDocumentError,
   GetActionResultData,
   GetActionResultError,
   GetAuthConfigError,
@@ -318,6 +321,21 @@ export const useGetDocumentDetailSuspense = <
     queryKey: Common.UseGetDocumentDetailKeyFn(clientOptions, queryKey),
     queryFn: () =>
       getDocumentDetail({ ...clientOptions }).then((response) => response.data as TData) as TData,
+    ...options,
+  });
+export const useExportDocumentSuspense = <
+  TData = Common.ExportDocumentDefaultResponse,
+  TError = ExportDocumentError,
+  TQueryKey extends Array<unknown> = unknown[],
+>(
+  clientOptions: Options<ExportDocumentData, true>,
+  queryKey?: TQueryKey,
+  options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
+) =>
+  useSuspenseQuery<TData, TError>({
+    queryKey: Common.UseExportDocumentKeyFn(clientOptions, queryKey),
+    queryFn: () =>
+      exportDocument({ ...clientOptions }).then((response) => response.data as TData) as TData,
     ...options,
   });
 export const useListProjectsSuspense = <

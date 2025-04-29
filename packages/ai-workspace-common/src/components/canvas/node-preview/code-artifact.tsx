@@ -284,7 +284,7 @@ const CodeArtifactNodePreviewComponent = ({ nodeId }: CodeArtifactNodePreviewPro
             language={language}
             title={title || t('codeArtifact.defaultTitle', 'Code Artifact')}
             entityId={artifactId}
-            isGenerating={status === 'generating'}
+            isGenerating={status === 'generating' || status === 'executing'}
             activeTab={currentTab}
             onTabChange={handleTabChange}
             onTypeChange={handleTypeChange}

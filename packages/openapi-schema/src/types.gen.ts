@@ -4288,6 +4288,23 @@ export type GetDocumentDetailResponse2 = GetDocumentDetailResponse;
 
 export type GetDocumentDetailError = unknown;
 
+export type ExportDocumentData = {
+  query: {
+    /**
+     * Export document ID to retrieve
+     */
+    docId: string;
+    /**
+     * Export format
+     */
+    format?: 'markdown' | 'docx' | 'pdf';
+  };
+};
+
+export type ExportDocumentResponse = Blob | File;
+
+export type ExportDocumentError = unknown;
+
 export type UpdateDocumentData = {
   /**
    * Document update request
