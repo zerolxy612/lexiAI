@@ -72,7 +72,7 @@ export const SelectionContext = React.memo<SelectionContextProps>(
       [getContextItem, addToContext, t],
     );
 
-    const handleCreateSkill = useCallback(
+    const handleCreateAskAI = useCallback(
       (text: string) => {
         const contextItem = getContextItem(text);
 
@@ -100,7 +100,7 @@ export const SelectionContext = React.memo<SelectionContextProps>(
         );
 
         removeSelection();
-        message.success(t('knowledgeBase.context.createSkillSuccess'));
+        message.success(t('knowledgeBase.context.createAskAISuccess'));
       },
       [getContextItem, addNode, removeSelection, t],
     );
@@ -123,11 +123,11 @@ export const SelectionContext = React.memo<SelectionContextProps>(
         {
           className: 'w-full px-2 py-0 text-sm justify-start',
           icon: <IconResponse size={14} />,
-          label: t('knowledgeBase.context.askAI'),
-          onClick: () => handleCreateSkill(selectedText),
+          label: t('knowledgeBase.context.createAskAI'),
+          onClick: () => handleCreateAskAI(selectedText),
         },
       ],
-      [t, handleAddToContext, handleCreateMemo, handleCreateSkill, selectedText],
+      [t, handleAddToContext, handleCreateMemo, handleCreateAskAI, selectedText],
     );
 
     return (
