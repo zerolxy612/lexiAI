@@ -231,29 +231,6 @@ export class MCPAgent extends BaseSkill {
     if (executing.length > 0 || completed.length > 0 || errors.length > 0) {
       // 构建工具状态变化摘要
 
-      if (executing.length > 0) {
-        for (const t of executing) {
-          // Set initial step
-          config.metadata.step = { name: `${t.tool.name}-${this.messageIndex}` };
-
-          this.emitEvent(
-            {
-              event: 'log',
-              log: {
-                key: t.tool.name,
-                titleArgs: {
-                  ...t,
-                },
-                descriptionArgs: {
-                  ...t,
-                },
-              },
-            },
-            config,
-          );
-        }
-      }
-
       if (completed.length > 0) {
         for (const t of completed) {
           // Set initial step
@@ -266,11 +243,15 @@ export class MCPAgent extends BaseSkill {
               log: {
                 key: t.tool.name,
                 titleArgs: {
-                  ...t,
+                  ...t.tool,
+                  status: t.status,
                 },
                 descriptionArgs: {
-                  ...t,
+                  ...t.tool,
+                  status: t.status,
+                  response: t.response,
                 },
+                ...{ status: 'finish' },
               },
             },
             config,
@@ -290,11 +271,15 @@ export class MCPAgent extends BaseSkill {
               log: {
                 key: t.tool.name,
                 titleArgs: {
-                  ...t,
+                  ...t.tool,
+                  status: t.status,
                 },
                 descriptionArgs: {
-                  ...t,
+                  ...t.tool,
+                  status: t.status,
+                  response: t.response,
                 },
+                ...{ status: 'error' },
               },
             },
             config,
