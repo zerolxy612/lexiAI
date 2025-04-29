@@ -204,17 +204,6 @@ export const EnhancedSkillResponse = memo(
       };
     }, [resultId]);
 
-    // Scroll to bottom effect
-    useEffect(() => {
-      if (containerRef.current && messages.length > 0) {
-        setTimeout(() => {
-          if (containerRef.current) {
-            containerRef.current.scrollTop = containerRef.current.scrollHeight;
-          }
-        }, 100);
-      }
-    }, [messages]);
-
     // Update context when lastMessageResultId changes
     useEffect(() => {
       if (lastMessageResultId) {
