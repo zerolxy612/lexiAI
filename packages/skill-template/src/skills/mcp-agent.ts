@@ -10,14 +10,7 @@ import { GraphState } from '../scheduler/types';
 import { prepareContext } from '../scheduler/utils/context';
 import { buildFinalRequestMessages } from '../scheduler/utils/message';
 import { processQuery } from '../scheduler/utils/queryProcessor';
-import {
-  ChunkCallbackData,
-  MCPServer,
-  MCPTool,
-  Message,
-  MessageRole,
-  MCPToolResponse,
-} from '../mcp/core/types';
+import { ChunkCallbackData, MCPServer, MCPTool, Message, MessageRole } from '../mcp/core/types';
 import { MCPAssistant } from '../mcp/core/MCPAssistant';
 import { safeStringifyJSON } from '@refly/utils';
 import { IContext } from '../scheduler/types';
@@ -195,100 +188,14 @@ export class MCPAgent extends BaseSkill {
    */
   private handleChunk(data: ChunkCallbackData, config: SkillRunnableConfig): void {
     // Handle text chunks for streaming
-    // if (data.text) {
-    //   this.emitEvent(
-    //     {
-    //       content: data.text,
-    //       event: 'stream',
-    //     },
-    //     config,
-    //   );
-    // }
-
-    // Handle tool response chunks
-    if (data.mcpToolResponse) {
-      this.handleToolResponses(data.mcpToolResponse, config);
-    }
-  }
-
-  messageIndex = 0;
-
-  /**
-   * Process tool responses and emit structured data
-   * @param toolResponses Array of tool response objects
-   * @param config Skill configuration
-   */
-  private handleToolResponses(toolResponses: MCPToolResponse[], config: SkillRunnableConfig): void {
-    // 收集不同状态的工具
-    const executing = toolResponses.filter((tool) => tool.status === 'invoking');
-    const completed = toolResponses.filter((tool) => tool.status === 'done');
-    const errors = toolResponses.filter((tool) => tool.status === 'error');
-
-    // 批量处理工具状态变化，减少事件发送次数
-    if (executing.length > 0 || completed.length > 0 || errors.length > 0) {
-      // 构建工具状态变化摘要
-
-      if (completed.length > 0) {
-        for (const t of completed) {
-          // Set initial step
-
-          config.metadata.step = { name: `${t.tool.name}-${this.messageIndex++}` };
-
-          this.emitEvent(
-            {
-              event: 'log',
-              log: {
-                key: 'mcpCallingFinish',
-                titleArgs: {
-                  ...t.tool,
-                  status: t.status,
-                },
-                descriptionArgs: {
-                  ...t.tool,
-                  status: t.status,
-
-                  json: { params: t.tool.inputSchema, response: t.response },
-                },
-                ...{ status: 'finish' },
-              },
-            },
-            config,
-          );
-        }
-      }
-
-      if (errors.length > 0) {
-        for (const t of errors) {
-          // Set initial step
-          config.metadata.step = { name: `${t.tool.name}-${this.messageIndex++}` };
-
-          this.emitEvent(
-            {
-              event: 'log',
-              log: {
-                key: 'mcpCallingError',
-                titleArgs: {
-                  ...t.tool,
-                  status: t.status,
-                },
-                descriptionArgs: {
-                  ...t.tool,
-                  status: t.status,
-                  json: { params: t.tool.inputSchema, response: t.response },
-                },
-                ...{ status: 'error' },
-              },
-            },
-            config,
-          );
-        }
-      }
-    }
-
-    // 记录工具错误到日志（仍然保留，因为错误信息对排查问题很重要）
-    for (const tool of errors) {
-      const errorMessage = tool.response?.content[0]?.text || 'Unknown error';
-      this.engine.logger.error(`Tool ${tool.tool.name} error: ${errorMessage}`);
+    if (data.text) {
+      this.emitEvent(
+        {
+          content: data.text,
+          event: 'stream',
+        },
+        config,
+      );
     }
   }
 

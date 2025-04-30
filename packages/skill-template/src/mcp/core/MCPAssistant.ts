@@ -286,6 +286,10 @@ export class MCPAssistant {
         // Format result
         const formattedResult = this.formatToolResult(toolResponse.tool.id, result);
 
+        if (this.onChunk) {
+          this.onChunk({ text: formattedResult });
+        }
+
         // Add result to conversation
         this.addUserMessage(formattedResult);
 
@@ -303,6 +307,10 @@ export class MCPAssistant {
         // Handle error
         const errorMessage = `Error executing tool ${toolResponse.tool.id}: ${error instanceof Error ? error.message : String(error)}`;
         const formattedError = this.formatToolResult(toolResponse.tool.id, errorMessage);
+
+        if (this.onChunk) {
+          this.onChunk({ text: formattedError });
+        }
 
         // Add error to conversation
         this.addUserMessage(formattedError);
