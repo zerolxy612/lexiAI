@@ -730,7 +730,7 @@ const translations = {
     testimonials: {
       tag: 'User Testimonials',
       title: 'Thousands love their creation with Refly',
-      description: 'Join 4000+ Reflyers to unleash inspiration and accelerate creation 👩‍🎨🧑‍🎨',
+      description: 'Join 10000+ Reflyers to unleash inspiration and accelerate creation 👩‍🎨🧑‍🎨',
     },
   },
   priceContent: {
