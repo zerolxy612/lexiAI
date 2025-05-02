@@ -26,16 +26,19 @@ export const EmptyGuide = ({ canvasId }: { canvasId: string }) => {
     >
       <div
         className="flex flex-col items-center justify-center text-gray-500 text-center gap-4"
-        style={{ pointerEvents: 'auto' }}
+        style={{ pointerEvents: 'none' }}
       >
-        <div className="text-[20px]">{t('canvas.emptyText')}</div>
-        <div className="flex gap-4">
+        <div className="text-[20px]" style={{ pointerEvents: 'none' }}>
+          {t('canvas.emptyText')}
+        </div>
+        <div className="flex gap-4" style={{ pointerEvents: 'none' }}>
           <Button
             icon={<IconTemplate className="-mr-1 flex items-center justify-center" />}
             type="text"
             className="text-[20px] text-[#00968F] py-[4px] px-[8px]"
             onClick={() => setVisible(true)}
             data-cy="canvas-create-document-button"
+            style={{ pointerEvents: 'auto' }}
           >
             {t('loggedHomePage.siderMenu.template')}
           </Button>
@@ -46,6 +49,7 @@ export const EmptyGuide = ({ canvasId }: { canvasId: string }) => {
             className="text-[20px] text-[#00968F] py-[4px] px-[8px]"
             onClick={() => setShowReflyPilot(!showReflyPilot)}
             data-cy="canvas-ask-ai-button"
+            style={{ pointerEvents: 'auto' }}
           >
             {t('canvas.reflyPilot.title')}
           </Button>
