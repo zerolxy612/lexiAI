@@ -216,22 +216,6 @@ export const EnhancedSkillResponse = memo(
       }
     }, [lastMessageResultId, debouncedUpdateContextItems]);
 
-    // Handler for image upload - memoized to prevent recreation on each render
-    const handleImageUpload = useCallback(async (file: File) => {
-      // Mock implementation - in a real app, this would upload the image and return data
-      const mockImageData = {
-        entityId: genUniqueId(),
-        type: 'image',
-        title: file.name,
-        url: URL.createObjectURL(file),
-        name: file.name,
-      };
-
-      setContextItems((prev) => [...prev, mockImageData as IContextItem]);
-
-      return mockImageData;
-    }, []);
-
     // Handler for send message - memoized for stability
     const handleSendMessage = useCallback(() => {
       if (!canvasId || !query.trim()) return;
@@ -386,7 +370,6 @@ export const EnhancedSkillResponse = memo(
           setTplConfig={handleSetTplConfig}
           handleSendMessage={handleSendMessage}
           handleAbortAction={abortAction}
-          handleUploadImage={handleImageUpload}
           onInputHeightChange={() => {
             // Adjust container height if needed
           }}
@@ -409,7 +392,6 @@ export const EnhancedSkillResponse = memo(
         handleSetTplConfig,
         handleSendMessage,
         abortAction,
-        handleImageUpload,
         resultId,
       ],
     );

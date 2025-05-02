@@ -26,7 +26,6 @@ import { useCanvasStoreShallow } from '@refly-packages/ai-workspace-common/store
 import { NodeResizer as NodeResizerComponent } from './shared/node-resizer';
 import classNames from 'classnames';
 import Moveable from 'react-moveable';
-import { useUploadImage } from '@refly-packages/ai-workspace-common/hooks/use-upload-image';
 import { useContextUpdateByEdges } from '@refly-packages/ai-workspace-common/hooks/canvas/use-debounced-context-update';
 import { ChatPanel } from '@refly-packages/ai-workspace-common/components/canvas/node-chat-panel';
 import { useSetNodeDataByEntity } from '@refly-packages/ai-workspace-common/hooks/canvas';
@@ -112,8 +111,6 @@ export const SkillNode = memo(
     }));
 
     const { invokeAction, abortAction } = useInvokeAction();
-
-    const { handleUploadImage } = useUploadImage();
 
     const setQuery = useCallback(
       (query: string) => {
@@ -330,20 +327,6 @@ export const SkillNode = memo(
       };
     }, [id, handleSendMessage, handleDelete]);
 
-    const handleImageUpload = async (file: File) => {
-      const nodeData = await handleUploadImage(file, canvasId);
-      if (nodeData) {
-        setContextItems([
-          ...contextItems,
-          {
-            type: 'image',
-            ...nodeData,
-          },
-        ]);
-      }
-      return nodeData;
-    };
-
     // Use the new custom hook instead of the local implementation
     const { debouncedUpdateContextItems } = useContextUpdateByEdges({
       readonly,
@@ -417,7 +400,6 @@ export const SkillNode = memo(
               setTplConfig={setTplConfig}
               handleSendMessage={handleSendMessage}
               handleAbortAction={abortAction}
-              handleUploadImage={handleImageUpload}
               onInputHeightChange={() => updateSize({ height: 'auto' })}
               projectId={projectId}
               handleProjectChange={(projectId) => {

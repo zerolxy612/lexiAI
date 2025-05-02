@@ -1,6 +1,7 @@
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 import { genImageID } from '@refly/utils/id';
 import { useAddNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-node';
+import { useMemo } from 'react';
 
 export const useUploadImage = () => {
   const { addNode } = useAddNode();
@@ -37,7 +38,20 @@ export const useUploadImage = () => {
     return null;
   };
 
-  return {
-    handleUploadImage,
+  const handleUploadMultipleImages = async (imageFiles: File[], canvasId: string) => {
+    const uploadPromises = imageFiles.map(async (file) => {
+      return handleUploadImage(file, canvasId);
+    });
+
+    const results = await Promise.all(uploadPromises);
+    return results.filter(Boolean);
   };
+
+  return useMemo(
+    () => ({
+      handleUploadImage,
+      handleUploadMultipleImages,
+    }),
+    [],
+  );
 };

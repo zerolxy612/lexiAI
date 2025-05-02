@@ -23,6 +23,8 @@ import { cn } from '@refly/utils/cn';
 import classNames from 'classnames';
 import { ContextTarget } from '@refly-packages/ai-workspace-common/stores/context-panel';
 import { ProjectKnowledgeToggle } from '@refly-packages/ai-workspace-common/components/project/project-knowledge-toggle';
+import { useUploadImage } from '@refly-packages/ai-workspace-common/hooks/use-upload-image';
+import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/canvas';
 
 // Memoized Premium Banner Component
 const PremiumBanner = memo(() => {
@@ -130,7 +132,6 @@ export interface ChatPanelProps {
   setTplConfig?: (config: SkillTemplateConfig) => void;
   handleSendMessage: () => void;
   handleAbortAction: () => void;
-  handleUploadImage: (file: File) => Promise<any>;
   onInputHeightChange?: () => void;
   className?: string;
   mode?: 'node' | 'list';
@@ -156,7 +157,6 @@ export const ChatPanel = memo(
     setTplConfig,
     handleSendMessage,
     handleAbortAction,
-    handleUploadImage,
     onInputHeightChange,
     className = '',
     mode = 'node',
@@ -169,6 +169,9 @@ export const ChatPanel = memo(
     const chatInputRef = useRef<HTMLDivElement>(null);
     const userProfile = useUserStoreShallow((state) => state.userProfile);
     const isList = mode === 'list';
+    const { handleUploadImage, handleUploadMultipleImages } = useUploadImage();
+    const { canvasId } = useCanvasContext();
+    const contextItemsRef = useRef(contextItems);
 
     // Get setActiveResultId from context panel store
     const { setActiveResultId } = useContextPanelStoreShallow((state) => ({
@@ -182,6 +185,9 @@ export const ChatPanel = memo(
         setFormErrors({});
       }
     }, [selectedSkill, form, setFormErrors]);
+    useEffect(() => {
+      contextItemsRef.current = contextItems;
+    }, [contextItems]);
 
     // Memoize initialTplConfig to prevent unnecessary recalculations
     const initialTplConfig = useMemo(() => {
@@ -205,10 +211,10 @@ export const ChatPanel = memo(
           setActiveResultId(resultId);
         }
 
-        const nodeData = await handleUploadImage(file);
+        const nodeData = await handleUploadImage(file, canvasId);
         if (nodeData) {
           setContextItems([
-            ...contextItems,
+            ...(contextItemsRef.current || []),
             {
               type: 'image',
               ...nodeData,
@@ -217,6 +223,50 @@ export const ChatPanel = memo(
         }
       },
       [contextItems, handleUploadImage, setContextItems, resultId, setActiveResultId],
+    );
+
+    const handleMultipleImagesUpload = useCallback(
+      async (files: File[]) => {
+        // Set as active when user interacts with this component
+        if (resultId) {
+          setActiveResultId(resultId);
+        }
+
+        if (handleUploadMultipleImages) {
+          const nodesData = await handleUploadMultipleImages(files, canvasId);
+          if (nodesData?.length) {
+            const newContextItems = nodesData.map((nodeData) => ({
+              type: 'image' as const,
+              ...nodeData,
+            }));
+
+            setContextItems([...contextItems, ...newContextItems]);
+          }
+        } else {
+          // Fallback to uploading one at a time if multiple uploader not provided
+          const uploadPromises = files.map((file) => handleUploadImage(file, canvasId));
+          const results = await Promise.all(uploadPromises);
+          const validResults = results.filter(Boolean);
+
+          if (validResults.length) {
+            const newContextItems = validResults.map((nodeData) => ({
+              type: 'image' as const,
+              ...nodeData,
+            }));
+
+            setContextItems([...contextItems, ...newContextItems]);
+          }
+        }
+      },
+      [
+        contextItems,
+        handleUploadImage,
+        handleUploadMultipleImages,
+        setContextItems,
+        resultId,
+        setActiveResultId,
+        canvasId,
+      ],
     );
 
     // Handle input focus to set active resultId
@@ -281,6 +331,7 @@ export const ChatPanel = memo(
             setSelectedSkill(skill);
           }}
           onUploadImage={handleImageUpload}
+          onUploadMultipleImages={handleMultipleImagesUpload}
           onFocus={handleInputFocus}
         />
 
