@@ -53,6 +53,7 @@ export const EnhancedSkillResponse = memo(
     const [tplConfig, setTplConfig] = useState<SkillTemplateConfig | undefined>();
 
     const { projectId, handleProjectChange, getFinalProjectId } = useAskProject();
+    const { readonly, canvasId } = useCanvasContext();
 
     // Extract the last message resultId for context updates
     const lastMessageResultId = useMemo(() => {
@@ -79,7 +80,6 @@ export const EnhancedSkillResponse = memo(
     // Hooks
     const selectedSkill = useFindSkill(selectedSkillName);
     const { invokeAction, abortAction } = useInvokeAction();
-    const { canvasId, readonly } = useCanvasContext();
     const { addNode } = useAddNode();
 
     const { debouncedUpdateContextItems } = useContextUpdateByResultId({
@@ -231,7 +231,7 @@ export const EnhancedSkillResponse = memo(
       const newNodeId = genUniqueId();
 
       const finalProjectId = getFinalProjectId();
-      const { runtimeConfig = {} } = useContextPanelStore.getState();
+      const { runtimeConfig: contextRuntimeConfig = {} } = useContextPanelStore.getState();
 
       // Create message object for the thread
       const newMessage: LinearThreadMessage = {
@@ -269,7 +269,10 @@ export const EnhancedSkillResponse = memo(
           modelInfo,
           contextItems,
           tplConfig,
-          runtimeConfig,
+          runtimeConfig: {
+            ...contextRuntimeConfig,
+            ...runtimeConfig,
+          },
           projectId: finalProjectId,
         },
         {
@@ -291,7 +294,10 @@ export const EnhancedSkillResponse = memo(
               tplConfig,
               selectedSkill,
               modelInfo,
-              runtimeConfig,
+              runtimeConfig: {
+                ...contextRuntimeConfig,
+                ...runtimeConfig,
+              },
               structuredData: {
                 query: currentQuery,
               },
@@ -333,10 +339,6 @@ export const EnhancedSkillResponse = memo(
           !prevTplConfigRef.current ||
           JSON.stringify(prevTplConfigRef.current) !== JSON.stringify(config)
         ) {
-          console.log('EnhancedSkillResponse updating tplConfig', {
-            old: prevTplConfigRef.current,
-            new: config,
-          });
           prevTplConfigRef.current = config;
           setTplConfig(config);
         }

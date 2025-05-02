@@ -213,13 +213,15 @@ export const ChatPanel = memo(
 
         const nodeData = await handleUploadImage(file, canvasId);
         if (nodeData) {
-          setContextItems([
-            ...(contextItemsRef.current || []),
-            {
-              type: 'image',
-              ...nodeData,
-            },
-          ]);
+          setTimeout(() => {
+            setContextItems([
+              ...(contextItemsRef.current || []),
+              {
+                type: 'image',
+                ...nodeData,
+              },
+            ]);
+          }, 10);
         }
       },
       [contextItems, handleUploadImage, setContextItems, resultId, setActiveResultId],
@@ -235,12 +237,14 @@ export const ChatPanel = memo(
         if (handleUploadMultipleImages) {
           const nodesData = await handleUploadMultipleImages(files, canvasId);
           if (nodesData?.length) {
-            const newContextItems = nodesData.map((nodeData) => ({
-              type: 'image' as const,
-              ...nodeData,
-            }));
+            setTimeout(() => {
+              const newContextItems = nodesData.map((nodeData) => ({
+                type: 'image' as const,
+                ...nodeData,
+              }));
 
-            setContextItems([...contextItems, ...newContextItems]);
+              setContextItems([...contextItems, ...newContextItems]);
+            }, 10);
           }
         } else {
           // Fallback to uploading one at a time if multiple uploader not provided
@@ -249,12 +253,14 @@ export const ChatPanel = memo(
           const validResults = results.filter(Boolean);
 
           if (validResults.length) {
-            const newContextItems = validResults.map((nodeData) => ({
-              type: 'image' as const,
-              ...nodeData,
-            }));
+            setTimeout(() => {
+              const newContextItems = validResults.map((nodeData) => ({
+                type: 'image' as const,
+                ...nodeData,
+              }));
 
-            setContextItems([...contextItems, ...newContextItems]);
+              setContextItems([...contextItems, ...newContextItems]);
+            }, 10);
           }
         }
       },

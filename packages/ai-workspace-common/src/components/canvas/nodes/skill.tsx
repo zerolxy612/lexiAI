@@ -18,7 +18,7 @@ import { createNodeEventName } from '@refly-packages/ai-workspace-common/events/
 import { useDeleteNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-delete-node';
 import { IContextItem } from '@refly-packages/ai-workspace-common/stores/context-panel';
 import { useEdgeStyles } from '@refly-packages/ai-workspace-common/components/canvas/constants';
-import { genActionResultID } from '@refly/utils/id';
+import { genActionResultID, genUniqueId } from '@refly/utils/id';
 import { useAddNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-node';
 import { convertContextItemsToNodeFilters } from '@refly-packages/ai-workspace-common/utils/map-context-items';
 import { useNodeSize } from '@refly-packages/ai-workspace-common/hooks/canvas/use-node-size';
@@ -142,7 +142,7 @@ export const SkillNode = memo(
         const newSourceNodes = contextNodes.filter((node) => !existingSourceIds.has(node?.id));
 
         const newEdges = newSourceNodes.map((node) => ({
-          id: `${node.id}-${id}`,
+          id: `edge-${genUniqueId()}`,
           source: node.id,
           target: id,
           style: edgeStyles.hover,
@@ -152,13 +152,15 @@ export const SkillNode = memo(
         const contextNodeIds = new Set(contextNodes.map((node) => node?.id));
         const edgesToRemove = existingEdges.filter((edge) => !contextNodeIds.has(edge.source));
 
-        if (newEdges?.length > 0) {
-          addEdges(newEdges);
-        }
+        setTimeout(() => {
+          if (newEdges?.length > 0) {
+            addEdges(newEdges);
+          }
 
-        if (edgesToRemove?.length > 0) {
-          deleteElements({ edges: edgesToRemove });
-        }
+          if (edgesToRemove?.length > 0) {
+            deleteElements({ edges: edgesToRemove });
+          }
+        }, 10);
       },
       [id, setNodeData, addEdges, getNodes, getEdges, deleteElements, edgeStyles.hover],
     );
@@ -289,7 +291,10 @@ export const SkillNode = memo(
                 tplConfig,
                 selectedSkill,
                 modelInfo,
-                runtimeConfig,
+                runtimeConfig: {
+                  ...contextRuntimeConfig,
+                  ...runtimeConfig,
+                },
                 structuredData: {
                   query,
                 },
