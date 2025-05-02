@@ -49,13 +49,13 @@ import { CustomEdge } from './edges/custom-edge';
 import NotFoundOverlay from './NotFoundOverlay';
 import { NODE_MINI_MAP_COLORS } from './nodes/shared/colors';
 import { useDragToCreateNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-drag-create-node';
+import { useDragDropPaste } from '@refly-packages/ai-workspace-common/hooks/canvas/use-drag-drop-paste';
 
 import '@xyflow/react/dist/style.css';
 import './index.scss';
 import { SelectionContextMenu } from '@refly-packages/ai-workspace-common/components/canvas/selection-context-menu';
 import { useUserStore, useUserStoreShallow } from '@refly-packages/ai-workspace-common/stores/user';
 import { useUpdateSettings } from '@refly-packages/ai-workspace-common/queries';
-import { useUploadImage } from '@refly-packages/ai-workspace-common/hooks/use-upload-image';
 import { useCanvasSync } from '@refly-packages/ai-workspace-common/hooks/canvas/use-canvas-sync';
 import { EmptyGuide } from './empty-guide';
 import { useReflyPilotReset } from '@refly-packages/ai-workspace-common/hooks/canvas/use-refly-pilot-reset';
@@ -724,27 +724,13 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
     [reactFlowInstance],
   );
 
-  const { handleUploadImage } = useUploadImage();
   const { undoManager } = useCanvasSync();
 
-  // Add drag and drop handlers
-  const handleDragOver = useCallback((event: React.DragEvent) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = 'copy';
-  }, []);
-
-  const handleDrop = useCallback(
-    async (event: React.DragEvent) => {
-      event.preventDefault();
-      const files = Array.from(event.dataTransfer.files);
-      const imageFile = files.find((file) => file.type.startsWith('image/'));
-
-      if (imageFile) {
-        handleUploadImage(imageFile, canvasId);
-      }
-    },
-    [addNode, reactFlowInstance],
-  );
+  // Use the new drag, drop, paste hook
+  const { handlers, DropOverlay } = useDragDropPaste({
+    canvasId,
+    readonly,
+  });
 
   // Add edge types configuration
   const edgeTypes = useMemo(
@@ -920,6 +906,7 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
               }
             `}</style>
           )}
+          <DropOverlay />
           <ReactFlow
             {...flowConfig}
             snapToGrid={true}
@@ -953,8 +940,10 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
             onSelectionContextMenu={readonly ? undefined : onSelectionContextMenu}
             deleteKeyCode={readonly ? null : ['Backspace', 'Delete']}
             multiSelectionKeyCode={readonly ? null : ['Shift', 'Meta']}
-            onDragOver={readonly ? undefined : handleDragOver}
-            onDrop={readonly ? undefined : handleDrop}
+            onDragOver={handlers.handleDragOver}
+            onDragLeave={handlers.handleDragLeave}
+            onDrop={handlers.handleDrop}
+            onPaste={handlers.handlePaste}
             connectOnClick={false}
             edgesFocusable={false}
             nodesFocusable={!readonly}
