@@ -134,6 +134,12 @@ export const ImageNode = memo(
       setIsPreviewModalVisible(true);
     }, []);
 
+    const handleImageClick = useCallback(() => {
+      if (selected || readonly) {
+        handlePreview();
+      }
+    }, [selected, readonly, handlePreview]);
+
     const onTitleChange = (newTitle: string) => {
       setNodeDataByEntity(
         {
@@ -233,11 +239,20 @@ export const ImageNode = memo(
             )}
 
             <div className={cn('flex flex-col h-full relative box-border', MAX_HEIGHT_CLASS)}>
-              <div className="relative w-full rounded-lg overflow-y-auto">
-                {showTitle && isHovered && (
+              <div className="relative w-full h-full rounded-lg overflow-hidden">
+                {showTitle && (
                   <div
-                    className="absolute top-0 left-0 right-0 z-10 rounded-t-lg px-1"
-                    style={{ textShadow: '0px 0px 3px #ffffff' }}
+                    className={cn(
+                      'absolute top-0 left-0 right-0 z-10 rounded-t-lg px-1 transition-opacity duration-200',
+                      {
+                        'opacity-100': selected || isHovered,
+                        'opacity-0': !selected && !isHovered,
+                      },
+                    )}
+                    style={{
+                      textShadow: '0px 0px 3px #ffffff',
+                      backgroundColor: 'transparent',
+                    }}
                   >
                     <NodeHeader
                       title={data.title}
@@ -249,10 +264,11 @@ export const ImageNode = memo(
                   </div>
                 )}
                 <img
-                  onClick={readonly ? handlePreview : undefined}
+                  onClick={handleImageClick}
                   src={imageUrl}
                   alt={data.title || 'Image'}
-                  className="w-full h-auto object-contain"
+                  className="w-full h-full object-contain"
+                  style={{ cursor: selected || readonly ? 'pointer' : 'default' }}
                 />
 
                 {/* only for preview image */}
