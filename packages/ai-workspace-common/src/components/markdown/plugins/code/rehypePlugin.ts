@@ -39,6 +39,14 @@ const getCodeArtifactType = (className: string, content: string): CodeArtifactTy
     return 'application/refly.artifacts.mermaid';
   }
 
+  if (
+    className.includes('language-html') ||
+    content.includes('<html') ||
+    content.includes('<!DOCTYPE html')
+  ) {
+    return 'text/html';
+  }
+
   // Check for SVG content even if not explicitly marked as svg
   if (
     className.includes('language-svg') ||
@@ -54,14 +62,6 @@ const getCodeArtifactType = (className: string, content: string): CodeArtifactTy
     className.includes('language-react')
   ) {
     return 'application/refly.artifacts.react';
-  }
-
-  if (
-    className.includes('language-html') ||
-    content.includes('<html') ||
-    content.includes('<!DOCTYPE html')
-  ) {
-    return 'text/html';
   }
 
   if (className.includes('language-markdown') || className.includes('language-md')) {
