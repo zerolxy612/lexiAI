@@ -2,6 +2,7 @@ import getClient from '@refly-packages/ai-workspace-common/requests/proxiedReque
 import { genImageID } from '@refly/utils/id';
 import { useAddNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-node';
 import { useMemo } from 'react';
+import { nodeOperationsEmitter } from '@refly-packages/ai-workspace-common/events/nodeOperations';
 
 export const useUploadImage = () => {
   const { addNode } = useAddNode();
@@ -39,12 +40,55 @@ export const useUploadImage = () => {
   };
 
   const handleUploadMultipleImages = async (imageFiles: File[], canvasId: string) => {
-    const uploadPromises = imageFiles.map(async (file) => {
-      return handleUploadImage(file, canvasId);
-    });
+    // Store the reference position for node placement
+    let referencePosition = null;
+    const nodesData = [];
 
-    const results = await Promise.all(uploadPromises);
-    return results.filter(Boolean);
+    for (let i = 0; i < imageFiles.length; i++) {
+      const imageFile = imageFiles[i];
+      const result = await uploadImage(imageFile, canvasId);
+      const { data, success } = result ?? {};
+
+      if (success && data) {
+        const nodeData = {
+          title: imageFile.name,
+          entityId: genImageID(),
+          metadata: {
+            imageUrl: data.url,
+            storageKey: data.storageKey,
+          },
+        };
+
+        await new Promise<void>((resolve) => {
+          // Use the event emitter to add nodes with proper spacing
+          nodeOperationsEmitter.emit('addNode', {
+            node: {
+              type: 'image',
+              data: { ...nodeData },
+              position: referencePosition
+                ? {
+                    x: referencePosition.x,
+                    y: referencePosition.y + 150, // Add vertical spacing between nodes
+                  }
+                : undefined,
+            },
+            shouldPreview: i === imageFiles.length - 1,
+            needSetCenter: i === imageFiles.length - 1,
+            positionCallback: (newPosition) => {
+              referencePosition = newPosition;
+              resolve();
+            },
+          });
+
+          // Add a timeout in case the callback doesn't fire
+          setTimeout(() => resolve(), 100);
+        });
+
+        nodesData.push(nodeData);
+      }
+    }
+
+    return nodesData;
   };
 
   return useMemo(
