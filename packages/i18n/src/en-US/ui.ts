@@ -119,6 +119,8 @@ const translations = {
     deselectAll: 'Deselect All',
     addNode: 'Add Node',
     viewAll: 'View All',
+    addedToCanvas: 'Added to canvas',
+    operationFailed: 'Operation failed',
   },
   pages: {
     share: {
@@ -1449,6 +1451,7 @@ const translations = {
       title: 'Resource Integration',
       fromWebSearch: 'Web Search',
       fromFile: 'Upload File',
+      fromImage: 'Upload Image',
       dragOrClick: 'Click or Drag files to this area to upload',
       unsupportedFileType: 'Please upload the specified type of file',
       supportedFiles: 'Supported Files: {{formats}}.',
@@ -1491,6 +1494,9 @@ const translations = {
       viewDocs: 'View Documentation',
       recommendedPlatforms: 'Recommended Platforms',
       selectProject: 'Select Project',
+      emptyImage: 'Please select at least one image',
+      imageCount: 'Images: {{count}}',
+      supportedImages: 'Supported image formats: {{formats}}',
     },
     wait_parse: 'Parsing',
     parse_failed: 'Parse Failed',

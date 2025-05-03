@@ -15,8 +15,10 @@ import { useEffect, memo } from 'react';
 import { getRuntime } from '@refly/utils/env';
 import MultilingualSearch from '@refly-packages/ai-workspace-common/modules/multilingual-search';
 import { TbClipboard, TbWorldSearch, TbBrowserPlus, TbFile } from 'react-icons/tb';
+import { PiImagesSquare } from 'react-icons/pi';
 import { IconImportResource } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { ImportFromFile } from '@refly-packages/ai-workspace-common/components/import-resource/intergrations/import-from-file';
+import { ImportFromImage } from './intergrations/import-from-image';
 
 const MenuItem = Menu.Item;
 
@@ -94,6 +96,12 @@ export const ImportResourceModal = memo(() => {
                       </span>
                       {t('resource.import.fromFile')}
                     </MenuItem>
+                    <MenuItem key="import-from-image">
+                      <span className="flex items-center justify-center mr-2">
+                        <PiImagesSquare className="text-base" />
+                      </span>
+                      {t('resource.import.fromImage')}
+                    </MenuItem>
                     <MenuItem key="import-from-weblink">
                       <span className="flex items-center justify-center mr-2">
                         <HiLink className="text-base" />
@@ -124,6 +132,7 @@ export const ImportResourceModal = memo(() => {
               {selectedMenuItem === 'import-from-web-search' ? <MultilingualSearch /> : null}
               {selectedMenuItem === 'import-from-extension' ? <ImportFromExtension /> : null}
               {selectedMenuItem === 'import-from-file' ? <ImportFromFile /> : null}
+              {selectedMenuItem === 'import-from-image' ? <ImportFromImage /> : null}
             </div>
           </Splitter.Panel>
         </Splitter>
