@@ -40,7 +40,6 @@ import { useAddToContext } from '@refly-packages/ai-workspace-common/hooks/canva
 import { useAddNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-node';
 import { genSkillID } from '@refly/utils/id';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
-import { convertResultContextToItems } from '@refly-packages/ai-workspace-common/utils/map-context-items';
 import { NodeResizer as NodeResizerComponent } from './shared/node-resizer';
 import {
   useNodeSize,
@@ -524,17 +523,7 @@ export const SkillResponseNode = memo(
     }, [data, addNode]);
 
     const handleCloneAskAI = useCallback(async () => {
-      // Fetch action result to get context
-      const { data: resultData } = await getClient().getActionResult({
-        query: { resultId: data?.entityId },
-      });
-
-      if (!resultData?.success || !resultData.data) {
-        return;
-      }
-
-      const { context, history, title, modelInfo, actionMeta, tplConfig } = resultData.data;
-      const contextItems = context ? convertResultContextToItems(context, history) : [];
+      const { contextItems, modelInfo, actionMeta, tplConfig } = data?.metadata || {};
 
       // Create new skill node with context, similar to group node implementation
       const connectTo = contextItems.map((item) => ({

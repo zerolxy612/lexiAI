@@ -3791,8 +3791,7 @@ export type CanvasNodeType =
   | 'toolResponse'
   | 'memo'
   | 'group'
-  | 'image'
-  | 'mindMap';
+  | 'image';
 
 export type CanvasNodeData = {
   /**

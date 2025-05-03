@@ -477,6 +477,13 @@ export class SkillService {
           document.content = '';
         }
       }
+
+      if (contextCopy.codeArtifacts) {
+        for (const { codeArtifact } of contextCopy.codeArtifacts) {
+          codeArtifact.content = '';
+        }
+      }
+
       return contextCopy;
     };
 

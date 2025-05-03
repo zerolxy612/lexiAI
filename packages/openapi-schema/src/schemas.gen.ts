@@ -5451,7 +5451,6 @@ export const CanvasNodeTypeSchema = {
     'memo',
     'group',
     'image',
-    'mindMap',
   ],
 } as const;
 
