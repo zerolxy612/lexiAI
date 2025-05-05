@@ -25,10 +25,6 @@ export const useEdgeOperations = () => {
       const updatedEdges = applyEdgeChanges(changes, edges);
 
       updateEdgesWithSync(updatedEdges);
-      edgeEventsEmitter.emit('edgeChange', {
-        oldEdges: edges,
-        newEdges: updatedEdges,
-      });
     },
     [getState, updateEdgesWithSync],
   );

@@ -41,7 +41,12 @@ const SourceItem = ({ source, index }: { source: Source; index: number }) => {
     <div className="search-result-popover-content">
       {/* Title section */}
       <div className="flex items-center gap-2 mb-2">
-        <h4 className="font-medium text-base m-0 break-words">{source?.title ?? ''}</h4>
+        <h4
+          className="font-medium text-base m-0 break-words overflow-hidden text-ellipsis whitespace-nowrap max-w-[300px]"
+          title={source?.title ?? ''}
+        >
+          {source?.title ?? ''}
+        </h4>
       </div>
 
       {/* Domain section */}
@@ -52,12 +57,21 @@ const SourceItem = ({ source, index }: { source: Source; index: number }) => {
             alt={domain}
             src={`https://www.google.com/s2/favicons?domain=${domain}&sz=${16}`}
           />
-          <div className="text-zinc-400 text-sm break-all">{domain}</div>
+          <div
+            className="text-zinc-400 text-sm break-all overflow-hidden text-ellipsis whitespace-nowrap max-w-[250px]"
+            title={domain}
+          >
+            {domain}
+          </div>
         </div>
       ) : null}
 
       {/* Content section */}
-      <div className="content-body pt-0">{source.pageContent}</div>
+      <div className="content-body pt-0 max-h-[300px] overflow-y-auto">
+        <div className="line-clamp-6 overflow-hidden text-ellipsis" title={source.pageContent}>
+          {source.pageContent}
+        </div>
+      </div>
     </div>
   );
 
@@ -77,7 +91,10 @@ const SourceItem = ({ source, index }: { source: Source; index: number }) => {
           {/* Left section with number and title */}
           <div className="flex items-center gap-1 min-w-0 flex-1">
             <span className="flex-shrink-0">{index + 1} ·</span>
-            <span className="overflow-hidden text-ellipsis whitespace-nowrap font-medium text-zinc-950">
+            <span
+              className="overflow-hidden text-ellipsis whitespace-nowrap font-medium text-zinc-950"
+              title={source?.title ?? ''}
+            >
               {source?.title ?? ''}
             </span>
           </div>
@@ -85,7 +102,10 @@ const SourceItem = ({ source, index }: { source: Source; index: number }) => {
           {/* Right section with domain and icon */}
           {source?.url ? (
             <div className="flex items-center gap-2 min-w-0">
-              <span className="overflow-hidden text-ellipsis whitespace-nowrap text-zinc-400 max-w-[120px]">
+              <span
+                className="overflow-hidden text-ellipsis whitespace-nowrap text-zinc-400 max-w-[120px]"
+                title={domain}
+              >
                 {domain}
               </span>
               <img
@@ -124,26 +144,31 @@ const ViewMoreItem = ({
         onClick?.();
       }}
     >
-      <div className="overflow-hidden font-medium whitespace-nowrap break-all text-ellipsis text-zinc-500">
+      <div
+        className="w-full overflow-hidden font-medium whitespace-nowrap text-ellipsis text-zinc-500"
+        title={t('copilot.sourceListModal.moreSources', { count: extraCnt })}
+      >
         {t('copilot.sourceListModal.moreSources', { count: extraCnt })} <IconRight />
       </div>
-      {extraSources.map((item, index) => {
-        const url = item?.url;
-        const domain = safeParseURL(url || '');
+      <div className="flex flex-wrap gap-1 max-w-full overflow-hidden">
+        {extraSources.map((item, index) => {
+          const url = item?.url;
+          const domain = safeParseURL(url || '');
 
-        if (!url) {
-          return null;
-        }
+          if (!url) {
+            return null;
+          }
 
-        return (
-          <img
-            key={index}
-            className="flex-shrink-0 w-3 h-3"
-            alt={url}
-            src={`https://www.google.com/s2/favicons?domain=${domain}&sz=${16}`}
-          />
-        );
-      })}
+          return (
+            <img
+              key={index}
+              className="flex-shrink-0 w-3 h-3"
+              alt={url}
+              src={`https://www.google.com/s2/favicons?domain=${domain}&sz=${16}`}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 };
@@ -164,17 +189,19 @@ export const SourceList = (props: SourceListProps) => {
   const sources = props?.sources ?? [];
 
   return sources.length > 0 ? (
-    <div className="session-source-content">
-      <div className="session-source-list">
+    <div className="session-source-content w-full overflow-hidden">
+      <div className="session-source-list w-full max-w-full">
         {sources.slice(0, 3).map((item, index) => (
           <SourceItem key={index} index={index} source={item} />
         ))}
-        <ViewMoreItem
-          onClick={handleViewMore}
-          key="view-more"
-          sources={sources}
-          extraCnt={sources.slice(3).length}
-        />
+        {sources.length > 3 && (
+          <ViewMoreItem
+            onClick={handleViewMore}
+            key="view-more"
+            sources={sources}
+            extraCnt={sources.slice(3).length}
+          />
+        )}
       </div>
     </div>
   ) : null;

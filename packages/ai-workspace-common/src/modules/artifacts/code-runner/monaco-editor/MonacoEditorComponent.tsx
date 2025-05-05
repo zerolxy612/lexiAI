@@ -14,6 +14,9 @@ import {
   getLanguageFromType,
 } from './constants';
 
+// Loading timeout in milliseconds (8 seconds)
+const EDITOR_LOADING_TIMEOUT = 1000;
+
 const MonacoEditorComponent = React.memo(
   ({
     content,
@@ -27,10 +30,12 @@ const MonacoEditorComponent = React.memo(
     const { t } = useTranslation();
     const editorRef = useRef<any>(null);
     const monacoRef = useRef<any>(null);
+    const loadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const [isEditorReady, setIsEditorReady] = useState(false);
     const [loadingError, setLoadingError] = useState<string | null>(null);
     const [loadAttempt, setLoadAttempt] = useState(0);
     const [useFallbackEditor, setUseFallbackEditor] = useState(false);
+    const [loadingTimedOut, setLoadingTimedOut] = useState(false);
 
     // Get current CDN based on load attempt
     const getCurrentCDN = useCallback(() => {
@@ -45,6 +50,28 @@ const MonacoEditorComponent = React.memo(
           return PRIMARY_CDN;
       }
     }, [loadAttempt]);
+
+    // Start loading timeout when component mounts
+    useEffect(() => {
+      // Skip if we're already using fallback or if editor is ready
+      if (useFallbackEditor || isEditorReady || isGenerating || loadingTimedOut) return;
+
+      // Set a timeout to switch to SimpleTextEditor if loading takes too long
+      loadTimeoutRef.current = setTimeout(() => {
+        if (!isEditorReady) {
+          console.log(`Monaco editor loading timed out after ${EDITOR_LOADING_TIMEOUT}ms`);
+          setLoadingTimedOut(true);
+        }
+      }, EDITOR_LOADING_TIMEOUT);
+
+      // Clear timeout on cleanup
+      return () => {
+        if (loadTimeoutRef.current) {
+          clearTimeout(loadTimeoutRef.current);
+          loadTimeoutRef.current = null;
+        }
+      };
+    }, [isEditorReady, useFallbackEditor, isGenerating, loadingTimedOut]);
 
     // Switch CDN when current one fails
     // useEffect(() => {
@@ -166,6 +193,12 @@ const MonacoEditorComponent = React.memo(
           maxTokenizationLineLength: 2000,
         });
 
+        // Clear the loading timeout since editor is ready
+        if (loadTimeoutRef.current) {
+          clearTimeout(loadTimeoutRef.current);
+          loadTimeoutRef.current = null;
+        }
+
         setIsEditorReady(true);
         setLoadingError(null);
       } catch (error) {
@@ -236,7 +269,7 @@ const MonacoEditorComponent = React.memo(
 
     // Use simple editor during generation to improve performance
     // Skip complex Monaco initialization & syntax highlighting while content is changing rapidly
-    if (isGenerating) {
+    if (isGenerating || loadingTimedOut) {
       return (
         <div className="h-full">
           <SimpleTextEditor

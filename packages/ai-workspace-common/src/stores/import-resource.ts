@@ -27,7 +27,8 @@ export type ImportResourceMenuItem =
   | 'import-from-weblink'
   | 'import-from-paste-text'
   | 'import-from-web-search'
-  | 'import-from-extension';
+  | 'import-from-extension'
+  | 'import-from-image';
 
 interface ImportResourceState {
   importResourceModalVisible: boolean;

@@ -4,7 +4,6 @@ import { CustomHandle } from './shared/custom-handle';
 import { useState, useCallback, useRef, useEffect, memo, useMemo } from 'react';
 import { useCanvasData } from '@refly-packages/ai-workspace-common/hooks/canvas/use-canvas-data';
 import { getNodeCommonStyles } from './index';
-import { ActionButtons } from './shared/action-buttons';
 import { useTranslation } from 'react-i18next';
 import { useAddToContext } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-to-context';
 import { useDeleteNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-delete-node';
@@ -30,7 +29,6 @@ import { NodeHeader } from './shared/node-header';
 import { ContentPreview } from './shared/content-preview';
 import { useCreateDocument } from '@refly-packages/ai-workspace-common/hooks/canvas/use-create-document';
 import { useDeleteDocument } from '@refly-packages/ai-workspace-common/hooks/canvas/use-delete-document';
-import { useEditorPerformance } from '@refly-packages/ai-workspace-common/context/editor-performance';
 import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/canvas';
 import cn from 'classnames';
 import { useUpdateNodeTitle } from '@refly-packages/ai-workspace-common/hooks/use-update-node-title';
@@ -41,7 +39,6 @@ export const DocumentNode = memo(
     selected,
     id,
     isPreview = false,
-    hideActions = false,
     hideHandles = false,
     onNodeClick,
   }: DocumentNodeProps) => {
@@ -60,9 +57,7 @@ export const DocumentNode = memo(
       operatingNodeId: state.operatingNodeId,
     }));
 
-    const { draggingNodeId } = useEditorPerformance();
     const isOperating = operatingNodeId === id;
-    const isDragging = draggingNodeId === id;
     const sizeMode = data?.metadata?.sizeMode || 'adaptive';
     const node = useMemo(() => getNode(id), [id, getNode]);
 
@@ -228,10 +223,6 @@ export const DocumentNode = memo(
           onClick={onNodeClick}
           style={isPreview ? { width: 288, height: 200 } : containerStyle}
         >
-          {!isPreview && !hideActions && !isDragging && !readonly && (
-            <ActionButtons type="document" nodeId={id} isNodeHovered={selected && isHovered} />
-          )}
-
           <div
             className={`
             h-full
@@ -242,6 +233,7 @@ export const DocumentNode = memo(
               <>
                 <CustomHandle
                   id={`${id}-target`}
+                  nodeId={id}
                   type="target"
                   position={Position.Left}
                   isConnected={isTargetConnected}
@@ -250,6 +242,7 @@ export const DocumentNode = memo(
                 />
                 <CustomHandle
                   id={`${id}-source`}
+                  nodeId={id}
                   type="source"
                   position={Position.Right}
                   isConnected={isSourceConnected}

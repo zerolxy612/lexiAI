@@ -12,14 +12,13 @@ import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/ca
 import { useChatStoreShallow } from '@refly-packages/ai-workspace-common/stores/chat';
 import { useCanvasData } from '@refly-packages/ai-workspace-common/hooks/canvas/use-canvas-data';
 import { useNodeHoverEffect } from '@refly-packages/ai-workspace-common/hooks/canvas/use-node-hover';
-import { ActionButtons } from './shared/action-buttons';
 import { cleanupNodeEvents } from '@refly-packages/ai-workspace-common/events/nodeActions';
 import { nodeActionEmitter } from '@refly-packages/ai-workspace-common/events/nodeActions';
 import { createNodeEventName } from '@refly-packages/ai-workspace-common/events/nodeActions';
 import { useDeleteNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-delete-node';
 import { IContextItem } from '@refly-packages/ai-workspace-common/stores/context-panel';
 import { useEdgeStyles } from '@refly-packages/ai-workspace-common/components/canvas/constants';
-import { genActionResultID } from '@refly/utils/id';
+import { genActionResultID, genUniqueId } from '@refly/utils/id';
 import { useAddNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-node';
 import { convertContextItemsToNodeFilters } from '@refly-packages/ai-workspace-common/utils/map-context-items';
 import { useNodeSize } from '@refly-packages/ai-workspace-common/hooks/canvas/use-node-size';
@@ -27,8 +26,6 @@ import { useCanvasStoreShallow } from '@refly-packages/ai-workspace-common/store
 import { NodeResizer as NodeResizerComponent } from './shared/node-resizer';
 import classNames from 'classnames';
 import Moveable from 'react-moveable';
-import { useUploadImage } from '@refly-packages/ai-workspace-common/hooks/use-upload-image';
-import { useEditorPerformance } from '@refly-packages/ai-workspace-common/context/editor-performance';
 import { useContextUpdateByEdges } from '@refly-packages/ai-workspace-common/hooks/canvas/use-debounced-context-update';
 import { ChatPanel } from '@refly-packages/ai-workspace-common/components/canvas/node-chat-panel';
 import { useSetNodeDataByEntity } from '@refly-packages/ai-workspace-common/hooks/canvas';
@@ -59,9 +56,7 @@ export const SkillNode = memo(
     const { operatingNodeId } = useCanvasStoreShallow((state) => ({
       operatingNodeId: state.operatingNodeId,
     }));
-    const { draggingNodeId } = useEditorPerformance();
     const isOperating = operatingNodeId === id;
-    const isDragging = draggingNodeId === id;
     const node = useMemo(() => getNode(id), [id, getNode]);
     const { canvasId, readonly } = useCanvasContext();
 
@@ -117,8 +112,6 @@ export const SkillNode = memo(
 
     const { invokeAction, abortAction } = useInvokeAction();
 
-    const { handleUploadImage } = useUploadImage();
-
     const setQuery = useCallback(
       (query: string) => {
         setLocalQuery(query);
@@ -149,7 +142,7 @@ export const SkillNode = memo(
         const newSourceNodes = contextNodes.filter((node) => !existingSourceIds.has(node?.id));
 
         const newEdges = newSourceNodes.map((node) => ({
-          id: `${node.id}-${id}`,
+          id: `edge-${genUniqueId()}`,
           source: node.id,
           target: id,
           style: edgeStyles.hover,
@@ -159,13 +152,15 @@ export const SkillNode = memo(
         const contextNodeIds = new Set(contextNodes.map((node) => node?.id));
         const edgesToRemove = existingEdges.filter((edge) => !contextNodeIds.has(edge.source));
 
-        if (newEdges?.length > 0) {
-          addEdges(newEdges);
-        }
+        setTimeout(() => {
+          if (newEdges?.length > 0) {
+            addEdges(newEdges);
+          }
 
-        if (edgesToRemove?.length > 0) {
-          deleteElements({ edges: edgesToRemove });
-        }
+          if (edgesToRemove?.length > 0) {
+            deleteElements({ edges: edgesToRemove });
+          }
+        }, 10);
       },
       [id, setNodeData, addEdges, getNodes, getEdges, deleteElements, edgeStyles.hover],
     );
@@ -296,7 +291,10 @@ export const SkillNode = memo(
                 tplConfig,
                 selectedSkill,
                 modelInfo,
-                runtimeConfig,
+                runtimeConfig: {
+                  ...contextRuntimeConfig,
+                  ...runtimeConfig,
+                },
                 structuredData: {
                   query,
                 },
@@ -334,20 +332,6 @@ export const SkillNode = memo(
       };
     }, [id, handleSendMessage, handleDelete]);
 
-    const handleImageUpload = async (file: File) => {
-      const nodeData = await handleUploadImage(file, canvasId);
-      if (nodeData) {
-        setContextItems([
-          ...contextItems,
-          {
-            type: 'image',
-            ...nodeData,
-          },
-        ]);
-      }
-      return nodeData;
-    };
-
     // Use the new custom hook instead of the local implementation
     const { debouncedUpdateContextItems } = useContextUpdateByEdges({
       readonly,
@@ -380,14 +364,12 @@ export const SkillNode = memo(
           })}
           style={safeContainerStyle}
         >
-          {!isDragging && !readonly && (
-            <ActionButtons type="skill" nodeId={id} isNodeHovered={selected && isHovered} />
-          )}
           <div className={`w-full h-full  ${getNodeCommonStyles({ selected, isHovered })}`}>
             {
               <>
                 <CustomHandle
                   id={`${id}-target`}
+                  nodeId={id}
                   type="target"
                   position={Position.Left}
                   isConnected={isTargetConnected}
@@ -396,6 +378,7 @@ export const SkillNode = memo(
                 />
                 <CustomHandle
                   id={`${id}-source`}
+                  nodeId={id}
                   type="source"
                   position={Position.Right}
                   isConnected={isSourceConnected}
@@ -422,7 +405,6 @@ export const SkillNode = memo(
               setTplConfig={setTplConfig}
               handleSendMessage={handleSendMessage}
               handleAbortAction={abortAction}
-              handleUploadImage={handleImageUpload}
               onInputHeightChange={() => updateSize({ height: 'auto' })}
               projectId={projectId}
               handleProjectChange={(projectId) => {

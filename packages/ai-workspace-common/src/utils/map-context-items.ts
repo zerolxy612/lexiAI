@@ -13,6 +13,7 @@ export const convertResultContextToItems = (
 
   const items: IContextItem[] = [];
 
+  // Convert history
   for (const item of history ?? []) {
     items.push({
       type: 'skillResponse',
@@ -24,12 +25,15 @@ export const convertResultContextToItems = (
   // Convert contentList
   for (const content of context?.contentList ?? []) {
     const metadata = content.metadata as any;
+
     items.push({
       type: metadata?.domain?.includes('resource')
         ? 'resource'
         : metadata?.domain?.includes('document')
           ? 'document'
-          : 'skillResponse',
+          : metadata?.domain === 'memo'
+            ? 'memo'
+            : 'skillResponse',
       entityId: metadata?.entityId ?? '',
       title: metadata?.title ?? 'Selected Content',
       metadata: {
@@ -66,6 +70,53 @@ export const convertResultContextToItems = (
       isCurrentContext: doc.isCurrent,
     });
   }
+
+  // Convert code artifacts
+  for (const artifact of context?.codeArtifacts ?? []) {
+    items.push({
+      type: 'codeArtifact',
+      entityId: artifact.artifactId ?? '',
+      title: artifact.codeArtifact?.title ?? 'Code Artifact',
+      metadata: {
+        ...artifact.metadata,
+        artifactType: artifact.codeArtifact?.type ?? 'unknown',
+      },
+      isPreview: !!artifact.isCurrent,
+      isCurrentContext: artifact.isCurrent,
+    });
+  }
+
+  // Convert URLs/websites
+  for (const url of context?.urls ?? []) {
+    items.push({
+      type: 'website',
+      entityId: (url.metadata?.entityId as string) || '',
+      title: (url.metadata?.title as string) || 'Website',
+      metadata: {
+        ...url.metadata,
+        url: url.url,
+      },
+    });
+  }
+
+  // Handle images separately - they're not part of the standard contentList
+  // Images are handled specially in useInvokeAction.ts via findImages
+  // if (context?.images && Array.isArray(context.input.images)) {
+  //   for (const imageKey of context.input.images) {
+  //     // Add image context items
+  //     items.push({
+  //       type: 'image',
+  //       entityId: typeof imageKey === 'object' ? imageKey.entityId || '' : '',
+  //       title: typeof imageKey === 'object' ? imageKey.title || 'Image' : 'Image',
+  //       metadata: {
+  //         storageKey: typeof imageKey === 'object' ? imageKey.storageKey : imageKey,
+  //         imageUrl: typeof imageKey === 'object' ? imageKey.imageUrl || '' : '',
+  //         // Other image-specific metadata
+  //         ...(typeof imageKey === 'object' ? imageKey.metadata || {} : {}),
+  //       },
+  //     });
+  //   }
+  // }
 
   return purgeContextItems(items);
 };
@@ -117,7 +168,6 @@ export const convertContextItemsToInvokeParams = (
   items: IContextItem[],
   getHistory: (item: IContextItem) => ActionResult[],
   getMemo?: (item: IContextItem) => { content: string; title: string }[],
-  getCodeArtifact?: (item: IContextItem) => { content: string; title: string }[],
   getImages?: (
     item: IContextItem,
   ) => { storageKey: string; title: string; entityId: string; metadata: any }[],
@@ -156,25 +206,10 @@ export const convertContextItemsToInvokeParams = (
         })),
       ) ?? [];
 
-  // Create content list with code artifacts
-  const codeArtifactContentList =
-    purgedItems
-      ?.filter((item) => item.type === 'codeArtifact' && getCodeArtifact)
-      ?.flatMap((item) =>
-        getCodeArtifact(item).map((code) => ({
-          content: code.content,
-          metadata: {
-            domain: 'codeArtifact',
-            entityId: item.entityId,
-            title: code.title,
-          },
-        })),
-      ) ?? [];
-
   // Combine all content lists and deduplicate by content and entityId
   const combinedContentList = deduplicate(
-    [...selectionContentList, ...memoContentList, ...codeArtifactContentList],
-    (item) => `${item.metadata.entityId}-${item.content.substring(0, 100)}`,
+    [...selectionContentList, ...memoContentList],
+    (item) => `${item.metadata.entityId}-${(item.content || '').substring(0, 100)}`,
   );
 
   const context = {
@@ -212,6 +247,23 @@ export const convertContextItemsToInvokeParams = (
           },
         })),
       (item) => item.docId,
+    ),
+    codeArtifacts: deduplicate(
+      purgedItems
+        ?.filter((item) => item?.type === 'codeArtifact')
+        .map((item) => ({
+          artifactId: item.entityId,
+          codeArtifact: {
+            artifactId: item.entityId,
+            title: item.title,
+            type: item.metadata?.artifactType ?? 'unknown',
+          },
+          isCurrent: item.isCurrentContext,
+          metadata: {
+            ...item.metadata,
+          },
+        })),
+      (item) => item.artifactId,
     ),
     urls: deduplicate(
       purgedItems
@@ -259,6 +311,7 @@ export const convertContextItemsToInvokeParams = (
     (item) => item.resultId,
   );
 
+  // Process image items - extract only storageKeys
   const images = purgedItems
     ?.filter((item) => item.type === 'image')
     .flatMap((item) => {
@@ -267,8 +320,11 @@ export const convertContextItemsToInvokeParams = (
           .map((img) => img.storageKey)
           .filter(Boolean);
       }
-      // Fallback to existing behavior if getImages is not provided
-      return item.metadata?.storageKey ? [item.metadata.storageKey] : [];
+      // Direct storageKey extraction for standard image items
+      if (item.metadata?.storageKey) {
+        return [item.metadata.storageKey];
+      }
+      return [];
     });
 
   return { context, resultHistory, images };

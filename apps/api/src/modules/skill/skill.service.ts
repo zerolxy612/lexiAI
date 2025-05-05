@@ -39,6 +39,7 @@ import {
   ActionStep,
   Artifact,
   ActionMeta,
+  CodeArtifact,
 } from '@refly/openapi-schema';
 import {
   BaseSkill,
@@ -101,6 +102,7 @@ import { AutoNameCanvasJobData } from '../canvas/canvas.dto';
 import { ParserFactory } from '../knowledge/parsers/factory';
 import { CodeArtifactService } from '../code-artifact/code-artifact.service';
 import { projectPO2DTO } from '@/modules/project/project.dto';
+import { codeArtifactPO2DTO } from '@/modules/code-artifact/code-artifact.dto';
 
 function validateSkillTriggerCreateParam(param: SkillTriggerCreateParam) {
   if (param.triggerType === 'simpleEvent') {
@@ -475,6 +477,13 @@ export class SkillService {
           document.content = '';
         }
       }
+
+      if (contextCopy.codeArtifacts) {
+        for (const { codeArtifact } of contextCopy.codeArtifacts) {
+          codeArtifact.content = '';
+        }
+      }
+
       return contextCopy;
     };
 
@@ -598,6 +607,64 @@ export class SkillService {
       for (const item of context.documents) {
         item.document = docMap.get(item.docId);
       }
+    }
+
+    // Populate code artifacts
+    if (context.codeArtifacts?.length > 0) {
+      const artifactIds = [
+        ...new Set(context.codeArtifacts.map((item) => item.artifactId).filter((id) => id)),
+      ];
+      const limit = pLimit(5);
+      const artifacts = await Promise.all(
+        artifactIds.map((id) => limit(() => this.codeArtifact.getCodeArtifactDetail(user, id))),
+      );
+      const artifactMap = new Map<string, CodeArtifact>();
+      for (const a of artifacts) {
+        artifactMap.set(a.artifactId, codeArtifactPO2DTO(a));
+      }
+
+      for (const item of context.codeArtifacts) {
+        item.codeArtifact = artifactMap.get(item.artifactId);
+      }
+
+      // Process code artifacts and add them to contentList
+      if (!context.contentList) {
+        context.contentList = [];
+      }
+
+      const codeArtifactContentList = context.codeArtifacts
+        .filter((item) => item.codeArtifact?.content)
+        .map((item) => {
+          const codeArtifact = item.codeArtifact;
+          // For long code content, preserve beginning and end
+          const MAX_CONTENT_LENGTH = 10000;
+          const PRESERVED_SECTION_LENGTH = 2000;
+
+          let processedContent = codeArtifact.content;
+
+          if (codeArtifact.content.length > MAX_CONTENT_LENGTH) {
+            const startContent = codeArtifact.content.substring(0, PRESERVED_SECTION_LENGTH);
+            const endContent = codeArtifact.content.substring(
+              codeArtifact.content.length - PRESERVED_SECTION_LENGTH,
+              codeArtifact.content.length,
+            );
+            processedContent = `${startContent}\n\n... (content truncated) ...\n\n${endContent}`;
+          }
+
+          return {
+            title: codeArtifact.title ?? 'Code',
+            content: processedContent,
+            metadata: {
+              domain: 'codeArtifact',
+              entityId: item.artifactId,
+              title: codeArtifact.title ?? 'Code',
+              language: codeArtifact.language,
+              artifactType: codeArtifact.type,
+            },
+          };
+        });
+
+      context.contentList.push(...codeArtifactContentList);
     }
 
     return context;
