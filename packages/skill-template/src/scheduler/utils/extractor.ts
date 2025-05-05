@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { checkIsSupportedModel } from './model';
 import { AIMessage, AIMessageChunk } from '@langchain/core/messages';
 import { ToolCall } from '@langchain/core/messages/tool';
-import { ModelInfo } from '@refly/openapi-schema';
+import { LLMModelConfig } from '@refly/openapi-schema';
 import parseJson from 'json-parse-even-better-errors';
 import { jsonrepair } from 'jsonrepair';
 import { zodToJsonSchema } from 'zod-to-json-schema';
@@ -244,7 +244,7 @@ export async function extractStructuredData<T extends z.ZodType>(
   prompt: string,
   config: SkillRunnableConfig,
   maxRetries: number,
-  modelInfo: ModelInfo,
+  modelInfo: LLMModelConfig,
 ): Promise<z.infer<T>> {
   let lastError = '';
   const detailedErrors: string[] = [];

@@ -39,6 +39,8 @@ import {
   ActionStep,
   Artifact,
   ActionMeta,
+  ModelScene,
+  LLMModelConfig,
 } from '@refly/openapi-schema';
 import {
   BaseSkill,
@@ -101,7 +103,7 @@ import { ParserFactory } from '../knowledge/parsers/factory';
 import { CodeArtifactService } from '../code-artifact/code-artifact.service';
 import { projectPO2DTO } from '@/modules/project/project.dto';
 import { ProviderService } from '@/modules/provider/provider.service';
-import { providerItem2ModelInfo, providerPO2DTO } from '@/modules/provider/provider.dto';
+import { providerPO2DTO } from '@/modules/provider/provider.dto';
 
 function validateSkillTriggerCreateParam(param: SkillTriggerCreateParam) {
   if (param.triggerType === 'simpleEvent') {
@@ -431,18 +433,34 @@ export class SkillService {
       throw new ProviderItemNotFoundError(`provider item ${modelItemId} not valid`);
     }
 
-    if (providerItem.provider.isGlobal && providerItem.tier) {
-      // Check for usage quota
-      const usageResult = await this.subscription.checkRequestUsage(user);
+    const modelProviderMap = await this.providerService.prepareModelProviderMap(user, modelItemId);
+    param.modelItemId = modelProviderMap.chat.itemId;
 
-      if (!usageResult[providerItem.tier]) {
-        throw new ModelUsageQuotaExceeded(
-          `model ${providerItem.name} (${providerItem.tier}) not available for current plan`,
-        );
+    const tiers = [];
+    for (const providerItem of Object.values(modelProviderMap)) {
+      if (providerItem.tier) {
+        tiers.push(providerItem.tier);
       }
     }
 
-    const modelInfo = providerItem2ModelInfo(providerItem);
+    if (tiers.length > 0) {
+      // Check for usage quota
+      const usageResult = await this.subscription.checkRequestUsage(user);
+
+      for (const tier of tiers) {
+        if (!usageResult[tier]) {
+          throw new ModelUsageQuotaExceeded(
+            `model provider (${tier}) not available for current plan`,
+          );
+        }
+      }
+    }
+
+    const modelConfigMap: Record<ModelScene, LLMModelConfig> = {
+      chat: JSON.parse(modelProviderMap.chat.config) as LLMModelConfig,
+      titleGeneration: JSON.parse(modelProviderMap.titleGeneration.config) as LLMModelConfig,
+      queryAnalysis: JSON.parse(modelProviderMap.queryAnalysis.config) as LLMModelConfig,
+    };
 
     if (param.context) {
       param.context = await this.populateSkillContext(user, param.context);
@@ -494,7 +512,7 @@ export class SkillService {
       ...param,
       uid,
       rawParam: JSON.stringify(param),
-      modelInfo,
+      modelConfigMap,
       provider: {
         ...providerPO2DTO(providerItem?.provider),
         apiKey: providerItem?.provider?.apiKey,
@@ -509,12 +527,12 @@ export class SkillService {
             uid,
             version: (existingResult.version ?? 0) + 1,
             type: 'skill',
-            tier: modelInfo.tier,
+            tier: providerItem.tier ?? '',
             status: 'executing',
             title: param.input.query,
             targetId: param.target?.entityId,
             targetType: param.target?.entityType,
-            modelName: modelInfo.name,
+            modelName: providerItem.name,
             projectId: param.projectId ?? null,
             actionMeta: JSON.stringify({
               type: 'skill',
@@ -543,11 +561,11 @@ export class SkillService {
           resultId,
           uid,
           version: 0,
-          tier: modelInfo.tier,
+          tier: providerItem.tier,
           targetId: param.target?.entityId,
           targetType: param.target?.entityType,
           title: param.input?.query,
-          modelName: modelInfo.name,
+          modelName: providerItem.name,
           type: 'skill',
           status: 'executing',
           actionMeta: JSON.stringify({
@@ -723,7 +741,7 @@ export class SkillService {
       context,
       tplConfig,
       runtimeConfig,
-      modelInfo,
+      modelConfigMap,
       provider,
       resultHistory,
       projectId,
@@ -747,7 +765,7 @@ export class SkillService {
       configurable: {
         ...context,
         user,
-        modelInfo,
+        modelConfigMap,
         provider,
         locale: displayLocale,
         uiLocale: userPo.uiLocale,

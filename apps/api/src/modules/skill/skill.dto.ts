@@ -1,7 +1,8 @@
 import {
   ActionResult,
   InvokeSkillRequest,
-  ModelInfo,
+  LLMModelConfig,
+  ModelScene,
   Provider,
   SimpleEventName,
   SkillInstance,
@@ -18,8 +19,8 @@ export interface InvokeSkillJobData extends InvokeSkillRequest {
   uid: string;
   rawParam: string;
   result?: ActionResult;
-  modelInfo?: ModelInfo;
   provider?: Provider;
+  modelConfigMap?: Record<ModelScene, LLMModelConfig>;
 }
 
 export interface SkillTimeoutCheckJobData {

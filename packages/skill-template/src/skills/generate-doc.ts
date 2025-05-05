@@ -65,7 +65,8 @@ export class GenerateDoc extends BaseSkill {
   ) => {
     config.metadata.step = { name: 'analyzeQuery' };
     const { messages = [], images = [] } = state;
-    const { locale = 'en', modelInfo, project, runtimeConfig } = config.configurable;
+    const { locale = 'en', modelConfigMap, project, runtimeConfig } = config.configurable;
+    const modelInfo = modelConfigMap.chat;
 
     // Extract customInstructions from project if available
     const customInstructions = project?.customInstructions;
@@ -184,7 +185,7 @@ export class GenerateDoc extends BaseSkill {
       originalQuery: query,
       optimizedQuery,
       rewrittenQueries,
-      modelInfo: config?.configurable?.modelInfo,
+      modelInfo,
       customInstructions,
     });
 
@@ -198,9 +199,10 @@ export class GenerateDoc extends BaseSkill {
     { context, chatHistory }: { context: string; chatHistory: BaseMessage[] },
   ): Promise<string> => {
     const { query = '' } = state;
-    const { locale = 'en', uiLocale = 'en' } = config.configurable;
+    const { locale = 'en', uiLocale = 'en', modelConfigMap } = config.configurable;
+    const modelInfo = modelConfigMap.titleGeneration;
 
-    const model = this.engine.chatModel({ temperature: 0.1 }, true);
+    const model = this.engine.chatModel({ temperature: 0.1 }, 'titleGeneration');
 
     // Prepare context snippet if available
     let contextSnippet = '';
@@ -244,7 +246,7 @@ ${recentHistory.map((msg) => `${(msg as HumanMessage)?.getType?.()}: ${msg.conte
         titlePrompt,
         config,
         3, // Max retries
-        config?.configurable?.modelInfo,
+        modelInfo,
       );
 
       // Log the reasoning process

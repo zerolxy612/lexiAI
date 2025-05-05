@@ -1,9 +1,9 @@
-import { ModelInfo } from '@refly/openapi-schema';
+import { LLMModelConfig } from '@refly/openapi-schema';
 
-export const checkIsSupportedModel = (modelInfo: ModelInfo) => {
+export const checkIsSupportedModel = (modelInfo: LLMModelConfig) => {
   return !!modelInfo.capabilities.functionCall;
 };
 
-export const checkModelContextLenSupport = (modelInfo: ModelInfo) => {
+export const checkModelContextLenSupport = (modelInfo: LLMModelConfig) => {
   return modelInfo?.contextLimit > 8 * 1024;
 };

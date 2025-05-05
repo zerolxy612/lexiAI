@@ -1,7 +1,7 @@
 import { SkillRunnableConfig, BaseSkill } from '../../../base';
 import { GraphState } from '../../types';
 import { deduplicateSourcesByTitle, TimeTracker, batchTranslateText } from '@refly/utils';
-import { Source } from '@refly/openapi-schema';
+import { LLMModelConfig, Source } from '@refly/openapi-schema';
 
 import {
   buildRewriteQuerySystemPrompt,
@@ -34,6 +34,7 @@ import { extractStructuredData } from '../../utils/extractor';
  */
 
 interface CallMultiLingualWebSearchParams {
+  modelInfo: LLMModelConfig;
   rewrittenQueries?: string[];
   searchLimit: number;
   searchLocaleList: string[];
@@ -80,7 +81,7 @@ export const callMultiLingualWebSearch = async (
   const timeTracker = new TimeTracker();
   let finalResults: Source[] = [];
 
-  const model = engine.chatModel({ temperature: 0.1 }, true);
+  const model = engine.chatModel({ temperature: 0.1 }, 'queryAnalysis');
 
   const enableQueryRewrite = params.enableQueryRewrite ?? true;
 
@@ -100,7 +101,7 @@ export const callMultiLingualWebSearch = async (
           `${buildRewriteQuerySystemPrompt()}\n\n${buildRewriteQueryUserPrompt({ query })}`,
           config,
           3,
-          ctx?.config?.configurable?.modelInfo,
+          params.modelInfo,
         );
 
         queries = rewriteResult?.queries?.rewrittenQueries || [query];

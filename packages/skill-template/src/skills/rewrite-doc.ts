@@ -63,13 +63,13 @@ export class RewriteDoc extends BaseSkill {
     const {
       locale = 'en',
       chatHistory = [],
-      modelInfo,
+      modelConfigMap,
       resources,
       documents,
       contentList,
-    } = config.configurable;
+      tplConfig,
+    } = config.configurable ?? {};
 
-    const { tplConfig } = config?.configurable || {};
     const enableWebSearch = tplConfig?.enableWebSearch?.value as boolean;
     const enableKnowledgeBaseSearch = tplConfig?.enableKnowledgeBaseSearch?.value as boolean;
 
@@ -98,6 +98,7 @@ export class RewriteDoc extends BaseSkill {
     });
     this.engine.logger.log(`checkHasContext: ${hasContext}`);
 
+    const modelInfo = modelConfigMap.chat;
     const maxTokens = modelInfo.contextLimit || DEFAULT_MODEL_CONTEXT_LIMIT;
     const queryTokens = countToken(query);
     const chatHistoryTokens = countMessagesTokens(usedChatHistory);
@@ -182,7 +183,7 @@ export class RewriteDoc extends BaseSkill {
       images,
       originalQuery: query,
       optimizedQuery,
-      modelInfo: config?.configurable?.modelInfo,
+      modelInfo,
     });
 
     return { requestMessages };

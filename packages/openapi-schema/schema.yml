@@ -4169,6 +4169,13 @@ components:
         providerKey:
           type: string
           description: Provider key
+    ModelScene:
+      type: string
+      description: Model usage scene
+      enum:
+        - chat
+        - queryAnalysis
+        - titleGeneration
     DefaultModelConfig:
       type: object
       description: Default model config

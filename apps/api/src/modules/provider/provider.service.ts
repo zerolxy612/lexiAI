@@ -9,6 +9,7 @@ import {
   ListProviderItemsData,
   ListProvidersData,
   LLMModelConfig,
+  ModelScene,
   ModelTier,
   ProviderCategory,
   ProviderItemOption,
@@ -18,7 +19,7 @@ import {
   User,
   UserPreferences,
 } from '@refly/openapi-schema';
-import { Provider, ProviderItem } from '@/generated/client';
+import { Provider as ProviderModel, ProviderItem as ProviderItemModel } from '@/generated/client';
 import { genProviderItemID, genProviderID, providerInfoList, pick } from '@refly/utils';
 import { ProviderNotFoundError, ProviderItemNotFoundError, ParamsError } from '@refly/errors';
 import { SingleFlightCache } from '@/utils/cache';
@@ -33,8 +34,8 @@ import {
 } from '@refly/providers';
 
 interface GlobalProviderConfig {
-  providers: Provider[];
-  items: (ProviderItem & { provider: Provider })[];
+  providers: ProviderModel[];
+  items: (ProviderItemModel & { provider: ProviderModel })[];
 }
 
 const PROVIDER_ITEMS_BATCH_LIMIT = 50;
@@ -428,16 +429,60 @@ export class ProviderService {
     return getReranker(provider, rerankerConfig);
   }
 
-  async findDefaultProviderItem(
+  /**
+   * Prepare the model provider map for the skill invocation
+   * @param user The user to prepare the model provider map for
+   * @param modelItemId The modelItemId passed in the skill invocation params
+   * @returns The model provider map
+   */
+  async prepareModelProviderMap(
     user: User,
-    scene: 'chat' | 'titleGeneration' | 'queryAnalysis',
-  ): Promise<ProviderItem> {
-    const { preferences } = await this.prisma.user.findUnique({
+    modelItemId: string,
+  ): Promise<Record<ModelScene, ProviderItemModel>> {
+    const userPo = await this.prisma.user.findUnique({
       where: { uid: user.uid },
       select: {
         preferences: true,
       },
     });
+    const defaultChatItem = await this.findDefaultProviderItem(user, 'chat', userPo);
+    const chatItem = modelItemId
+      ? await this.findProviderItemById(user, modelItemId)
+      : defaultChatItem;
+
+    if (!chatItem) {
+      throw new ProviderItemNotFoundError('chat model not configured');
+    }
+
+    if (chatItem.category !== 'llm' || !chatItem.enabled) {
+      throw new ProviderItemNotFoundError(`provider item ${modelItemId} not valid`);
+    }
+
+    const titleGenerationItem = await this.findDefaultProviderItem(user, 'titleGeneration', userPo);
+    const queryAnalysisItem = await this.findDefaultProviderItem(user, 'queryAnalysis', userPo);
+
+    const modelConfigMap: Record<ModelScene, ProviderItemModel> = {
+      chat: chatItem,
+      titleGeneration: titleGenerationItem,
+      queryAnalysis: queryAnalysisItem,
+    };
+
+    return modelConfigMap;
+  }
+
+  async findDefaultProviderItem(
+    user: User,
+    scene: ModelScene,
+    userPo?: { preferences: string },
+  ): Promise<ProviderItemModel> {
+    const { preferences } =
+      userPo ||
+      (await this.prisma.user.findUnique({
+        where: { uid: user.uid },
+        select: {
+          preferences: true,
+        },
+      }));
 
     const userPreferences: UserPreferences = JSON.parse(preferences || '{}');
     const { defaultModel } = userPreferences;
@@ -447,10 +492,10 @@ export class ProviderService {
       itemId = defaultModel.chat.itemId;
     }
     if (scene === 'titleGeneration' && defaultModel?.titleGeneration) {
-      itemId = defaultModel.titleGeneration.itemId;
+      itemId = defaultModel.titleGeneration.itemId || defaultModel.chat.itemId;
     }
     if (scene === 'queryAnalysis' && defaultModel?.queryAnalysis) {
-      itemId = defaultModel.queryAnalysis.itemId;
+      itemId = defaultModel.queryAnalysis.itemId || defaultModel.chat.itemId;
     }
 
     if (itemId) {

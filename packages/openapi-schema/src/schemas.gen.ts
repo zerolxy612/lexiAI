@@ -2154,6 +2154,12 @@ export const ProviderConfigSchema = {
   },
 } as const;
 
+export const ModelSceneSchema = {
+  type: 'string',
+  description: 'Model usage scene',
+  enum: ['chat', 'queryAnalysis', 'titleGeneration'],
+} as const;
+
 export const DefaultModelConfigSchema = {
   type: 'object',
   description: 'Default model config',

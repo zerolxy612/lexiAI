@@ -1693,6 +1693,11 @@ export type ProviderConfig = {
 };
 
 /**
+ * Model usage scene
+ */
+export type ModelScene = 'chat' | 'queryAnalysis' | 'titleGeneration';
+
+/**
  * Default model config
  */
 export type DefaultModelConfig = {

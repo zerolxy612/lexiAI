@@ -18,12 +18,13 @@ export async function processQuery(options: QueryProcessorOptions): Promise<Quer
   const { config, ctxThis, state, shouldSkipAnalysis = false } = options;
   const { query: originalQuery } = state;
   const {
-    modelInfo,
+    modelConfigMap,
     chatHistory: rawChatHistory = [],
     resources,
     documents,
     contentList,
   } = config.configurable;
+  const modelInfo = modelConfigMap.queryAnalysis;
   const { tplConfig } = config?.configurable || {};
 
   let optimizedQuery = '';

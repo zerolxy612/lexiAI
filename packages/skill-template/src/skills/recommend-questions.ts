@@ -68,10 +68,10 @@ export class RecommendQuestions extends BaseSkill {
     const {
       locale = 'en',
       chatHistory = [],
-      modelInfo,
+      modelConfigMap,
       tplConfig,
       project,
-    } = config.configurable || {};
+    } = config.configurable ?? {};
 
     // Extract customInstructions from project if available
     const customInstructions = project?.customInstructions;
@@ -93,6 +93,7 @@ export class RecommendQuestions extends BaseSkill {
     const isRefresh = tplConfig?.refresh?.value;
 
     // Process query and context using shared utilities
+    const modelInfo = modelConfigMap.chat;
     const remainingTokens = modelInfo.contextLimit;
 
     // Truncate chat history with larger window for better context

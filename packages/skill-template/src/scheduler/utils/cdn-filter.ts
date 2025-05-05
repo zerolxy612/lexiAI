@@ -261,14 +261,14 @@ ${urlsJson}
 Return a structured JSON array with your analysis for each URL.`;
 
   try {
-    const model = ctx.ctxThis.engine.chatModel({ temperature: 0.1 }, true);
+    const model = ctx.ctxThis.engine.chatModel({ temperature: 0.1 }, 'queryAnalysis');
     const result = await extractStructuredData(
       model,
       cdnBatchAnalysisSchema,
       `${systemPrompt}\n\n${userMessage}`,
       ctx.config,
       3,
-      ctx?.config?.configurable?.modelInfo,
+      ctx?.config?.configurable?.modelConfigMap?.queryAnalysis,
     );
 
     logger.log(`LLM batch analysis complete: analyzed ${result.results.length} URLs`);

@@ -201,7 +201,13 @@ export async function analyzeQueryAndContext(
     tplConfig: SkillTemplateConfig;
   },
 ): Promise<QueryAnalysis> {
-  const { chatHistory, resources, documents, contentList, modelInfo } = ctx.config.configurable;
+  const {
+    chatHistory,
+    resources,
+    documents,
+    contentList,
+    modelConfigMap: modelInfo,
+  } = ctx.config.configurable;
   const context: IContext = {
     resources,
     documents,
@@ -210,7 +216,8 @@ export async function analyzeQueryAndContext(
 
   // Preprocess context for better extract mentioned context
   const preprocessedContext = preprocessContext(context);
-  const maxContextTokens = modelInfo.contextLimit * MAX_CONTEXT_RATIO;
+  const modelConfig = modelInfo.queryAnalysis;
+  const maxContextTokens = modelConfig.contextLimit * MAX_CONTEXT_RATIO;
   const summarizedContext = summarizeContext(preprocessedContext, maxContextTokens);
 
   // Summarize chat history
@@ -276,7 +283,7 @@ ${summarizedChatHistory}
 
 Please analyze the query, focusing primarily on the current query and available context. Only consider the chat history if it's directly relevant to understanding the current query.`;
 
-  const model = ctx.ctxThis.engine.chatModel({ temperature: 0.3 }, true);
+  const model = ctx.ctxThis.engine.chatModel({ temperature: 0.3 }, 'queryAnalysis');
 
   try {
     const result = await extractStructuredData(
@@ -285,7 +292,7 @@ Please analyze the query, focusing primarily on the current query and available 
       `${systemPrompt}\n\n${userMessage}`,
       ctx.config,
       3, // maxRetries
-      ctx?.config?.configurable?.modelInfo,
+      ctx?.config?.configurable?.modelConfigMap?.queryAnalysis,
     );
 
     ctx.ctxThis.engine.logger.log(`- Query Analysis: ${result.analysis.queryAnalysis}
@@ -333,7 +340,8 @@ export const preprocessQuery = (
     tplConfig: SkillTemplateConfig;
   },
 ) => {
-  const { modelInfo } = ctx.config.configurable;
+  const { modelConfigMap } = ctx.config.configurable;
+  const modelInfo = modelConfigMap?.queryAnalysis;
   const maxQueryTokens =
     (modelInfo.contextLimit || DEFAULT_MODEL_CONTEXT_LIMIT) * MAX_QUERY_TOKENS_RATIO;
 

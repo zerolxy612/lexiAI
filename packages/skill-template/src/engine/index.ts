@@ -1,9 +1,6 @@
 import { SkillRunnableConfig } from '../base';
 import { FakeListChatModel } from '@langchain/core/utils/testing';
-import { ChatOpenAI, OpenAIBaseInput } from '@langchain/openai';
-import { ChatOllama } from '@langchain/ollama';
-import { ChatFireworks } from '@langchain/community/chat_models/fireworks';
-import { ChatDeepSeek } from './chat-deepseek';
+import { OpenAIBaseInput } from '@langchain/openai';
 import { Document } from '@langchain/core/documents';
 import {
   CreateLabelClassRequest,
@@ -45,8 +42,10 @@ import {
   DeleteCanvasRequest,
   DeleteDocumentResponse,
   DeleteDocumentRequest,
+  ModelScene,
 } from '@refly/openapi-schema';
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
+import { getChatModel } from '@refly/providers';
 
 // TODO: unify with frontend
 export type ContentNodeType =
@@ -171,7 +170,7 @@ export class SkillEngine {
     this.config = config;
   }
 
-  chatModel(params?: Partial<OpenAIBaseInput>, useDefaultChatModel = false): BaseChatModel {
+  chatModel(params?: Partial<OpenAIBaseInput>, scene?: ModelScene): BaseChatModel {
     if (process.env.MOCK_LLM_RESPONSE) {
       return new FakeListChatModel({
         responses: ['This is a test'],
@@ -179,43 +178,19 @@ export class SkillEngine {
       });
     }
 
+    const finalScene = scene || 'chat';
+
     const config = this.config?.configurable;
     const provider = config?.provider;
-    const model = useDefaultChatModel
-      ? this.options.defaultModel
-      : config.modelInfo?.name || this.options.defaultModel;
+    const model = config.modelConfigMap?.[finalScene]?.modelId || this.options.defaultModel;
 
-    switch (provider?.providerKey) {
-      case 'openai':
-        return new ChatOpenAI({
-          model,
-          apiKey: provider.apiKey,
-          configuration: {
-            baseURL: provider.baseUrl,
-          },
-          reasoningEffort: 'high',
-          ...params,
-        });
-      case 'ollama':
-        return new ChatOllama({
-          model,
-          baseUrl: provider.baseUrl,
-          ...params,
-        });
-      case 'fireworks':
-        return new ChatFireworks({
-          model,
-          apiKey: provider.apiKey,
-          ...params,
-        });
-      case 'deepseek':
-        return new ChatDeepSeek({
-          model,
-          apiKey: provider.apiKey,
-          ...params,
-        });
-      default:
-        throw new Error(`Unsupported provider: ${provider?.providerKey}`);
-    }
+    return getChatModel(
+      provider,
+      {
+        modelId: model,
+        modelName: model,
+      },
+      params,
+    );
   }
 }
