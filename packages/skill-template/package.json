@@ -21,6 +21,7 @@
     "@refly/common-types": "workspace:*",
     "@refly/errors": "workspace:*",
     "@refly/openapi-schema": "workspace:*",
+    "@refly/providers": "workspace:*",
     "@refly/utils": "workspace:*",
     "@types/lodash": "~4.17.10",
     "better-sqlite3": "^9.5.0",

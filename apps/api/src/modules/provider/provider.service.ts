@@ -70,6 +70,7 @@ export class ProviderService {
         providerId: {
           in: providers.map((provider) => provider.providerId),
         },
+        uid: null,
         deletedAt: null,
       },
       include: {
@@ -174,7 +175,7 @@ export class ProviderService {
     const provider = await this.prisma.provider.findUnique({
       where: {
         providerId,
-        uid: user.uid,
+        OR: [{ uid: user.uid }, { isGlobal: true }],
         deletedAt: null,
       },
     });
@@ -260,7 +261,7 @@ export class ProviderService {
     const provider = await this.prisma.provider.findUnique({
       where: {
         providerId,
-        uid: user.uid,
+        OR: [{ uid: user.uid }, { isGlobal: true }],
         deletedAt: null,
       },
     });
@@ -386,7 +387,7 @@ export class ProviderService {
     const { provider, config } = item;
     const chatConfig: LLMModelConfig = JSON.parse(config);
 
-    return getChatModel(provider, chatConfig, this.logger);
+    return getChatModel(provider, chatConfig);
   }
 
   /**
@@ -493,7 +494,7 @@ export class ProviderService {
 
     if (providerId) {
       const provider = await this.prisma.provider.findUnique({
-        where: { providerId, uid: user.uid, deletedAt: null },
+        where: { providerId, OR: [{ uid: user.uid }, { isGlobal: true }], deletedAt: null },
       });
       if (provider?.enabled) {
         // Decrypt API key and return
@@ -527,8 +528,8 @@ export class ProviderService {
     const provider = await this.prisma.provider.findUnique({
       where: {
         providerId,
-        uid: user.uid,
         deletedAt: null,
+        OR: [{ uid: user.uid }, { isGlobal: true }],
       },
     });
 
@@ -540,9 +541,9 @@ export class ProviderService {
     let finalConfig = config;
     if (provider.isGlobal) {
       const options = await this.listProviderItemOptions(user, { providerId, category });
-      const option = options.find((option) => option.name === name);
+      const option = options.find((option) => option.config?.modelId === config?.modelId);
       if (!option) {
-        throw new ParamsError(`Unknown provider item name: ${name}`);
+        throw new ParamsError(`Unknown provider item modelId: ${config?.modelId}`);
       }
       finalConfig = option.config;
     }
@@ -586,7 +587,7 @@ export class ProviderService {
     const providerCnt = await this.prisma.provider.count({
       where: {
         providerId: { in: Array.from(providerIds) },
-        uid: user.uid,
+        OR: [{ uid: user.uid }, { isGlobal: true }],
         deletedAt: null,
       },
     });
@@ -765,22 +766,26 @@ export class ProviderService {
         }));
     }
 
+    const apiKey = provider.apiKey ? this.encryptionService.decrypt(provider.apiKey) : null;
+
     try {
       const res = await fetch(`${provider.baseUrl}/models`, {
         headers: {
-          ...(provider.apiKey ? { Authorization: `Bearer ${provider.apiKey}` } : {}),
+          ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
         },
       });
 
       const data = await res.json();
 
-      return data.data.map(
-        (model) =>
-          ({
-            name: model.name || model.id,
-            category,
-            config: { modelId: model.id, modelName: model.name || model.id },
-          }) as ProviderItemOption,
+      return (
+        data?.data?.map(
+          (model) =>
+            ({
+              name: model.name || model.id,
+              category,
+              config: { modelId: model.id, modelName: model.name || model.id },
+            }) as ProviderItemOption,
+        ) ?? []
       );
     } catch (error) {
       this.logger.warn(

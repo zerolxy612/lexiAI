@@ -4,11 +4,12 @@ import { EnhancedChatOpenAI } from './openai';
 import { ChatOllama } from '@langchain/ollama';
 import { ChatFireworks } from '@langchain/community/chat_models/fireworks';
 import { BaseProvider } from '../types';
+import { OpenAIBaseInput } from '@langchain/openai';
 
 export const getChatModel = (
   provider: BaseProvider,
   config: LLMModelConfig,
-  params: any,
+  params?: Partial<OpenAIBaseInput>,
 ): BaseChatModel => {
   switch (provider?.providerKey) {
     case 'openai':
@@ -24,7 +25,7 @@ export const getChatModel = (
     case 'ollama':
       return new ChatOllama({
         model: config.modelId,
-        baseUrl: provider.baseUrl,
+        baseUrl: provider.baseUrl?.replace(/\/v1\/?$/, ''),
         ...params,
       });
     case 'fireworks':

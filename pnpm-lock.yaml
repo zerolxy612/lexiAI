@@ -1498,6 +1498,9 @@ importers:
       '@refly/openapi-schema':
         specifier: workspace:*
         version: link:../openapi-schema
+      '@refly/providers':
+        specifier: workspace:*
+        version: link:../providers
       '@refly/utils':
         specifier: workspace:*
         version: link:../utils
