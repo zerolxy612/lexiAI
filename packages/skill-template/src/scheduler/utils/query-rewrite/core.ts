@@ -316,7 +316,7 @@ Please analyze the query, focusing primarily on the current query and available 
       },
     };
   } catch (error) {
-    ctx.ctxThis.engine.logger.error(`Failed to analyze query: ${error}`);
+    ctx.ctxThis.engine.logger.error(`Failed to analyze query: ${error.stack}`);
     // Return original query if analysis fails
     return {
       optimizedQuery: query,

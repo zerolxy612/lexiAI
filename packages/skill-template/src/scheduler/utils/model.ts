@@ -1,7 +1,7 @@
 import { LLMModelConfig } from '@refly/openapi-schema';
 
 export const checkIsSupportedModel = (modelInfo: LLMModelConfig) => {
-  return !!modelInfo.capabilities.functionCall;
+  return !!modelInfo?.capabilities?.functionCall;
 };
 
 export const checkModelContextLenSupport = (modelInfo: LLMModelConfig) => {

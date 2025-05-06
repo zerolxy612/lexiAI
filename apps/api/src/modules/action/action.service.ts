@@ -48,7 +48,7 @@ export class ActionService {
     }
 
     const item = await this.providerService.findLLMProviderItemByModelID(user, result.modelName);
-    const modelInfo = providerItem2ModelInfo(item);
+    const modelInfo = item ? providerItem2ModelInfo(item) : null;
 
     const steps = await this.prisma.actionStep.findMany({
       where: {
