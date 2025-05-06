@@ -1,11 +1,12 @@
 import React, { useMemo, useCallback, useState, useEffect } from 'react';
-import { Popover, Select, Button, Divider, message } from 'antd';
+import { Popover, Select, Button, Divider, message, Tooltip } from 'antd';
 import { ButtonProps } from 'antd/es/button';
 import {
   IconShare,
   IconClose,
   IconLink,
   IconTemplate,
+  IconRefresh,
 } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { RiUserForbidLine } from 'react-icons/ri';
 import { GrLanguage } from 'react-icons/gr';
@@ -66,6 +67,8 @@ const ShareSettings = React.memo(({ canvasId, canvasTitle }: ShareSettingsProps)
   const [open, setOpen] = useState(false);
   const [createTemplateModalVisible, setCreateTemplateModalVisible] = useState(false);
   const [access, setAccess] = useState<ShareAccess>('off');
+  const [updateLoading, setUpdateLoading] = useState(false);
+  const [updateShareLoading, setUpdateShareLoading] = useState(false);
 
   const accessOptions = useMemo(
     () => [
@@ -103,17 +106,13 @@ const ShareSettings = React.memo(({ canvasId, canvasTitle }: ShareSettingsProps)
   const { uploadCanvasCover } = useExportCanvasAsImage();
 
   // Memoized function to re-share latest content before copying link
-  const reshareAndCopyLink = useCallback(async () => {
+  const updateShare = useCallback(async () => {
     if (access === 'off') return;
-
-    // Copy link to clipboard immediately for better UX
-    const newShareLink = getShareLink('canvas', shareRecord?.shareId ?? '');
-    await navigator.clipboard.writeText(newShareLink);
-    message.success(t('shareContent.copyLinkSuccess'));
 
     // Asynchronously create new share with latest content
     (async () => {
       try {
+        setUpdateShareLoading(true);
         const { storageKey } = await uploadCanvasCover();
         const { data, error } = await getClient().createShare({
           body: {
@@ -125,20 +124,39 @@ const ShareSettings = React.memo(({ canvasId, canvasTitle }: ShareSettingsProps)
         });
 
         if (data?.success && !error) {
+          message.success(t('shareContent.updateShareSuccess'));
           await refetchShares();
         }
       } catch (error) {
         console.error('Failed to create share:', error);
+      } finally {
+        setUpdateShareLoading(false);
       }
     })();
   }, [access, canvasId, refetchShares, shareRecord?.shareId, t]);
 
+  const copyLink = useCallback(async () => {
+    if (access === 'off') return;
+    // Copy link to clipboard immediately for better UX
+    const newShareLink = getShareLink('canvas', shareRecord?.shareId ?? '');
+    await navigator.clipboard.writeText(newShareLink);
+    message.success(t('shareContent.copyLinkSuccess'));
+  }, [access, shareRecord?.shareId, t]);
+
   const buttons = useMemo(
     () => [
       {
+        label: 'updateShare',
+        icon: <IconRefresh className="w-3 h-3 flex items-center justify-center" />,
+        onClick: () => updateShare(),
+        disabled: access === 'off' || updateShareLoading,
+        type: 'default',
+        loading: updateShareLoading,
+      },
+      {
         label: 'copyLink',
-        icon: <IconLink className="w-3.5 h-3.5 flex items-center justify-center" />,
-        onClick: () => reshareAndCopyLink(),
+        icon: <IconLink className="w-3 h-3 flex items-center justify-center" />,
+        onClick: () => copyLink(),
         disabled: access === 'off',
         type: 'default',
       },
@@ -153,14 +171,12 @@ const ShareSettings = React.memo(({ canvasId, canvasTitle }: ShareSettingsProps)
         type: 'primary',
       },
     ],
-    [access, reshareAndCopyLink, t],
+    [access, updateShare, t, updateShareLoading],
   );
 
   useEffect(() => {
     setAccess(shareRecord ? 'anyone' : 'off');
   }, [shareRecord]);
-
-  const [updateLoading, setUpdateLoading] = useState(false);
 
   const updateCanvasPermission = useCallback(
     async (value: ShareAccess) => {
@@ -255,17 +271,23 @@ const ShareSettings = React.memo(({ canvasId, canvasTitle }: ShareSettingsProps)
         </div>
         <div className="px-3 py-4 bg-[#F5F6F7] flex items-center justify-center gap-2 rounded-b-lg">
           {buttons.map((button) => (
-            <Button
-              className="w-full"
-              type={button.type as ButtonProps['type']}
+            <Tooltip
+              title={t(`shareContent.${button.label}Tooltip`)}
               key={button.label}
-              icon={button.icon}
-              disabled={button.disabled || updateLoading}
-              loading={button.label === 'copyLink' && updateLoading}
-              onClick={() => button.onClick()}
+              placement="bottom"
             >
-              {t(`shareContent.${button.label}`)}
-            </Button>
+              <Button
+                className="w-full h-[28px] text-xs"
+                type={button.type as ButtonProps['type']}
+                icon={button.icon}
+                size="small"
+                disabled={button.disabled || updateLoading}
+                loading={button.loading}
+                onClick={() => button.onClick()}
+              >
+                {t(`shareContent.${button.label}`)}
+              </Button>
+            </Tooltip>
           ))}
         </div>
       </div>

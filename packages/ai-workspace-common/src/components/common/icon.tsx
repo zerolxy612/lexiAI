@@ -45,6 +45,7 @@ import {
   LuUserRound,
   LuFileStack,
   LuCloud,
+  LuRefreshCw,
 } from 'react-icons/lu';
 
 import {
@@ -175,6 +176,8 @@ export const IconFiles = LuFileStack;
 export const IconWorldConfig = TbWorldCog;
 export const IconCloud = LuCloud;
 export const IconSlideshow = RiSlideshow2Line;
+export const IconRefresh = LuRefreshCw;
+
 export const IconChrome = ChromeIcon;
 export const ModelProviderIcons = {
   openai: OpenAIIcon,
