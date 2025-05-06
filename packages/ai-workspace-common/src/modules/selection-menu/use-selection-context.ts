@@ -1,7 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
-import { IContextItem, useContextPanelStoreShallow } from '../../stores/context-panel';
+import {
+  IContextItem,
+  useContextPanelStoreShallow,
+  useContextPanelStore,
+  ContextTarget,
+} from '../../stores/context-panel';
 import { getSelectionNodesMarkdown } from '@refly/utils/html2md';
 import { Editor } from '@tiptap/react';
+import { message } from 'antd';
+import React from 'react';
+import { emitAddToContext, emitAddToContextCompleted } from '../../utils/event-emitter/context';
+import AddToContextMessageContent from '../../components/message/add-to-context-message';
 
 interface UseSelectionContextProps {
   containerClass?: string;
@@ -85,11 +94,30 @@ export const useSelectionContext = ({
       }
 
       // Prefer containerRef to check container
-      const container =
-        containerRef?.current ||
-        (containerClass ? document.querySelector(`.${containerClass}`) : document.body);
+      if (containerRef?.current) {
+        if (!containerRef.current.contains(range.commonAncestorContainer)) {
+          setIsSelecting(false);
+          setSelectedText('');
+          return;
+        }
+      } else if (containerClass) {
+        const containers = document.querySelectorAll(`.${containerClass}`);
+        let isWithinContainer = false;
 
-      if (!container || !container.contains(range.commonAncestorContainer)) {
+        // Check if selection is within any container with this class
+        for (const container of containers) {
+          if (container.contains(range.commonAncestorContainer)) {
+            isWithinContainer = true;
+            break;
+          }
+        }
+
+        if (!isWithinContainer) {
+          setIsSelecting(false);
+          setSelectedText('');
+          return;
+        }
+      } else if (!document.body.contains(range.commonAncestorContainer)) {
         setIsSelecting(false);
         setSelectedText('');
         return;
@@ -109,7 +137,53 @@ export const useSelectionContext = ({
     (item: IContextItem) => {
       if (!selectedText) return;
 
+      const { activeResultId } = useContextPanelStore.getState();
+      const resultId = activeResultId || ContextTarget.Global;
+      const contextStore = useContextPanelStore.getState();
+      const selectedContextItems = contextStore.contextItems;
+      const nodeType = item?.type;
+
+      // Check if item is already in context
+      const isAlreadyAdded = selectedContextItems.some(
+        (selectedItem) => selectedItem.entityId === item.entityId && !selectedItem.isPreview,
+      );
+
+      // Get node title based on type
+      const nodeTitle = item?.title ?? 'Untitled';
+
+      if (isAlreadyAdded) {
+        message.warning({
+          content: React.createElement(AddToContextMessageContent, {
+            title: nodeTitle,
+            nodeType: nodeType,
+            action: 'already added to context',
+          }),
+          key: 'already-added-warning',
+        });
+
+        // Emit event that adding to context is completed (but failed)
+        emitAddToContext(item, resultId);
+        emitAddToContextCompleted(item, resultId, false);
+        return;
+      }
+
+      // Emit event that we're adding to context
+      emitAddToContext(item, resultId);
+
+      // Add to context
       addContextItem(item);
+
+      message.success({
+        content: React.createElement(AddToContextMessageContent, {
+          title: nodeTitle || 'Untitled',
+          nodeType: nodeType,
+          action: 'added to context successfully',
+        }),
+        key: 'add-success',
+      });
+
+      // Emit event that adding to context is completed
+      emitAddToContextCompleted(item, resultId, true);
     },
     [selectedText, addContextItem, editor],
   );
@@ -156,9 +230,12 @@ export const useSelectionContext = ({
 
     // Fallback to browser selection events
     document.addEventListener('selectionchange', handleSelection);
+    // Add mouseup event to better handle selections when using mouse
+    document.addEventListener('mouseup', handleSelection);
 
     return () => {
       document.removeEventListener('selectionchange', handleSelection);
+      document.removeEventListener('mouseup', handleSelection);
     };
   }, [enabled, handleSelection, editor]);
 

@@ -49,13 +49,13 @@ import { CustomEdge } from './edges/custom-edge';
 import NotFoundOverlay from './NotFoundOverlay';
 import { NODE_MINI_MAP_COLORS } from './nodes/shared/colors';
 import { useDragToCreateNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-drag-create-node';
+import { useDragDropPaste } from '@refly-packages/ai-workspace-common/hooks/canvas/use-drag-drop-paste';
 
 import '@xyflow/react/dist/style.css';
 import './index.scss';
 import { SelectionContextMenu } from '@refly-packages/ai-workspace-common/components/canvas/selection-context-menu';
 import { useUserStore, useUserStoreShallow } from '@refly-packages/ai-workspace-common/stores/user';
 import { useUpdateSettings } from '@refly-packages/ai-workspace-common/queries';
-import { useUploadImage } from '@refly-packages/ai-workspace-common/hooks/use-upload-image';
 import { useCanvasSync } from '@refly-packages/ai-workspace-common/hooks/canvas/use-canvas-sync';
 import { EmptyGuide } from './empty-guide';
 import { useReflyPilotReset } from '@refly-packages/ai-workspace-common/hooks/canvas/use-refly-pilot-reset';
@@ -63,6 +63,7 @@ import HelperLines from './common/helper-line/index';
 import { useListenNodeOperationEvents } from '@refly-packages/ai-workspace-common/hooks/canvas/use-listen-node-events';
 import { runtime } from '@refly-packages/ai-workspace-common/utils/env';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
+import { nodeOperationsEmitter } from '@refly-packages/ai-workspace-common/events/nodeOperations';
 
 const GRID_SIZE = 10;
 
@@ -308,7 +309,8 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
   const [lastClickTime, setLastClickTime] = useState(0);
 
-  const { onConnectEnd: temporaryEdgeOnConnectEnd } = useDragToCreateNode();
+  const { onConnectEnd: temporaryEdgeOnConnectEnd, onConnectStart: temporaryEdgeOnConnectStart } =
+    useDragToCreateNode();
 
   const cleanupTemporaryEdges = useCallback(() => {
     const rfInstance = reactFlowInstance;
@@ -722,27 +724,13 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
     [reactFlowInstance],
   );
 
-  const { handleUploadImage } = useUploadImage();
   const { undoManager } = useCanvasSync();
 
-  // Add drag and drop handlers
-  const handleDragOver = useCallback((event: React.DragEvent) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = 'copy';
-  }, []);
-
-  const handleDrop = useCallback(
-    async (event: React.DragEvent) => {
-      event.preventDefault();
-      const files = Array.from(event.dataTransfer.files);
-      const imageFile = files.find((file) => file.type.startsWith('image/'));
-
-      if (imageFile) {
-        handleUploadImage(imageFile, canvasId);
-      }
-    },
-    [addNode, reactFlowInstance],
-  );
+  // Use the new drag, drop, paste hook
+  const { handlers, DropOverlay } = useDragDropPaste({
+    canvasId,
+    readonly,
+  });
 
   // Add edge types configuration
   const edgeTypes = useMemo(
@@ -837,6 +825,45 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
   // Add event listener for node operations
   useListenNodeOperationEvents();
 
+  // Add listener for opening node context menu
+  useEffect(() => {
+    const handleOpenContextMenu = (event: any) => {
+      // 从事件名称中提取nodeId
+      const nodeId = event.nodeId;
+
+      // 检查事件是否包含必要的信息
+      if (event?.nodeType) {
+        // 构造一个合成的React鼠标事件
+        const syntheticEvent = {
+          ...event.originalEvent,
+          clientX: event.x,
+          clientY: event.y,
+          preventDefault: () => {},
+          stopPropagation: () => {},
+        } as React.MouseEvent;
+
+        // 构造一个简化的节点对象，包含必要的属性
+        const node = {
+          id: nodeId,
+          type: event.nodeType as CanvasNodeType,
+          data: { type: event.nodeType },
+          position: { x: event.x, y: event.y },
+        } as unknown as CanvasNode<any>;
+
+        // 调用onNodeContextMenu处理上下文菜单
+        onNodeContextMenu(syntheticEvent, node);
+      }
+    };
+
+    // 监听所有包含openContextMenu的事件
+    nodeOperationsEmitter.on('openNodeContextMenu', handleOpenContextMenu);
+
+    return () => {
+      // 清理事件监听器
+      nodeOperationsEmitter.off('openNodeContextMenu', handleOpenContextMenu);
+    };
+  }, [onNodeContextMenu]);
+
   return (
     <Spin
       className="w-full h-full"
@@ -879,6 +906,7 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
               }
             `}</style>
           )}
+          <DropOverlay />
           <ReactFlow
             {...flowConfig}
             snapToGrid={true}
@@ -897,6 +925,7 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
             onNodesChange={readonly ? readonlyNodesChange : onNodesChange}
             onEdgesChange={readonly ? readonlyEdgesChange : onEdgesChange}
             onConnect={readonly ? readonlyConnect : onConnect}
+            onConnectStart={readonly ? undefined : temporaryEdgeOnConnectStart}
             onConnectEnd={readonly ? undefined : temporaryEdgeOnConnectEnd}
             onNodeClick={handleNodeClick}
             onPaneClick={handlePanelClick}
@@ -911,8 +940,10 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
             onSelectionContextMenu={readonly ? undefined : onSelectionContextMenu}
             deleteKeyCode={readonly ? null : ['Backspace', 'Delete']}
             multiSelectionKeyCode={readonly ? null : ['Shift', 'Meta']}
-            onDragOver={readonly ? undefined : handleDragOver}
-            onDrop={readonly ? undefined : handleDrop}
+            onDragOver={handlers.handleDragOver}
+            onDragLeave={handlers.handleDragLeave}
+            onDrop={handlers.handleDrop}
+            onPaste={handlers.handlePaste}
             connectOnClick={false}
             edgesFocusable={false}
             nodesFocusable={!readonly}

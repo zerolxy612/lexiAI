@@ -5,7 +5,6 @@ import { pluginViteEncoding } from '@refly/plugin-vite-encoding';
 import postcssConfig from './postcss.config';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import path from 'node:path';
-import { codeInspectorPlugin } from 'code-inspector-plugin';
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
@@ -23,9 +22,6 @@ export default defineConfig({
           theme: '@arco-themes/react-refly-ai',
           sourceMaps: true,
           filePatterns: ['apps/web/src', 'apps/extension/src', 'packages/ai-workspace-common/src'],
-        }),
-        codeInspectorPlugin({
-          bundler: 'vite',
         }),
         // pluginViteWatcher({
         //   filesPath: extraWatchFiles,

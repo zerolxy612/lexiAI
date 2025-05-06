@@ -1,36 +1,55 @@
 import { IRuntime } from '@refly/common-types';
 
+/**
+ * Checks if code is running in browser environment and safely accesses window properties
+ */
+const isBrowser = typeof window !== 'undefined';
+
+/**
+ * Safely access window properties in browser environment
+ */
+const getBrowserValue = <T>(getter: () => T, fallback: T): T => {
+  if (!isBrowser) return fallback;
+  try {
+    return getter() ?? fallback;
+  } catch {
+    return fallback;
+  }
+};
+
 export const serverOrigin =
-  window?.electronEnv?.getApiBaseUrl() ||
-  window?.ENV?.API_URL ||
+  getBrowserValue(() => window.electronEnv?.getApiBaseUrl?.(), '') ||
+  getBrowserValue(() => window.ENV?.API_URL, '') ||
   import.meta.env.VITE_API_URL ||
   '';
 console.log('serverOrigin', serverOrigin);
 
 export const wsServerOrigin =
-  window?.electronEnv?.getCollabUrl() ||
-  window?.ENV?.COLLAB_URL ||
+  getBrowserValue(() => window.electronEnv?.getCollabUrl?.(), '') ||
+  getBrowserValue(() => window.ENV?.COLLAB_URL, '') ||
   import.meta.env.VITE_COLLAB_URL ||
   '';
 console.log('wsServerOrigin', wsServerOrigin);
 
 export const staticPublicEndpoint =
-  window?.electronEnv?.getPublicStaticEndpoint() ||
-  window?.ENV?.STATIC_PUBLIC_ENDPOINT ||
+  getBrowserValue(() => window.electronEnv?.getPublicStaticEndpoint?.(), '') ||
+  getBrowserValue(() => window.ENV?.STATIC_PUBLIC_ENDPOINT, '') ||
   import.meta.env.VITE_STATIC_PUBLIC_ENDPOINT ||
   '';
 
 export const staticPrivateEndpoint =
-  window?.electronEnv?.getPrivateStaticEndpoint() ||
-  window?.ENV?.STATIC_PRIVATE_ENDPOINT ||
+  getBrowserValue(() => window.electronEnv?.getPrivateStaticEndpoint?.(), '') ||
+  getBrowserValue(() => window.ENV?.STATIC_PRIVATE_ENDPOINT, '') ||
   import.meta.env.VITE_STATIC_PRIVATE_ENDPOINT ||
   '';
 
 export const subscriptionEnabled =
-  Boolean(window.ENV?.SUBSCRIPTION_ENABLED) || Boolean(import.meta.env.VITE_SUBSCRIPTION_ENABLED);
+  getBrowserValue(() => Boolean(window.ENV?.SUBSCRIPTION_ENABLED), false) ||
+  Boolean(import.meta.env.VITE_SUBSCRIPTION_ENABLED);
 
 export const sentryEnabled =
-  Boolean(window.ENV?.SENTRY_ENABLED) || Boolean(import.meta.env.VITE_SENTRY_ENABLED);
+  getBrowserValue(() => Boolean(window.ENV?.SENTRY_ENABLED), false) ||
+  Boolean(import.meta.env.VITE_SENTRY_ENABLED);
 
 export const runtime: IRuntime = import.meta.env.VITE_RUNTIME;
 

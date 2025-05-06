@@ -127,6 +127,8 @@ const translations = {
     deselectAll: '取消全选',
     addNode: '添加节点',
     viewAll: '查看全部',
+    addedToCanvas: '已添加到画布',
+    operationFailed: '操作失败',
   },
   verifyRules: {
     emailRequired: '邮箱地址不能为空',
@@ -501,7 +503,7 @@ const translations = {
     testimonials: {
       tag: '用户评价',
       title: '数千名用户在 Refly 创作',
-      description: '加入 4000+ Reflyer，一起释放灵感，加速创作 👩‍🎨🧑‍🎨',
+      description: '加入 10000+ Reflyer，一起释放灵感，加速创作 👩‍🎨🧑‍🎨',
     },
     workflow: {
       tag: '工作流',
@@ -633,8 +635,13 @@ const translations = {
   shareContent: {
     title: '分享',
     login: '开始用 Refly 写作',
-    copyLink: '复制链接',
-    publishTemplate: '发布模板',
+    updateShare: '同步',
+    updateShareTooltip: '同步分享内容',
+    updateShareSuccess: '最新画布内容已同步分享',
+    copyLink: '复制',
+    copyLinkTooltip: '复制分享链接',
+    publishTemplate: '发布',
+    publishTemplateTooltip: '将画布发布为模板',
     linkShare: '链接分享',
     updateCanvasPermissionSuccess: '更新画布权限成功',
     copyLinkSuccess: '分享链接已复制到剪切板！',
@@ -780,6 +787,8 @@ const translations = {
       contentSelector: '内容划线选择器',
       addContext: '添加上下文',
       createMemo: '创建备忘录',
+      createAskAI: '问问 AI',
+      createAskAISuccess: '已成功创建问问 AI 节点',
       clearContext: '清空',
       addToContext: '引用提问',
       resource: '资源',
@@ -1061,6 +1070,8 @@ const translations = {
       nodeNotFound: '源节点未找到或已被删除，请先添加到画布',
     },
     nodeActions: {
+      dragToConnect: '拖拽连线',
+      clickToAdd: '点击添加',
       createMemo: '创建空备忘录',
       createMemoDescription: '创建一个空备忘录，用于快速记录想法，支持 Markdown 格式',
       copy: '复制节点内容',
@@ -1255,6 +1266,7 @@ const translations = {
       title: '资源集成',
       fromWebSearch: '全网搜索',
       fromFile: '上传文件',
+      fromImage: '上传图片',
       dragOrClick: '点击或拖拽文件到此区域上传',
       unsupportedFileType: '请上传指定类型的文件',
       supportedFiles: '支持文件: {{formats}}',
@@ -1295,6 +1307,9 @@ const translations = {
       viewDocs: '查看文档',
       recommendedPlatforms: '推荐平台',
       selectProject: '选择项目',
+      emptyImage: '请至少选择一张图片',
+      imageCount: '图片数量：{{count}}',
+      supportedImages: '支持的图片格式：{{formats}}',
     },
     wait_parse: '内容解析中',
     parse_failed: '解析失败',
@@ -2326,6 +2341,7 @@ const translations = {
     customInstructions: '预设提示词',
     waitingUploadCover: '暂未上传封面',
     askProject: '知识库提问',
+    noProjects: '暂无知识库',
     knowledgeToggle: {
       enabledDesc:
         '基于知识库提问当前被设置为开启，"{{projectName}}"内的文件知识会在提问时作为参考内容使用',

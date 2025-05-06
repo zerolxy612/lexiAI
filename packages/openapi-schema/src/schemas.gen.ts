@@ -4162,6 +4162,29 @@ export const SkillContextDocumentItemSchema = {
   },
 } as const;
 
+export const SkillContextCodeArtifactItemSchema = {
+  type: 'object',
+  description: 'Skill context code artifact item',
+  properties: {
+    artifactId: {
+      type: 'string',
+      description: 'Artifact ID',
+    },
+    codeArtifact: {
+      description: 'Code artifact',
+      $ref: '#/components/schemas/CodeArtifact',
+    },
+    isCurrent: {
+      type: 'boolean',
+      description: 'Whether this code artifact is current',
+    },
+    metadata: {
+      type: 'object',
+      description: 'Code artifact context metadata',
+    },
+  },
+} as const;
+
 export const SkillContextContentItemSchema = {
   type: 'object',
   description: 'Skill context content item',
@@ -4210,6 +4233,13 @@ export const SkillContextSchema = {
       description: 'Context documents',
       items: {
         $ref: '#/components/schemas/SkillContextDocumentItem',
+      },
+    },
+    codeArtifacts: {
+      type: 'array',
+      description: 'Context code artifacts',
+      items: {
+        $ref: '#/components/schemas/SkillContextCodeArtifactItem',
       },
     },
     contentList: {
@@ -5421,7 +5451,6 @@ export const CanvasNodeTypeSchema = {
     'memo',
     'group',
     'image',
-    'mindMap',
   ],
 } as const;
 

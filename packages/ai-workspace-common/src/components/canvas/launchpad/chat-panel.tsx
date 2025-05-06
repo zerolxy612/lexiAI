@@ -144,7 +144,7 @@ export const ChatPanel = ({
   const { handleFilterErrorTip } = useContextFilterErrorTip();
   const { addNode } = useAddNode();
   const { invokeAction, abortAction } = useInvokeAction();
-  const { handleUploadImage } = useUploadImage();
+  const { handleUploadImage, handleUploadMultipleImages } = useUploadImage();
 
   // Handle input focus
   const handleInputFocus = useCallback(() => {
@@ -338,14 +338,30 @@ export const ChatPanel = ({
     setActiveResultId(resultId);
 
     const nodeData = await handleUploadImage(file, canvasId);
+    const { contextItems: oldContextItems } = useContextPanelStore.getState();
     if (nodeData) {
       setContextItems([
-        ...contextItems,
+        ...oldContextItems,
         {
           type: 'image',
           ...nodeData,
         },
       ]);
+    }
+  };
+
+  const handleMultipleImagesUpload = async (files: File[]) => {
+    // Set active resultId when uploading images
+    setActiveResultId(resultId);
+
+    const nodesData = await handleUploadMultipleImages(files, canvasId);
+    if (nodesData?.length) {
+      const newContextItems = nodesData.map((nodeData) => ({
+        type: 'image' as const,
+        ...nodeData,
+      }));
+
+      setContextItems([...contextItems, ...newContextItems]);
     }
   };
 
@@ -380,6 +396,7 @@ export const ChatPanel = ({
                 autoCompletionPlacement={'topLeft'}
                 handleSendMessage={handleSendMessage}
                 onUploadImage={handleImageUpload}
+                onUploadMultipleImages={handleMultipleImagesUpload}
                 onFocus={handleInputFocus}
               />
             </div>

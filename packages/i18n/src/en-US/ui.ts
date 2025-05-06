@@ -119,6 +119,8 @@ const translations = {
     deselectAll: 'Deselect All',
     addNode: 'Add Node',
     viewAll: 'View All',
+    addedToCanvas: 'Added to canvas',
+    operationFailed: 'Operation failed',
   },
   pages: {
     share: {
@@ -723,7 +725,7 @@ const translations = {
     testimonials: {
       tag: 'User Testimonials',
       title: 'Thousands love their creation with Refly',
-      description: 'Join 4000+ Reflyers to unleash inspiration and accelerate creation 👩‍🎨🧑‍🎨',
+      description: 'Join 10000+ Reflyers to unleash inspiration and accelerate creation 👩‍🎨🧑‍🎨',
     },
   },
   priceContent: {
@@ -806,8 +808,13 @@ const translations = {
   shareContent: {
     title: 'Share',
     login: 'Start Writing with Refly',
-    copyLink: 'Copy Link',
-    publishTemplate: 'Publish Template',
+    updateShare: 'Sync',
+    updateShareTooltip: 'Sync shared content',
+    updateShareSuccess: '​​Latest canvas content synced and shared successfully!',
+    copyLink: 'Copy',
+    copyLinkTooltip: 'Copy shared link',
+    publishTemplate: 'Publish',
+    publishTemplateTooltip: 'Publish canvas to template',
     linkShare: 'Link Share',
     updateCanvasPermissionSuccess: 'Update canvas permission successfully',
     copyLinkSuccess: 'Share link copied to clipboard!',
@@ -956,6 +963,8 @@ const translations = {
       clearSelector: 'Clear Selection',
       addContext: 'Add Context',
       createMemo: 'Create Memo',
+      createAskAI: 'Ask AI',
+      createAskAISuccess: 'Successfully created Ask AI node',
       clearContext: 'Clear',
       addToContext: 'Quote',
       resource: 'Resource',
@@ -1244,6 +1253,8 @@ const translations = {
       nodeNotFound: 'Source node not found or has been deleted. Please add it to the canvas first.',
     },
     nodeActions: {
+      dragToConnect: 'Drag to Connect',
+      clickToAdd: 'Click to Add',
       createMemo: 'Create Empty Memo',
       createMemoDescription:
         'Create an empty memo for quick recording ideas, supporting Markdown format',
@@ -1445,6 +1456,7 @@ const translations = {
       title: 'Resource Integration',
       fromWebSearch: 'Web Search',
       fromFile: 'Upload File',
+      fromImage: 'Upload Image',
       dragOrClick: 'Click or Drag files to this area to upload',
       unsupportedFileType: 'Please upload the specified type of file',
       supportedFiles: 'Supported Files: {{formats}}.',
@@ -1487,6 +1499,9 @@ const translations = {
       viewDocs: 'View Documentation',
       recommendedPlatforms: 'Recommended Platforms',
       selectProject: 'Select Project',
+      emptyImage: 'Please select at least one image',
+      imageCount: 'Images: {{count}}',
+      supportedImages: 'Supported image formats: {{formats}}',
     },
     wait_parse: 'Parsing',
     parse_failed: 'Parse Failed',
@@ -2518,6 +2533,7 @@ const translations = {
     customInstructions: 'Custom Instructions',
     waitingUploadCover: 'Waiting for upload cover',
     askProject: 'Ask Project',
+    noProjects: 'No projects available',
     knowledgeToggle: {
       enabledDesc:
         'Ask Project is currently enabled. Knowledge from files in "{{projectName}}" will be used as reference when asking questions.',

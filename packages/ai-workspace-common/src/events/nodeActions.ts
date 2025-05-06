@@ -14,12 +14,13 @@ export type NodeActionEvents = {
   [key: `node:${string}:cloneAskAI`]: undefined;
   [key: `node:${string}:cloneAskAI.completed`]: undefined;
   [key: `node:${string}:fullScreenPreview`]: undefined;
+  [key: `node:${string}:showActionButtons`]: undefined;
 };
 
 export const nodeActionEmitter = mitt<NodeActionEvents>();
 
-export const createNodeEventName = (nodeId: string, action: string) =>
-  `node:${nodeId}:${action}` as keyof NodeActionEvents;
+export const createNodeEventName = (nodeId: string, actionType: string) =>
+  `node:${nodeId}:${actionType}` as keyof NodeActionEvents;
 
 export const cleanupNodeEvents = (nodeId: string) => {
   const eventTypes = [
@@ -33,6 +34,7 @@ export const cleanupNodeEvents = (nodeId: string) => {
     'askAI',
     'cloneAskAI',
     'cloneAskAI.completed',
+    'showActionButtons',
   ];
   for (const type of eventTypes) {
     nodeActionEmitter.all.delete(createNodeEventName(nodeId, type));
