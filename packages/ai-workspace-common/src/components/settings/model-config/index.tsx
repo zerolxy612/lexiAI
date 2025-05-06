@@ -226,7 +226,7 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
   const queryAnalysisModel = defaultModel.queryAnalysis;
   const titleGenerationModel = defaultModel.titleGeneration;
 
-  const getDefaultModelType = (itemId: string) => {
+  const getDefaultModelTypes = (itemId: string) => {
     const type = [];
     if (itemId === chatModel?.itemId) {
       type.push('chat');
@@ -307,7 +307,10 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
       });
       setIsUpdating(false);
       if (res.data.success) {
-        const updatedModel = res.data.data;
+        const updatedModel = {
+          ...model,
+          enabled,
+        };
         setModelItems(
           modelItems.map((item) => (item.itemId === updatedModel.itemId ? updatedModel : item)),
         );
@@ -318,7 +321,7 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
   );
 
   const beforeDeleteProviderItem = async (model: ProviderItem) => {
-    const type = getDefaultModelType(model.itemId);
+    const type = getDefaultModelTypes(model.itemId);
     if (type.length) {
       Modal.confirm({
         title: t('settings.modelConfig.deleteSyncConfirm', {
@@ -337,6 +340,23 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
     }
   };
 
+  const disableDefaultModelConfirm = async (modelName: string, handleOk: () => void) => {
+    Modal.confirm({
+      title: t('settings.modelConfig.disableSyncConfirm', {
+        name: modelName || t('common.untitled'),
+      }),
+      onOk: () => handleOk(),
+      okText: t('common.confirm'),
+      cancelText: t('common.cancel'),
+      okButtonProps: {
+        danger: true,
+      },
+      cancelButtonProps: {
+        className: 'hover:!text-green-600 hover:!border-green-600',
+      },
+    });
+  };
+
   const deleteProviderItem = async (itemId: string) => {
     const res = await getClient().deleteProviderItem({
       body: { itemId },
@@ -344,7 +364,7 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
     if (res.data.success) {
       message.success(t('common.deleteSuccess'));
       setModelItems(modelItems.filter((item) => item.itemId !== itemId));
-      const types = getDefaultModelType(itemId);
+      const types = getDefaultModelTypes(itemId);
       if (types.length) {
         updateDefaultModel(types, null);
       }
@@ -384,7 +404,15 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
   };
 
   const handleToggleEnabled = async (model: ProviderItem, enabled: boolean) => {
-    updateModelMutation(enabled, model);
+    const types = getDefaultModelTypes(model.itemId);
+    if (!enabled && types.length) {
+      disableDefaultModelConfirm(model.name, () => {
+        updateModelMutation(enabled, model);
+        updateDefaultModel(types, null);
+      });
+    } else {
+      updateModelMutation(enabled, model);
+    }
   };
 
   const handleSuccess = (
@@ -400,9 +428,9 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
           ...modelItems.map((item) => (item.itemId === model.itemId ? { ...model } : item)),
         ]);
 
-        const types = getDefaultModelType(model.itemId);
+        const types = getDefaultModelTypes(model.itemId);
         if (types.length) {
-          updateDefaultModel(types, model);
+          updateDefaultModel(types, model?.enabled ? model : null);
         }
       }
     } else if (categoryType === 'embedding') {
@@ -616,7 +644,9 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
           setIsModalOpen(false);
           setEditingModel(null);
         }}
+        disableDefaultModelConfirm={disableDefaultModelConfirm}
         model={editingModel}
+        defaultModelTypes={getDefaultModelTypes(editingModel?.itemId)}
         onSuccess={handleSuccess}
         disabledEnableControl={['embedding', 'reranker'].includes(category)}
       />

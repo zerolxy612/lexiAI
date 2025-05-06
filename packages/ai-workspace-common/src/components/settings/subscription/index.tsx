@@ -140,8 +140,8 @@ export const Subscription = () => {
   }, [t, planType, subscription?.interval, subscription?.cancelAt]);
 
   return (
-    <div className="p-4 pt-0 h-full overflow-hidden flex flex-col">
-      <Title level={4} className="pb-4">
+    <div className="p-4 pt-0 pl-0 h-full overflow-hidden flex flex-col">
+      <Title level={4} className="pb-4 pl-4">
         {t('settings.tabs.subscription')}
       </Title>
       <div className="subscription h-full overflow-y-auto">

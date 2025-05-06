@@ -33,6 +33,8 @@ export const ModelFormModal = memo(
     filterProviderCategory,
     shouldRefetch,
     disabledEnableControl = false,
+    defaultModelTypes,
+    disableDefaultModelConfirm,
   }: {
     isOpen: boolean;
     onClose: () => void;
@@ -41,6 +43,8 @@ export const ModelFormModal = memo(
     filterProviderCategory: ProviderCategory;
     disabledEnableControl?: boolean;
     shouldRefetch?: boolean;
+    defaultModelTypes?: string[];
+    disableDefaultModelConfirm?: (modelName: string, handleOk: () => void) => void;
   }) => {
     const { t } = useTranslation();
     const [form] = Form.useForm();
@@ -74,6 +78,13 @@ export const ModelFormModal = memo(
     }, [providerInfoList, filterProviderCategory]);
 
     const [isSaving, setIsSaving] = useState(false);
+
+    const getProviderByProviderId = useCallback(
+      (providerId: string) => {
+        return providersResponse?.data?.find((provider) => provider.providerId === providerId);
+      },
+      [providersResponse],
+    );
 
     const getConfigByCategory = useCallback(
       (values: any, existingConfig: any = {}) => {
@@ -198,7 +209,11 @@ export const ModelFormModal = memo(
         setIsSaving(false);
         if (res.data.success) {
           message.success(t('common.addSuccess'));
-          onSuccess?.(filterProviderCategory, 'create', res.data.data);
+          const provider = getProviderByProviderId(values.providerId);
+          onSuccess?.(filterProviderCategory, 'create', {
+            ...res.data.data,
+            provider,
+          });
           onClose();
         }
       },
@@ -221,7 +236,11 @@ export const ModelFormModal = memo(
         setIsSaving(false);
         if (res.data.success) {
           message.success(t('common.saveSuccess'));
-          onSuccess?.(filterProviderCategory, 'update', res.data.data);
+          const provider = getProviderByProviderId(values.providerId);
+          onSuccess?.(filterProviderCategory, 'update', {
+            ...res.data.data,
+            provider,
+          });
           onClose();
         }
       },
@@ -252,14 +271,20 @@ export const ModelFormModal = memo(
       try {
         const values = await form.validateFields();
         if (isEditMode) {
-          updateModelMutation(values, model);
+          if (!values.enabled && defaultModelTypes?.length) {
+            disableDefaultModelConfirm?.(model?.name, () => {
+              updateModelMutation(values, model);
+            });
+          } else {
+            updateModelMutation(values, model);
+          }
         } else {
           createModelMutation(values);
         }
       } catch (error) {
         console.error('Form validation failed:', error);
       }
-    }, [form, updateModelMutation, createModelMutation]);
+    }, [form, updateModelMutation, createModelMutation, disableDefaultModelConfirm]);
 
     const providerOptions = useMemo(() => {
       return (

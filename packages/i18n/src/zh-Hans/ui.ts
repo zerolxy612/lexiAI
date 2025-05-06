@@ -1857,6 +1857,8 @@ const translations = {
       deleteConfirm: '确定删除模型 {{name}} 吗？',
       deleteSyncConfirm:
         '模型 {{name}} 已被应用到默认模型配置中，删除后需要重新配置默认模型，确定删除吗？',
+      disableSyncConfirm:
+        '模型 {{name}} 已被应用到默认模型配置中，禁用后需要重新配置默认模型，确定禁用吗？',
       provider: '供应商',
       providerPlaceholder: '请选择供应商',
       name: '模型名称',
