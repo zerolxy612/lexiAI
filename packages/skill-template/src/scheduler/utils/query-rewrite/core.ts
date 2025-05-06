@@ -217,7 +217,8 @@ export async function analyzeQueryAndContext(
   // Preprocess context for better extract mentioned context
   const preprocessedContext = preprocessContext(context);
   const modelConfig = modelInfo.queryAnalysis;
-  const maxContextTokens = modelConfig.contextLimit * MAX_CONTEXT_RATIO;
+  const maxContextTokens =
+    (modelConfig.contextLimit || DEFAULT_MODEL_CONTEXT_LIMIT) * MAX_CONTEXT_RATIO;
   const summarizedContext = summarizeContext(preprocessedContext, maxContextTokens);
 
   // Summarize chat history

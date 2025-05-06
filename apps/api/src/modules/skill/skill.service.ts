@@ -541,7 +541,7 @@ export class SkillService {
             title: param.input.query,
             targetId: param.target?.entityId,
             targetType: param.target?.entityType,
-            modelName: providerItem.name,
+            modelName: modelConfigMap.chat.modelId,
             projectId: param.projectId ?? null,
             actionMeta: JSON.stringify({
               type: 'skill',
@@ -574,7 +574,7 @@ export class SkillService {
           targetId: param.target?.entityId,
           targetType: param.target?.entityType,
           title: param.input?.query,
-          modelName: providerItem.name,
+          modelName: modelConfigMap.chat.modelId,
           type: 'skill',
           status: 'executing',
           actionMeta: JSON.stringify({

@@ -38,7 +38,7 @@ export const providerItem2ModelInfo = (
   const config: LLMModelConfig = JSON.parse(providerItem.config || '{}');
   return {
     name: config.modelId,
-    label: config.modelName,
+    label: providerItem.name,
     provider: providerItem.provider?.name ?? '',
     tier: providerItem.tier as ModelTier,
     contextLimit: config.contextLimit ?? 0,
