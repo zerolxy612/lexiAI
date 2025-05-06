@@ -50,6 +50,7 @@ import {
   emailLogin,
   emailSignup,
   exportCanvas,
+  exportDocument,
   getActionResult,
   getAuthConfig,
   getCanvasData,
@@ -274,6 +275,16 @@ export const UseGetDocumentDetailKeyFn = (
   clientOptions: Options<unknown, true>,
   queryKey?: Array<unknown>,
 ) => [useGetDocumentDetailKey, ...(queryKey ?? [clientOptions])];
+export type ExportDocumentDefaultResponse = Awaited<ReturnType<typeof exportDocument>>['data'];
+export type ExportDocumentQueryResult<
+  TData = ExportDocumentDefaultResponse,
+  TError = unknown,
+> = UseQueryResult<TData, TError>;
+export const useExportDocumentKey = 'ExportDocument';
+export const UseExportDocumentKeyFn = (
+  clientOptions: Options<unknown, true>,
+  queryKey?: Array<unknown>,
+) => [useExportDocumentKey, ...(queryKey ?? [clientOptions])];
 export type ListProjectsDefaultResponse = Awaited<ReturnType<typeof listProjects>>['data'];
 export type ListProjectsQueryResult<
   TData = ListProjectsDefaultResponse,

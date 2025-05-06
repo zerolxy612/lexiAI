@@ -5,6 +5,7 @@ import { type QueryClient } from '@tanstack/react-query';
 import {
   checkSettingsField,
   exportCanvas,
+  exportDocument,
   getActionResult,
   getAuthConfig,
   getCanvasData,
@@ -42,6 +43,7 @@ import {
 import {
   CheckSettingsFieldData,
   ExportCanvasData,
+  ExportDocumentData,
   GetActionResultData,
   GetCanvasDataData,
   GetCanvasDetailData,
@@ -187,6 +189,14 @@ export const prefetchUseGetDocumentDetail = (
   queryClient.prefetchQuery({
     queryKey: Common.UseGetDocumentDetailKeyFn(clientOptions),
     queryFn: () => getDocumentDetail({ ...clientOptions }).then((response) => response.data),
+  });
+export const prefetchUseExportDocument = (
+  queryClient: QueryClient,
+  clientOptions: Options<ExportDocumentData, true>,
+) =>
+  queryClient.prefetchQuery({
+    queryKey: Common.UseExportDocumentKeyFn(clientOptions),
+    queryFn: () => exportDocument({ ...clientOptions }).then((response) => response.data),
   });
 export const prefetchUseListProjects = (
   queryClient: QueryClient,

@@ -64,6 +64,7 @@ const EditChatInputComponent = (props: EditChatInputProps) => {
   const [editContextItems, setEditContextItems] = useState<IContextItem[]>(contextItems);
   const [editModelInfo, setEditModelInfo] = useState<ModelInfo>(modelInfo);
   const [editRuntimeConfig, setEditRuntimeConfig] = useState<SkillRuntimeConfig>(runtimeConfig);
+  const contextItemsRef = useRef(editContextItems);
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const { t } = useTranslation();
@@ -83,7 +84,10 @@ const EditChatInputComponent = (props: EditChatInputProps) => {
   const { canvasId } = useCanvasContext();
   const { invokeAction } = useInvokeAction();
   const skill = useFindSkill(localActionMeta?.name);
-  const { handleUploadImage } = useUploadImage();
+  const {
+    handleUploadImage: uploadImageHook,
+    handleUploadMultipleImages: uploadMultipleImagesHook,
+  } = useUploadImage();
 
   const textareaRef = useRef<HTMLDivElement>(null);
 
@@ -128,6 +132,10 @@ const EditChatInputComponent = (props: EditChatInputProps) => {
       form.setFieldValue('tplConfig', newConfig);
     }
   }, [skill, form, initialTplConfig]);
+
+  useEffect(() => {
+    contextItemsRef.current = editContextItems;
+  }, [editContextItems]);
 
   const handleSendMessage = useCallback(() => {
     // Check for form errors
@@ -250,15 +258,27 @@ const EditChatInputComponent = (props: EditChatInputProps) => {
   );
 
   const handleImageUpload = async (file: File) => {
-    const nodeData = await handleUploadImage(file, canvasId);
+    const nodeData = await uploadImageHook(file, canvasId);
     if (nodeData) {
       setEditContextItems([
-        ...editContextItems,
+        ...(contextItemsRef.current || []),
         {
           type: 'image',
           ...nodeData,
         },
       ]);
+    }
+  };
+
+  const handleMultipleImagesUpload = async (files: File[]) => {
+    const nodesData = await uploadMultipleImagesHook(files, canvasId);
+    if (nodesData?.length) {
+      const newContextItems = nodesData.map((nodeData) => ({
+        type: 'image' as const,
+        ...nodeData,
+      }));
+
+      setEditContextItems([...editContextItems, ...newContextItems]);
     }
   };
 
@@ -299,6 +319,7 @@ const EditChatInputComponent = (props: EditChatInputProps) => {
               handleSelectSkill(skill);
             }}
             onUploadImage={handleImageUpload}
+            onUploadMultipleImages={handleMultipleImagesUpload}
           />
         </div>
 

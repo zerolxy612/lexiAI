@@ -2,7 +2,6 @@ import { memo, useCallback, useState, useEffect, useRef, useMemo } from 'react';
 import { Position, NodeProps, useReactFlow } from '@xyflow/react';
 import { CustomHandle } from './shared/custom-handle';
 import { useNodeHoverEffect } from '@refly-packages/ai-workspace-common/hooks/canvas/use-node-hover';
-import { ActionButtons } from './shared/action-buttons';
 import { CanvasNode, CommonNodeProps } from './shared/types';
 import { GroupActionButtons } from '../group-action-menu/group-action-buttons';
 import { GroupName } from '../group-action-menu/group-name';
@@ -347,6 +346,7 @@ export const GroupNode = memo(
               <>
                 <CustomHandle
                   id={`${id}-target`}
+                  nodeId={id}
                   type="target"
                   position={Position.Left}
                   isConnected={false}
@@ -355,6 +355,7 @@ export const GroupNode = memo(
                 />
                 <CustomHandle
                   id={`${id}-source`}
+                  nodeId={id}
                   type="source"
                   position={Position.Right}
                   isConnected={false}
@@ -365,14 +366,11 @@ export const GroupNode = memo(
             )}
 
             {!isPreview && !hideActions && !isDragging && !readonly && (
-              <>
-                <ActionButtons type="group" nodeId={id} isNodeHovered={selected && isHovered} />
-                <GroupActionButtons
-                  nodeId={id}
-                  isTemporary={data.metadata?.isTemporary}
-                  isNodeHovered={selected && isHovered}
-                />
-              </>
+              <GroupActionButtons
+                nodeId={id}
+                isTemporary={data.metadata?.isTemporary}
+                isNodeHovered={selected && isHovered}
+              />
             )}
 
             <GroupName

@@ -29,7 +29,7 @@ export const useContextUpdateByEdges = ({
   nodeId,
   updateNodeData,
 }: UseContextUpdateByEdgesProps) => {
-  const { getNodes, getEdges } = useReactFlow();
+  const { getNodes } = useReactFlow();
 
   const updateContextItemsByEdges = useCallback(
     (contextItems: IContextItem[], edges: Edge[]) => {
@@ -40,41 +40,36 @@ export const useContextUpdateByEdges = ({
 
       const nodes = getNodes() as CanvasNode<any>[];
 
-      // get all source nodes that are connected to the current node
-      const connectedSourceIds = new Set(currentEdges.map((edge) => edge.source));
+      // 克隆现有的所有 context items，保留所有已有项
+      const updatedContextItems = [...contextItems];
 
-      // filter current contextItems, remove nodes that are no longer connected
-      const updatedContextItems = contextItems.filter((item) => {
-        if (currentEdges.length === 0 && contextItems.length > 0) {
-          return true;
-        }
+      // 创建一个已存在的 entityId 集合，用于快速查找
+      const existingEntityIds = new Set(contextItems.map((item) => item.entityId));
 
-        const itemNode = nodes.find((node) => node.data?.entityId === item.entityId);
-        return itemNode && connectedSourceIds.has(itemNode.id);
-      });
-
-      // add new connected nodes to contextItems
+      // 为每个连线检查并添加新的 context item（如果不存在）
       for (const edge of currentEdges) {
         const sourceNode = nodes.find((node) => node.id === edge.source);
         if (!sourceNode?.data?.entityId || ['skill', 'group'].includes(sourceNode?.type)) continue;
 
-        const exists = updatedContextItems.some(
-          (item) => item.entityId === sourceNode.data.entityId,
-        );
-        if (!exists) {
-          updatedContextItems.push({
-            entityId: sourceNode.data.entityId,
-            type: sourceNode.type as CanvasNodeType,
-            title: sourceNode.data.title || '',
-          });
-        }
+        const entityId = sourceNode.data.entityId;
+
+        // 如果 entityId 已存在于现有 items 中，跳过
+        if (existingEntityIds.has(entityId)) continue;
+
+        // 添加新的 context item
+        updatedContextItems.push({
+          entityId,
+          type: sourceNode.type as CanvasNodeType,
+          title: sourceNode.data.title || '',
+        });
       }
 
-      if (JSON.stringify(updatedContextItems) !== JSON.stringify(contextItems)) {
+      // 只有在真正添加了新项目时才更新
+      if (updatedContextItems.length > contextItems.length) {
         updateNodeData({ metadata: { contextItems: updatedContextItems } });
       }
     },
-    [readonly, nodeId, getNodes, getEdges, updateNodeData],
+    [readonly, nodeId, getNodes, updateNodeData],
   );
 
   const debouncedUpdateContextItems = useDebouncedCallback(

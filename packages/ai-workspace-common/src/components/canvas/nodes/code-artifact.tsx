@@ -5,7 +5,6 @@ import Moveable from 'react-moveable';
 import { CanvasNode, CodeArtifactNodeProps } from './shared/types';
 import { CustomHandle } from './shared/custom-handle';
 import { getNodeCommonStyles } from './index';
-import { ActionButtons } from './shared/action-buttons';
 import { useAddToContext } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-to-context';
 import { useDeleteNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-delete-node';
 import { time } from '@refly-packages/ai-workspace-common/utils/time';
@@ -26,7 +25,6 @@ import {
 } from '@refly-packages/ai-workspace-common/hooks/canvas/use-node-size';
 import { NodeHeader } from './shared/node-header';
 import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/canvas';
-import { useEditorPerformance } from '@refly-packages/ai-workspace-common/context/editor-performance';
 import { NodeResizer as NodeResizerComponent } from './shared/node-resizer';
 import { IconCodeArtifact } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { useInsertToDocument } from '@refly-packages/ai-workspace-common/hooks/canvas/use-insert-to-document';
@@ -34,16 +32,19 @@ import { useAddNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use
 import { genSkillID } from '@refly/utils/id';
 import { IContextItem } from '@refly-packages/ai-workspace-common/stores/context-panel';
 import { useChatStore } from '@refly-packages/ai-workspace-common/stores/chat';
-import { CodeArtifact, Skill } from '@refly/openapi-schema';
+import { CodeArtifact, CodeArtifactType, Skill } from '@refly/openapi-schema';
 import Renderer from '@refly-packages/ai-workspace-common/modules/artifacts/code-runner/render';
 import { useGetCodeArtifactDetail } from '@refly-packages/ai-workspace-common/queries/queries';
 import { useFetchShareData } from '@refly-packages/ai-workspace-common/hooks/use-fetch-share-data';
 import { useUserStoreShallow } from '@refly-packages/ai-workspace-common/stores/user';
 import { useUpdateNodeTitle } from '@refly-packages/ai-workspace-common/hooks/use-update-node-title';
 import { useSelectedNodeZIndex } from '@refly-packages/ai-workspace-common/hooks/canvas/use-selected-node-zIndex';
+import { codeArtifactEmitter } from '@refly-packages/ai-workspace-common/events/codeArtifact';
+import { detectActualTypeFromType } from '@refly-packages/ai-workspace-common/modules/artifacts/code-runner/artifact-type-util';
+import { useSetNodeDataByEntity } from '@refly-packages/ai-workspace-common/hooks/canvas/use-set-node-data-by-entity';
 
 interface NodeContentProps {
-  status: 'generating' | 'finish' | 'failed';
+  status: 'generating' | 'finish' | 'failed' | 'executing';
   entityId: string;
   shareId?: string;
   legacyData?: CodeArtifact;
@@ -91,15 +92,7 @@ const NodeContent = memo(
 );
 
 export const CodeArtifactNode = memo(
-  ({
-    id,
-    data,
-    isPreview,
-    selected,
-    hideActions,
-    hideHandles,
-    onNodeClick,
-  }: CodeArtifactNodeProps) => {
+  ({ id, data, isPreview, selected, hideHandles, onNodeClick }: CodeArtifactNodeProps) => {
     const [isHovered, setIsHovered] = useState(false);
     const [isResizing] = useState(false);
     const { edges } = useCanvasData();
@@ -108,6 +101,7 @@ export const CodeArtifactNode = memo(
     const { t } = useTranslation();
     const updateNodeTitle = useUpdateNodeTitle();
     useSelectedNodeZIndex(id, selected);
+    const setNodeDataByEntity = useSetNodeDataByEntity();
 
     const { sizeMode = 'adaptive' } = data?.metadata ?? {};
 
@@ -121,12 +115,39 @@ export const CodeArtifactNode = memo(
       operatingNodeId: state.operatingNodeId,
     }));
 
-    const { draggingNodeId } = useEditorPerformance();
     const isOperating = operatingNodeId === id;
-    const isDragging = draggingNodeId === id;
     const node = useMemo(() => getNode(id), [id, getNode]);
 
     const { readonly } = useCanvasContext();
+
+    // Listen for statusUpdate events to update node metadata
+    useEffect(() => {
+      const handleStatusUpdate = (eventData: {
+        artifactId: string;
+        status: 'finish' | 'generating';
+        type: CodeArtifactType;
+      }) => {
+        if (eventData.artifactId === data?.entityId) {
+          // Update node metadata when status changes
+          setNodeDataByEntity(
+            { type: 'codeArtifact', entityId: eventData.artifactId },
+            {
+              metadata: {
+                status: eventData.status,
+                activeTab: eventData.status === 'finish' ? 'preview' : 'code',
+                type: detectActualTypeFromType(eventData.type),
+              },
+            },
+          );
+        }
+      };
+
+      codeArtifactEmitter.on('statusUpdate', handleStatusUpdate);
+
+      return () => {
+        codeArtifactEmitter.off('statusUpdate', handleStatusUpdate);
+      };
+    }, [data?.entityId, setNodeDataByEntity]);
 
     const { containerStyle, handleResize } = useNodeSize({
       id,
@@ -332,10 +353,6 @@ export const CodeArtifactNode = memo(
           style={isPreview ? { width: 288, height: 200 } : containerStyle}
           onClick={onNodeClick}
         >
-          {!isPreview && !hideActions && !isDragging && !readonly && (
-            <ActionButtons type="codeArtifact" nodeId={id} isNodeHovered={selected && isHovered} />
-          )}
-
           <div
             className={`h-full flex flex-col ${getNodeCommonStyles({ selected, isHovered })} ${isResizing ? 'pointer-events-none' : ''}`}
           >
@@ -343,19 +360,21 @@ export const CodeArtifactNode = memo(
               <>
                 <CustomHandle
                   id={`${id}-target`}
+                  nodeId={id}
                   type="target"
                   position={Position.Left}
                   isConnected={isTargetConnected}
                   isNodeHovered={isHovered}
-                  nodeType="response"
+                  nodeType="codeArtifact"
                 />
                 <CustomHandle
                   id={`${id}-source`}
+                  nodeId={id}
                   type="source"
                   position={Position.Right}
                   isConnected={isSourceConnected}
                   isNodeHovered={isHovered}
-                  nodeType="response"
+                  nodeType="codeArtifact"
                 />
               </>
             )}

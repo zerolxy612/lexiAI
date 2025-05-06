@@ -57,15 +57,6 @@ export const ChatActions = memo(
       handleSendMessage();
     };
 
-    const handleImageUpload = async (file: File) => {
-      if (onUploadImage) {
-        await onUploadImage(file);
-      } else {
-        await handleUploadImage(file, canvasId);
-      }
-      return false;
-    };
-
     // hooks
     const isWeb = getRuntime() === 'web';
 
@@ -134,7 +125,18 @@ export const ChatActions = memo(
             </Tooltip>
           ))}
 
-          <Upload accept="image/*" showUploadList={false} beforeUpload={handleImageUpload}>
+          <Upload
+            accept="image/*"
+            showUploadList={false}
+            customRequest={({ file }) => {
+              if (onUploadImage) {
+                onUploadImage(file as File);
+              } else {
+                handleUploadImage(file as File, canvasId);
+              }
+            }}
+            multiple
+          >
             <Tooltip title={t('common.uploadImage')}>
               <Button
                 className="translate-y-[0.5px]"
@@ -167,7 +169,10 @@ export const ChatActions = memo(
       prevProps.contextItems === nextProps.contextItems &&
       prevProps.query === nextProps.query &&
       prevProps.runtimeConfig === nextProps.runtimeConfig &&
-      prevProps.setRuntimeConfig === nextProps.setRuntimeConfig
+      prevProps.setRuntimeConfig === nextProps.setRuntimeConfig &&
+      prevProps.onUploadImage === nextProps.onUploadImage &&
+      prevProps.onUploadMultipleImages === nextProps.onUploadMultipleImages &&
+      prevProps.model === nextProps.model
     );
   },
 );

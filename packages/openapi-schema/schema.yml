@@ -1002,6 +1002,46 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetDocumentDetailResponse'
+  /knowledge/document/export/document:
+    get:
+      tags:
+        - knowledge
+      summary: Export document to Markdown, DOCX or PDF format
+      description: Export a document to Markdown, DOCX or PDF format
+      operationId: exportDocument
+      parameters:
+        - name: docId
+          in: query
+          description: Export document ID to retrieve
+          required: true
+          schema:
+            type: string
+            example: d-g30e1b80b5g1itbemc0g5jj3
+        - name: format
+          in: query
+          description: Export format
+          required: false
+          schema:
+            type: string
+            enum: [markdown, docx, pdf]
+            default: markdown
+            example: markdown
+      responses:
+        '200':
+          description: operation success
+          content:
+            text/markdown:
+              schema:
+                type: string
+                format: binary
+            application/vnd.openxmlformats-officedocument.wordprocessingml.document:
+              schema:
+                type: string
+                format: binary
+            application/pdf:
+              schema:
+                type: string
+                format: binary
   /knowledge/document/update:
     post:
       tags:
@@ -3305,6 +3345,9 @@ components:
             precision:
               type: number
               description: Decimal precision for number input
+            passwordType:
+              type: boolean
+              description: Whether to display as password input
     DynamicConfigValue:
       type: object
       description: Dynamic config value
@@ -5515,6 +5558,22 @@ components:
         metadata:
           type: object
           description: Canvas context metadata
+    SkillContextCodeArtifactItem:
+      type: object
+      description: Skill context code artifact item
+      properties:
+        artifactId:
+          type: string
+          description: Artifact ID
+        codeArtifact:
+          description: Code artifact
+          $ref: '#/components/schemas/CodeArtifact'
+        isCurrent:
+          type: boolean
+          description: Whether this code artifact is current
+        metadata:
+          type: object
+          description: Code artifact context metadata
     SkillContextContentItem:
       type: object
       description: Skill context content item
@@ -5553,6 +5612,11 @@ components:
           description: Context documents
           items:
             $ref: '#/components/schemas/SkillContextDocumentItem'
+        codeArtifacts:
+          type: array
+          description: Context code artifacts
+          items:
+            $ref: '#/components/schemas/SkillContextCodeArtifactItem'
         contentList:
           type: array
           description: Context content list
@@ -6676,7 +6740,6 @@ components:
         - memo
         - group
         - image
-        - mindMap
     CanvasNodeData:
       type: object
       required:

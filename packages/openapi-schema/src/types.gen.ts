@@ -796,6 +796,10 @@ export type DynamicConfigItem = {
      * Decimal precision for number input
      */
     precision?: number;
+    /**
+     * Whether to display as password input
+     */
+    passwordType?: boolean;
   };
 };
 
@@ -2981,6 +2985,30 @@ export type SkillContextDocumentItem = {
 };
 
 /**
+ * Skill context code artifact item
+ */
+export type SkillContextCodeArtifactItem = {
+  /**
+   * Artifact ID
+   */
+  artifactId?: string;
+  /**
+   * Code artifact
+   */
+  codeArtifact?: CodeArtifact;
+  /**
+   * Whether this code artifact is current
+   */
+  isCurrent?: boolean;
+  /**
+   * Code artifact context metadata
+   */
+  metadata?: {
+    [key: string]: unknown;
+  };
+};
+
+/**
  * Skill context content item
  */
 export type SkillContextContentItem = {
@@ -3024,6 +3052,10 @@ export type SkillContext = {
    * Context documents
    */
   documents?: Array<SkillContextDocumentItem>;
+  /**
+   * Context code artifacts
+   */
+  codeArtifacts?: Array<SkillContextCodeArtifactItem>;
   /**
    * Context content list
    */
@@ -4115,8 +4147,7 @@ export type CanvasNodeType =
   | 'toolResponse'
   | 'memo'
   | 'group'
-  | 'image'
-  | 'mindMap';
+  | 'image';
 
 export type CanvasNodeData = {
   /**
@@ -4639,6 +4670,23 @@ export type GetDocumentDetailData = {
 export type GetDocumentDetailResponse2 = GetDocumentDetailResponse;
 
 export type GetDocumentDetailError = unknown;
+
+export type ExportDocumentData = {
+  query: {
+    /**
+     * Export document ID to retrieve
+     */
+    docId: string;
+    /**
+     * Export format
+     */
+    format?: 'markdown' | 'docx' | 'pdf';
+  };
+};
+
+export type ExportDocumentResponse = Blob | File;
+
+export type ExportDocumentError = unknown;
 
 export type UpdateDocumentData = {
   /**

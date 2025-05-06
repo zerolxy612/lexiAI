@@ -130,19 +130,6 @@ const SVGRenderer = memo(
                 }
               }
               
-              console.log('SVG dimensions measurements:', {
-                widthAttr,
-                heightAttr,
-                styleWidth,
-                styleHeight,
-                viewBoxWidth,
-                viewBoxHeight,
-                boundingWidth,
-                boundingHeight,
-                maxChildWidth,
-                maxChildHeight
-              });
-              
               // Determine the original dimensions (before any scaling)
               let originalWidth = 0;
               let originalHeight = 0;
@@ -464,11 +451,11 @@ const SVGRenderer = memo(
 
         {/* Action Buttons */}
         <div className="absolute bottom-2 right-2 z-10">
-          <Space.Compact className="shadow-sm rounded-md overflow-hidden">
+          <Space.Compact className="shadow-sm rounded-md overflow-hidden backdrop-blur-sm">
             <Tooltip title={t('common.preview')}>
               <Button
                 type="default"
-                className="flex items-center justify-center bg-white hover:bg-gray-50 hover:text-purple-600 hover:border-purple-600 border border-gray-200"
+                className="flex items-center justify-center bg-white/70 dark:bg-gray-800/70 hover:bg-gray-100 dark:hover:bg-gray-700/80 hover:text-purple-600 dark:hover:text-purple-400 hover:border-purple-600 dark:hover:border-purple-400 border border-gray-200/80 dark:border-gray-700/80 text-gray-700 dark:text-gray-300"
                 icon={<PiMagnifyingGlassPlusBold className="w-4 h-4" />}
                 onClick={handleZoom}
               >
@@ -478,7 +465,7 @@ const SVGRenderer = memo(
             <Tooltip title={t('artifact.svg.downloadAsPng')}>
               <Button
                 type="default"
-                className="flex items-center justify-center bg-white hover:bg-gray-50 hover:text-blue-600 hover:border-blue-600 border-x border-gray-200"
+                className="flex items-center justify-center bg-white/70 dark:bg-gray-800/70 hover:bg-gray-100 dark:hover:bg-gray-700/80 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-600 dark:hover:border-blue-400 border-x border-gray-200/80 dark:border-gray-700/80 text-gray-700 dark:text-gray-300"
                 icon={<DownloadIcon className="w-4 h-4" />}
                 onClick={() => downloadImage('png')}
               >
@@ -488,7 +475,7 @@ const SVGRenderer = memo(
             <Tooltip title={t('artifact.svg.copyToClipboard')}>
               <Button
                 type="default"
-                className="flex items-center justify-center bg-white hover:bg-gray-50 hover:text-purple-600 hover:border-purple-600 border border-gray-200"
+                className="flex items-center justify-center bg-white/70 dark:bg-gray-800/70 hover:bg-gray-100 dark:hover:bg-gray-700/80 hover:text-purple-600 dark:hover:text-purple-400 hover:border-purple-600 dark:hover:border-purple-400 border border-gray-200/80 dark:border-gray-700/80 text-gray-700 dark:text-gray-300"
                 icon={<CopyIcon className="w-4 h-4" />}
                 onClick={copyImage}
               >

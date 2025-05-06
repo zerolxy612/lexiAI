@@ -5,7 +5,6 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useNodeHoverEffect } from '@refly-packages/ai-workspace-common/hooks/canvas/use-node-hover';
 import { useSetNodeDataByEntity } from '@refly-packages/ai-workspace-common/hooks/canvas/use-set-node-data-by-entity';
 import { getNodeCommonStyles } from '../index';
-import { ActionButtons } from '../shared/action-buttons';
 import { useTranslation } from 'react-i18next';
 import { useAddToContext } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-to-context';
 import { useDeleteNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-delete-node';
@@ -38,7 +37,6 @@ import { MemoEditor } from './memo-editor';
 import { useAddNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-node';
 import { genSkillID } from '@refly/utils/id';
 import { IContextItem } from '@refly-packages/ai-workspace-common/stores/context-panel';
-import { useEditorPerformance } from '@refly-packages/ai-workspace-common/context/editor-performance';
 import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/canvas';
 import { useNodeSize } from '@refly-packages/ai-workspace-common/hooks/canvas/use-node-size';
 import { NodeResizer as NodeResizerComponent } from '../shared/node-resizer';
@@ -49,7 +47,6 @@ export const MemoNode = ({
   selected,
   id,
   isPreview = false,
-  hideActions = false,
   hideHandles = false,
   onNodeClick,
 }: MemoNodeProps) => {
@@ -68,8 +65,6 @@ export const MemoNode = ({
   const { operatingNodeId } = useCanvasStoreShallow((state) => ({
     operatingNodeId: state.operatingNodeId,
   }));
-  const { draggingNodeId } = useEditorPerformance();
-  const isDragging = draggingNodeId === id;
 
   const { handleMouseEnter: onHoverStart, handleMouseLeave: onHoverEnd } = useNodeHoverEffect(id);
 
@@ -345,9 +340,6 @@ export const MemoNode = ({
         {!isPreview && selected && !readonly && (
           <MemoEditor editor={editor} bgColor={bgColor} onChangeBackground={onUpdateBgColor} />
         )}
-        {!isPreview && !hideActions && !isDragging && !readonly && (
-          <ActionButtons type="memo" nodeId={id} isNodeHovered={isHovered && selected} />
-        )}
 
         <div
           style={{ backgroundColor: bgColor }}
@@ -363,6 +355,7 @@ export const MemoNode = ({
             <>
               <CustomHandle
                 id={`${id}-target`}
+                nodeId={id}
                 type="target"
                 position={Position.Left}
                 isConnected={isTargetConnected}
@@ -371,6 +364,7 @@ export const MemoNode = ({
               />
               <CustomHandle
                 id={`${id}-source`}
+                nodeId={id}
                 type="source"
                 position={Position.Right}
                 isConnected={isSourceConnected}

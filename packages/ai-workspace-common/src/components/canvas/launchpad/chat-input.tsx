@@ -1,5 +1,5 @@
 import { AutoComplete, AutoCompleteProps, Input } from 'antd';
-import { memo, useRef, useMemo, useState, useCallback, forwardRef } from 'react';
+import { memo, useRef, useMemo, useState, useCallback, forwardRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { RefTextAreaType } from '@arco-design/web-react/es/Input/textarea';
 import { useSearchStoreShallow } from '@refly-packages/ai-workspace-common/stores/search';
@@ -22,6 +22,7 @@ interface ChatInputProps {
   handleSendMessage: () => void;
   handleSelectSkill?: (skill: Skill) => void;
   onUploadImage?: (file: File) => Promise<void>;
+  onUploadMultipleImages?: (files: File[]) => Promise<void>;
   onFocus?: () => void;
 }
 
@@ -37,6 +38,7 @@ const ChatInputComponent = forwardRef<HTMLDivElement, ChatInputProps>(
       handleSendMessage,
       handleSelectSkill,
       onUploadImage,
+      onUploadMultipleImages,
       onFocus,
     },
     ref,
@@ -44,6 +46,12 @@ const ChatInputComponent = forwardRef<HTMLDivElement, ChatInputProps>(
     const { t } = useTranslation();
     const { readonly } = useCanvasContext();
     const [isDragging, setIsDragging] = useState(false);
+    const [isMac, setIsMac] = useState(false);
+
+    useEffect(() => {
+      // Detect if user is on macOS
+      setIsMac(navigator.platform.toUpperCase().indexOf('MAC') >= 0);
+    }, []);
 
     const inputRef = useRef<RefTextAreaType>(null);
     const hasMatchedOptions = useRef(false);
@@ -58,7 +66,7 @@ const ChatInputComponent = forwardRef<HTMLDivElement, ChatInputProps>(
 
     const handlePaste = useCallback(
       async (e: React.ClipboardEvent<HTMLDivElement | HTMLTextAreaElement>) => {
-        if (readonly || !onUploadImage) {
+        if (readonly || (!onUploadImage && !onUploadMultipleImages)) {
           return;
         }
 
@@ -68,18 +76,27 @@ const ChatInputComponent = forwardRef<HTMLDivElement, ChatInputProps>(
           return;
         }
 
-        for (const item of items) {
+        const imageFiles: File[] = [];
+
+        for (const item of Array.from(items)) {
           if (item.type.startsWith('image/')) {
-            e.preventDefault();
             const file = item.getAsFile();
             if (file) {
-              await onUploadImage(file);
+              imageFiles.push(file);
             }
-            break;
+          }
+        }
+
+        if (imageFiles.length > 0) {
+          e.preventDefault();
+          if (imageFiles.length === 1 && onUploadImage) {
+            await onUploadImage(imageFiles[0]);
+          } else if (onUploadMultipleImages && imageFiles.length > 0) {
+            await onUploadMultipleImages(imageFiles);
           }
         }
       },
-      [onUploadImage, readonly],
+      [onUploadImage, onUploadMultipleImages, readonly],
     );
 
     const skills = useListSkills();
@@ -109,7 +126,7 @@ const ChatInputComponent = forwardRef<HTMLDivElement, ChatInputProps>(
           return;
         }
 
-        // When the user presses Ctrl+/ key, open the skill selector
+        // When the user presses Ctrl+/ or Cmd+/ key, open the skill selector
         if (e.key === '/' && (e.ctrlKey || e.metaKey)) {
           e.preventDefault();
           setQuery(`${query}/`);
@@ -259,6 +276,29 @@ const ChatInputComponent = forwardRef<HTMLDivElement, ChatInputProps>(
       }, 0);
     }, [onFocus, readonly]);
 
+    // Get placeholder dynamically based on OS
+    const getPlaceholder = useCallback(
+      (skillName: string | null) => {
+        const defaultValue = isMac
+          ? t('commonQnA.placeholderMac', {
+              ns: 'skill',
+              defaultValue: t('commonQnA.placeholder', { ns: 'skill' }),
+            })
+          : t('commonQnA.placeholder', { ns: 'skill' });
+
+        return skillName
+          ? t(`${skillName}.placeholder${isMac ? 'Mac' : ''}`, {
+              ns: 'skill',
+              defaultValue: t(`${skillName}.placeholder`, {
+                ns: 'skill',
+                defaultValue,
+              }),
+            })
+          : defaultValue;
+      },
+      [t, isMac],
+    );
+
     return (
       <div
         ref={ref}
@@ -284,16 +324,20 @@ const ChatInputComponent = forwardRef<HTMLDivElement, ChatInputProps>(
 
           setIsDragging(false);
 
-          if (!onUploadImage) return;
+          if (!onUploadImage && !onUploadMultipleImages) return;
 
           const files = Array.from(e.dataTransfer.files);
-          const imageFile = files.find((file) => file.type.startsWith('image/'));
+          const imageFiles = files.filter((file) => file.type.startsWith('image/'));
 
-          if (imageFile) {
+          if (imageFiles.length > 0) {
             try {
-              await onUploadImage(imageFile);
+              if (imageFiles.length === 1 && onUploadImage) {
+                await onUploadImage(imageFiles[0]);
+              } else if (onUploadMultipleImages) {
+                await onUploadMultipleImages(imageFiles);
+              }
             } catch (error) {
-              console.error('Failed to upload image:', error);
+              console.error('Failed to upload images:', error);
             }
           }
         }}
@@ -336,14 +380,7 @@ const ChatInputComponent = forwardRef<HTMLDivElement, ChatInputProps>(
                 inputClassName,
                 readonly && 'cursor-not-allowed !text-black !bg-transparent',
               )}
-              placeholder={
-                selectedSkillName
-                  ? t(`${selectedSkillName}.placeholder`, {
-                      ns: 'skill',
-                      defaultValue: t('commonQnA.placeholder', { ns: 'skill' }),
-                    })
-                  : t('commonQnA.placeholder', { ns: 'skill' })
-              }
+              placeholder={getPlaceholder(selectedSkillName)}
               autoSize={{
                 minRows: 1,
                 maxRows: maxRows ?? 6,
@@ -372,14 +409,7 @@ const ChatInputComponent = forwardRef<HTMLDivElement, ChatInputProps>(
               inputClassName,
               readonly && 'cursor-not-allowed !text-black !bg-transparent',
             )}
-            placeholder={
-              selectedSkillName
-                ? t(`${selectedSkillName}.placeholder`, {
-                    ns: 'skill',
-                    defaultValue: t('commonQnA.placeholder', { ns: 'skill' }),
-                  })
-                : t('commonQnA.placeholder', { ns: 'skill' })
-            }
+            placeholder={getPlaceholder(selectedSkillName)}
             autoSize={{
               minRows: 1,
               maxRows: maxRows ?? 6,
@@ -400,6 +430,7 @@ export const ChatInput = memo(ChatInputComponent, (prevProps, nextProps) => {
     prevProps.selectedSkillName === nextProps.selectedSkillName &&
     prevProps.handleSelectSkill === nextProps.handleSelectSkill &&
     prevProps.onUploadImage === nextProps.onUploadImage &&
+    prevProps.onUploadMultipleImages === nextProps.onUploadMultipleImages &&
     prevProps.onFocus === nextProps.onFocus
   );
 }) as typeof ChatInputComponent;

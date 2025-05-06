@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { CanvasNode, CanvasNodeData, ResourceNodeMeta, ResourceNodeProps } from './shared/types';
 import { CustomHandle } from './shared/custom-handle';
 import { getNodeCommonStyles } from './index';
-import { ActionButtons } from './shared/action-buttons';
 import { Spin } from '@refly-packages/ai-workspace-common/components/common/spin';
 import { useAddToContext } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-to-context';
 import { useDeleteNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-delete-node';
@@ -36,7 +35,6 @@ import { ContentPreview } from './shared/content-preview';
 import { useCreateDocument } from '@refly-packages/ai-workspace-common/hooks/canvas/use-create-document';
 import { message, Result } from 'antd';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
-import { useEditorPerformance } from '@refly-packages/ai-workspace-common/context/editor-performance';
 import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/canvas';
 import { useSubscriptionUsage } from '@refly-packages/ai-workspace-common/hooks/use-subscription-usage';
 import { NODE_COLORS } from '@refly-packages/ai-workspace-common/components/canvas/nodes/shared/colors';
@@ -84,7 +82,7 @@ const NodeContent = memo(
 );
 
 export const ResourceNode = memo(
-  ({ id, data, isPreview, selected, hideActions, hideHandles, onNodeClick }: ResourceNodeProps) => {
+  ({ id, data, isPreview, selected, hideHandles, onNodeClick }: ResourceNodeProps) => {
     const [isHovered, setIsHovered] = useState(false);
     const [shouldPoll, setShouldPoll] = useState(false);
     const { edges } = useCanvasData();
@@ -106,9 +104,7 @@ export const ResourceNode = memo(
       operatingNodeId: state.operatingNodeId,
     }));
 
-    const { draggingNodeId } = useEditorPerformance();
     const isOperating = operatingNodeId === id;
-    const isDragging = draggingNodeId === id;
     const node = useMemo(() => getNode(id), [id, getNode]);
 
     const { readonly } = useCanvasContext();
@@ -328,13 +324,8 @@ export const ResourceNode = memo(
             'nodrag nopan select-text': isOperating,
           })}
         >
-          {!isPreview && !hideActions && !isDragging && !readonly && (
-            <ActionButtons type="resource" nodeId={id} isNodeHovered={selected && isHovered} />
-          )}
-
           <div
-            className={`
-            h-full
+            className={`            h-full
             flex flex-col
             ${getNodeCommonStyles({ selected: !isPreview && selected, isHovered })}
           `}
@@ -365,6 +356,7 @@ export const ResourceNode = memo(
               <>
                 <CustomHandle
                   id={`${id}-target`}
+                  nodeId={id}
                   type="target"
                   position={Position.Left}
                   isConnected={isTargetConnected}
@@ -373,6 +365,7 @@ export const ResourceNode = memo(
                 />
                 <CustomHandle
                   id={`${id}-source`}
+                  nodeId={id}
                   type="source"
                   position={Position.Right}
                   isConnected={isSourceConnected}

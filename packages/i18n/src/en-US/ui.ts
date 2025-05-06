@@ -122,6 +122,8 @@ const translations = {
     viewAll: 'View All',
     noMore: 'No more',
     action: 'Action',
+    addedToCanvas: 'Added to canvas',
+    operationFailed: 'Operation failed',
   },
   pages: {
     share: {
@@ -826,6 +828,13 @@ const translations = {
   workspace: {
     addToCanvas: 'Add to Canvas',
     noCanvasSelected: 'Please create or select a canvas',
+    exporting: 'Exporting...',
+    exportSuccess: 'Export successfully',
+    exportFailed: 'Export failed',
+    exportAs: 'Export as',
+    exportDocumentToMarkdown: 'Export to Markdown',
+    exportDocumentToDocx: 'Export to DOCX',
+    exportDocumentToPdf: 'Export to PDF',
     openWebpage: 'Open Original Webpage',
     downloadFile: 'Download File',
     canvasListModal: {
@@ -888,7 +897,8 @@ const translations = {
       failed: 'Failed to delete',
       deleteConfirmForDocument: 'Are you sure you want to delete this document?',
       deleteConfirmForCanvas:
-        'Canvas {{canvas}} will be permanently deleted, are you sure to continue?',
+        'Canvas {{canvas}} will be permanently deleted. Do you want to continue?',
+      deleteConfirmForProject: 'Are you sure you want to delete this project?',
       deleteConfirmForResource: 'Are you sure you want to delete this resource?',
       deleteConfirmForResourceProject: 'Are you sure to remove this resource from the project?',
       delete: 'Delete',
@@ -953,6 +963,8 @@ const translations = {
       clearSelector: 'Clear Selection',
       addContext: 'Add Context',
       createMemo: 'Create Memo',
+      createAskAI: 'Ask AI',
+      createAskAISuccess: 'Successfully created Ask AI node',
       clearContext: 'Clear',
       addToContext: 'Quote',
       resource: 'Resource',
@@ -1241,6 +1253,8 @@ const translations = {
       nodeNotFound: 'Source node not found or has been deleted. Please add it to the canvas first.',
     },
     nodeActions: {
+      dragToConnect: 'Drag to Connect',
+      clickToAdd: 'Click to Add',
       createMemo: 'Create Empty Memo',
       createMemoDescription:
         'Create an empty memo for quick recording ideas, supporting Markdown format',
@@ -1442,6 +1456,7 @@ const translations = {
       title: 'Resource Integration',
       fromWebSearch: 'Web Search',
       fromFile: 'Upload File',
+      fromImage: 'Upload Image',
       dragOrClick: 'Click or Drag files to this area to upload',
       unsupportedFileType: 'Please upload the specified type of file',
       supportedFiles: 'Supported Files: {{formats}}.',
@@ -1484,6 +1499,9 @@ const translations = {
       viewDocs: 'View Documentation',
       recommendedPlatforms: 'Recommended Platforms',
       selectProject: 'Select Project',
+      emptyImage: 'Please select at least one image',
+      imageCount: 'Images: {{count}}',
+      supportedImages: 'Supported image formats: {{formats}}',
     },
     wait_parse: 'Parsing',
     parse_failed: 'Parse Failed',
@@ -1532,6 +1550,13 @@ const translations = {
       fontLigatures: 'Font Ligatures',
       theme: 'Theme',
       loading: 'Loading editor...',
+      useFallback: 'Use Text Editor',
+      loadError: 'Failed to load editor',
+      generatingContent: 'AI is generating content',
+      generatingPlaceholder: 'Content is being generated...',
+      fallbackMode: 'Simple Editor Mode',
+      contentTruncated:
+        'Showing only the last {{chars}} characters of {{total}} total. Full content will be displayed when generation completes.',
     },
     copySuccess: 'Code copied to clipboard',
     copyError: 'Failed to copy code',
@@ -2627,6 +2652,7 @@ const translations = {
     customInstructions: 'Custom Instructions',
     waitingUploadCover: 'Waiting for upload cover',
     askProject: 'Ask Project',
+    noProjects: 'No projects available',
     knowledgeToggle: {
       enabledDesc:
         'Ask Project is currently enabled. Knowledge from files in "{{projectName}}" will be used as reference when asking questions.',

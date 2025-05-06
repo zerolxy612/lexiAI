@@ -3,10 +3,12 @@ import { Button } from 'antd';
 import {
   IconAskAI,
   IconTemplate,
+  IconImportResource,
 } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { TemplatesGuide } from './templates-guide';
 import { useCanvasTemplateModal } from '@refly-packages/ai-workspace-common/stores/canvas-template-modal';
 import { useCanvasStoreShallow } from '@refly-packages/ai-workspace-common/stores/canvas';
+import { useImportResourceStoreShallow } from '@refly-packages/ai-workspace-common/stores/import-resource';
 
 export const EmptyGuide = ({ canvasId }: { canvasId: string }) => {
   const { t } = useTranslation();
@@ -19,6 +21,10 @@ export const EmptyGuide = ({ canvasId }: { canvasId: string }) => {
     showReflyPilot: state.showReflyPilot,
   }));
 
+  const { setImportResourceModalVisible } = useImportResourceStoreShallow((state) => ({
+    setImportResourceModalVisible: state.setImportResourceModalVisible,
+  }));
+
   return (
     <div
       className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[70%]"
@@ -26,18 +32,21 @@ export const EmptyGuide = ({ canvasId }: { canvasId: string }) => {
     >
       <div
         className="flex flex-col items-center justify-center text-gray-500 text-center gap-4"
-        style={{ pointerEvents: 'auto' }}
+        style={{ pointerEvents: 'none' }}
       >
-        <div className="text-[20px]">{t('canvas.emptyText')}</div>
-        <div className="flex gap-4">
+        <div className="text-[20px]" style={{ pointerEvents: 'none' }}>
+          {t('canvas.emptyText')}
+        </div>
+        <div className="flex gap-4" style={{ pointerEvents: 'none' }}>
           <Button
-            icon={<IconTemplate className="-mr-1 flex items-center justify-center" />}
+            icon={<IconImportResource className="-mr-1 flex items-center justify-center" />}
             type="text"
             className="text-[20px] text-[#00968F] py-[4px] px-[8px]"
-            onClick={() => setVisible(true)}
-            data-cy="canvas-create-document-button"
+            onClick={() => setImportResourceModalVisible(true)}
+            data-cy="canvas-import-resource-button"
+            style={{ pointerEvents: 'auto' }}
           >
-            {t('loggedHomePage.siderMenu.template')}
+            {t('canvas.toolbar.importResource')}
           </Button>
 
           <Button
@@ -46,8 +55,20 @@ export const EmptyGuide = ({ canvasId }: { canvasId: string }) => {
             className="text-[20px] text-[#00968F] py-[4px] px-[8px]"
             onClick={() => setShowReflyPilot(!showReflyPilot)}
             data-cy="canvas-ask-ai-button"
+            style={{ pointerEvents: 'auto' }}
           >
             {t('canvas.reflyPilot.title')}
+          </Button>
+
+          <Button
+            icon={<IconTemplate className="-mr-1 flex items-center justify-center" />}
+            type="text"
+            className="text-[20px] text-[#00968F] py-[4px] px-[8px]"
+            onClick={() => setVisible(true)}
+            data-cy="canvas-create-document-button"
+            style={{ pointerEvents: 'auto' }}
+          >
+            {t('loggedHomePage.siderMenu.template')}
           </Button>
         </div>
       </div>
