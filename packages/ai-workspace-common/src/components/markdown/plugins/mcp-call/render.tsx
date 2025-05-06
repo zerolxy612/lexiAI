@@ -6,15 +6,15 @@ import { MarkdownMode } from '../../types';
 const ChevronDownIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
+    width="18"
+    height="18"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
-    className="w-5 h-5"
+    className="w-[18px] h-[18px]"
   >
     <path d="m6 9 6 6 6-6" />
   </svg>
@@ -23,15 +23,15 @@ const ChevronDownIcon = () => (
 const CheckIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
+    width="18"
+    height="18"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
-    className="w-5 h-5 text-green-500"
+    className="w-[18px] h-[18px] text-green-500"
   >
     <path d="M20 6 9 17l-5-5" />
   </svg>
@@ -52,69 +52,81 @@ interface MCPCallProps {
  */
 const MCPCall: React.FC<MCPCallProps> = (props) => {
   const { t } = useTranslation();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   // Extract tool name from props
   const toolName = useMemo(() => props['data-tool-name'] || 'unknown', [props]);
 
-  // Determine if this is a tool use or result component
-  const isToolUse = useMemo(() => props['data-tool-type'] === 'use', [props]);
-
-  // Format the content based on whether this is a tool use or result
-  const content = useMemo(() => {
-    if (isToolUse) {
-      try {
-        // Try to parse JSON arguments if present
-        const argsStr = props['data-tool-arguments'] || '{}';
-        const args = JSON.parse(argsStr);
-        return Object.keys(args).length
-          ? JSON.stringify(args, null, 2)
-          : t('components.markdown.noParameters', 'No parameters');
-      } catch (_e) {
-        return (
-          props['data-tool-arguments'] || t('components.markdown.noParameters', 'No parameters')
-        );
-      }
-    } else {
-      return props['data-tool-result'] || '';
+  // Format the content for parameters
+  const parametersContent = useMemo(() => {
+    try {
+      const argsStr = props['data-tool-arguments'] || '{}';
+      const args = JSON.parse(argsStr);
+      return Object.keys(args).length
+        ? JSON.stringify(args, null, 2)
+        : t('components.markdown.noParameters', 'No parameters');
+    } catch (_e) {
+      return props['data-tool-arguments'] || t('components.markdown.noParameters', 'No parameters');
     }
-  }, [props, isToolUse, t]);
+  }, [props, t]);
+
+  // Format the content for result
+  const resultContent = useMemo(() => props['data-tool-result'] || '', [props]);
+
+  // Check if result exists
+  const hasResult = !!resultContent;
 
   return (
-    <div className="my-4 rounded-lg border border-gray-700 overflow-hidden bg-gray-900 text-white">
+    <div className="my-3 rounded-lg border border-[#23272F] overflow-hidden bg-[#181A20] text-white font-mono">
       {/* Header bar */}
       <div
-        className="flex items-center p-3 cursor-pointer"
+        className="flex items-center px-4 py-2 cursor-pointer select-none bg-[#181A20] min-h-[44px]"
         onClick={() => setIsCollapsed(!isCollapsed)}
+        style={{
+          fontFamily: 'Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+        }}
       >
-        <div className="mr-2 text-gray-400">
+        <div
+          className={`mr-2 text-[#A1A1AA] flex items-center transition-transform duration-200 ${isCollapsed ? 'rotate-[-90deg]' : 'rotate-0'}`}
+        >
           <ChevronDownIcon />
         </div>
-        <div className="flex-1 font-medium">
-          {isToolUse
-            ? t('components.markdown.calledMCPTool', 'Called MCP tool')
-            : t('components.markdown.result', 'Result')}
+        <div className="flex-1 text-[15px] font-medium tracking-tight">
+          {t('components.markdown.calledMCPTool', 'Called MCP tool')}
         </div>
-        <div className="mx-2 px-3 py-1 bg-gray-800 rounded text-sm font-mono">{toolName}</div>
-        {!isToolUse && <CheckIcon />}
+        <div className="mx-2 px-2.5 py-0.5 bg-[#23272F] rounded text-[13px] font-mono font-normal leading-6">
+          {toolName}
+        </div>
+        {hasResult && (
+          <span className="ml-1 flex items-center">
+            <CheckIcon />
+          </span>
+        )}
       </div>
 
       {/* Content section */}
       {!isCollapsed && (
-        <div className="border-t border-gray-700">
-          {isToolUse ? (
-            <div>
-              <div className="px-5 py-3 text-gray-400 border-b border-gray-800">
-                {t('components.markdown.parameters', 'Parameters:')}
-              </div>
-              <div className="p-5 font-mono text-sm whitespace-pre-wrap">{content}</div>
+        <div className="border-t border-[#23272F] bg-[#181A20] py-2">
+          {/* Parameters section always shown */}
+          <div>
+            <div className="px-5 py-1 text-[#A1A1AA] text-[13px] border-b border-[#23272F] font-normal">
+              {t('components.markdown.parameters', 'Parameters:')}
             </div>
-          ) : (
+            {/* Parameter content block with background, rounded corners, margin and padding */}
+            <div className="mx-4 my-2 rounded-md bg-[#23272F] px-4 py-3 font-mono text-[15px] font-normal whitespace-pre-wrap text-[#F4F4F5] leading-[22px]">
+              {parametersContent}
+            </div>
+          </div>
+          {/* Result section only if hasResult */}
+          {hasResult && (
             <div>
-              <div className="px-5 py-3 text-gray-400 border-b border-gray-800">
+              <div className="px-5 py-1 text-[#A1A1AA] text-[13px] border-b border-[#23272F] font-normal">
                 {t('components.markdown.result', 'Result:')}
               </div>
-              <div className="p-5 font-mono text-sm whitespace-pre-wrap">{content}</div>
+              {/* Result content block with background, rounded corners, margin and padding */}
+              <div className="mx-4 my-2 rounded-md bg-[#23272F] px-4 py-3 font-mono text-[15px] font-normal whitespace-pre-wrap text-[#F4F4F5] leading-[22px]">
+                {resultContent}
+              </div>
             </div>
           )}
         </div>

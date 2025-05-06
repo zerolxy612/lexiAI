@@ -2,14 +2,9 @@ import { SKIP, visit } from 'unist-util-visit';
 
 // Define the tool use and tool result tags directly here to avoid circular dependencies
 const TOOL_USE_TAG = 'tool_use';
-const TOOL_RESULT_TAG = 'tool_use_result';
 
 // Regular expressions to match tool tags and their content
 const TOOL_USE_REGEX = new RegExp(`<${TOOL_USE_TAG}[^>]*>([\\s\\S]*?)<\\/${TOOL_USE_TAG}>`, 'i');
-const TOOL_RESULT_REGEX = new RegExp(
-  `<${TOOL_RESULT_TAG}[^>]*>([\\s\\S]*?)<\\/${TOOL_RESULT_TAG}>`,
-  'i',
-);
 
 // Regular expressions to extract data from tool tags
 const NAME_REGEX = /<name>(.*?)<\/name>/is;
@@ -17,8 +12,8 @@ const ARGUMENTS_REGEX = /<arguments>(.*?)<\/arguments>/is;
 const RESULT_REGEX = /<result>(.*?)<\/result>/is;
 
 /**
- * Rehype plugin to process tool_use and tool_use_result tags in markdown
- * This transforms the XML-style tags into React component props
+ * Rehype plugin to process tool_use tags in markdown
+ * 解析 <tool_use> 标签时，如果有 <result>，则同时提取 <arguments> 和 <result>，都放到同一个节点属性上；如果没有 <result>，只提取 <arguments>。
  */
 function rehypePlugin() {
   return (tree: any) => {
@@ -44,44 +39,11 @@ function rehypePlugin() {
               attributes['data-tool-arguments'] = argsMatch[1].trim();
             }
 
-            // Set the tool type attribute
-            attributes['data-tool-type'] = 'use';
-
-            // Create a new node with the extracted data
-            const newNode = {
-              type: 'element',
-              tagName: 'pre',
-              properties: attributes,
-              children: [],
-            };
-
-            // Replace the original node
-            parent.children.splice(index, 1, newNode);
-            return [SKIP, index];
-          }
-        }
-
-        // Check for tool_use_result tags
-        if (node.value?.includes(`<${TOOL_RESULT_TAG}`)) {
-          const match = TOOL_RESULT_REGEX.exec(node.value);
-          if (match?.[1]) {
-            const content = match[1];
-            const attributes: Record<string, string> = {};
-
-            // Extract tool name
-            const nameMatch = NAME_REGEX.exec(content);
-            if (nameMatch?.[1]) {
-              attributes['data-tool-name'] = nameMatch[1].trim();
-            }
-
-            // Extract result
+            // Extract result (optional)
             const resultMatch = RESULT_REGEX.exec(content);
             if (resultMatch?.[1]) {
               attributes['data-tool-result'] = resultMatch[1].trim();
             }
-
-            // Set the tool type attribute
-            attributes['data-tool-type'] = 'result';
 
             // Create a new node with the extracted data
             const newNode = {
@@ -108,12 +70,8 @@ function rehypePlugin() {
           })
           .join('');
 
-        // Check if paragraph contains tool_use or tool_use_result tags
-        if (
-          paragraphText.includes(`<${TOOL_USE_TAG}`) ||
-          paragraphText.includes(`<${TOOL_RESULT_TAG}`)
-        ) {
-          // Check for tool_use tags
+        // Check if paragraph contains tool_use tags
+        if (paragraphText.includes(`<${TOOL_USE_TAG}`)) {
           const useMatch = TOOL_USE_REGEX.exec(paragraphText);
           if (useMatch?.[1]) {
             const content = useMatch[1];
@@ -131,42 +89,11 @@ function rehypePlugin() {
               attributes['data-tool-arguments'] = argsMatch[1].trim();
             }
 
-            // Set the tool type attribute
-            attributes['data-tool-type'] = 'use';
-
-            // Create a new node with the extracted data
-            const newNode = {
-              type: 'element',
-              tagName: 'pre',
-              properties: attributes,
-              children: [],
-            };
-
-            // Replace the paragraph with the new node
-            parent.children.splice(index, 1, newNode);
-            return [SKIP, index];
-          }
-
-          // Check for tool_use_result tags
-          const resultMatch = TOOL_RESULT_REGEX.exec(paragraphText);
-          if (resultMatch?.[1]) {
-            const content = resultMatch[1];
-            const attributes: Record<string, string> = {};
-
-            // Extract tool name
-            const nameMatch = NAME_REGEX.exec(content);
-            if (nameMatch?.[1]) {
-              attributes['data-tool-name'] = nameMatch[1].trim();
+            // Extract result (optional)
+            const resultMatch = RESULT_REGEX.exec(content);
+            if (resultMatch?.[1]) {
+              attributes['data-tool-result'] = resultMatch[1].trim();
             }
-
-            // Extract result
-            const resultContentMatch = RESULT_REGEX.exec(content);
-            if (resultContentMatch?.[1]) {
-              attributes['data-tool-result'] = resultContentMatch[1].trim();
-            }
-
-            // Set the tool type attribute
-            attributes['data-tool-type'] = 'result';
 
             // Create a new node with the extracted data
             const newNode = {

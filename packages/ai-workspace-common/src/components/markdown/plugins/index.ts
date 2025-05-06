@@ -1,4 +1,4 @@
-import MCPCallElement from '@refly-packages/ai-workspace-common/components/markdown/plugins/mcp-call';
+import MCPCallElement from './mcp-call';
 import ReflyArtifact from './artifact';
 import ReflyArtifactThinking from './artifact-thinking';
 import CodeElement from './code';

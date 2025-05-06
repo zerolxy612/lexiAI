@@ -3,7 +3,7 @@ import rehypePlugin from './rehypePlugin';
 
 // Define the tool use and tool result tags
 export const TOOL_USE_TAG = 'tool_use';
-export const TOOL_RESULT_TAG = 'tool_use_result';
+export const TOOL_RESULT_TAG = 'tool_use';
 
 // Define a consistent interface for the plugin
 type MCPCallElement = {

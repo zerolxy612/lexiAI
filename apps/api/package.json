@@ -14,6 +14,7 @@
     "prisma:generate": "prisma format && prisma generate",
     "sync-db-schema": "prisma format && prisma generate && node -r ts-node/register --env-file=.env src/scripts/sync-db-schema.ts",
     "dev": "nodemon",
+    "devn": "node",
     "dev:electron": "nodemon --config nodemon.electron.json",
     "dev:debug": "nodemon --inspect",
     "start": "node --env-file=.env dist/scripts/sync-db-schema.js && node --env-file=.env dist/server/main.js",

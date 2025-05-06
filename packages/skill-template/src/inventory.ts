@@ -30,6 +30,7 @@ import {
   MCPAgent,
   ImageGeneration,
 } from './skills';
+import { Agent } from './skills/agent';
 
 export const createSkillTemplateInventory = (engine: SkillEngine): BaseSkill[] => {
   return [
@@ -66,5 +67,6 @@ export const createSkillInventory = (engine: SkillEngine): BaseSkill[] => {
     // new RewriteDoc(engine),
     new EditDoc(engine),
     new MCPAgent(engine),
+    new Agent(engine),
   ];
 };

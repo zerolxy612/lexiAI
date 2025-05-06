@@ -1037,6 +1037,50 @@ export class SkillService {
         const chunk: AIMessageChunk = event.data?.chunk ?? event.data?.output;
 
         switch (event.event) {
+          case 'on_tool_end':
+          case 'on_tool_start': {
+            // Extract tool_call_chunks from AIMessageChunk
+            if (event.metadata.langgraph_node === 'tools') {
+              // Update result content and forward stream events to client
+
+              const content = event.data?.output
+                ? `
+<tool_use>
+<name>${`${event.name}`}</name>
+<arguments>
+${event.data?.input ? JSON.stringify(event.data?.input?.input, null, 2) : ''}
+</arguments>
+<result>
+${event.data?.output ? (event.data?.output?.content ?? '') : ''}
+</result>
+</tool_use>
+`
+                : `
+<tool_use>
+<name>${`${event.name}`}</name>
+<arguments>
+${event.data?.input ? JSON.stringify(event.data?.input?.input, null, 2) : ''}
+</arguments>
+</tool_use>
+`;
+              resultAggregator.handleStreamContent(runMeta, content, '');
+
+              writeSSEResponse(res, {
+                event: 'stream',
+                resultId,
+                reasoningContent: '',
+                content,
+                step: runMeta?.step,
+                structuredData: {
+                  input: event.data?.input,
+                  output: event.data?.output,
+                  toolCallId: event.run_id,
+                  name: event.name,
+                },
+              });
+            }
+            break;
+          }
           case 'on_chat_model_stream': {
             const content = chunk.content.toString();
             const reasoningContent = chunk?.additional_kwargs?.reasoning_content?.toString() || '';
