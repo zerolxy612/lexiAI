@@ -20,6 +20,16 @@ type ModelSelectProps = {
 
 const ModelSelect = React.memo(
   ({ value, onChange, options, placeholder, description, title, isUpdating }: ModelSelectProps) => {
+    const handleModelChange = useCallback(
+      (itemId: string) => {
+        const selectedModel = options?.find((model) => model?.itemId === itemId);
+        if (selectedModel) {
+          onChange(selectedModel);
+        }
+      },
+      [onChange, options],
+    );
+
     return (
       <div className="mb-6">
         <Title level={5} className="mb-4">
@@ -30,15 +40,10 @@ const ModelSelect = React.memo(
           placeholder={placeholder}
           value={value?.itemId}
           loading={isUpdating}
-          onChange={(itemId) => {
-            const selectedModel = options.find((model) => model.itemId === itemId);
-            if (selectedModel) {
-              onChange(selectedModel);
-            }
-          }}
-          options={options.map((model) => ({
-            label: model.name,
-            value: model.itemId,
+          onChange={handleModelChange}
+          options={options?.map((model) => ({
+            label: model?.name ?? '',
+            value: model?.itemId ?? '',
           }))}
         />
         <Text type="secondary" className="text-sm">
@@ -49,11 +54,13 @@ const ModelSelect = React.memo(
   },
 );
 
-export const DefaultModel = ({ visible }: { visible: boolean }) => {
+ModelSelect.displayName = 'ModelSelect';
+
+export const DefaultModel = React.memo(({ visible }: { visible: boolean }) => {
   const { t } = useTranslation();
   const { userProfile, setUserProfile } = useUserStoreShallow((state) => ({
-    userProfile: state.userProfile,
-    setUserProfile: state.setUserProfile,
+    userProfile: state?.userProfile,
+    setUserProfile: state?.setUserProfile,
   }));
 
   const { data, isLoading, refetch } = useListProviderItems({
@@ -63,17 +70,20 @@ export const DefaultModel = ({ visible }: { visible: boolean }) => {
     },
   });
 
-  const llmProviders = useMemo(() => data?.data || [], [data?.data]);
+  const llmProviders = useMemo(() => data?.data ?? [], [data?.data]);
 
-  const defaultPreferences = userProfile?.preferences || {};
-  const defaultModel = defaultPreferences.defaultModel || {};
+  const defaultPreferences = useMemo(
+    () => userProfile?.preferences ?? {},
+    [userProfile?.preferences],
+  );
+  const defaultModel = useMemo(() => defaultPreferences?.defaultModel ?? {}, [defaultPreferences]);
 
-  const [chatModel, setChatModel] = useState<ProviderItem | undefined>(defaultModel.chat);
+  const [chatModel, setChatModel] = useState<ProviderItem | undefined>(defaultModel?.chat);
   const [queryAnalysisModel, setQueryAnalysisModel] = useState<ProviderItem | undefined>(
-    defaultModel.queryAnalysis,
+    defaultModel?.queryAnalysis,
   );
   const [titleGenerationModel, setTitleGenerationModel] = useState<ProviderItem | undefined>(
-    defaultModel.titleGeneration,
+    defaultModel?.titleGeneration,
   );
 
   const [updateLoading, setUpdateLoading] = useState<Record<string, boolean>>({});
@@ -91,20 +101,27 @@ export const DefaultModel = ({ visible }: { visible: boolean }) => {
       };
 
       setUpdateLoading((prev) => ({ ...prev, [type]: true }));
-      const res = await getClient().updateSettings({
-        body: {
-          preferences: updatedPreferences,
-        },
-      });
 
-      if (res?.data?.success) {
-        setUserProfile({
-          ...userProfile,
-          preferences: updatedPreferences,
+      try {
+        const res = await getClient().updateSettings({
+          body: {
+            preferences: updatedPreferences,
+          },
         });
-        message.success(t('settings.defaultModel.updateSuccessfully'));
+
+        if (res?.data?.success) {
+          setUserProfile({
+            ...userProfile,
+            preferences: updatedPreferences,
+          });
+          message.success(t('settings.defaultModel.updateSuccessfully'));
+        }
+      } catch (error) {
+        console.error('Failed to update settings:', error);
+        message.error(t('settings.defaultModel.updateFailed'));
+      } finally {
+        setUpdateLoading((prev) => ({ ...prev, [type]: false }));
       }
-      setUpdateLoading((prev) => ({ ...prev, [type]: false }));
     },
     [defaultModel, defaultPreferences, setUserProfile, userProfile, t],
   );
@@ -138,6 +155,14 @@ export const DefaultModel = ({ visible }: { visible: boolean }) => {
       refetch();
     }
   }, [visible, refetch]);
+
+  useEffect(() => {
+    if (visible) {
+      setChatModel(defaultModel?.chat);
+      setQueryAnalysisModel(defaultModel?.queryAnalysis);
+      setTitleGenerationModel(defaultModel?.titleGeneration);
+    }
+  }, [visible, defaultModel]);
 
   if (isLoading) {
     return (
@@ -180,4 +205,6 @@ export const DefaultModel = ({ visible }: { visible: boolean }) => {
       />
     </div>
   );
-};
+});
+
+DefaultModel.displayName = 'DefaultModel';

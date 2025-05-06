@@ -75,6 +75,13 @@ export const ModelFormModal = memo(
 
     const [isSaving, setIsSaving] = useState(false);
 
+    const getProviderByProviderId = useCallback(
+      (providerId: string) => {
+        return providersResponse?.data?.find((provider) => provider.providerId === providerId);
+      },
+      [providersResponse],
+    );
+
     const getConfigByCategory = useCallback(
       (values: any, existingConfig: any = {}) => {
         const baseConfig = {
@@ -198,7 +205,11 @@ export const ModelFormModal = memo(
         setIsSaving(false);
         if (res.data.success) {
           message.success(t('common.addSuccess'));
-          onSuccess?.(filterProviderCategory, 'create', res.data.data);
+          const provider = getProviderByProviderId(values.providerId);
+          onSuccess?.(filterProviderCategory, 'create', {
+            ...res.data.data,
+            provider,
+          });
           onClose();
         }
       },
@@ -221,7 +232,11 @@ export const ModelFormModal = memo(
         setIsSaving(false);
         if (res.data.success) {
           message.success(t('common.saveSuccess'));
-          onSuccess?.(filterProviderCategory, 'update', res.data.data);
+          const provider = getProviderByProviderId(values.providerId);
+          onSuccess?.(filterProviderCategory, 'update', {
+            ...res.data.data,
+            provider,
+          });
           onClose();
         }
       },

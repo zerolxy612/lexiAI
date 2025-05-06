@@ -307,7 +307,10 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
       });
       setIsUpdating(false);
       if (res.data.success) {
-        const updatedModel = res.data.data;
+        const updatedModel = {
+          ...model,
+          enabled,
+        };
         setModelItems(
           modelItems.map((item) => (item.itemId === updatedModel.itemId ? updatedModel : item)),
         );
