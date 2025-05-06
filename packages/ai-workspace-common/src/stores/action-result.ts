@@ -3,8 +3,9 @@ import { useShallow } from 'zustand/react/shallow';
 import { ActionResult } from '@refly/openapi-schema';
 import { persist } from 'zustand/middleware';
 
-// Maximum number of action results to keep in storage
-const MAX_STORED_RESULTS = 5;
+// Maximum number of action results to keep in storage.
+// When the number of results exceeds this limit, we are likely to get stuck in an infinite data fetching loop.
+const MAX_STORED_RESULTS = 100;
 
 interface PollingState {
   notFoundErrorCount: number;
