@@ -2043,6 +2043,8 @@ const translations = {
       editModel: 'Edit Model',
       deleteSyncConfirm:
         'Are you sure you want to delete the model {{name}}? It has been applied to the default model configuration and needs to be reconfigured.',
+      disableSyncConfirm:
+        '{{name}}​​ has been applied to the default model. Disabling it will reset your default settings. Proceed?',
       deleteConfirm: 'Are you sure you want to delete the model {{name}}?',
       provider: 'Provider',
       providerPlaceholder: 'Please select the provider',
