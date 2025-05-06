@@ -235,7 +235,7 @@ export const ModelFormModal = memo(
           onClose();
         }
       },
-      [onSuccess, onClose, getConfigByCategory, filterProviderCategory],
+      [onSuccess, onClose, getConfigByCategory, filterProviderCategory, getProviderByProviderId],
     );
 
     const updateModelMutation = useCallback(
@@ -262,7 +262,7 @@ export const ModelFormModal = memo(
           onClose();
         }
       },
-      [onSuccess, onClose, getConfigByCategory],
+      [onSuccess, onClose, getConfigByCategory, filterProviderCategory, getProviderByProviderId],
     );
 
     const handleAddModel = useCallback(() => {
