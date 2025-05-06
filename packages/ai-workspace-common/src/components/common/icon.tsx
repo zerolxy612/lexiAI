@@ -44,6 +44,7 @@ import {
   LuChevronRight,
   LuUserRound,
   LuFileStack,
+  LuRefreshCw,
 } from 'react-icons/lu';
 
 import {
@@ -173,6 +174,8 @@ export const IconUser = LuUserRound;
 export const IconRemove = MdOutlineRemoveCircleOutline;
 export const IconFiles = LuFileStack;
 export const IconSlideshow = RiSlideshow2Line;
+export const IconRefresh = LuRefreshCw;
+
 export const IconChrome = ChromeIcon;
 export const ModelProviderIcons = {
   openai: OpenAIIcon,
