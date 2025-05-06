@@ -16,7 +16,12 @@ import {
   Checkbox,
   AutoComplete,
 } from 'antd';
-import { ProviderCategory, ProviderItem } from '@refly/openapi-schema';
+import {
+  LLMModelConfig,
+  ProviderCategory,
+  ProviderItem,
+  ProviderItemOption,
+} from '@refly/openapi-schema';
 import { providerInfoList } from '@refly/utils';
 import { IconPlus } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { Loading } from '../parser-config';
@@ -329,9 +334,15 @@ export const ModelFormModal = memo(
 
     // Handle model ID selection
     const handleModelIdChange = useCallback(
-      (_value: string, option: any) => {
+      (_value: string, option: ProviderItemOption) => {
         resetFormExcludeField(['providerId', 'modelId']);
-        form.setFieldsValue({ name: option.name, enabled: true });
+        form.setFieldsValue({
+          name: option.name,
+          contextLimit: (option.config as LLMModelConfig).contextLimit,
+          maxOutput: (option.config as LLMModelConfig).maxOutput,
+          capabilities: { vision: true },
+          enabled: true,
+        });
       },
       [form, resetFormExcludeField],
     );
