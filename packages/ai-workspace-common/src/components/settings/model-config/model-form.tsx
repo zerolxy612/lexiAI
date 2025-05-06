@@ -21,6 +21,7 @@ import {
   ProviderCategory,
   ProviderItem,
   ProviderItemOption,
+  ModelCapabilities,
 } from '@refly/openapi-schema';
 import { providerInfoList } from '@refly/utils';
 import { IconPlus } from '@refly-packages/ai-workspace-common/components/common/icon';
@@ -135,6 +136,18 @@ export const ModelFormModal = memo(
       },
       [filterProviderCategory],
     );
+
+    const getCapabilitiesFromObject = (capabilitiesObject: any) => {
+      const capabilitiesArray: string[] = [];
+      if (capabilitiesObject && typeof capabilitiesObject === 'object') {
+        for (const [key, value] of Object.entries(capabilitiesObject)) {
+          if (value === true) {
+            capabilitiesArray.push(key);
+          }
+        }
+      }
+      return capabilitiesArray;
+    };
 
     const {
       data: providerItemOptions,
@@ -336,15 +349,20 @@ export const ModelFormModal = memo(
     const handleModelIdChange = useCallback(
       (_value: string, option: ProviderItemOption) => {
         resetFormExcludeField(['providerId', 'modelId']);
+
+        const capabilities = getCapabilitiesFromObject(
+          (option?.config as LLMModelConfig)?.capabilities as ModelCapabilities,
+        );
+
         form.setFieldsValue({
-          name: option.name,
-          contextLimit: (option.config as LLMModelConfig).contextLimit,
-          maxOutput: (option.config as LLMModelConfig).maxOutput,
-          capabilities: { vision: true },
+          name: option?.name ?? '',
+          contextLimit: (option?.config as LLMModelConfig)?.contextLimit,
+          maxOutput: (option?.config as LLMModelConfig)?.maxOutput,
+          capabilities,
           enabled: true,
         });
       },
-      [form, resetFormExcludeField],
+      [form, resetFormExcludeField, getCapabilitiesFromObject],
     );
 
     useEffect(() => {
@@ -366,14 +384,7 @@ export const ModelFormModal = memo(
             relevanceThreshold?: number;
           }
 
-          const capabilitiesArray: string[] = [];
-          if (config.capabilities && typeof config.capabilities === 'object') {
-            for (const [key, value] of Object.entries(config.capabilities)) {
-              if (value === true) {
-                capabilitiesArray.push(key);
-              }
-            }
-          }
+          const capabilitiesArray = getCapabilitiesFromObject(config.capabilities);
 
           const formValues: FormValuesType = {
             name: model?.name || '',
@@ -455,12 +466,11 @@ export const ModelFormModal = memo(
               />
             </Form.Item>
 
-            <Form.Item
-              name="capabilities"
-              label={t('settings.modelConfig.capabilities')}
-              valuePropName="checked"
-            >
-              <Checkbox.Group className="w-full">
+            <Form.Item name="capabilities" label={t('settings.modelConfig.capabilities')}>
+              <Checkbox.Group
+                className="w-full"
+                key={`capabilities-${JSON.stringify(form.getFieldValue('capabilities'))}`}
+              >
                 <div className="grid grid-cols-2 gap-2">
                   <Checkbox value="functionCall">{t('settings.modelConfig.functionCall')}</Checkbox>
                   <Checkbox value="vision">{t('settings.modelConfig.vision')}</Checkbox>
