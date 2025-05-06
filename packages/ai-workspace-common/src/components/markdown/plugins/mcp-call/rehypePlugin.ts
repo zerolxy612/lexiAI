@@ -6,10 +6,24 @@ const TOOL_USE_TAG = 'tool_use';
 // Regular expressions to match tool tags and their content
 const TOOL_USE_REGEX = new RegExp(`<${TOOL_USE_TAG}[^>]*>([\\s\\S]*?)<\\/${TOOL_USE_TAG}>`, 'i');
 
-// Regular expressions to extract data from tool tags
-const NAME_REGEX = /<name>(.*?)<\/name>/is;
-const ARGUMENTS_REGEX = /<arguments>(.*?)<\/arguments>/is;
-const RESULT_REGEX = /<result>(.*?)<\/result>/is;
+// Regular expressions to extract data from tool tags with improved special character handling
+const NAME_REGEX = /<name>([\s\S]*?)<\/name>/i;
+const ARGUMENTS_REGEX = /<arguments>([\s\S]*?)<\/arguments>/i;
+const RESULT_REGEX = /<result>([\s\S]*?)<\/result>/i;
+
+/**
+ * Utility function to safely extract content from regex matches
+ * @param content The content to extract from
+ * @param regex The regex pattern to use
+ * @returns The extracted content or empty string
+ */
+const safeExtract = (content: string, regex: RegExp): string => {
+  const match = regex.exec(content);
+  if (match?.[1]) {
+    return match[1].trim();
+  }
+  return '';
+};
 
 /**
  * Rehype plugin to process tool_use tags in markdown
@@ -27,22 +41,22 @@ function rehypePlugin() {
             const content = match[1];
             const attributes: Record<string, string> = {};
 
-            // Extract tool name
-            const nameMatch = NAME_REGEX.exec(content);
-            if (nameMatch?.[1]) {
-              attributes['data-tool-name'] = nameMatch[1].trim();
+            // Extract tool name using safe extraction
+            const name = safeExtract(content, NAME_REGEX);
+            if (name) {
+              attributes['data-tool-name'] = name;
             }
 
-            // Extract arguments
-            const argsMatch = ARGUMENTS_REGEX.exec(content);
-            if (argsMatch?.[1]) {
-              attributes['data-tool-arguments'] = argsMatch[1].trim();
+            // Extract arguments using safe extraction
+            const args = safeExtract(content, ARGUMENTS_REGEX);
+            if (args) {
+              attributes['data-tool-arguments'] = args;
             }
 
-            // Extract result (optional)
-            const resultMatch = RESULT_REGEX.exec(content);
-            if (resultMatch?.[1]) {
-              attributes['data-tool-result'] = resultMatch[1].trim();
+            // Extract result using safe extraction
+            const result = safeExtract(content, RESULT_REGEX);
+            if (result) {
+              attributes['data-tool-result'] = result;
             }
 
             // Create a new node with the extracted data
@@ -77,22 +91,22 @@ function rehypePlugin() {
             const content = useMatch[1];
             const attributes: Record<string, string> = {};
 
-            // Extract tool name
-            const nameMatch = NAME_REGEX.exec(content);
-            if (nameMatch?.[1]) {
-              attributes['data-tool-name'] = nameMatch[1].trim();
+            // Extract tool name using safe extraction
+            const name = safeExtract(content, NAME_REGEX);
+            if (name) {
+              attributes['data-tool-name'] = name;
             }
 
-            // Extract arguments
-            const argsMatch = ARGUMENTS_REGEX.exec(content);
-            if (argsMatch?.[1]) {
-              attributes['data-tool-arguments'] = argsMatch[1].trim();
+            // Extract arguments using safe extraction
+            const args = safeExtract(content, ARGUMENTS_REGEX);
+            if (args) {
+              attributes['data-tool-arguments'] = args;
             }
 
-            // Extract result (optional)
-            const resultMatch = RESULT_REGEX.exec(content);
-            if (resultMatch?.[1]) {
-              attributes['data-tool-result'] = resultMatch[1].trim();
+            // Extract result using safe extraction
+            const result = safeExtract(content, RESULT_REGEX);
+            if (result) {
+              attributes['data-tool-result'] = result;
             }
 
             // Create a new node with the extracted data

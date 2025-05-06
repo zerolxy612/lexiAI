@@ -1040,26 +1040,28 @@ export class SkillService {
           case 'on_tool_end':
           case 'on_tool_start': {
             // Extract tool_call_chunks from AIMessageChunk
-            if (event.metadata.langgraph_node === 'tools') {
+            if (event.metadata.langgraph_node === 'tools' && event.data?.output) {
               // Update result content and forward stream events to client
+
+              const [, , eventName] = event.name?.split('__') ?? '';
 
               const content = event.data?.output
                 ? `
 <tool_use>
-<name>${`${event.name}`}</name>
+<name>${`${eventName}`}</name>
 <arguments>
-${event.data?.input ? JSON.stringify(event.data?.input?.input, null, 2) : ''}
+${event.data?.input ? JSON.stringify({ params: event.data?.input?.input }) : ''}
 </arguments>
 <result>
-${event.data?.output ? (event.data?.output?.content ?? '') : ''}
+${event.data?.output ? JSON.stringify({ response: event.data?.output?.content ?? '' }) : ''}
 </result>
 </tool_use>
 `
                 : `
 <tool_use>
-<name>${`${event.name}`}</name>
+<name>${`${eventName}`}</name>
 <arguments>
-${event.data?.input ? JSON.stringify(event.data?.input?.input, null, 2) : ''}
+${event.data?.input ? JSON.stringify(event.data?.input?.input) : ''}
 </arguments>
 </tool_use>
 `;
@@ -1072,8 +1074,6 @@ ${event.data?.input ? JSON.stringify(event.data?.input?.input, null, 2) : ''}
                 content,
                 step: runMeta?.step,
                 structuredData: {
-                  input: event.data?.input,
-                  output: event.data?.output,
                   toolCallId: event.run_id,
                   name: event.name,
                 },

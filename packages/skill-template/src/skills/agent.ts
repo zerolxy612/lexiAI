@@ -258,6 +258,26 @@ export class Agent extends BaseSkill {
         type: 'sse',
         url: 'http://localhost:8787/sse',
       },
+      'mcp-time': {
+        type: 'sse',
+        url: 'https://mcp.higress.ai/mcp-time/cmacdo7yu00469001xgwju1os/sse',
+      },
+      'mcp-ip-query': {
+        type: 'sse',
+        url: 'https://mcp.higress.ai/mcp-ip-query/cmacdo7yu00469001xgwju1os/sse',
+      },
+      'mcp-calendar-holiday-helper': {
+        type: 'sse',
+        url: 'https://mcp.higress.ai/mcp-calendar-holiday-helper/cmacdo7yu00469001xgwju1os/sse',
+      },
+      'mcp-firecrawl': {
+        type: 'sse',
+        url: 'https://mcp.higress.ai/mcp-firecrawl/cmacdo7yu00469001xgwju1os/sse',
+      },
+      'mcp-wolframalpha': {
+        type: 'sse',
+        url: 'https://mcp.higress.ai/mcp-wolframalpha/cmacdo7yu00469001xgwju1os/sse',
+      },
     });
 
     console.log('Initializing MCP client...');
