@@ -421,8 +421,7 @@ const DocumentBody = memo(
       config: state.config[docId],
     }));
     const hasDocumentSynced = config?.remoteSyncedAt > 0 && config?.localSyncedAt > 0;
-    const isStillLoading =
-      (isLoading && !hasDocumentSynced) || (!readonly && provider?.status !== 'connected');
+    const isStillLoading = (isLoading && !hasDocumentSynced) || provider?.status !== 'connected';
 
     return (
       <div className="overflow-auto flex-grow">
