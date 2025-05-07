@@ -2675,6 +2675,10 @@ export type DuplicateShareRequest = {
    * Share ID
    */
   shareId: string;
+  /**
+   * Project ID to duplicate the share to
+   */
+  projectId?: string;
 };
 
 export type DuplicateShareResponse = BaseResponse & {
