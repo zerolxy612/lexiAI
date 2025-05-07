@@ -1466,8 +1466,8 @@ importers:
         specifier: 0.4.3
         version: 0.4.3(@langchain/core@0.3.29)(ws@8.17.1)
       '@modelcontextprotocol/sdk':
-        specifier: ^1.9.0
-        version: 1.9.0
+        specifier: ^1.10.1
+        version: 1.10.1
       '@refly/common-types':
         specifier: workspace:*
         version: link:../common-types
@@ -5397,7 +5397,7 @@ packages:
       '@langchain/core': ^0.3.44
     dependencies:
       '@langchain/core': 0.3.29(openai@4.83.0)
-      '@modelcontextprotocol/sdk': 1.9.0
+      '@modelcontextprotocol/sdk': 1.10.1
       debug: 4.4.0
       zod: 3.24.3
     optionalDependencies:
@@ -5521,8 +5521,8 @@ packages:
     resolution: {integrity: sha512-Y28PR25bHXUg88kCV7nivXrP2Nj2RueZ3/l/jdx6J9f8J4nsEGcgX0Qe6lt7Pa+J79+kPiJU3LguR6O/6zrLOw==}
     dev: false
 
-  /@modelcontextprotocol/sdk@1.9.0:
-    resolution: {integrity: sha512-Jq2EUCQpe0iyO5FGpzVYDNFR6oR53AIrwph9yWl7uSc7IWUMsrmpmSaTGra5hQNunXpM+9oit85p924jWuHzUA==}
+  /@modelcontextprotocol/sdk@1.10.1:
+    resolution: {integrity: sha512-xNYdFdkJqEfIaTVP1gPKoEvluACHZsHZegIoICX8DM1o6Qf3G5u2BQJHmgd0n4YgRPqqK/u1ujQvrgAxxSJT9w==}
     engines: {node: '>=18'}
     dependencies:
       content-type: 1.0.5

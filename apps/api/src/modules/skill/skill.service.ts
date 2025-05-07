@@ -1043,7 +1043,7 @@ export class SkillService {
             if (event.metadata.langgraph_node === 'tools' && event.data?.output) {
               // Update result content and forward stream events to client
 
-              const [, , eventName] = event.name?.split('__') ?? '';
+              const [, , eventName] = event.name?.split('__') ?? event.name;
 
               const content = event.data?.output
                 ? `

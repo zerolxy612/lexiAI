@@ -274,8 +274,8 @@ export class Agent extends BaseSkill {
         url: 'https://mcp.higress.ai/mcp-time/cmacdo7yu00469001xgwju1os/sse',
       },
       'mcp-ip-query': {
-        type: 'sse',
-        url: 'https://mcp.higress.ai/mcp-ip-query/cmacdo7yu00469001xgwju1os/sse',
+        type: 'streamable',
+        url: 'https://mcp.higress.ai/mcp-ip-query/cmacdo7yu00469001xgwju1os',
       },
       'mcp-calendar-holiday-helper': {
         type: 'sse',

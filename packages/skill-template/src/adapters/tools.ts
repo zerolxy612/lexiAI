@@ -90,15 +90,16 @@ async function _convertCallToolResult(
   if (result.isError) {
     throw new ToolException(
       `MCP tool '${toolName}' on server '${serverName}' returned an error: ${result.content
-        .map((content: CallToolResultContent) => content.text)
+        .map((content) => content.text)
         .join('\n')}`,
     );
   }
 
   const mcpTextAndImageContent: MessageContentComplex[] = (
-    result.content.filter(
-      (content: CallToolResultContent) => content.type === 'text' || content.type === 'image',
-    ) as (TextContent | ImageContent)[]
+    result.content.filter((content) => content.type === 'text' || content.type === 'image') as (
+      | TextContent
+      | ImageContent
+    )[]
   ).map((content: TextContent | ImageContent) => {
     switch (content.type) {
       case 'text':
@@ -126,11 +127,9 @@ async function _convertCallToolResult(
   // Create the text content output
   const artifacts = (
     await Promise.all(
-      (
-        result.content.filter(
-          (content: CallToolResultContent) => content.type === 'resource',
-        ) as EmbeddedResource[]
-      ).map((content: EmbeddedResource) => _embeddedResourceToArtifact(content, client)),
+      (result.content.filter((content) => content.type === 'resource') as EmbeddedResource[]).map(
+        (content: EmbeddedResource) => _embeddedResourceToArtifact(content, client),
+      ),
     )
   ).flat();
 
@@ -261,7 +260,6 @@ export async function loadMcpTools(
               ) as DynamicStructuredToolInput['func'],
             });
             getDebugLog()(`INFO: Successfully loaded tool: ${dst.name}`);
-            (dst as any).inputSchema = tool.inputSchema;
             return dst;
           } catch (error) {
             getDebugLog()(`ERROR: Failed to load tool "${tool.name}":`, error);

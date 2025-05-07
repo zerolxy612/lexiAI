@@ -19,7 +19,7 @@
     "@langchain/langgraph": "0.2.45",
     "@langchain/mcp-adapters": "^0.4.2",
     "@langchain/openai": "0.4.3",
-    "@modelcontextprotocol/sdk": "^1.9.0",
+    "@modelcontextprotocol/sdk": "^1.10.1",
     "@refly/common-types": "workspace:*",
     "@refly/errors": "workspace:*",
     "@refly/openapi-schema": "workspace:*",
