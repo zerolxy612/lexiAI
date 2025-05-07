@@ -105,28 +105,6 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
             setSelectedSkill={handleSelectSkill}
           />
 
-          {selectedSkill?.configSchema?.items?.length > 0 && (
-            <ConfigManager
-              readonly={false}
-              key={selectedSkill?.name}
-              form={form}
-              formErrors={formErrors}
-              setFormErrors={setFormErrors}
-              schema={selectedSkill?.configSchema}
-              tplConfig={tplConfig}
-              fieldPrefix="tplConfig"
-              configScope="runtime"
-              resetConfig={() => {
-                const defaultConfig = selectedSkill?.tplConfig ?? {};
-                setTplConfig(defaultConfig);
-                form.setFieldValue('tplConfig', defaultConfig);
-              }}
-              onFormValuesChange={(_changedValues, allValues) => {
-                setTplConfig(allValues.tplConfig);
-              }}
-            />
-          )}
-
           <div className="flex flex-col">
             <ChatInput
               readonly={false}
@@ -137,8 +115,30 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
               handleSelectSkill={handleSelectSkill}
               maxRows={6}
               minRows={2}
-              inputClassName="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              inputClassName="px-3 py-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
+
+            {selectedSkill?.configSchema?.items?.length > 0 && (
+              <ConfigManager
+                readonly={false}
+                key={selectedSkill?.name}
+                form={form}
+                formErrors={formErrors}
+                setFormErrors={setFormErrors}
+                schema={selectedSkill?.configSchema}
+                tplConfig={tplConfig}
+                fieldPrefix="tplConfig"
+                configScope="runtime"
+                resetConfig={() => {
+                  const defaultConfig = selectedSkill?.tplConfig ?? {};
+                  setTplConfig(defaultConfig);
+                  form.setFieldValue('tplConfig', defaultConfig);
+                }}
+                onFormValuesChange={(_changedValues, allValues) => {
+                  setTplConfig(allValues.tplConfig);
+                }}
+              />
+            )}
 
             <Actions
               query={query}
