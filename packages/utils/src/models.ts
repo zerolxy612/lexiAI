@@ -15,7 +15,7 @@ export const aggregateTokenUsage = (usageItems: TokenUsageItem[]): TokenUsageIte
 
   for (const item of usageItems) {
     if (!item) continue;
-    const key = `${item.tier}:${item.modelName}`;
+    const key = `${item.tier ?? ''}:${item.modelName}`;
     if (!aggregatedUsage[key]) {
       aggregatedUsage[key] = { inputTokens: 0, outputTokens: 0, modelProvider: item.modelProvider };
     }
@@ -27,11 +27,11 @@ export const aggregateTokenUsage = (usageItems: TokenUsageItem[]): TokenUsageIte
     .map(([key, value]) => {
       const [tier, modelName] = key.split(':');
       return {
-        tier,
         modelName,
         modelProvider: value.modelProvider,
         inputTokens: value.inputTokens,
         outputTokens: value.outputTokens,
+        ...(tier ? { tier } : {}),
       };
     })
     .sort((a, b) => {

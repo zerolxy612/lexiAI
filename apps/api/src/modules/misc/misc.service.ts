@@ -35,8 +35,8 @@ import {
 } from '@refly/errors';
 import { FileObject } from '../misc/misc.dto';
 import { createId } from '@paralleldrive/cuid2';
-import { ParserFactory } from '../knowledge/parsers/factory';
 import { StaticFile } from '@/generated/client';
+import { PandocParser } from '@/modules/knowledge/parsers/pandoc.parser';
 import pLimit from 'p-limit';
 
 @Injectable()
@@ -743,8 +743,7 @@ export class MiscService implements OnModuleInit {
 
   async convert(param: { content: string; from: string; to: string }): Promise<string> {
     const { content, from, to } = param;
-    const parserFactory = new ParserFactory(this.config);
-    const parser = parserFactory.createParser('pandoc', {
+    const parser = new PandocParser({
       format: from,
       extractMedia: false,
     });

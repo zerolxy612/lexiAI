@@ -19,8 +19,10 @@ import {
   Icon,
   Artifact,
   ActionStepMeta,
-  ModelInfo,
   Project,
+  Provider,
+  ModelScene,
+  LLMModelConfig,
 } from '@refly/openapi-schema';
 import { EventEmitter } from 'node:stream';
 
@@ -242,7 +244,8 @@ export interface SkillRunnableConfig extends RunnableConfig {
     canvasId?: string;
     locale?: string;
     uiLocale?: string;
-    modelInfo?: ModelInfo;
+    modelConfigMap?: Record<ModelScene, LLMModelConfig>;
+    provider?: Provider;
     project?: Project;
     currentSkill?: SkillMeta;
     currentStep?: ActionStepMeta;

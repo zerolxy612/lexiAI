@@ -79,6 +79,9 @@ import { ParserFactory } from '../knowledge/parsers/factory';
 import { ConfigService } from '@nestjs/config';
 import { ParseResult, ParserOptions } from './parsers/base';
 import { OSS_INTERNAL, ObjectStorageService } from '@/modules/common/object-storage';
+import { ProviderService } from '@/modules/provider/provider.service';
+import { DocxParser } from '@/modules/knowledge/parsers/docx.parser';
+import { PdfParser } from '@/modules/knowledge/parsers/pdf.parser';
 
 @Injectable()
 export class KnowledgeService {
@@ -89,6 +92,7 @@ export class KnowledgeService {
     private prisma: PrismaService,
     private ragService: RAGService,
     private miscService: MiscService,
+    private providerService: ProviderService,
     private subscriptionService: SubscriptionService,
     @Inject(OSS_INTERNAL) private oss: ObjectStorageService,
     @Inject(FULLTEXT_SEARCH) private fts: FulltextSearchService,
@@ -499,16 +503,16 @@ export class KnowledgeService {
     const { resourceId, resourceType, rawFileKey, meta } = resource;
     const { url, contentType } = JSON.parse(meta) as ResourceMeta;
 
-    const parserFactory = new ParserFactory(this.config);
+    const parserFactory = new ParserFactory(this.config, this.providerService);
     const parserOptions: ParserOptions = { resourceId };
 
     let result: ParseResult;
 
     if (resourceType === 'weblink') {
-      const parser = parserFactory.createParser('jina', parserOptions);
+      const parser = await parserFactory.createWebParser(user, parserOptions);
       result = await parser.parse(url);
     } else if (rawFileKey) {
-      const parser = parserFactory.createParserByContentType(contentType, parserOptions);
+      const parser = await parserFactory.createDocumentParser(user, contentType, parserOptions);
       const fileStream = await this.oss.getObject(rawFileKey);
       const fileBuffer = await streamToBuffer(fileStream);
 
@@ -912,12 +916,12 @@ export class KnowledgeService {
       case 'markdown':
         return Buffer.from(markdownContent);
       case 'docx': {
-        const docxParser = new ParserFactory(this.config).createParser('docx');
+        const docxParser = new DocxParser();
         const docxData = await docxParser.parse(markdownContent);
         return docxData.buffer;
       }
       case 'pdf': {
-        const pdfParser = new ParserFactory(this.config).createParser('pdf');
+        const pdfParser = new PdfParser();
         const pdfData = await pdfParser.parse(markdownContent);
         return pdfData.buffer;
       }

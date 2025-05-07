@@ -1223,10 +1223,6 @@ export type ModelTier = 't1' | 't2' | 'free';
  */
 export type TokenUsageItem = {
   /**
-   * Model tier
-   */
-  tier: string;
-  /**
    * Model name
    */
   modelName: string;
@@ -1242,6 +1238,10 @@ export type TokenUsageItem = {
    * Output tokens
    */
   outputTokens: number;
+  /**
+   * Model tier
+   */
+  tier?: string;
 };
 
 /**
@@ -1683,6 +1683,43 @@ export type FileParsingMeter = {
 export type OperationMode = 'mouse' | 'touchpad';
 
 /**
+ * Provider config
+ */
+export type ProviderConfig = {
+  /**
+   * Provider ID
+   */
+  providerId?: string;
+  /**
+   * Provider key
+   */
+  providerKey?: string;
+};
+
+/**
+ * Model usage scene
+ */
+export type ModelScene = 'chat' | 'queryAnalysis' | 'titleGeneration';
+
+/**
+ * Default model config
+ */
+export type DefaultModelConfig = {
+  /**
+   * Default chat model to use
+   */
+  chat?: ProviderItem;
+  /**
+   * Query analysis and context processing model
+   */
+  queryAnalysis?: ProviderItem;
+  /**
+   * Title generation model for canvas and documents
+   */
+  titleGeneration?: ProviderItem;
+};
+
+/**
  * User preferences
  */
 export type UserPreferences = {
@@ -1694,6 +1731,22 @@ export type UserPreferences = {
    * Whether to disable hover tutorial
    */
   disableHoverCard?: boolean;
+  /**
+   * Web search config
+   */
+  webSearch?: ProviderConfig;
+  /**
+   * URL parsing config
+   */
+  urlParsing?: ProviderConfig;
+  /**
+   * PDF parsing config
+   */
+  pdfParsing?: ProviderConfig;
+  /**
+   * Default model config
+   */
+  defaultModel?: DefaultModelConfig;
 };
 
 /**
@@ -3154,8 +3207,13 @@ export type InvokeSkillRequest = {
   locale?: string;
   /**
    * Selected model
+   * @deprecated
    */
   modelName?: string;
+  /**
+   * Selected model item ID
+   */
+  modelItemId?: string;
   /**
    * Skill ID
    */
@@ -3407,6 +3465,14 @@ export type WebSearchRequest = {
    * Language/locale code
    */
   hl?: string;
+  /**
+   * Country/region code
+   */
+  gl?: string;
+  /**
+   * Location string
+   */
+  location?: string;
   /**
    * Web search result limit
    */
@@ -3735,9 +3801,13 @@ export type ModelInfo = {
    */
   provider: string;
   /**
+   * Model provider item ID
+   */
+  providerItemId?: string;
+  /**
    * Model tier
    */
-  tier: ModelTier;
+  tier?: ModelTier;
   /**
    * Model context limit (in tokens)
    */
@@ -3761,6 +3831,292 @@ export type ListModelsResponse = BaseResponse & {
    * Model list
    */
   data?: Array<ModelInfo>;
+};
+
+export type ProviderCategory =
+  | 'llm'
+  | 'embedding'
+  | 'reranker'
+  | 'webSearch'
+  | 'urlParsing'
+  | 'pdfParsing';
+
+/**
+ * General provider info
+ */
+export type Provider = {
+  /**
+   * Provider ID
+   */
+  providerId: string;
+  /**
+   * Provider key
+   */
+  providerKey: string;
+  /**
+   * Provider name
+   */
+  name: string;
+  /**
+   * Provider categories
+   */
+  categories: Array<ProviderCategory>;
+  /**
+   * Provider base URL
+   */
+  baseUrl?: string;
+  /**
+   * Whether the provider is enabled
+   */
+  enabled: boolean;
+  /**
+   * Whether the provider is global
+   */
+  isGlobal?: boolean;
+  /**
+   * Provider API key (this will never be exposed to the frontend)
+   */
+  apiKey?: string;
+};
+
+/**
+ * Provider config for LLMs
+ */
+export type LLMModelConfig = {
+  /**
+   * Model ID
+   */
+  modelId: string;
+  /**
+   * Model name
+   */
+  modelName: string;
+  /**
+   * Model context limit (in tokens)
+   */
+  contextLimit?: number;
+  /**
+   * Model max output length (in tokens)
+   */
+  maxOutput?: number;
+  /**
+   * Model capabilities
+   */
+  capabilities?: ModelCapabilities;
+};
+
+/**
+ * Provider config for embeddings
+ */
+export type EmbeddingModelConfig = {
+  /**
+   * Embedding model ID
+   */
+  modelId: string;
+  /**
+   * Embedding model name
+   */
+  modelName?: string;
+  /**
+   * Embedding model batch size
+   */
+  batchSize?: number;
+  /**
+   * Embedding model dimensions
+   */
+  dimensions?: number;
+};
+
+/**
+ * Provider config for rerankers
+ */
+export type RerankerModelConfig = {
+  /**
+   * Reranking model ID
+   */
+  modelId: string;
+  /**
+   * Reranking model name
+   */
+  modelName?: string;
+  /**
+   * Number of top results to return
+   */
+  topN?: number;
+  /**
+   * Minimum relevance score threshold (0.0-1.0)
+   */
+  relevanceThreshold?: number;
+};
+
+export type ProviderItemConfig = LLMModelConfig | EmbeddingModelConfig | RerankerModelConfig;
+
+export type ProviderItemOption = {
+  /**
+   * Provider item name
+   */
+  name?: string;
+  /**
+   * Provider category
+   */
+  category?: ProviderCategory;
+  /**
+   * Provider item tier
+   */
+  tier?: ModelTier;
+  /**
+   * Provider item config
+   */
+  config?: ProviderItemConfig;
+};
+
+export type ProviderItem = {
+  /**
+   * Provider item ID
+   */
+  itemId: string;
+  /**
+   * Provider item name
+   */
+  name: string;
+  /**
+   * Whether the provider item is enabled
+   */
+  enabled: boolean;
+  /**
+   * Provider category
+   */
+  category: ProviderCategory;
+  /**
+   * Provider item tier
+   */
+  tier?: ModelTier;
+  /**
+   * Provider ID
+   */
+  providerId: string;
+  /**
+   * Provider detail info
+   */
+  provider?: Provider;
+  /**
+   * Provider item config
+   */
+  config?: ProviderItemConfig;
+  /**
+   * Provider item order
+   */
+  order?: number;
+};
+
+export type ListProvidersResponse = BaseResponse & {
+  data?: Array<Provider>;
+};
+
+export type UpsertProviderRequest = {
+  /**
+   * Provider ID (only for update)
+   */
+  providerId?: string;
+  /**
+   * Provider key
+   */
+  providerKey?: string;
+  /**
+   * Provider name
+   */
+  name?: string;
+  /**
+   * Provider categories
+   */
+  categories?: Array<ProviderCategory>;
+  /**
+   * Provider API key
+   */
+  apiKey?: string;
+  /**
+   * Provider base URL
+   */
+  baseUrl?: string;
+  /**
+   * Whether the provider is enabled
+   */
+  enabled?: boolean;
+};
+
+export type UpsertProviderResponse = BaseResponse & {
+  data?: Provider;
+};
+
+export type DeleteProviderRequest = {
+  /**
+   * Provider ID
+   */
+  providerId: string;
+};
+
+export type ListProviderItemOptionsResponse = BaseResponse & {
+  data?: Array<ProviderItemOption>;
+};
+
+export type ListProviderItemsResponse = BaseResponse & {
+  data?: Array<ProviderItem>;
+};
+
+export type UpsertProviderItemRequest = {
+  /**
+   * Provider item ID (only for update)
+   */
+  itemId?: string;
+  /**
+   * Provider ID
+   */
+  providerId?: string;
+  /**
+   * Provider item name
+   */
+  name?: string;
+  /**
+   * Provider category
+   */
+  category?: ProviderCategory;
+  /**
+   * Whether the provider item is enabled
+   */
+  enabled?: boolean;
+  /**
+   * Provider item config
+   */
+  config?: ProviderItemConfig;
+  /**
+   * Provider item order
+   */
+  order?: number;
+};
+
+export type UpsertProviderItemResponse = BaseResponse & {
+  data?: ProviderItem;
+};
+
+export type BatchUpsertProviderItemsRequest = {
+  /**
+   * Provider items to upsert
+   */
+  items: Array<UpsertProviderItemRequest>;
+};
+
+export type BatchUpsertProviderItemsResponse = BaseResponse & {
+  /**
+   * Upserted provider items
+   */
+  data?: Array<ProviderItem>;
+};
+
+export type DeleteProviderItemRequest = {
+  /**
+   * Provider item ID
+   */
+  itemId: string;
 };
 
 export type DocumentInterface = {
@@ -4893,6 +5249,129 @@ export type MultiLingualWebSearchData = {
 export type MultiLingualWebSearchResponse2 = MultiLingualWebSearchResponse;
 
 export type MultiLingualWebSearchError = unknown;
+
+export type ListProvidersData = {
+  query?: {
+    /**
+     * Provider category
+     */
+    category?: ProviderCategory;
+    /**
+     * Whether the provider is enabled
+     */
+    enabled?: boolean;
+    /**
+     * Provider key
+     */
+    providerKey?: string;
+  };
+};
+
+export type ListProvidersResponse2 = ListProvidersResponse;
+
+export type ListProvidersError = unknown;
+
+export type CreateProviderData = {
+  body: UpsertProviderRequest;
+};
+
+export type CreateProviderResponse = UpsertProviderResponse;
+
+export type CreateProviderError = unknown;
+
+export type UpdateProviderData = {
+  body: UpsertProviderRequest;
+};
+
+export type UpdateProviderResponse = UpsertProviderResponse;
+
+export type UpdateProviderError = unknown;
+
+export type DeleteProviderData = {
+  body: DeleteProviderRequest;
+};
+
+export type DeleteProviderResponse = BaseResponse;
+
+export type DeleteProviderError = unknown;
+
+export type ListProviderItemsData = {
+  query?: {
+    /**
+     * Provider category
+     */
+    category?: ProviderCategory;
+    /**
+     * Whether the provider item is enabled
+     */
+    enabled?: boolean;
+    /**
+     * Provider ID
+     */
+    providerId?: string;
+  };
+};
+
+export type ListProviderItemsResponse2 = ListProviderItemsResponse;
+
+export type ListProviderItemsError = unknown;
+
+export type ListProviderItemOptionsData = {
+  query: {
+    /**
+     * Provider category
+     */
+    category?: ProviderCategory;
+    /**
+     * Provider ID
+     */
+    providerId: string;
+  };
+};
+
+export type ListProviderItemOptionsResponse2 = ListProviderItemOptionsResponse;
+
+export type ListProviderItemOptionsError = unknown;
+
+export type CreateProviderItemData = {
+  body: UpsertProviderItemRequest;
+};
+
+export type CreateProviderItemResponse = UpsertProviderItemResponse;
+
+export type CreateProviderItemError = unknown;
+
+export type BatchCreateProviderItemsData = {
+  body: BatchUpsertProviderItemsRequest;
+};
+
+export type BatchCreateProviderItemsResponse = BatchUpsertProviderItemsResponse;
+
+export type BatchCreateProviderItemsError = unknown;
+
+export type UpdateProviderItemData = {
+  body: UpsertProviderItemRequest;
+};
+
+export type UpdateProviderItemResponse = UpsertProviderItemResponse;
+
+export type UpdateProviderItemError = unknown;
+
+export type BatchUpdateProviderItemsData = {
+  body: BatchUpsertProviderItemsRequest;
+};
+
+export type BatchUpdateProviderItemsResponse = BatchUpsertProviderItemsResponse;
+
+export type BatchUpdateProviderItemsError = unknown;
+
+export type DeleteProviderItemData = {
+  body: DeleteProviderItemRequest;
+};
+
+export type DeleteProviderItemResponse = BaseResponse;
+
+export type DeleteProviderItemError = unknown;
 
 export type ScrapeData = {
   body: ScrapeWeblinkRequest;

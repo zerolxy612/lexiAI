@@ -1576,12 +1576,8 @@ export const ModelTierSchema = {
 export const TokenUsageItemSchema = {
   type: 'object',
   description: 'Token usage item',
-  required: ['tier', 'modelName', 'modelProvider', 'inputTokens', 'outputTokens'],
+  required: ['modelName', 'modelProvider', 'inputTokens', 'outputTokens'],
   properties: {
-    tier: {
-      type: 'string',
-      description: 'Model tier',
-    },
     modelName: {
       type: 'string',
       description: 'Model name',
@@ -1597,6 +1593,10 @@ export const TokenUsageItemSchema = {
     outputTokens: {
       type: 'number',
       description: 'Output tokens',
+    },
+    tier: {
+      type: 'string',
+      description: 'Model tier',
     },
   },
 } as const;
@@ -2143,12 +2143,51 @@ export const OperationModeSchema = {
   enum: ['mouse', 'touchpad'],
 } as const;
 
+export const ProviderConfigSchema = {
+  type: 'object',
+  description: 'Provider config',
+  properties: {
+    providerId: {
+      type: 'string',
+      description: 'Provider ID',
+    },
+    providerKey: {
+      type: 'string',
+      description: 'Provider key',
+    },
+  },
+} as const;
+
+export const ModelSceneSchema = {
+  type: 'string',
+  description: 'Model usage scene',
+  enum: ['chat', 'queryAnalysis', 'titleGeneration'],
+} as const;
+
+export const DefaultModelConfigSchema = {
+  type: 'object',
+  description: 'Default model config',
+  properties: {
+    chat: {
+      description: 'Default chat model to use',
+      $ref: '#/components/schemas/ProviderItem',
+    },
+    queryAnalysis: {
+      description: 'Query analysis and context processing model',
+      $ref: '#/components/schemas/ProviderItem',
+    },
+    titleGeneration: {
+      description: 'Title generation model for canvas and documents',
+      $ref: '#/components/schemas/ProviderItem',
+    },
+  },
+} as const;
+
 export const UserPreferencesSchema = {
   type: 'object',
   description: 'User preferences',
   properties: {
     operationMode: {
-      type: 'string',
       description: 'Operation mode',
       $ref: '#/components/schemas/OperationMode',
     },
@@ -2156,6 +2195,22 @@ export const UserPreferencesSchema = {
       type: 'boolean',
       description: 'Whether to disable hover tutorial',
       default: false,
+    },
+    webSearch: {
+      description: 'Web search config',
+      $ref: '#/components/schemas/ProviderConfig',
+    },
+    urlParsing: {
+      description: 'URL parsing config',
+      $ref: '#/components/schemas/ProviderConfig',
+    },
+    pdfParsing: {
+      description: 'PDF parsing config',
+      $ref: '#/components/schemas/ProviderConfig',
+    },
+    defaultModel: {
+      description: 'Default model config',
+      $ref: '#/components/schemas/DefaultModelConfig',
     },
   },
 } as const;
@@ -4452,6 +4507,11 @@ export const InvokeSkillRequestSchema = {
     modelName: {
       type: 'string',
       description: 'Selected model',
+      deprecated: true,
+    },
+    modelItemId: {
+      type: 'string',
+      description: 'Selected model item ID',
     },
     skillId: {
       type: 'string',
@@ -4858,6 +4918,14 @@ export const WebSearchRequestSchema = {
     hl: {
       type: 'string',
       description: 'Language/locale code',
+    },
+    gl: {
+      type: 'string',
+      description: 'Country/region code',
+    },
+    location: {
+      type: 'string',
+      description: 'Location string',
     },
     limit: {
       type: 'number',
@@ -5344,7 +5412,7 @@ export const ModelCapabilitiesSchema = {
 
 export const ModelInfoSchema = {
   type: 'object',
-  required: ['name', 'label', 'provider', 'tier', 'contextLimit', 'maxOutput'],
+  required: ['name', 'label', 'provider', 'contextLimit', 'maxOutput'],
   properties: {
     name: {
       type: 'string',
@@ -5357,6 +5425,10 @@ export const ModelInfoSchema = {
     provider: {
       type: 'string',
       description: 'Model provider',
+    },
+    providerItemId: {
+      type: 'string',
+      description: 'Model provider item ID',
     },
     tier: {
       type: 'string',
@@ -5400,6 +5472,428 @@ export const ListModelsResponseSchema = {
       },
     },
   ],
+} as const;
+
+export const ProviderCategorySchema = {
+  type: 'string',
+  enum: ['llm', 'embedding', 'reranker', 'webSearch', 'urlParsing', 'pdfParsing'],
+} as const;
+
+export const ProviderSchema = {
+  type: 'object',
+  description: 'General provider info',
+  required: ['providerId', 'providerKey', 'categories', 'name', 'enabled'],
+  properties: {
+    providerId: {
+      type: 'string',
+      description: 'Provider ID',
+    },
+    providerKey: {
+      type: 'string',
+      description: 'Provider key',
+    },
+    name: {
+      type: 'string',
+      description: 'Provider name',
+    },
+    categories: {
+      type: 'array',
+      description: 'Provider categories',
+      items: {
+        $ref: '#/components/schemas/ProviderCategory',
+      },
+    },
+    baseUrl: {
+      type: 'string',
+      description: 'Provider base URL',
+    },
+    enabled: {
+      type: 'boolean',
+      description: 'Whether the provider is enabled',
+    },
+    isGlobal: {
+      type: 'boolean',
+      description: 'Whether the provider is global',
+    },
+    apiKey: {
+      type: 'string',
+      description: 'Provider API key (this will never be exposed to the frontend)',
+    },
+  },
+} as const;
+
+export const LLMModelConfigSchema = {
+  type: 'object',
+  description: 'Provider config for LLMs',
+  required: ['modelId', 'modelName'],
+  properties: {
+    modelId: {
+      type: 'string',
+      description: 'Model ID',
+    },
+    modelName: {
+      type: 'string',
+      description: 'Model name',
+    },
+    contextLimit: {
+      type: 'number',
+      description: 'Model context limit (in tokens)',
+    },
+    maxOutput: {
+      type: 'number',
+      description: 'Model max output length (in tokens)',
+    },
+    capabilities: {
+      description: 'Model capabilities',
+      $ref: '#/components/schemas/ModelCapabilities',
+    },
+  },
+} as const;
+
+export const EmbeddingModelConfigSchema = {
+  type: 'object',
+  description: 'Provider config for embeddings',
+  required: ['modelId'],
+  properties: {
+    modelId: {
+      type: 'string',
+      description: 'Embedding model ID',
+    },
+    modelName: {
+      type: 'string',
+      description: 'Embedding model name',
+    },
+    batchSize: {
+      type: 'number',
+      description: 'Embedding model batch size',
+    },
+    dimensions: {
+      type: 'number',
+      description: 'Embedding model dimensions',
+    },
+  },
+} as const;
+
+export const RerankerModelConfigSchema = {
+  type: 'object',
+  description: 'Provider config for rerankers',
+  required: ['modelId'],
+  properties: {
+    modelId: {
+      type: 'string',
+      description: 'Reranking model ID',
+    },
+    modelName: {
+      type: 'string',
+      description: 'Reranking model name',
+    },
+    topN: {
+      type: 'number',
+      description: 'Number of top results to return',
+    },
+    relevanceThreshold: {
+      type: 'number',
+      description: 'Minimum relevance score threshold (0.0-1.0)',
+    },
+  },
+} as const;
+
+export const ProviderItemConfigSchema = {
+  oneOf: [
+    {
+      $ref: '#/components/schemas/LLMModelConfig',
+    },
+    {
+      $ref: '#/components/schemas/EmbeddingModelConfig',
+    },
+    {
+      $ref: '#/components/schemas/RerankerModelConfig',
+    },
+  ],
+} as const;
+
+export const ProviderItemOptionSchema = {
+  type: 'object',
+  properties: {
+    name: {
+      type: 'string',
+      description: 'Provider item name',
+    },
+    category: {
+      description: 'Provider category',
+      $ref: '#/components/schemas/ProviderCategory',
+    },
+    tier: {
+      type: 'string',
+      description: 'Provider item tier',
+      $ref: '#/components/schemas/ModelTier',
+    },
+    config: {
+      type: 'object',
+      description: 'Provider item config',
+      $ref: '#/components/schemas/ProviderItemConfig',
+    },
+  },
+} as const;
+
+export const ProviderItemSchema = {
+  type: 'object',
+  required: ['itemId', 'name', 'providerId', 'category', 'enabled'],
+  properties: {
+    itemId: {
+      type: 'string',
+      description: 'Provider item ID',
+    },
+    name: {
+      type: 'string',
+      description: 'Provider item name',
+    },
+    enabled: {
+      type: 'boolean',
+      description: 'Whether the provider item is enabled',
+    },
+    category: {
+      description: 'Provider category',
+      $ref: '#/components/schemas/ProviderCategory',
+    },
+    tier: {
+      description: 'Provider item tier',
+      $ref: '#/components/schemas/ModelTier',
+    },
+    providerId: {
+      type: 'string',
+      description: 'Provider ID',
+    },
+    provider: {
+      type: 'object',
+      description: 'Provider detail info',
+      $ref: '#/components/schemas/Provider',
+    },
+    config: {
+      description: 'Provider item config',
+      $ref: '#/components/schemas/ProviderItemConfig',
+    },
+    order: {
+      type: 'number',
+      description: 'Provider item order',
+    },
+  },
+} as const;
+
+export const ListProvidersResponseSchema = {
+  allOf: [
+    {
+      $ref: '#/components/schemas/BaseResponse',
+    },
+    {
+      type: 'object',
+      properties: {
+        data: {
+          type: 'array',
+          items: {
+            $ref: '#/components/schemas/Provider',
+          },
+        },
+      },
+    },
+  ],
+} as const;
+
+export const UpsertProviderRequestSchema = {
+  type: 'object',
+  properties: {
+    providerId: {
+      type: 'string',
+      description: 'Provider ID (only for update)',
+    },
+    providerKey: {
+      type: 'string',
+      description: 'Provider key',
+    },
+    name: {
+      type: 'string',
+      description: 'Provider name',
+    },
+    categories: {
+      type: 'array',
+      description: 'Provider categories',
+      items: {
+        $ref: '#/components/schemas/ProviderCategory',
+      },
+    },
+    apiKey: {
+      type: 'string',
+      description: 'Provider API key',
+    },
+    baseUrl: {
+      type: 'string',
+      description: 'Provider base URL',
+    },
+    enabled: {
+      type: 'boolean',
+      description: 'Whether the provider is enabled',
+    },
+  },
+} as const;
+
+export const UpsertProviderResponseSchema = {
+  allOf: [
+    {
+      $ref: '#/components/schemas/BaseResponse',
+    },
+    {
+      type: 'object',
+      properties: {
+        data: {
+          $ref: '#/components/schemas/Provider',
+        },
+      },
+    },
+  ],
+} as const;
+
+export const DeleteProviderRequestSchema = {
+  type: 'object',
+  required: ['providerId'],
+  properties: {
+    providerId: {
+      type: 'string',
+      description: 'Provider ID',
+    },
+  },
+} as const;
+
+export const ListProviderItemOptionsResponseSchema = {
+  allOf: [
+    {
+      $ref: '#/components/schemas/BaseResponse',
+    },
+    {
+      type: 'object',
+      properties: {
+        data: {
+          type: 'array',
+          items: {
+            $ref: '#/components/schemas/ProviderItemOption',
+          },
+        },
+      },
+    },
+  ],
+} as const;
+
+export const ListProviderItemsResponseSchema = {
+  allOf: [
+    {
+      $ref: '#/components/schemas/BaseResponse',
+    },
+    {
+      type: 'object',
+      properties: {
+        data: {
+          type: 'array',
+          items: {
+            $ref: '#/components/schemas/ProviderItem',
+          },
+        },
+      },
+    },
+  ],
+} as const;
+
+export const UpsertProviderItemRequestSchema = {
+  type: 'object',
+  properties: {
+    itemId: {
+      type: 'string',
+      description: 'Provider item ID (only for update)',
+    },
+    providerId: {
+      type: 'string',
+      description: 'Provider ID',
+    },
+    name: {
+      type: 'string',
+      description: 'Provider item name',
+    },
+    category: {
+      description: 'Provider category',
+      $ref: '#/components/schemas/ProviderCategory',
+    },
+    enabled: {
+      type: 'boolean',
+      description: 'Whether the provider item is enabled',
+    },
+    config: {
+      description: 'Provider item config',
+      $ref: '#/components/schemas/ProviderItemConfig',
+    },
+    order: {
+      type: 'number',
+      description: 'Provider item order',
+    },
+  },
+} as const;
+
+export const UpsertProviderItemResponseSchema = {
+  allOf: [
+    {
+      $ref: '#/components/schemas/BaseResponse',
+    },
+    {
+      type: 'object',
+      properties: {
+        data: {
+          $ref: '#/components/schemas/ProviderItem',
+        },
+      },
+    },
+  ],
+} as const;
+
+export const BatchUpsertProviderItemsRequestSchema = {
+  type: 'object',
+  required: ['items'],
+  properties: {
+    items: {
+      type: 'array',
+      description: 'Provider items to upsert',
+      items: {
+        $ref: '#/components/schemas/UpsertProviderItemRequest',
+      },
+    },
+  },
+} as const;
+
+export const BatchUpsertProviderItemsResponseSchema = {
+  allOf: [
+    {
+      $ref: '#/components/schemas/BaseResponse',
+    },
+    {
+      type: 'object',
+      properties: {
+        data: {
+          type: 'array',
+          description: 'Upserted provider items',
+          items: {
+            $ref: '#/components/schemas/ProviderItem',
+          },
+        },
+      },
+    },
+  ],
+} as const;
+
+export const DeleteProviderItemRequestSchema = {
+  type: 'object',
+  required: ['itemId'],
+  properties: {
+    itemId: {
+      type: 'string',
+      description: 'Provider item ID',
+    },
+  },
 } as const;
 
 export const DocumentInterfaceSchema = {

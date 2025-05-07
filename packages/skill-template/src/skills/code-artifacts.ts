@@ -105,7 +105,14 @@ export class CodeArtifacts extends BaseSkill {
 
   commonPreprocess = async (state: GraphState, config: SkillRunnableConfig) => {
     const { messages = [], images = [] } = state;
-    const { locale = 'en', modelInfo, tplConfig, project, runtimeConfig } = config.configurable;
+    const {
+      locale = 'en',
+      modelConfigMap,
+      tplConfig,
+      project,
+      runtimeConfig,
+    } = config.configurable;
+    const modelInfo = modelConfigMap.chat;
 
     // Get project-specific customInstructions if available
     const customInstructions = project?.customInstructions;
@@ -247,7 +254,7 @@ export class CodeArtifacts extends BaseSkill {
       originalQuery: originalQuery,
       optimizedQuery: enhancedQuery, // Use enhanced query with instructions
       rewrittenQueries,
-      modelInfo: config.configurable.modelInfo,
+      modelInfo,
       customInstructions,
     });
 

@@ -1,12 +1,11 @@
 import { Module } from '@nestjs/common';
 import { CommonModule } from '../common/common.module';
 import { RAGService } from './rag.service';
-import { RagController } from './rag.controller';
+import { ProviderModule } from '@/modules/provider/provider.module';
 
 @Module({
-  imports: [CommonModule],
+  imports: [CommonModule, ProviderModule],
   providers: [RAGService],
   exports: [RAGService],
-  controllers: [RagController],
 })
 export class RAGModule {}

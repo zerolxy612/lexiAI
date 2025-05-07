@@ -43,7 +43,7 @@ export class LibrarySearch extends BaseSkill {
     config: SkillRunnableConfig,
   ): Promise<Partial<GraphState>> => {
     const { messages = [], images = [] } = state;
-    const { locale = 'en', currentSkill, project } = config.configurable;
+    const { locale = 'en', currentSkill, project, modelConfigMap } = config.configurable;
 
     // Extract customInstructions from project if available
     const customInstructions = project?.customInstructions;
@@ -163,7 +163,7 @@ export class LibrarySearch extends BaseSkill {
       originalQuery: query,
       optimizedQuery,
       rewrittenQueries,
-      modelInfo: config?.configurable?.modelInfo,
+      modelInfo: modelConfigMap.chat,
       customInstructions,
     });
 

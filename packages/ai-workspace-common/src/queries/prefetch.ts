@@ -30,6 +30,9 @@ import {
   listModels,
   listPages,
   listProjects,
+  listProviderItemOptions,
+  listProviderItems,
+  listProviders,
   listResources,
   listShares,
   listSkillInstances,
@@ -57,6 +60,9 @@ import {
   ListLabelInstancesData,
   ListPagesData,
   ListProjectsData,
+  ListProviderItemOptionsData,
+  ListProviderItemsData,
+  ListProvidersData,
   ListResourcesData,
   ListSharesData,
   ListSkillInstancesData,
@@ -319,6 +325,30 @@ export const prefetchUseListModels = (
   queryClient.prefetchQuery({
     queryKey: Common.UseListModelsKeyFn(clientOptions),
     queryFn: () => listModels({ ...clientOptions }).then((response) => response.data),
+  });
+export const prefetchUseListProviders = (
+  queryClient: QueryClient,
+  clientOptions: Options<ListProvidersData, true> = {},
+) =>
+  queryClient.prefetchQuery({
+    queryKey: Common.UseListProvidersKeyFn(clientOptions),
+    queryFn: () => listProviders({ ...clientOptions }).then((response) => response.data),
+  });
+export const prefetchUseListProviderItems = (
+  queryClient: QueryClient,
+  clientOptions: Options<ListProviderItemsData, true> = {},
+) =>
+  queryClient.prefetchQuery({
+    queryKey: Common.UseListProviderItemsKeyFn(clientOptions),
+    queryFn: () => listProviderItems({ ...clientOptions }).then((response) => response.data),
+  });
+export const prefetchUseListProviderItemOptions = (
+  queryClient: QueryClient,
+  clientOptions: Options<ListProviderItemOptionsData, true>,
+) =>
+  queryClient.prefetchQuery({
+    queryKey: Common.UseListProviderItemOptionsKeyFn(clientOptions),
+    queryFn: () => listProviderItemOptions({ ...clientOptions }).then((response) => response.data),
   });
 export const prefetchUseServeStatic = (
   queryClient: QueryClient,
