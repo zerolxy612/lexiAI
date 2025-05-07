@@ -15,6 +15,7 @@ interface DocumentContextType {
   provider: HocuspocusProvider | null;
   localProvider: IndexeddbPersistence | null;
   isLoading: boolean;
+  isShareDocumentLoading: boolean;
   readonly: boolean;
 }
 
@@ -55,7 +56,8 @@ export const DocumentProvider = ({
     }));
 
   // Fetch document data from API when in readonly mode
-  const { data: documentData } = useFetchShareData<Document>(shareId);
+  const { data: documentData, loading: isShareDocumentLoading } =
+    useFetchShareData<Document>(shareId);
 
   // Set document data from API response when in readonly mode
   useEffect(() => {
@@ -244,9 +246,10 @@ export const DocumentProvider = ({
       localProvider,
       ydoc: doc,
       isLoading,
+      isShareDocumentLoading,
       readonly,
     }),
-    [docId, provider, localProvider, doc, isLoading, readonly],
+    [docId, provider, localProvider, doc, isLoading, readonly, isShareDocumentLoading],
   );
 
   return <DocumentContext.Provider value={value}>{children}</DocumentContext.Provider>;
