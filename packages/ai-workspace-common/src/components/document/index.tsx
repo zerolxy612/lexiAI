@@ -413,7 +413,7 @@ const DocumentEditorHeader = memo(
 const DocumentBody = memo(
   ({ docId }: { docId: string }) => {
     const { t } = useTranslation();
-    const { readonly, isLoading, provider } = useDocumentContext();
+    const { readonly, isLoading, isShareDocumentLoading, provider } = useDocumentContext();
     const [searchParams] = useSearchParams();
     const isMaximized = searchParams.get('isMaximized') === 'true';
 
@@ -428,7 +428,7 @@ const DocumentBody = memo(
         <Spin
           className="document-editor-spin"
           tip={t('knowledgeBase.note.connecting')}
-          loading={isStillLoading}
+          loading={readonly ? isShareDocumentLoading : isStillLoading}
           style={{ height: '100%', width: '100%' }}
         >
           <div className="ai-note-editor">
