@@ -251,8 +251,19 @@ export class Agent extends BaseSkill {
     return { messages: [responseMessage] };
   };
 
+  private _cachedSetup: {
+    model: any;
+    toolNode: ToolNode;
+    mcpTools: any[];
+  } | null = null;
+
   async setupAgent() {
-    // 初始化MCP客户端
+    // Return cached setup if available
+    if (this._cachedSetup) {
+      return this._cachedSetup;
+    }
+
+    // Initialize MCP client
     const client = new MultiServerMCPClient({
       calc: {
         type: 'sse',
@@ -280,40 +291,46 @@ export class Agent extends BaseSkill {
       },
     });
 
-    console.log('Initializing MCP client...');
+    // Initialize client and get tools in parallel
+    const [mcpTools] = await Promise.all([
+      client.getTools().catch((error) => {
+        this.engine.logger.error('Failed to get MCP tools:', error);
+        throw new Error('Failed to initialize MCP tools');
+      }),
+    ]);
 
-    // 获取工具
-    const mcpTools = await client.getTools();
-
-    if (mcpTools.length === 0) {
+    if (!mcpTools?.length) {
       throw new Error('No tools found');
     }
 
-    console.log(
+    this.engine.logger.log(
       `Loaded ${mcpTools.length} MCP tools: ${mcpTools.map((tool) => tool.name).join(', ')}`,
     );
 
-    // 创建模型和工具节点
+    // Create model and tool node
     const model = this.engine.chatModel({ temperature: 0.1 }).bindTools(mcpTools);
     const toolNode = new ToolNode(mcpTools);
 
-    return { model, toolNode, mcpTools };
+    // Cache the setup
+    this._cachedSetup = { model, toolNode, mcpTools };
+
+    return this._cachedSetup;
   }
 
-  // LLM节点 - 处理消息并调用模型
+  // LLM node - Process messages and call model
   agentNode = async (state: GraphState): Promise<Partial<GraphState>> => {
     const { model, toolNode, mcpTools } = await this.setupAgent();
 
     console.log('\n=== CREATING LANGGRAPH AGENT FLOW ===');
 
-    // 定义LLM节点函数
+    // Define LLM node function
     const llmNode = async (nodeState: typeof MessagesAnnotation.State) => {
       console.log('Calling LLM with messages:', nodeState.messages.length);
       const response = await model.invoke(nodeState.messages);
       return { messages: [response] };
     };
 
-    // 创建工作流
+    // Create workflow
     const workflow = new StateGraph(MessagesAnnotation)
       .addNode('llm', llmNode)
       .addNode('tools', toolNode)
@@ -330,7 +347,7 @@ export class Agent extends BaseSkill {
         return END;
       });
 
-    // 编译和执行工作流
+    // Compile and execute workflow
     const app = workflow.compile();
 
     const systemPrompt = buildSystemPrompt(
@@ -347,7 +364,7 @@ export class Agent extends BaseSkill {
   };
 
   toRunnable(): Runnable {
-    // 创建一个简单的线性工作流
+    // Create a simple linear workflow
     const workflow = new StateGraph<GraphState>({
       channels: this.graphState,
     })
