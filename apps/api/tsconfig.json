@@ -34,6 +34,7 @@
   "references": [
     { "path": "../../packages/errors" },
     { "path": "../../packages/i18n" },
+    { "path": "../../packages/providers" },
     { "path": "../../packages/openapi-schema" },
     { "path": "../../packages/common-types" },
     { "path": "../../packages/utils" },

@@ -21,6 +21,7 @@ if (!getPreloadModules().includes('tsconfig-paths/register')) {
     '@refly/errors': path.resolve(__dirname, '../../../packages/errors/dist'),
     '@refly/common-types': path.resolve(__dirname, '../../../packages/common-types/dist'),
     '@refly/utils': path.resolve(__dirname, '../../../packages/utils/dist'),
+    '@refly/providers': path.resolve(__dirname, '../../../packages/providers/dist'),
     '@refly/skill-template': path.resolve(__dirname, '../../../packages/skill-template/dist'),
     '@': __dirname,
   });
