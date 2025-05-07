@@ -56,13 +56,5 @@
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": ["biome check --write"],
     "*.json": ["biome format --write"]
-  },
-  "dependencies": {
-    "@types/react-beautiful-dnd": "^13.1.8",
-    "@types/react-virtualized-auto-sizer": "^1.0.8",
-    "@types/react-window": "^1.8.8",
-    "react-beautiful-dnd": "^13.1.1",
-    "react-virtualized-auto-sizer": "^1.0.26",
-    "react-window": "^1.8.11"
   }
 }
