@@ -9,7 +9,7 @@ const BIN_DIR = path.join(__dirname, '..', 'dist-electron', 'bin');
 const BINARY_URLS = {
   win32: 'https://static.refly.ai/windows-amd64-redis-qdrant-bin.zip',
   linux: 'https://static.refly.ai/linux-amd64-redis-qdrant-bin.zip',
-  darwin: 'https://static.refly.ai/mac-arm-redis-qdrant-bin.zip', // Mac uses Linux binaries
+  darwin: 'https://static.refly.ai/darwin-arm64-redis-qdrant-bin.zip',
 };
 
 function formatBytes(bytes, decimals = 2) {
