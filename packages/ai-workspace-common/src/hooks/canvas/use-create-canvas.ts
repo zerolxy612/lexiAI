@@ -8,9 +8,10 @@ import getClient from '@refly-packages/ai-workspace-common/requests/proxiedReque
 import { DATA_NUM } from '@refly-packages/ai-workspace-common/hooks/use-handle-sider-data';
 
 export const useCreateCanvas = ({
+  source,
   projectId,
   afterCreateSuccess,
-}: { projectId?: string; afterCreateSuccess?: () => void } = {}) => {
+}: { source?: string; projectId?: string; afterCreateSuccess?: () => void } = {}) => {
   const [isCreating, setIsCreating] = useState(false);
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -54,9 +55,9 @@ export const useCreateCanvas = ({
 
       message.success(t('canvas.action.addSuccess'));
       if (projectId) {
-        navigate(`/project/${projectId}?canvasId=${canvasId}`);
+        navigate(`/project/${projectId}?canvasId=${canvasId}${source ? `&source=${source}` : ''}`);
       } else {
-        navigate(`/canvas/${canvasId}`);
+        navigate(`/canvas/${canvasId}${source ? `?source=${source}` : ''}`);
       }
       afterCreateSuccess?.();
     },

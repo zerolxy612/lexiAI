@@ -170,7 +170,7 @@ export const ChatPanel = memo(
     const userProfile = useUserStoreShallow((state) => state.userProfile);
     const isList = mode === 'list';
     const { handleUploadImage, handleUploadMultipleImages } = useUploadImage();
-    const { canvasId } = useCanvasContext();
+    const { canvasId, readonly: canvasReadonly } = useCanvasContext();
     const contextItemsRef = useRef(contextItems);
 
     // Get setActiveResultId from context panel store
@@ -320,6 +320,7 @@ export const ChatPanel = memo(
         />
 
         <ChatInput
+          readonly={canvasReadonly}
           ref={chatInputRef}
           query={query}
           setQuery={(value) => {
@@ -343,6 +344,7 @@ export const ChatPanel = memo(
 
         {selectedSkill?.configSchema?.items?.length && setTplConfig ? (
           <ConfigManager
+            readonly={canvasReadonly}
             key={`${selectedSkill?.name}-${Object.keys(initialTplConfig).length}`}
             form={form}
             formErrors={formErrors}

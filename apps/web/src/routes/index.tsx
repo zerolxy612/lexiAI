@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { Route, Routes, useMatch } from 'react-router-dom';
+import { Route, Routes, useMatch, Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { safeParseJSON } from '@refly-packages/ai-workspace-common/utils/parse';
 import { useUserStoreShallow } from '@refly-packages/ai-workspace-common/stores/user';
@@ -104,6 +104,7 @@ export const AppRouter = (props: { layout?: any }) => {
           <Route path="/artifact-gallery" element={<ArtifactGalleryPage />} />
           <Route path="/use-cases-gallery" element={<UseCasesGalleryPage />} />
           <Route path="/preview/canvas/:shareId" element={<TemplatePreviewPage />} />
+          <Route path="/canvas/" element={<Navigate to="/canvas/empty" replace />} />
           <Route
             path="/canvas/:canvasId"
             element={<BetaProtectedRoute component={Canvas} hasBetaAccess={hasBetaAccess} />}
