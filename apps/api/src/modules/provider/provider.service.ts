@@ -583,14 +583,13 @@ export class ProviderService {
     }
 
     // Validate config if provider is global
-    let finalConfig = config;
+    let option: ProviderItemOption | null = null;
     if (provider.isGlobal) {
       const options = await this.listProviderItemOptions(user, { providerId, category });
-      const option = options.find((option) => option.config?.modelId === config?.modelId);
+      option = options.find((option) => option.config?.modelId === config?.modelId);
       if (!option) {
         throw new ParamsError(`Unknown provider item modelId: ${config?.modelId}`);
       }
-      finalConfig = option.config;
     }
 
     const itemId = genProviderItemID();
@@ -604,7 +603,8 @@ export class ProviderService {
         enabled,
         order,
         uid: user.uid,
-        config: JSON.stringify(finalConfig),
+        tier: option?.tier,
+        config: JSON.stringify(option?.config ?? config),
       },
     });
   }

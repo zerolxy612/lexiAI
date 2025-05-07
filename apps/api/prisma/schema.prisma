@@ -169,6 +169,8 @@ model ActionStep {
   content          String    @map("content")
   /// Step reasoning content
   reasoningContent String?   @map("reasoning_content")
+  /// Model tier
+  tier             String?   @default("") @map("tier")
   /// Structured data output (JSON)
   structuredData   String    @default("{}") @map("structured_data")
   /// Action logs

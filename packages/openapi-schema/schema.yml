@@ -3735,15 +3735,11 @@ components:
       type: object
       description: Token usage item
       required:
-        - tier
         - modelName
         - modelProvider
         - inputTokens
         - outputTokens
       properties:
-        tier:
-          type: string
-          description: Model tier
         modelName:
           type: string
           description: Model name
@@ -3756,6 +3752,9 @@ components:
         outputTokens:
           type: number
           description: Output tokens
+        tier:
+          type: string
+          description: Model tier
     ActionStatus:
       type: string
       description: Action status

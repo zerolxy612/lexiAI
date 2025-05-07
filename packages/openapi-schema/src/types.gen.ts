@@ -1223,10 +1223,6 @@ export type ModelTier = 't1' | 't2' | 'free';
  */
 export type TokenUsageItem = {
   /**
-   * Model tier
-   */
-  tier: string;
-  /**
    * Model name
    */
   modelName: string;
@@ -1242,6 +1238,10 @@ export type TokenUsageItem = {
    * Output tokens
    */
   outputTokens: number;
+  /**
+   * Model tier
+   */
+  tier?: string;
 };
 
 /**

@@ -1576,12 +1576,8 @@ export const ModelTierSchema = {
 export const TokenUsageItemSchema = {
   type: 'object',
   description: 'Token usage item',
-  required: ['tier', 'modelName', 'modelProvider', 'inputTokens', 'outputTokens'],
+  required: ['modelName', 'modelProvider', 'inputTokens', 'outputTokens'],
   properties: {
-    tier: {
-      type: 'string',
-      description: 'Model tier',
-    },
     modelName: {
       type: 'string',
       description: 'Model name',
@@ -1597,6 +1593,10 @@ export const TokenUsageItemSchema = {
     outputTokens: {
       type: 'number',
       description: 'Output tokens',
+    },
+    tier: {
+      type: 'string',
+      description: 'Model tier',
     },
   },
 } as const;
