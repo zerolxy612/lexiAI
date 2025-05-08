@@ -24,6 +24,17 @@ services:
     extends:
       file: docker-compose.yml
       service: api
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
     environment:
       - FULLTEXT_SEARCH_BACKEND=elasticsearch
       - ELASTICSEARCH_URL=http://elasticsearch:9200

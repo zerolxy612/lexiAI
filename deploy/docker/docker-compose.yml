@@ -5,8 +5,6 @@ services:
     image: reflyai/refly-api:latest
     container_name: refly_api
     depends_on:
-      elasticsearch:
-        condition: service_healthy
       db:
         condition: service_healthy
       minio:
