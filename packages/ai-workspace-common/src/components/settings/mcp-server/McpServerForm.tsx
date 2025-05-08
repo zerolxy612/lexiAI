@@ -105,10 +105,83 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
     setFormData(values);
   };
 
-  // Handle JSON editor changes to update form
-  const handleJsonChange = (newData: McpServerFormData) => {
-    setFormData(newData);
-    form.setFieldsValue(newData);
+  // 将 Refly 格式转换为通用格式
+  const convertToUniversalFormat = (server: McpServerFormData): any => {
+    const mcpServers: Record<string, any> = {};
+
+    mcpServers[server.name] = {
+      type: server.type,
+      description: server.config?.description || '',
+      isActive: server.enabled,
+      baseUrl: server.url || '',
+      command: server.command || '',
+      args: server.args || [],
+      env: server.env || {},
+    };
+
+    return { mcpServers };
+  };
+
+  // 将通用格式转换为 Refly 格式
+  const convertToReflyFormat = (data: any): McpServerFormData => {
+    // 如果数据已经是 McpServerFormData 格式，直接返回
+    if (!data.mcpServers && typeof data === 'object') {
+      return data as McpServerFormData;
+    }
+
+    // 如果数据有 mcpServers 属性，说明是通用格式
+    if (data?.mcpServers && typeof data.mcpServers === 'object') {
+      // 只取第一个服务器，因为表单只能编辑一个服务器
+      const entries = Object.entries(data.mcpServers);
+      if (entries.length > 0) {
+        const [name, serverConfig] = entries[0] as [string, any];
+
+        // 映射通用格式字段到 Refly 格式
+        const server: McpServerFormData = {
+          name: name,
+          type: mapServerType(serverConfig.type),
+          enabled: serverConfig.isActive ?? true,
+          url: serverConfig.baseUrl || '',
+          command: serverConfig.command || '',
+          args: serverConfig.args || [],
+          env: serverConfig.env || {},
+          headers: serverConfig.headers || {},
+          reconnect: { enabled: false },
+          config: {},
+        };
+
+        // 如果有描述，添加到 config 中
+        if (serverConfig.description) {
+          server.config = { ...server.config, description: serverConfig.description };
+        }
+
+        return server;
+      }
+    }
+
+    // 如果无法转换，返回原始数据
+    return formData;
+  };
+
+  // 将服务器类型从通用格式映射到 Refly 格式
+  const mapServerType = (type: string): McpServerType => {
+    const typeMap: Record<string, McpServerType> = {
+      sse: 'sse',
+      streamable: 'streamable',
+      streamableHttp: 'streamable',
+      stdio: 'stdio',
+      inMemory: 'sse', // 将 inMemory 映射为 sse 作为后备
+    };
+
+    return type && typeMap[type] ? typeMap[type] : 'sse';
+  };
+
+  // 处理 JSON 编辑器变更
+  const handleJsonChange = (newData: any) => {
+    // 将通用格式转换为 Refly 格式
+    const reflyData = convertToReflyFormat(newData);
+    setFormData(reflyData);
+    form.setFieldsValue(reflyData);
   };
 
   // Handle server type change
@@ -363,7 +436,10 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
           }
           key="json"
         >
-          <McpServerJsonEditor value={formData} onChange={handleJsonChange} />
+          <McpServerJsonEditor
+            value={convertToUniversalFormat(formData)}
+            onChange={handleJsonChange}
+          />
           <div className="mt-4">
             <Space>
               <Button
