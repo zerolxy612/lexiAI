@@ -21,7 +21,7 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
   const [serverToDelete, setServerToDelete] = useState<McpServerDTO | null>(null);
 
   // Fetch MCP servers
-  const { data } = useListMcpServersSuspense({}, [], {
+  const { data, refetch } = useListMcpServersSuspense({}, [], {
     enabled: visible,
     refetchOnWindowFocus: false,
   });
@@ -33,6 +33,8 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
     onSuccess: () => {
       message.success(t('settings.mcpServer.deleteSuccess'));
       setDeleteModalVisible(false);
+      // 刷新列表数据
+      refetch();
     },
     onError: (error) => {
       message.error(t('settings.mcpServer.deleteError'));
@@ -45,6 +47,8 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
     // Form submission is handled in the form component
     setIsFormVisible(false);
     setEditingServer(null);
+    // 刷新列表数据
+    refetch();
   };
 
   // Handle edit button click
