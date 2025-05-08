@@ -6,23 +6,29 @@ interface FrontPageState {
   selectedSkill: Skill | null;
   tplConfig: SkillTemplateConfig | null;
   runtimeConfig: SkillRuntimeConfig | null;
-  setQuery: (query: string) => void;
-  setSelectedSkill: (skill: Skill | null) => void;
-  setTplConfig: (tplConfig: SkillTemplateConfig | null) => void;
-  setRuntimeConfig: (runtimeConfig: SkillRuntimeConfig | null) => void;
-  reset: () => void;
+  setQuery?: (query: string) => void;
+  setSelectedSkill?: (skill: Skill | null) => void;
+  setTplConfig?: (tplConfig: SkillTemplateConfig | null) => void;
+  setRuntimeConfig?: (runtimeConfig: SkillRuntimeConfig | null) => void;
+  reset?: () => void;
 }
 
-export const useFrontPageStore = create<FrontPageState>((set) => ({
+const initialState: FrontPageState = {
   query: '',
   selectedSkill: null,
   tplConfig: null,
-  runtimeConfig: null,
+  runtimeConfig: { disableLinkParsing: true, enabledKnowledgeBase: false },
+};
+
+export const useFrontPageStore = create<FrontPageState>((set) => ({
+  ...initialState,
   setQuery: (query) => set({ query }),
   setSelectedSkill: (selectedSkill) => set({ selectedSkill }),
-  setTplConfig: (tplConfig) => set({ tplConfig }),
+  setTplConfig: (tplConfig) => {
+    set({ tplConfig });
+  },
   setRuntimeConfig: (runtimeConfig) => set({ runtimeConfig }),
-  reset: () => set({ query: '', selectedSkill: null, tplConfig: null, runtimeConfig: null }),
+  reset: () => set(initialState),
 }));
 
 export const useFrontPageStoreShallow = (selector: (state: FrontPageState) => any) => {

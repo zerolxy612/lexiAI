@@ -11,12 +11,16 @@ import { Button } from 'antd';
 import { ConfigManager } from '@refly-packages/ai-workspace-common/components/canvas/launchpad/config-manager';
 import { Actions } from './action';
 import { useChatStoreShallow } from '@refly-packages/ai-workspace-common/stores/chat';
-import { EmptyThreadWelcome } from '@refly-packages/ai-workspace-common/components/canvas/refly-pilot/linear-thread';
+import { useUserStoreShallow } from '@refly-packages/ai-workspace-common/stores/user';
 
 export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
   const { t } = useTranslation();
   const [form] = Form.useForm();
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  const { userProfile } = useUserStoreShallow((state) => ({
+    userProfile: state.userProfile,
+  }));
 
   const { skillSelectedModel, setSkillSelectedModel } = useChatStoreShallow((state) => ({
     skillSelectedModel: state.skillSelectedModel,
@@ -76,8 +80,14 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
   return (
     <div className="flex flex-col items-center justify-center w-full h-full p-6">
       <div className="w-full max-w-4xl mx-auto">
-        <div className="h-60">
-          <EmptyThreadWelcome />
+        <div>
+          <h3 className="text-xl font-semibold text-center text-gray-800 mb-1">
+            {t('canvas.reflyPilot.welcome.title', { name: userProfile?.nickname || '' })}
+          </h3>
+
+          <p className="text-base text-center text-gray-600 mb-6">
+            {t('canvas.reflyPilot.welcome.subtitle')}
+          </p>
         </div>
 
         <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200 p-4">
@@ -114,7 +124,6 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
               handleSendMessage={handleSendMessage}
               handleSelectSkill={handleSelectSkill}
               maxRows={6}
-              minRows={2}
               inputClassName="px-3 py-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
 

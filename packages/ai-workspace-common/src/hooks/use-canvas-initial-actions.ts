@@ -15,6 +15,7 @@ export const useCanvasInitialActions = (canvasId: string) => {
       query: state.query,
       selectedSkill: state.selectedSkill,
       runtimeConfig: state.runtimeConfig,
+      tplConfig: state.tplConfig,
       reset: state.reset,
     }),
   );
@@ -41,6 +42,8 @@ export const useCanvasInitialActions = (canvasId: string) => {
         canvasId,
         query,
         selectedSkill,
+        tplConfig,
+        runtimeConfig,
       });
 
       const resultId = genActionResultID();
