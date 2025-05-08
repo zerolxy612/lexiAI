@@ -27,6 +27,7 @@ import { CollabModule } from './collab/collab.module';
 import { ActionModule } from './action/action.module';
 import { RedisService } from './common/redis.service';
 import { ShareModule } from './share/share.module';
+import { ProviderModule } from './provider/provider.module';
 import { TemplateModule } from './template/template.module';
 import { CodeArtifactModule } from './code-artifact/code-artifact.module';
 import { PagesModule } from './pages/pages.module';
@@ -127,6 +128,7 @@ class CustomThrottlerGuard extends ThrottlerGuard {
     CollabModule,
     ActionModule,
     ShareModule,
+    ProviderModule,
     TemplateModule,
     CodeArtifactModule,
     PagesModule,

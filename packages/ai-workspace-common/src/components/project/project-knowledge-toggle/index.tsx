@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Switch, Tooltip, Select, Spin, Avatar } from 'antd';
-import { LuBrain, LuCheck } from 'react-icons/lu';
+import { Switch, Tooltip, Select, Spin, Avatar, Button } from 'antd';
+import { LuBrain, LuCheck, LuPlus } from 'react-icons/lu';
 import { FiHelpCircle } from 'react-icons/fi';
 import { useTranslation } from 'react-i18next';
 import { IconDown, IconProject } from '@refly-packages/ai-workspace-common/components/common/icon';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 import { Project } from '@refly/openapi-schema';
 import { useContextPanelStoreShallow } from '@refly-packages/ai-workspace-common/stores/context-panel';
+import { CreateProjectModal } from '@refly-packages/ai-workspace-common/components/project/project-create';
 import './index.scss';
 
 // Custom styles for switch component
@@ -39,6 +40,7 @@ export const ProjectKnowledgeToggle: React.FC<ProjectKnowledgeToggleProps> = ({
   const [projects, setProjects] = useState<Project[]>([]);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [selectOpen, setSelectOpen] = useState(false);
+  const [createProjectModalVisible, setCreateProjectModalVisible] = useState(false);
 
   const { setRuntimeConfig, enabledKnowledgeBase } = useContextPanelStoreShallow((state) => ({
     setRuntimeConfig: state.setRuntimeConfig,
@@ -46,30 +48,30 @@ export const ProjectKnowledgeToggle: React.FC<ProjectKnowledgeToggleProps> = ({
   }));
 
   // Fetch project list
-  useEffect(() => {
-    const fetchProjects = async () => {
-      setLoading(true);
-      try {
-        const res = await getClient().listProjects({
-          query: { pageSize: 100 },
-        });
+  const fetchProjects = async () => {
+    setLoading(true);
+    try {
+      const res = await getClient().listProjects({
+        query: { pageSize: 100 },
+      });
 
-        if (res?.data?.data) {
-          setProjects(res.data.data);
+      if (res?.data?.data) {
+        setProjects(res.data.data);
 
-          // Set current project
-          const current = res.data.data.find((p) => p.projectId === currentProjectId);
-          if (current) {
-            setCurrentProject(current);
-          }
+        // Set current project
+        const current = res.data.data.find((p) => p.projectId === currentProjectId);
+        if (current) {
+          setCurrentProject(current);
         }
-      } catch (error) {
-        console.error('Failed to fetch projects:', error);
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (error) {
+      console.error('Failed to fetch projects:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchProjects();
   }, [currentProjectId]);
 
@@ -119,8 +121,21 @@ export const ProjectKnowledgeToggle: React.FC<ProjectKnowledgeToggleProps> = ({
                     <div className="flex justify-center items-center py-4">
                       <Spin size="small" />
                     </div>
-                  ) : (
+                  ) : projects.length > 0 ? (
                     menu
+                  ) : (
+                    <div className="py-4 px-3 flex flex-col items-center justify-center">
+                      <div className="text-sm text-gray-500 mb-2">{t('project.noProjects')}</div>
+                      <Button
+                        type="primary"
+                        size="small"
+                        className="bg-[#00968F] hover:bg-[#007F7A] flex items-center"
+                        icon={<LuPlus size={14} />}
+                        onClick={() => setCreateProjectModalVisible(true)}
+                      >
+                        {t('project.create')}
+                      </Button>
+                    </div>
                   )}
                 </div>
               )}
@@ -203,6 +218,15 @@ export const ProjectKnowledgeToggle: React.FC<ProjectKnowledgeToggleProps> = ({
           </Tooltip>
         </div>
       </div>
+
+      <CreateProjectModal
+        mode="create"
+        visible={createProjectModalVisible}
+        setVisible={setCreateProjectModalVisible}
+        onSuccess={() => {
+          fetchProjects();
+        }}
+      />
     </div>
   );
 };

@@ -28,6 +28,7 @@ export const ImagePreview = ({
     // Create a temporary link element
     const link = document.createElement('a');
     link.href = imageUrl;
+    link.target = '_blank';
     link.download = imageTitle ?? 'image';
     document.body.appendChild(link);
     link.click();

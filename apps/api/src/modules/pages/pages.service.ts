@@ -7,7 +7,7 @@ import { KnowledgeService } from '@/modules/knowledge/knowledge.service';
 import { ObjectStorageService, OSS_INTERNAL } from '@/modules/common/object-storage';
 import { streamToBuffer } from '@/utils';
 import { User } from '@refly/openapi-schema';
-import { PageNotFoundError } from '@refly/errors';
+import { CanvasNotFoundError, PageNotFoundError } from '@refly/errors';
 import { CodeArtifactService } from '@/modules/code-artifact/code-artifact.service';
 import { ShareService } from '@/modules/share/share.service';
 import { UpdatePageDto, ResolveUserResponse, CanvasData, NodeInfo } from './pages.dto';
@@ -392,7 +392,7 @@ export class PagesService {
     });
 
     if (!canvas) {
-      throw new Error('Canvas not found or access denied');
+      throw new CanvasNotFoundError('Canvas not found or access denied');
     }
 
     // Find page associated with canvas using canvas_id field
@@ -681,7 +681,7 @@ export class PagesService {
       // 1. Check if canvas exists and user has access
       const canvas = await this.getCanvasWithAccess(tx, canvasId, user.uid);
       if (!canvas) {
-        throw new Error('Canvas not found or access denied');
+        throw new CanvasNotFoundError('Canvas not found or access denied');
       }
 
       // 2. Find page associated with canvas

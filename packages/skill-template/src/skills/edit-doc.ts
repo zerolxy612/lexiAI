@@ -73,11 +73,12 @@ export class EditDoc extends BaseSkill {
     const {
       locale = 'en',
       chatHistory = [],
-      modelInfo,
+      modelConfigMap,
       resources,
       documents,
       contentList,
     } = config.configurable;
+    const modelInfo = modelConfigMap.chat;
 
     const { tplConfig } = config?.configurable || {};
 
@@ -98,6 +99,7 @@ export class EditDoc extends BaseSkill {
 
     // preprocess chat history, ensure chat history is not too long
     const usedChatHistory = truncateMessages(chatHistory);
+
     const isModelContextLenSupport = checkModelContextLenSupport(modelInfo);
 
     // check if there is any context
@@ -196,7 +198,7 @@ export class EditDoc extends BaseSkill {
       images,
       originalQuery: query,
       optimizedQuery,
-      modelInfo: config?.configurable?.modelInfo,
+      modelInfo,
     });
 
     return { requestMessages };

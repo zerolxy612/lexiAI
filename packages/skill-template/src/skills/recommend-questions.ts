@@ -12,6 +12,7 @@ import {
   Source,
 } from '@refly/openapi-schema';
 import { prepareContext } from '../scheduler/utils/context';
+import { DEFAULT_MODEL_CONTEXT_LIMIT } from '../scheduler/utils/constants';
 
 // Schema for recommended questions with reasoning
 const recommendQuestionsSchema = z.object({
@@ -68,10 +69,10 @@ export class RecommendQuestions extends BaseSkill {
     const {
       locale = 'en',
       chatHistory = [],
-      modelInfo,
+      modelConfigMap,
       tplConfig,
       project,
-    } = config.configurable || {};
+    } = config.configurable ?? {};
 
     // Extract customInstructions from project if available
     const customInstructions = project?.customInstructions;
@@ -93,7 +94,8 @@ export class RecommendQuestions extends BaseSkill {
     const isRefresh = tplConfig?.refresh?.value;
 
     // Process query and context using shared utilities
-    const remainingTokens = modelInfo.contextLimit;
+    const modelInfo = modelConfigMap.chat;
+    const remainingTokens = modelInfo.contextLimit || DEFAULT_MODEL_CONTEXT_LIMIT;
 
     // Truncate chat history with larger window for better context
     const usedChatHistory = truncateMessages(chatHistory, 10, 800, 4000);

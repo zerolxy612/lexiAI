@@ -61,7 +61,7 @@ export class CommonQnA extends BaseSkill {
     customInstructions?: string,
   ) => {
     const { messages = [], images = [] } = state;
-    const { locale = 'en', modelInfo, project, runtimeConfig } = config.configurable;
+    const { locale = 'en', modelConfigMap, project, runtimeConfig } = config.configurable;
 
     config.metadata.step = { name: 'analyzeQuery' };
 
@@ -129,7 +129,7 @@ export class CommonQnA extends BaseSkill {
     const hasUrlSources = urlSources.length > 0;
     const needPrepareContext =
       (hasContext || hasUrlSources || enableKnowledgeBaseSearch) && remainingTokens > 0;
-    const isModelContextLenSupport = checkModelContextLenSupport(modelInfo);
+    const isModelContextLenSupport = checkModelContextLenSupport(modelConfigMap.chat);
 
     this.engine.logger.log(`optimizedQuery: ${optimizedQuery}`);
     this.engine.logger.log(`mentionedContext: ${safeStringifyJSON(mentionedContext)}`);
@@ -178,7 +178,7 @@ export class CommonQnA extends BaseSkill {
       originalQuery: query,
       optimizedQuery,
       rewrittenQueries,
-      modelInfo: config?.configurable?.modelInfo,
+      modelInfo: modelConfigMap.chat,
       customInstructions,
     });
 

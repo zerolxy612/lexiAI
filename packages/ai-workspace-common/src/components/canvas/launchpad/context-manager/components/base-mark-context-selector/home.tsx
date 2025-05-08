@@ -35,8 +35,8 @@ export function Home({
             <p
               className="search-res-title"
               // biome-ignore lint/security/noDangerouslySetInnerHtml: trust server highlights
-              dangerouslySetInnerHTML={{ __html: item?.data?.title }}
-              title={item?.data?.title.replace(/<[^>]*>/g, '')}
+              dangerouslySetInnerHTML={{ __html: item?.data?.title ?? '' }}
+              title={item?.data?.title?.replace(/<[^>]*>/g, '')}
             />
           </div>
         </Item>

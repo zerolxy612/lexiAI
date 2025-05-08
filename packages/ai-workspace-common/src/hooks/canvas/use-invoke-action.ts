@@ -24,7 +24,6 @@ import { useActionPolling } from './use-action-polling';
 import { useFindMemo } from '@refly-packages/ai-workspace-common/hooks/canvas/use-find-memo';
 import { useUpdateActionResult } from './use-update-action-result';
 import { useSubscriptionUsage } from '../use-subscription-usage';
-import { useFindCodeArtifact } from '@refly-packages/ai-workspace-common/hooks/canvas/use-find-code-artifact';
 import { useFindImages } from '@refly-packages/ai-workspace-common/hooks/canvas/use-find-images';
 import { ARTIFACT_TAG_CLOSED_REGEX, getArtifactContentAndAttributes } from '@refly/utils/artifact';
 import { useFindWebsite } from './use-find-website';
@@ -554,7 +553,6 @@ export const useInvokeAction = () => {
   const findThreadHistory = useFindThreadHistory();
   const findMemo = useFindMemo();
   const findWebsite = useFindWebsite();
-  const findCodeArtifact = useFindCodeArtifact();
   const findImages = useFindImages();
 
   const invokeAction = useCallback(
@@ -592,15 +590,6 @@ export const useInvokeAction = () => {
           return [];
         },
         (item) => {
-          if (item.type === 'codeArtifact') {
-            return findCodeArtifact({ resultId: item.entityId }).map((node) => ({
-              content: node.data?.contentPreview ?? '',
-              title: node.data?.title ?? 'Code',
-            }));
-          }
-          return [];
-        },
-        (item) => {
           if (item.type === 'image') {
             return findImages({ resultId: item.entityId });
           }
@@ -625,6 +614,7 @@ export const useInvokeAction = () => {
         },
         target,
         modelName: modelInfo?.name,
+        modelItemId: modelInfo?.providerItemId,
         context,
         resultHistory,
         skillName: selectedSkill?.name,

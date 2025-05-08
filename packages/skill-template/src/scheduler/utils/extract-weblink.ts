@@ -1,9 +1,10 @@
 import { SkillRunnableConfig } from '../../base';
-import { Source } from '@refly/openapi-schema';
+import { Source, User } from '@refly/openapi-schema';
 import { BaseSkill } from '../../base';
 import pLimit from 'p-limit';
 import { isValidUrl, extractUrlsWithLinkify } from '@refly/utils';
 import { filterStaticResources } from './cdn-filter';
+import { Logger, SkillEngine } from '../../engine';
 
 // Default concurrency limit and batch size
 const DEFAULT_CONCURRENCY_LIMIT = 5;
@@ -26,9 +27,9 @@ const chunk = <T>(arr: T[], size: number): T[][] => {
  */
 async function crawlSingleUrl(
   url: string,
-  user: any,
-  engine: any,
-  logger: any,
+  user: User,
+  engine: SkillEngine,
+  logger: Logger,
 ): Promise<Source | null> {
   try {
     // Verify URL is valid using Node.js URL API

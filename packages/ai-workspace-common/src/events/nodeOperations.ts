@@ -20,6 +20,12 @@ export type Events = {
   closeNodePreviewByEntityId: {
     entityId: string;
   };
+  openNodeContextMenu: {
+    nodeId: string;
+    nodeType: CanvasNodeType;
+    x: number;
+    y: number;
+  };
 };
 
 export const nodeOperationsEmitter = mitt<Events>();

@@ -1,4 +1,4 @@
-import { Button, Form, Input, Upload, message } from 'antd';
+import { Button, Form, Input, Upload, message, Typography } from 'antd';
 import { useEffect, useState } from 'react';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 import { AiOutlineUser } from 'react-icons/ai';
@@ -12,6 +12,7 @@ import { useSiderStoreShallow } from '@refly-packages/ai-workspace-common/stores
 import { AiOutlineLoading3Quarters } from 'react-icons/ai';
 import { BiSolidEdit } from 'react-icons/bi';
 
+const { Title } = Typography;
 export const AccountSetting = () => {
   const [form] = Form.useForm();
   const userStore = useUserStore();
@@ -145,103 +146,108 @@ export const AccountSetting = () => {
   }, [showSettingModal]);
 
   return (
-    <div className="w-full">
-      <div className="max-w-[600px] mx-auto">
-        <Form form={form} layout="vertical">
-          <Form.Item label={t('settings.account.avatar')} name="avatar">
-            <ImgCrop
-              rotationSlider
-              modalTitle={t('settings.account.cropAvatar')}
-              modalOk={t('common.confirm')}
-              modalCancel={t('common.cancel')}
-            >
-              <Upload
-                listType="picture-circle"
-                name="avatar"
-                showUploadList={false}
-                beforeUpload={beforeUpload}
+    <div className="p-4 pt-0 h-full overflow-hidden flex flex-col">
+      <Title level={4} className="pb-4">
+        {t('settings.tabs.account')}
+      </Title>
+      <div className="w-full h-full pb-10 box-border overflow-y-auto">
+        <div className="min-w-[680px] pr-4">
+          <Form form={form} layout="vertical">
+            <Form.Item label={t('settings.account.avatar')} name="avatar">
+              <ImgCrop
+                rotationSlider
+                modalTitle={t('settings.account.cropAvatar')}
+                modalOk={t('common.confirm')}
+                modalCancel={t('common.cancel')}
               >
-                <div className="w-full h-full group relative bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
-                  {loadingAvatar && (
-                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                      <AiOutlineLoading3Quarters size={22} className="animate-spin text-white" />
-                    </div>
-                  )}
-                  {!loadingAvatar && (
-                    <div className="absolute invisible group-hover:visible inset-0 bg-black/20 flex items-center justify-center">
-                      <BiSolidEdit size={22} className="text-white" />
-                    </div>
-                  )}
-
-                  {avatarKey && !avatarError ? (
-                    <img
-                      src={avatarUrl}
-                      alt="avatar"
-                      className="w-full h-full object-cover"
-                      onError={() => {
-                        setAvatarError(true);
-                      }}
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center">
-                      <AiOutlineUser size={32} className="text-white" />
-                      <div className="text-gray-400 text-xs mt-1">
-                        {t('settings.account.uploadAvatar')}
+                <Upload
+                  listType="picture-circle"
+                  name="avatar"
+                  showUploadList={false}
+                  beforeUpload={beforeUpload}
+                >
+                  <div className="w-full h-full group relative bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
+                    {loadingAvatar && (
+                      <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                        <AiOutlineLoading3Quarters size={22} className="animate-spin text-white" />
                       </div>
-                    </div>
-                  )}
-                </div>
-              </Upload>
-            </ImgCrop>
-          </Form.Item>
+                    )}
+                    {!loadingAvatar && (
+                      <div className="absolute invisible group-hover:visible inset-0 bg-black/20 flex items-center justify-center">
+                        <BiSolidEdit size={22} className="text-white" />
+                      </div>
+                    )}
 
-          <Form.Item
-            label={t('settings.account.name')}
-            name="name"
-            required
-            validateStatus={nameStatus}
-            help={nameMessage}
-            rules={[{ required: true, message: t('settings.account.namePlaceholder') }]}
-          >
-            <Input
-              maxLength={30}
-              showCount
-              prefix="@"
-              placeholder={t('settings.account.namePlaceholder')}
-              onChange={(e) => {
-                debouncedValidateField(e.target.value, 'name');
-              }}
-            />
-          </Form.Item>
+                    {avatarKey && !avatarError ? (
+                      <img
+                        src={avatarUrl}
+                        alt="avatar"
+                        className="w-full h-full object-cover"
+                        onError={() => {
+                          setAvatarError(true);
+                        }}
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center">
+                        <AiOutlineUser size={32} className="text-white" />
+                        <div className="text-gray-400 text-xs mt-1">
+                          {t('settings.account.uploadAvatar')}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </Upload>
+              </ImgCrop>
+            </Form.Item>
 
-          <Form.Item
-            label={t('settings.account.nickname')}
-            name="nickname"
-            required
-            rules={[{ required: true, message: t('settings.account.nicknamePlaceholder') }]}
-          >
-            <Input
-              maxLength={30}
-              showCount
-              placeholder={t('settings.account.nicknamePlaceholder')}
-            />
-          </Form.Item>
+            <Form.Item
+              label={t('settings.account.name')}
+              name="name"
+              required
+              validateStatus={nameStatus}
+              help={nameMessage}
+              rules={[{ required: true, message: t('settings.account.namePlaceholder') }]}
+            >
+              <Input
+                maxLength={30}
+                showCount
+                prefix="@"
+                placeholder={t('settings.account.namePlaceholder')}
+                onChange={(e) => {
+                  debouncedValidateField(e.target.value, 'name');
+                }}
+              />
+            </Form.Item>
 
-          <Form.Item
-            label={t('settings.account.email')}
-            name="email"
-            required
-            rules={[{ required: true, message: t('settings.account.nicknamePlaceholder') }]}
-          >
-            <Input disabled placeholder={t('settings.account.emailPlaceholder')} />
-          </Form.Item>
+            <Form.Item
+              label={t('settings.account.nickname')}
+              name="nickname"
+              required
+              rules={[{ required: true, message: t('settings.account.nicknamePlaceholder') }]}
+            >
+              <Input
+                maxLength={30}
+                showCount
+                placeholder={t('settings.account.nicknamePlaceholder')}
+              />
+            </Form.Item>
 
-          <div className="flex justify-end mt-6">
-            <Button type="primary" onClick={handleUpdate} loading={loading}>
-              {t('settings.account.update')}
-            </Button>
-          </div>
-        </Form>
+            <Form.Item
+              label={t('settings.account.email')}
+              name="email"
+              required
+              rules={[{ required: true, message: t('settings.account.nicknamePlaceholder') }]}
+            >
+              <Input disabled placeholder={t('settings.account.emailPlaceholder')} />
+            </Form.Item>
+
+            <div className="flex justify-end mt-6">
+              <Button type="primary" onClick={handleUpdate} loading={loading}>
+                {t('settings.account.update')}
+              </Button>
+            </div>
+          </Form>
+        </div>
       </div>
     </div>
   );

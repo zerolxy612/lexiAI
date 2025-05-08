@@ -6,8 +6,10 @@ import {
   addNodesToCanvasPage,
   addReferences,
   autoNameCanvas,
+  batchCreateProviderItems,
   batchCreateResource,
   batchUpdateDocument,
+  batchUpdateProviderItems,
   checkSettingsField,
   checkVerification,
   convert,
@@ -20,6 +22,8 @@ import {
   createLabelInstance,
   createPortalSession,
   createProject,
+  createProvider,
+  createProviderItem,
   createResource,
   createResourceWithFile,
   createShare,
@@ -34,6 +38,8 @@ import {
   deletePageNode,
   deleteProject,
   deleteProjectItems,
+  deleteProvider,
+  deleteProviderItem,
   deleteReferences,
   deleteResource,
   deleteShare,
@@ -71,6 +77,9 @@ import {
   listModels,
   listPages,
   listProjects,
+  listProviderItemOptions,
+  listProviderItems,
+  listProviders,
   listResources,
   listShares,
   listSkillInstances,
@@ -98,6 +107,8 @@ import {
   updatePage,
   updateProject,
   updateProjectItems,
+  updateProvider,
+  updateProviderItem,
   updateResource,
   updateSettings,
   updateSkillInstance,
@@ -111,10 +122,14 @@ import {
   AddReferencesError,
   AutoNameCanvasData,
   AutoNameCanvasError,
+  BatchCreateProviderItemsData,
+  BatchCreateProviderItemsError,
   BatchCreateResourceData,
   BatchCreateResourceError,
   BatchUpdateDocumentData,
   BatchUpdateDocumentError,
+  BatchUpdateProviderItemsData,
+  BatchUpdateProviderItemsError,
   CheckSettingsFieldData,
   CheckSettingsFieldError,
   CheckVerificationData,
@@ -138,6 +153,10 @@ import {
   CreatePortalSessionError,
   CreateProjectData,
   CreateProjectError,
+  CreateProviderData,
+  CreateProviderError,
+  CreateProviderItemData,
+  CreateProviderItemError,
   CreateResourceData,
   CreateResourceError,
   CreateResourceWithFileData,
@@ -166,6 +185,10 @@ import {
   DeleteProjectError,
   DeleteProjectItemsData,
   DeleteProjectItemsError,
+  DeleteProviderData,
+  DeleteProviderError,
+  DeleteProviderItemData,
+  DeleteProviderItemError,
   DeleteReferencesData,
   DeleteReferencesError,
   DeleteResourceData,
@@ -232,6 +255,12 @@ import {
   ListPagesError,
   ListProjectsData,
   ListProjectsError,
+  ListProviderItemOptionsData,
+  ListProviderItemOptionsError,
+  ListProviderItemsData,
+  ListProviderItemsError,
+  ListProvidersData,
+  ListProvidersError,
   ListResourcesData,
   ListResourcesError,
   ListSharesData,
@@ -282,6 +311,10 @@ import {
   UpdateProjectError,
   UpdateProjectItemsData,
   UpdateProjectItemsError,
+  UpdateProviderData,
+  UpdateProviderError,
+  UpdateProviderItemData,
+  UpdateProviderItemError,
   UpdateResourceData,
   UpdateResourceError,
   UpdateSettingsData,
@@ -780,6 +813,53 @@ export const useListModels = <
     queryKey: Common.UseListModelsKeyFn(clientOptions, queryKey),
     queryFn: () =>
       listModels({ ...clientOptions }).then((response) => response.data as TData) as TData,
+    ...options,
+  });
+export const useListProviders = <
+  TData = Common.ListProvidersDefaultResponse,
+  TError = ListProvidersError,
+  TQueryKey extends Array<unknown> = unknown[],
+>(
+  clientOptions: Options<ListProvidersData, true> = {},
+  queryKey?: TQueryKey,
+  options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
+) =>
+  useQuery<TData, TError>({
+    queryKey: Common.UseListProvidersKeyFn(clientOptions, queryKey),
+    queryFn: () =>
+      listProviders({ ...clientOptions }).then((response) => response.data as TData) as TData,
+    ...options,
+  });
+export const useListProviderItems = <
+  TData = Common.ListProviderItemsDefaultResponse,
+  TError = ListProviderItemsError,
+  TQueryKey extends Array<unknown> = unknown[],
+>(
+  clientOptions: Options<ListProviderItemsData, true> = {},
+  queryKey?: TQueryKey,
+  options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
+) =>
+  useQuery<TData, TError>({
+    queryKey: Common.UseListProviderItemsKeyFn(clientOptions, queryKey),
+    queryFn: () =>
+      listProviderItems({ ...clientOptions }).then((response) => response.data as TData) as TData,
+    ...options,
+  });
+export const useListProviderItemOptions = <
+  TData = Common.ListProviderItemOptionsDefaultResponse,
+  TError = ListProviderItemOptionsError,
+  TQueryKey extends Array<unknown> = unknown[],
+>(
+  clientOptions: Options<ListProviderItemOptionsData, true>,
+  queryKey?: TQueryKey,
+  options?: Omit<UseQueryOptions<TData, TError>, 'queryKey' | 'queryFn'>,
+) =>
+  useQuery<TData, TError>({
+    queryKey: Common.UseListProviderItemOptionsKeyFn(clientOptions, queryKey),
+    queryFn: () =>
+      listProviderItemOptions({ ...clientOptions }).then(
+        (response) => response.data as TData,
+      ) as TData,
     ...options,
   });
 export const useServeStatic = <
@@ -1818,6 +1898,144 @@ export const useMultiLingualWebSearch = <
     mutationKey: Common.UseMultiLingualWebSearchKeyFn(mutationKey),
     mutationFn: (clientOptions) =>
       multiLingualWebSearch(clientOptions) as unknown as Promise<TData>,
+    ...options,
+  });
+export const useCreateProvider = <
+  TData = Common.CreateProviderMutationResult,
+  TError = CreateProviderError,
+  TQueryKey extends Array<unknown> = unknown[],
+  TContext = unknown,
+>(
+  mutationKey?: TQueryKey,
+  options?: Omit<
+    UseMutationOptions<TData, TError, Options<CreateProviderData, true>, TContext>,
+    'mutationKey' | 'mutationFn'
+  >,
+) =>
+  useMutation<TData, TError, Options<CreateProviderData, true>, TContext>({
+    mutationKey: Common.UseCreateProviderKeyFn(mutationKey),
+    mutationFn: (clientOptions) => createProvider(clientOptions) as unknown as Promise<TData>,
+    ...options,
+  });
+export const useUpdateProvider = <
+  TData = Common.UpdateProviderMutationResult,
+  TError = UpdateProviderError,
+  TQueryKey extends Array<unknown> = unknown[],
+  TContext = unknown,
+>(
+  mutationKey?: TQueryKey,
+  options?: Omit<
+    UseMutationOptions<TData, TError, Options<UpdateProviderData, true>, TContext>,
+    'mutationKey' | 'mutationFn'
+  >,
+) =>
+  useMutation<TData, TError, Options<UpdateProviderData, true>, TContext>({
+    mutationKey: Common.UseUpdateProviderKeyFn(mutationKey),
+    mutationFn: (clientOptions) => updateProvider(clientOptions) as unknown as Promise<TData>,
+    ...options,
+  });
+export const useDeleteProvider = <
+  TData = Common.DeleteProviderMutationResult,
+  TError = DeleteProviderError,
+  TQueryKey extends Array<unknown> = unknown[],
+  TContext = unknown,
+>(
+  mutationKey?: TQueryKey,
+  options?: Omit<
+    UseMutationOptions<TData, TError, Options<DeleteProviderData, true>, TContext>,
+    'mutationKey' | 'mutationFn'
+  >,
+) =>
+  useMutation<TData, TError, Options<DeleteProviderData, true>, TContext>({
+    mutationKey: Common.UseDeleteProviderKeyFn(mutationKey),
+    mutationFn: (clientOptions) => deleteProvider(clientOptions) as unknown as Promise<TData>,
+    ...options,
+  });
+export const useCreateProviderItem = <
+  TData = Common.CreateProviderItemMutationResult,
+  TError = CreateProviderItemError,
+  TQueryKey extends Array<unknown> = unknown[],
+  TContext = unknown,
+>(
+  mutationKey?: TQueryKey,
+  options?: Omit<
+    UseMutationOptions<TData, TError, Options<CreateProviderItemData, true>, TContext>,
+    'mutationKey' | 'mutationFn'
+  >,
+) =>
+  useMutation<TData, TError, Options<CreateProviderItemData, true>, TContext>({
+    mutationKey: Common.UseCreateProviderItemKeyFn(mutationKey),
+    mutationFn: (clientOptions) => createProviderItem(clientOptions) as unknown as Promise<TData>,
+    ...options,
+  });
+export const useBatchCreateProviderItems = <
+  TData = Common.BatchCreateProviderItemsMutationResult,
+  TError = BatchCreateProviderItemsError,
+  TQueryKey extends Array<unknown> = unknown[],
+  TContext = unknown,
+>(
+  mutationKey?: TQueryKey,
+  options?: Omit<
+    UseMutationOptions<TData, TError, Options<BatchCreateProviderItemsData, true>, TContext>,
+    'mutationKey' | 'mutationFn'
+  >,
+) =>
+  useMutation<TData, TError, Options<BatchCreateProviderItemsData, true>, TContext>({
+    mutationKey: Common.UseBatchCreateProviderItemsKeyFn(mutationKey),
+    mutationFn: (clientOptions) =>
+      batchCreateProviderItems(clientOptions) as unknown as Promise<TData>,
+    ...options,
+  });
+export const useUpdateProviderItem = <
+  TData = Common.UpdateProviderItemMutationResult,
+  TError = UpdateProviderItemError,
+  TQueryKey extends Array<unknown> = unknown[],
+  TContext = unknown,
+>(
+  mutationKey?: TQueryKey,
+  options?: Omit<
+    UseMutationOptions<TData, TError, Options<UpdateProviderItemData, true>, TContext>,
+    'mutationKey' | 'mutationFn'
+  >,
+) =>
+  useMutation<TData, TError, Options<UpdateProviderItemData, true>, TContext>({
+    mutationKey: Common.UseUpdateProviderItemKeyFn(mutationKey),
+    mutationFn: (clientOptions) => updateProviderItem(clientOptions) as unknown as Promise<TData>,
+    ...options,
+  });
+export const useBatchUpdateProviderItems = <
+  TData = Common.BatchUpdateProviderItemsMutationResult,
+  TError = BatchUpdateProviderItemsError,
+  TQueryKey extends Array<unknown> = unknown[],
+  TContext = unknown,
+>(
+  mutationKey?: TQueryKey,
+  options?: Omit<
+    UseMutationOptions<TData, TError, Options<BatchUpdateProviderItemsData, true>, TContext>,
+    'mutationKey' | 'mutationFn'
+  >,
+) =>
+  useMutation<TData, TError, Options<BatchUpdateProviderItemsData, true>, TContext>({
+    mutationKey: Common.UseBatchUpdateProviderItemsKeyFn(mutationKey),
+    mutationFn: (clientOptions) =>
+      batchUpdateProviderItems(clientOptions) as unknown as Promise<TData>,
+    ...options,
+  });
+export const useDeleteProviderItem = <
+  TData = Common.DeleteProviderItemMutationResult,
+  TError = DeleteProviderItemError,
+  TQueryKey extends Array<unknown> = unknown[],
+  TContext = unknown,
+>(
+  mutationKey?: TQueryKey,
+  options?: Omit<
+    UseMutationOptions<TData, TError, Options<DeleteProviderItemData, true>, TContext>,
+    'mutationKey' | 'mutationFn'
+  >,
+) =>
+  useMutation<TData, TError, Options<DeleteProviderItemData, true>, TContext>({
+    mutationKey: Common.UseDeleteProviderItemKeyFn(mutationKey),
+    mutationFn: (clientOptions) => deleteProviderItem(clientOptions) as unknown as Promise<TData>,
     ...options,
   });
 export const useScrape = <

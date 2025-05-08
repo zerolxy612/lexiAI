@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState, forwardRef, useRef } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState, forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from 'antd';
 import { cn } from '@refly/utils/cn';
@@ -133,7 +133,6 @@ export const ThreadContainer = memo(
     const [isMaximized, setIsMaximized] = useState(false);
     const [isWideMode, setIsWideMode] = useState(false);
     const [contentHeight, setContentHeight] = useState('auto');
-    const containerRef = useRef<HTMLDivElement>(null);
 
     // Get context panel store to manage context items
     const { setContextItems, setActiveResultId } = useContextPanelStoreShallow((state) => ({
@@ -275,20 +274,6 @@ export const ThreadContainer = memo(
         return () => clearTimeout(timer);
       }
     }, [resultId, debouncedUpdateContextItems]);
-
-    // Scroll to bottom effect for messages
-    useEffect(() => {
-      if (containerRef.current && messages.length > 0) {
-        setTimeout(() => {
-          if (containerRef.current) {
-            const messageContainer = containerRef.current.querySelector('.message-container');
-            if (messageContainer) {
-              messageContainer.scrollTop = messageContainer.scrollHeight;
-            }
-          }
-        }, 100);
-      }
-    }, [messages]);
 
     const outerContainerStyles = useMemo(
       () => ({

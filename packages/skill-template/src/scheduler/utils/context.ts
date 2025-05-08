@@ -9,7 +9,7 @@ import {
 import { BaseSkill, SkillRunnableConfig } from '../../base';
 import { truncateContext } from './truncator';
 import { flattenMergedContextToSources, concatMergedContextToStr } from './summarizer';
-import { SkillTemplateConfig, Source } from '@refly/openapi-schema';
+import { LLMModelConfig, SkillTemplateConfig, Source } from '@refly/openapi-schema';
 import { uniqBy } from 'lodash';
 import { MAX_CONTEXT_RATIO, MAX_URL_SOURCES_RATIO } from './constants';
 import { safeStringifyJSON } from '@refly/utils';
@@ -69,7 +69,8 @@ export async function prepareContext(
     let remainingTokens = maxContextTokens - urlSourcesTokens;
     ctx.ctxThis.engine.logger.log(`URL Sources Tokens: ${urlSourcesTokens}`);
 
-    const { modelInfo } = ctx.config.configurable;
+    const { modelConfigMap } = ctx.config.configurable;
+    const modelInfo = modelConfigMap.queryAnalysis;
     const isSupportedModel = checkIsSupportedModel(modelInfo);
 
     // 1. web search context
@@ -83,6 +84,7 @@ export async function prepareContext(
       const preparedRes = await prepareWebSearchContext(
         {
           query,
+          modelInfo,
           rewrittenQueries,
           enableQueryRewrite: isSupportedModel,
         },
@@ -106,6 +108,7 @@ export async function prepareContext(
       const librarySearchRes = await performLibrarySearchContext(
         {
           query,
+          modelInfo,
           rewrittenQueries,
           enableQueryRewrite: true,
           enableSearchWholeSpace: true,
@@ -249,12 +252,14 @@ export async function prepareContext(
 export async function prepareWebSearchContext(
   {
     query,
+    modelInfo,
     rewrittenQueries,
     enableQueryRewrite = true,
     enableTranslateQuery = false,
     enableTranslateResult = false,
   }: {
     query: string;
+    modelInfo: LLMModelConfig;
     rewrittenQueries?: string[];
     enableQueryRewrite?: boolean;
     enableTranslateQuery?: boolean;
@@ -297,6 +302,7 @@ export async function prepareWebSearchContext(
   // Call multiLingualWebSearch instead of webSearch
   const searchResult = await callMultiLingualWebSearch(
     {
+      modelInfo,
       rewrittenQueries,
       searchLimit,
       searchLocaleList,
@@ -319,9 +325,7 @@ export async function prepareWebSearchContext(
   );
 
   // Take only first 10 sources
-  const isModelContextLenSupport = checkModelContextLenSupport(
-    ctx?.config?.configurable?.modelInfo,
-  );
+  const isModelContextLenSupport = checkModelContextLenSupport(modelInfo);
   let webSearchSources = searchResult.sources || [];
   if (!isModelContextLenSupport) {
     webSearchSources = webSearchSources.slice(0, 10);
@@ -573,6 +577,7 @@ export const mutateContextMetadata = (
 export async function performLibrarySearchContext(
   {
     query,
+    modelInfo,
     rewrittenQueries,
     enableQueryRewrite = true,
     enableTranslateQuery = false,
@@ -580,6 +585,7 @@ export async function performLibrarySearchContext(
     enableSearchWholeSpace = false,
   }: {
     query: string;
+    modelInfo: LLMModelConfig;
     rewrittenQueries?: string[];
     enableQueryRewrite?: boolean;
     enableTranslateQuery?: boolean;
@@ -645,9 +651,7 @@ export async function performLibrarySearchContext(
   );
 
   // Take only first 10 sources for models with limited context length
-  const isModelContextLenSupport = checkModelContextLenSupport(
-    ctx?.config?.configurable?.modelInfo,
-  );
+  const isModelContextLenSupport = checkModelContextLenSupport(modelInfo);
   let librarySearchSources = searchResult.sources || [];
   if (!isModelContextLenSupport) {
     librarySearchSources = librarySearchSources.slice(0, 10);

@@ -19,6 +19,7 @@ const makeSSERequest = async (
   controller: AbortController,
   isRetry = false,
 ): Promise<Response> => {
+  console.log('isDesktop', isDesktop());
   const response = await fetch(`${serverOrigin}/v1/skill/streamInvoke`, {
     method: 'POST',
     headers: {
@@ -29,7 +30,7 @@ const makeSSERequest = async (
     body: JSON.stringify(payload),
   });
 
-  if (response.status === 401 && !isRetry) {
+  if (response?.status === 401 && !isRetry) {
     try {
       await refreshToken();
       return makeSSERequest(payload, controller, true);

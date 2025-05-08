@@ -81,6 +81,10 @@ export const detectActualTypeFromType = (type: CodeArtifactType): CodeArtifactTy
     return typeMapping.react.mime;
   }
 
+  if (lowerContent.includes('html')) {
+    return typeMapping.html.mime;
+  }
+
   if (lowerContent.includes('svg')) {
     return typeMapping.svg.mime;
   }
@@ -95,10 +99,6 @@ export const detectActualTypeFromType = (type: CodeArtifactType): CodeArtifactTy
 
   if (lowerContent.includes('markdown')) {
     return typeMapping.markdown.mime;
-  }
-
-  if (lowerContent.includes('html')) {
-    return typeMapping.html.mime;
   }
 
   if (lowerContent.includes('mindmap')) {

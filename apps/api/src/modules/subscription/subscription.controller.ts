@@ -48,6 +48,9 @@ export class SubscriptionController {
     return buildSuccessResponse(usage);
   }
 
+  /**
+   * @deprecated Use /v1/provider/item/list instead
+   */
   @UseGuards(JwtAuthGuard)
   @Get('modelList')
   async listModels(): Promise<ListModelsResponse> {

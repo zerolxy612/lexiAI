@@ -19,12 +19,14 @@ import {
   QUEUE_CLEAR_CANVAS_ENTITY,
   QUEUE_POST_DELETE_KNOWLEDGE_ENTITY,
 } from '@/utils';
+import { ProviderModule } from '@/modules/provider/provider.module';
 
 @Module({
   imports: [
     CommonModule,
     RAGModule,
     MiscModule,
+    ProviderModule,
     SubscriptionModule,
     BullModule.registerQueue({ name: QUEUE_RESOURCE }),
     BullModule.registerQueue({ name: QUEUE_SIMPLE_EVENT }),

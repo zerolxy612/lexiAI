@@ -60,13 +60,25 @@ EmptyThreadWelcome.displayName = 'EmptyThreadWelcome';
 export const LinearThreadContent = memo(
   ({ messages, contentHeight, className = '' }: LinearThreadContentProps) => {
     const messagesContainerRef = useRef<HTMLDivElement>(null);
+    const lastMessageRef = useRef<HTMLDivElement>(null);
 
-    // Scroll to bottom effect
+    // Scroll to the start of the last message
     useEffect(() => {
-      if (messagesContainerRef.current) {
+      if (messagesContainerRef.current && messages.length > 0) {
         setTimeout(() => {
-          if (messagesContainerRef.current) {
-            messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+          const lastMessageElement = document.getElementById(
+            `message-wrapper-${messages[messages.length - 1].id}`,
+          );
+          if (lastMessageElement && messagesContainerRef.current) {
+            // If it's the only message, scroll to top
+            if (messages.length === 1) {
+              messagesContainerRef.current.scrollTop = 0;
+            } else {
+              // Scroll to position the last message at the top
+              const scrollTop = lastMessageElement.offsetTop - 16; // Add some padding
+
+              messagesContainerRef.current.scrollTop = scrollTop;
+            }
           }
         }, 100);
       }
@@ -83,7 +95,11 @@ export const LinearThreadContent = memo(
         ) : (
           <div className="flex flex-col divide-y max-w-[1024px] mx-auto">
             {messages.map((message, index) => (
-              <div key={`message-wrapper-${message.id}`}>
+              <div
+                key={`message-wrapper-${message.id}`}
+                id={`message-wrapper-${message.id}`}
+                ref={index === messages.length - 1 ? lastMessageRef : null}
+              >
                 <div key={`message-content-${message.id}`}>
                   <MemoizedSkillResponseNodePreview
                     node={{

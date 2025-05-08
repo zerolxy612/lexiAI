@@ -38,6 +38,7 @@ import {
 import { Queue } from 'bullmq';
 import { InjectQueue } from '@nestjs/bullmq';
 import { QUEUE_SEND_VERIFICATION_EMAIL } from '../../utils/const';
+import { ProviderService } from '../provider/provider.service';
 
 @Injectable()
 export class AuthService {
@@ -49,6 +50,7 @@ export class AuthService {
     private configService: ConfigService,
     private jwtService: JwtService,
     private miscService: MiscService,
+    private providerService: ProviderService,
     @InjectQueue(QUEUE_SEND_VERIFICATION_EMAIL) private emailQueue: Queue,
   ) {
     this.resend = new Resend(this.configService.get('auth.email.resendApiKey'));
@@ -296,6 +298,7 @@ export class AuthService {
         outputLocale: 'auto',
       },
     });
+    await this.postCreateUser(newUser);
     this.logger.log(`user created: ${newUser.uid}`);
 
     const newAccount = await this.prisma.account.create({
@@ -349,11 +352,17 @@ export class AuthService {
           },
         }),
       ]);
+      await this.postCreateUser(newUser);
+
       return { tokenData: await this.login(newUser) };
     }
 
     const { sessionId } = await this.createVerification({ email, purpose: 'signup', password });
     return { sessionId };
+  }
+
+  private async postCreateUser(user: User) {
+    await this.providerService.prepareGlobalProviderItemsForUser(user);
   }
 
   async emailLogin(email: string, password: string) {
@@ -467,6 +476,7 @@ export class AuthService {
         }),
       ]);
       user = newUser;
+      await this.postCreateUser(user);
     } else if (purpose === 'resetPassword') {
       user = await this.prisma.user.findUnique({ where: { email } });
       if (!user) {

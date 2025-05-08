@@ -1,6 +1,6 @@
-import { ChatOpenAI } from '@langchain/openai';
 import { SystemMessage, HumanMessage } from '@langchain/core/messages';
 import { Logger } from '@nestjs/common';
+import { BaseChatModel } from '@refly/providers';
 import { z } from 'zod';
 import { jsonrepair } from 'jsonrepair';
 import { zodToJsonSchema } from 'zod-to-json-schema';
@@ -315,7 +315,7 @@ function formatCanvasContent(contentItems: CanvasContentItem[]): string {
  */
 export async function generateCanvasTitle(
   contentItems: CanvasContentItem[],
-  modelInfo: any,
+  model: BaseChatModel,
   logger: Logger,
 ): Promise<string> {
   const combinedContent = formatCanvasContent(contentItems);
@@ -325,19 +325,6 @@ export async function generateCanvasTitle(
       logger.warn('No content available for title generation');
       return '';
     }
-
-    const model = new ChatOpenAI({
-      model: modelInfo?.name,
-      apiKey: process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY,
-      temperature: 0.2, // Lower temperature for more consistent titles
-      configuration: {
-        baseURL: process.env.OPENROUTER_API_KEY ? 'https://openrouter.ai/api/v1' : undefined,
-        defaultHeaders: {
-          'HTTP-Referer': 'https://refly.ai',
-          'X-Title': 'Refly',
-        },
-      },
-    });
 
     logger.log(`Generating title from ${contentItems.length} content items`);
 

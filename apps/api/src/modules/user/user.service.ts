@@ -68,60 +68,66 @@ export class UserService implements OnModuleInit {
   }
 
   async updateSettings(user: User, data: UpdateUserSettingsRequest) {
-    const lock = await this.redis.acquireLock(`update-user-settings:${user.uid}`);
-    if (!lock) {
+    const releaseLock = await this.redis.acquireLock(`update-user-settings:${user.uid}`);
+    if (!releaseLock) {
       throw new OperationTooFrequent('Update user settings too frequent');
     }
 
-    // Get current user data
-    const currentUser = await this.prisma.user.findUnique({
-      where: { uid: user.uid },
-      select: {
-        preferences: true,
-        onboarding: true,
-      },
-    });
-
-    // Process avatar upload
-    if (data.avatarStorageKey) {
-      const avatarFile = await this.miscService.findFileAndBindEntity(data.avatarStorageKey, {
-        entityId: user.uid,
-        entityType: 'user',
+    try {
+      // Get current user data
+      const currentUser = await this.prisma.user.findUnique({
+        where: { uid: user.uid },
+        select: {
+          preferences: true,
+          onboarding: true,
+        },
       });
-      if (!avatarFile) {
-        throw new ParamsError('Avatar file not found');
+
+      // Process avatar upload
+      if (data.avatarStorageKey) {
+        const avatarFile = await this.miscService.findFileAndBindEntity(data.avatarStorageKey, {
+          entityId: user.uid,
+          entityType: 'user',
+        });
+        if (!avatarFile) {
+          throw new ParamsError('Avatar file not found');
+        }
+        data.avatar = this.miscService.generateFileURL({
+          storageKey: avatarFile.storageKey,
+          visibility: avatarFile.visibility as FileVisibility,
+        });
       }
-      data.avatar = this.miscService.generateFileURL({
-        storageKey: avatarFile.storageKey,
-        visibility: avatarFile.visibility as FileVisibility,
+
+      // Parse existing data with fallbacks
+      const existingPreferences = currentUser?.preferences
+        ? JSON.parse(currentUser.preferences)
+        : {};
+      const existingOnboarding = currentUser?.onboarding ? JSON.parse(currentUser.onboarding) : {};
+
+      // Merge data
+      const mergedPreferences = {
+        ...existingPreferences,
+        ...data.preferences,
+      };
+
+      const mergedOnboarding = {
+        ...existingOnboarding,
+        ...data.onboarding,
+      };
+
+      const updatedUser = await this.prisma.user.update({
+        where: { uid: user.uid },
+        data: {
+          ...pick(data, ['name', 'nickname', 'avatar', 'uiLocale', 'outputLocale']),
+          preferences: JSON.stringify(mergedPreferences),
+          onboarding: JSON.stringify(mergedOnboarding),
+        },
       });
+
+      return updatedUser;
+    } finally {
+      await releaseLock();
     }
-
-    // Parse existing data with fallbacks
-    const existingPreferences = currentUser?.preferences ? JSON.parse(currentUser.preferences) : {};
-    const existingOnboarding = currentUser?.onboarding ? JSON.parse(currentUser.onboarding) : {};
-
-    // Merge data
-    const mergedPreferences = {
-      ...existingPreferences,
-      ...data.preferences,
-    };
-
-    const mergedOnboarding = {
-      ...existingOnboarding,
-      ...data.onboarding,
-    };
-
-    const updatedUser = await this.prisma.user.update({
-      where: { uid: user.uid },
-      data: {
-        ...pick(data, ['name', 'nickname', 'avatar', 'uiLocale', 'outputLocale']),
-        preferences: JSON.stringify(mergedPreferences),
-        onboarding: JSON.stringify(mergedOnboarding),
-      },
-    });
-
-    return updatedUser;
   }
 
   async checkSettingsField(user: User, param: CheckSettingsFieldData['query']) {

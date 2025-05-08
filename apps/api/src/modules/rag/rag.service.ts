@@ -1,30 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { LRUCache } from 'lru-cache';
 import { Document, DocumentInterface } from '@langchain/core/documents';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
-import { Embeddings } from '@langchain/core/embeddings';
-import { OpenAIEmbeddings } from '@langchain/openai';
-import { FireworksEmbeddings } from '@langchain/community/embeddings/fireworks';
 import { MemoryVectorStore } from 'langchain/vectorstores/memory';
 import { cleanMarkdownForIngest } from '@refly/utils';
 import * as avro from 'avsc';
-
 import { SearchResult, User } from '@refly/openapi-schema';
-import { HybridSearchParam, ContentPayload, ReaderResult, DocumentPayload } from './rag.dto';
+import { HybridSearchParam, ContentPayload, DocumentPayload } from './rag.dto';
 import { QdrantService } from '../common/qdrant.service';
 import { Condition, PointStruct } from '../common/qdrant.dto';
 import { genResourceUuid } from '../../utils';
-import { JinaEmbeddings } from '../../utils/embeddings/jina';
-
-const READER_URL = 'https://r.jina.ai/';
-
-interface JinaRerankerResponse {
-  results: {
-    document: { text: string };
-    relevance_score: number;
-  }[];
-}
+import { ProviderService } from '@/modules/provider/provider.service';
 
 // Define Avro schema for vector points (must match the one used for serialization)
 const avroSchema = avro.Type.forSchema({
@@ -54,87 +39,17 @@ const avroSchema = avro.Type.forSchema({
 
 @Injectable()
 export class RAGService {
-  private embeddings: Embeddings;
   private splitter: RecursiveCharacterTextSplitter;
-  private cache: LRUCache<string, ReaderResult>; // url -> reader result
   private logger = new Logger(RAGService.name);
 
   constructor(
-    private config: ConfigService,
     private qdrant: QdrantService,
+    private providerService: ProviderService,
   ) {
-    const provider = this.config.get('embeddings.provider');
-    if (provider === 'fireworks') {
-      this.embeddings = new FireworksEmbeddings({
-        modelName: this.config.getOrThrow('embeddings.modelName'),
-        batchSize: this.config.getOrThrow('embeddings.batchSize'),
-        maxRetries: 3,
-      });
-    } else if (provider === 'jina') {
-      this.embeddings = new JinaEmbeddings({
-        modelName: this.config.getOrThrow('embeddings.modelName'),
-        batchSize: this.config.getOrThrow('embeddings.batchSize'),
-        dimensions: this.config.getOrThrow('embeddings.dimensions'),
-        apiKey: this.config.getOrThrow('credentials.jina'),
-        maxRetries: 3,
-      });
-    } else if (provider === 'openai') {
-      this.embeddings = new OpenAIEmbeddings({
-        modelName: this.config.getOrThrow('embeddings.modelName'),
-        batchSize: this.config.getOrThrow('embeddings.batchSize'),
-        dimensions: this.config.getOrThrow('embeddings.dimensions'),
-        timeout: 5000,
-        maxRetries: 3,
-      });
-    } else {
-      throw new Error(`Unsupported embeddings provider: ${provider}`);
-    }
-
     this.splitter = RecursiveCharacterTextSplitter.fromLanguage('markdown', {
       chunkSize: 1000,
       chunkOverlap: 0,
     });
-    this.cache = new LRUCache({ max: 1000 });
-  }
-
-  async crawlFromRemoteReader(url: string): Promise<ReaderResult> {
-    if (this.cache.get(url)) {
-      this.logger.log(`in-mem crawl cache hit: ${url}`);
-      return this.cache.get(url) as ReaderResult;
-    }
-
-    this.logger.log(
-      `Authorization: ${
-        this.config.get('credentials.jina')
-          ? `Bearer ${this.config.get('credentials.jina')}`
-          : undefined
-      }`,
-    );
-
-    const response = await fetch(READER_URL + url, {
-      method: 'GET',
-      headers: {
-        Authorization: this.config.get('credentials.jina')
-          ? `Bearer ${this.config.get('credentials.jina')}`
-          : undefined,
-        Accept: 'application/json',
-      },
-    });
-    if (response.status !== 200) {
-      throw new Error(
-        `call remote reader failed: ${response.status} ${response.statusText} ${response.text}`,
-      );
-    }
-
-    const data = await response.json();
-    if (!data) {
-      throw new Error(`invalid data from remote reader: ${response.text}`);
-    }
-
-    this.logger.log(`crawl from reader success: ${url}`);
-    this.cache.set(url, data);
-
-    return data;
   }
 
   async chunkText(text: string) {
@@ -161,7 +76,8 @@ export class RAGService {
     }
 
     // Create a temporary MemoryVectorStore for this operation
-    const tempMemoryVectorStore = new MemoryVectorStore(this.embeddings);
+    const embeddings = await this.providerService.prepareEmbeddings(user);
+    const tempMemoryVectorStore = new MemoryVectorStore(embeddings);
 
     // Prepare the document
     let documents: Document<any>[];
@@ -298,13 +214,14 @@ export class RAGService {
 
     // Compute embeddings only for new or modified chunks
     if (chunksNeedingEmbeddings.length > 0) {
-      const newEmbeddings = await this.embeddings.embedDocuments(chunksNeedingEmbeddings);
+      const embeddings = await this.providerService.prepareEmbeddings(user);
+      const vectors = await embeddings.embedDocuments(chunksNeedingEmbeddings);
 
       // Create points for chunks with new embeddings
       chunkIndices.forEach((originalIndex, embeddingIndex) => {
         pointsToUpsert.push({
           id: genResourceUuid(`${entityId}-${originalIndex}`),
-          vector: newEmbeddings[embeddingIndex],
+          vector: vectors[embeddingIndex],
           payload: {
             ...metadata,
             seq: originalIndex,
@@ -416,7 +333,8 @@ export class RAGService {
 
   async retrieve(user: User, param: HybridSearchParam): Promise<ContentPayload[]> {
     if (!param.vector) {
-      param.vector = await this.embeddings.embedQuery(param.query);
+      const embeddings = await this.providerService.prepareEmbeddings(user);
+      param.vector = await embeddings.embedQuery(param.query);
       // param.vector = Array(256).fill(0);
     }
 
@@ -463,57 +381,20 @@ export class RAGService {
   }
 
   /**
-   * Rerank search results using Jina Reranker.
+   * Rerank search results using the configured reranker.
    */
   async rerank(
+    user: User,
     query: string,
     results: SearchResult[],
     options?: { topN?: number; relevanceThreshold?: number },
   ): Promise<SearchResult[]> {
-    const topN = options?.topN || this.config.get('reranker.topN');
-    const relevanceThreshold =
-      options?.relevanceThreshold || this.config.get('reranker.relevanceThreshold');
-
-    const contentMap = new Map<string, SearchResult>();
-    for (const r of results) {
-      contentMap.set(r.snippets.map((s) => s.text).join('\n\n'), r);
-    }
-
-    const payload = JSON.stringify({
-      query,
-      model: this.config.get('reranker.model'),
-      top_n: topN,
-      documents: Array.from(contentMap.keys()),
-    });
-
     try {
-      const res = await fetch('https://api.jina.ai/v1/rerank', {
-        method: 'post',
-        headers: {
-          Authorization: `Bearer ${this.config.getOrThrow('credentials.jina')}`,
-          'Content-Type': 'application/json',
-        },
-        body: payload,
-      });
-      const data: JinaRerankerResponse = await res.json();
-      this.logger.debug(`Jina reranker results: ${JSON.stringify(data)}`);
-
-      return data.results
-        .filter((r) => r.relevance_score >= relevanceThreshold)
-        .map((r) => {
-          const originalResult = contentMap.get(r.document.text);
-          return {
-            ...originalResult,
-            relevanceScore: r.relevance_score, // Add relevance score to the result
-          } as SearchResult;
-        });
+      const reranker = await this.providerService.prepareReranker(user);
+      return await reranker.rerank(query, results, options);
     } catch (e) {
-      this.logger.error(`Reranker failed, fallback to default: ${e.stack}`);
-      // When falling back, maintain the original order but add default relevance scores
-      return results.map((result, index) => ({
-        ...result,
-        relevanceScore: 1 - index * 0.1, // Simple fallback scoring based on original order
-      }));
+      this.logger.error(`Reranker failed, fallback to original results: ${e.stack}`);
+      return results;
     }
   }
 

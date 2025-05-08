@@ -44,6 +44,8 @@ import {
   LuChevronRight,
   LuUserRound,
   LuFileStack,
+  LuCloud,
+  LuRefreshCw,
 } from 'react-icons/lu';
 
 import {
@@ -73,9 +75,8 @@ import { HiOutlineChevronDown } from 'react-icons/hi';
 import { RxExit } from 'react-icons/rx';
 
 import { AiOutlineShrink } from 'react-icons/ai';
-import { TbWorldSearch } from 'react-icons/tb';
+import { TbWorldSearch, TbWorldCog, TbInputSpark } from 'react-icons/tb';
 import { GrCircleQuestion } from 'react-icons/gr';
-import { TbInputSpark } from 'react-icons/tb';
 import { AiOutlineLink } from 'react-icons/ai';
 import { HiOutlineTableCells } from 'react-icons/hi2';
 
@@ -172,7 +173,11 @@ export const IconRight = LuChevronRight;
 export const IconUser = LuUserRound;
 export const IconRemove = MdOutlineRemoveCircleOutline;
 export const IconFiles = LuFileStack;
+export const IconWorldConfig = TbWorldCog;
+export const IconCloud = LuCloud;
 export const IconSlideshow = RiSlideshow2Line;
+export const IconRefresh = LuRefreshCw;
+
 export const IconChrome = ChromeIcon;
 export const ModelProviderIcons = {
   openai: OpenAIIcon,

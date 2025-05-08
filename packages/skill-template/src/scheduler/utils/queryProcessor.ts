@@ -5,6 +5,7 @@ import { isEmptyMessage, truncateMessages } from './truncator';
 import { analyzeQueryAndContext, preprocessQuery } from './query-rewrite/index';
 import { safeStringifyJSON } from '@refly/utils';
 import { QueryProcessorResult } from '../types';
+import { DEFAULT_MODEL_CONTEXT_LIMIT } from './constants';
 
 interface QueryProcessorOptions {
   config: SkillRunnableConfig;
@@ -18,12 +19,13 @@ export async function processQuery(options: QueryProcessorOptions): Promise<Quer
   const { config, ctxThis, state, shouldSkipAnalysis = false } = options;
   const { query: originalQuery } = state;
   const {
-    modelInfo,
+    modelConfigMap,
     chatHistory: rawChatHistory = [],
     resources,
     documents,
     contentList,
   } = config.configurable;
+  const modelInfo = modelConfigMap.queryAnalysis;
   const { tplConfig } = config?.configurable || {};
 
   let optimizedQuery = '';
@@ -52,7 +54,7 @@ export async function processQuery(options: QueryProcessorOptions): Promise<Quer
   ctxThis.engine.logger.log(`checkHasContext: ${hasContext}`);
 
   // Calculate tokens
-  const maxTokens = modelInfo.contextLimit;
+  const maxTokens = modelInfo.contextLimit || DEFAULT_MODEL_CONTEXT_LIMIT;
   const queryTokens = countToken(query);
   const chatHistoryTokens = countMessagesTokens(usedChatHistory);
   const remainingTokens = maxTokens - queryTokens - chatHistoryTokens;

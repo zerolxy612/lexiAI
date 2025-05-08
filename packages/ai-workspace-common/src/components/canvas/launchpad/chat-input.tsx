@@ -22,6 +22,7 @@ interface ChatInputProps {
   handleSendMessage: () => void;
   handleSelectSkill?: (skill: Skill) => void;
   onUploadImage?: (file: File) => Promise<void>;
+  onUploadMultipleImages?: (files: File[]) => Promise<void>;
   onFocus?: () => void;
 }
 
@@ -37,6 +38,7 @@ const ChatInputComponent = forwardRef<HTMLDivElement, ChatInputProps>(
       handleSendMessage,
       handleSelectSkill,
       onUploadImage,
+      onUploadMultipleImages,
       onFocus,
     },
     ref,
@@ -64,7 +66,7 @@ const ChatInputComponent = forwardRef<HTMLDivElement, ChatInputProps>(
 
     const handlePaste = useCallback(
       async (e: React.ClipboardEvent<HTMLDivElement | HTMLTextAreaElement>) => {
-        if (readonly || !onUploadImage) {
+        if (readonly || (!onUploadImage && !onUploadMultipleImages)) {
           return;
         }
 
@@ -74,18 +76,27 @@ const ChatInputComponent = forwardRef<HTMLDivElement, ChatInputProps>(
           return;
         }
 
-        for (const item of items) {
+        const imageFiles: File[] = [];
+
+        for (const item of Array.from(items)) {
           if (item.type.startsWith('image/')) {
-            e.preventDefault();
             const file = item.getAsFile();
             if (file) {
-              await onUploadImage(file);
+              imageFiles.push(file);
             }
-            break;
+          }
+        }
+
+        if (imageFiles.length > 0) {
+          e.preventDefault();
+          if (imageFiles.length === 1 && onUploadImage) {
+            await onUploadImage(imageFiles[0]);
+          } else if (onUploadMultipleImages && imageFiles.length > 0) {
+            await onUploadMultipleImages(imageFiles);
           }
         }
       },
-      [onUploadImage, readonly],
+      [onUploadImage, onUploadMultipleImages, readonly],
     );
 
     const skills = useListSkills();
@@ -313,16 +324,20 @@ const ChatInputComponent = forwardRef<HTMLDivElement, ChatInputProps>(
 
           setIsDragging(false);
 
-          if (!onUploadImage) return;
+          if (!onUploadImage && !onUploadMultipleImages) return;
 
           const files = Array.from(e.dataTransfer.files);
-          const imageFile = files.find((file) => file.type.startsWith('image/'));
+          const imageFiles = files.filter((file) => file.type.startsWith('image/'));
 
-          if (imageFile) {
+          if (imageFiles.length > 0) {
             try {
-              await onUploadImage(imageFile);
+              if (imageFiles.length === 1 && onUploadImage) {
+                await onUploadImage(imageFiles[0]);
+              } else if (onUploadMultipleImages) {
+                await onUploadMultipleImages(imageFiles);
+              }
             } catch (error) {
-              console.error('Failed to upload image:', error);
+              console.error('Failed to upload images:', error);
             }
           }
         }}
@@ -415,6 +430,7 @@ export const ChatInput = memo(ChatInputComponent, (prevProps, nextProps) => {
     prevProps.selectedSkillName === nextProps.selectedSkillName &&
     prevProps.handleSelectSkill === nextProps.handleSelectSkill &&
     prevProps.onUploadImage === nextProps.onUploadImage &&
+    prevProps.onUploadMultipleImages === nextProps.onUploadMultipleImages &&
     prevProps.onFocus === nextProps.onFocus
   );
 }) as typeof ChatInputComponent;

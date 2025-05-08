@@ -53,6 +53,7 @@ export const EnhancedSkillResponse = memo(
     const [tplConfig, setTplConfig] = useState<SkillTemplateConfig | undefined>();
 
     const { projectId, handleProjectChange, getFinalProjectId } = useAskProject();
+    const { readonly, canvasId } = useCanvasContext();
 
     // Extract the last message resultId for context updates
     const lastMessageResultId = useMemo(() => {
@@ -79,7 +80,6 @@ export const EnhancedSkillResponse = memo(
     // Hooks
     const selectedSkill = useFindSkill(selectedSkillName);
     const { invokeAction, abortAction } = useInvokeAction();
-    const { canvasId, readonly } = useCanvasContext();
     const { addNode } = useAddNode();
 
     const { debouncedUpdateContextItems } = useContextUpdateByResultId({
@@ -204,17 +204,6 @@ export const EnhancedSkillResponse = memo(
       };
     }, [resultId]);
 
-    // Scroll to bottom effect
-    useEffect(() => {
-      if (containerRef.current && messages.length > 0) {
-        setTimeout(() => {
-          if (containerRef.current) {
-            containerRef.current.scrollTop = containerRef.current.scrollHeight;
-          }
-        }, 100);
-      }
-    }, [messages]);
-
     // Update context when lastMessageResultId changes
     useEffect(() => {
       if (lastMessageResultId) {
@@ -226,22 +215,6 @@ export const EnhancedSkillResponse = memo(
         return () => clearTimeout(timer);
       }
     }, [lastMessageResultId, debouncedUpdateContextItems]);
-
-    // Handler for image upload - memoized to prevent recreation on each render
-    const handleImageUpload = useCallback(async (file: File) => {
-      // Mock implementation - in a real app, this would upload the image and return data
-      const mockImageData = {
-        entityId: genUniqueId(),
-        type: 'image',
-        title: file.name,
-        url: URL.createObjectURL(file),
-        name: file.name,
-      };
-
-      setContextItems((prev) => [...prev, mockImageData as IContextItem]);
-
-      return mockImageData;
-    }, []);
 
     // Handler for send message - memoized for stability
     const handleSendMessage = useCallback(() => {
@@ -258,7 +231,7 @@ export const EnhancedSkillResponse = memo(
       const newNodeId = genUniqueId();
 
       const finalProjectId = getFinalProjectId();
-      const { runtimeConfig = {} } = useContextPanelStore.getState();
+      const { runtimeConfig: contextRuntimeConfig = {} } = useContextPanelStore.getState();
 
       // Create message object for the thread
       const newMessage: LinearThreadMessage = {
@@ -296,7 +269,10 @@ export const EnhancedSkillResponse = memo(
           modelInfo,
           contextItems,
           tplConfig,
-          runtimeConfig,
+          runtimeConfig: {
+            ...contextRuntimeConfig,
+            ...runtimeConfig,
+          },
           projectId: finalProjectId,
         },
         {
@@ -318,7 +294,10 @@ export const EnhancedSkillResponse = memo(
               tplConfig,
               selectedSkill,
               modelInfo,
-              runtimeConfig,
+              runtimeConfig: {
+                ...contextRuntimeConfig,
+                ...runtimeConfig,
+              },
               structuredData: {
                 query: currentQuery,
               },
@@ -360,10 +339,6 @@ export const EnhancedSkillResponse = memo(
           !prevTplConfigRef.current ||
           JSON.stringify(prevTplConfigRef.current) !== JSON.stringify(config)
         ) {
-          console.log('EnhancedSkillResponse updating tplConfig', {
-            old: prevTplConfigRef.current,
-            new: config,
-          });
           prevTplConfigRef.current = config;
           setTplConfig(config);
         }
@@ -397,7 +372,6 @@ export const EnhancedSkillResponse = memo(
           setTplConfig={handleSetTplConfig}
           handleSendMessage={handleSendMessage}
           handleAbortAction={abortAction}
-          handleUploadImage={handleImageUpload}
           onInputHeightChange={() => {
             // Adjust container height if needed
           }}
@@ -420,7 +394,6 @@ export const EnhancedSkillResponse = memo(
         handleSetTplConfig,
         handleSendMessage,
         abortAction,
-        handleImageUpload,
         resultId,
       ],
     );

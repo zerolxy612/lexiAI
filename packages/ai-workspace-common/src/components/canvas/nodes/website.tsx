@@ -11,7 +11,6 @@ import { useNodeHoverEffect } from '@refly-packages/ai-workspace-common/hooks/ca
 import { FiCode, FiEye, FiExternalLink, FiCopy } from 'react-icons/fi';
 import { Button, Form, Input, message, Tooltip } from 'antd';
 import { IconWebsite } from '@refly-packages/ai-workspace-common/components/common/icon';
-import { ActionButtons } from './shared/action-buttons';
 import {
   nodeActionEmitter,
   createNodeEventName,
@@ -19,7 +18,6 @@ import {
 } from '@refly-packages/ai-workspace-common/events/nodeActions';
 import { useSetNodeDataByEntity } from '@refly-packages/ai-workspace-common/hooks/canvas/use-set-node-data-by-entity';
 import { NodeHeader } from './shared/node-header';
-import { useEditorPerformance } from '@refly-packages/ai-workspace-common/context/editor-performance';
 import { useCanvasStoreShallow } from '@refly-packages/ai-workspace-common/stores/canvas';
 import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/canvas';
 import {
@@ -393,7 +391,6 @@ export const WebsiteNode = memo(
     id,
     selected,
     isPreview = false,
-    hideActions = false,
     hideHandles = false,
     onNodeClick,
   }: WebsiteNodeProps) => {
@@ -418,9 +415,7 @@ export const WebsiteNode = memo(
       operatingNodeId: state.operatingNodeId,
     }));
 
-    const { draggingNodeId } = useEditorPerformance();
     const isOperating = operatingNodeId === id;
-    const isDragging = draggingNodeId === id;
     const node = getNode(id);
 
     const { readonly } = useCanvasContext();
@@ -565,10 +560,6 @@ export const WebsiteNode = memo(
           style={isPreview ? { width: 288, height: 200 } : containerStyle}
           onClick={onNodeClick}
         >
-          {!isPreview && !hideActions && !isDragging && !readonly && (
-            <ActionButtons type="website" nodeId={id} isNodeHovered={selected && isHovered} />
-          )}
-
           <div
             className={`h-full flex flex-col ${getNodeCommonStyles({ selected, isHovered })} ${isResizing ? 'pointer-events-none' : ''}`}
           >
@@ -576,6 +567,7 @@ export const WebsiteNode = memo(
               <>
                 <CustomHandle
                   id={`${id}-target`}
+                  nodeId={id}
                   type="target"
                   position={Position.Left}
                   isConnected={isTargetConnected}
@@ -584,6 +576,7 @@ export const WebsiteNode = memo(
                 />
                 <CustomHandle
                   id={`${id}-source`}
+                  nodeId={id}
                   type="source"
                   position={Position.Right}
                   isConnected={isSourceConnected}

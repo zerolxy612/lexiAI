@@ -95,7 +95,15 @@ export class CustomPrompt extends BaseSkill {
     config: SkillRunnableConfig,
   ): Promise<Partial<GraphState>> => {
     const { messages = [], images = [] } = state;
-    const { currentSkill, tplConfig, locale = 'en', project, runtimeConfig } = config.configurable;
+    const {
+      currentSkill,
+      tplConfig,
+      locale = 'en',
+      project,
+      runtimeConfig,
+      modelConfigMap,
+    } = config.configurable;
+    const modelInfo = modelConfigMap.chat;
 
     // Set current step
     config.metadata.step = { name: 'analyzeQuery' };
@@ -195,7 +203,7 @@ export class CustomPrompt extends BaseSkill {
         config,
         ctxThis: this,
         state,
-        tplConfig: config.configurable.tplConfig,
+        tplConfig,
       },
     );
 
@@ -243,7 +251,7 @@ export class CustomPrompt extends BaseSkill {
       originalQuery: query,
       optimizedQuery,
       rewrittenQueries,
-      modelInfo: config?.configurable?.modelInfo,
+      modelInfo,
       customInstructions,
     });
 

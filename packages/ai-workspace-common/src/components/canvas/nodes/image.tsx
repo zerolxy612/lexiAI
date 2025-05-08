@@ -1,7 +1,6 @@
 import { memo, useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { useReactFlow, Position } from '@xyflow/react';
 import { CanvasNode, ImageNodeProps } from './shared/types';
-import { ActionButtons } from './shared/action-buttons';
 import { useNodeHoverEffect } from '@refly-packages/ai-workspace-common/hooks/canvas/use-node-hover';
 import {
   useNodeSize,
@@ -26,14 +25,13 @@ import { useAddToContext } from '@refly-packages/ai-workspace-common/hooks/canva
 import { useDeleteNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-delete-node';
 import Moveable from 'react-moveable';
 import { useSetNodeDataByEntity } from '@refly-packages/ai-workspace-common/hooks/canvas/use-set-node-data-by-entity';
-import { useEditorPerformance } from '@refly-packages/ai-workspace-common/context/editor-performance';
 import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/canvas';
 import cn from 'classnames';
 import { ImagePreview } from '@refly-packages/ai-workspace-common/components/common/image-preview';
 import { useSelectedNodeZIndex } from '@refly-packages/ai-workspace-common/hooks/canvas/use-selected-node-zIndex';
 
 export const ImageNode = memo(
-  ({ id, data, isPreview, selected, hideActions, hideHandles, onNodeClick }: ImageNodeProps) => {
+  ({ id, data, isPreview, selected, hideHandles, onNodeClick }: ImageNodeProps) => {
     const { metadata } = data ?? {};
     const imageUrl = metadata?.imageUrl ?? '';
     const showBorder = metadata?.showBorder ?? false;
@@ -53,9 +51,7 @@ export const ImageNode = memo(
       operatingNodeId: state.operatingNodeId,
     }));
 
-    const { draggingNodeId } = useEditorPerformance();
     const isOperating = operatingNodeId === id;
-    const isDragging = draggingNodeId === id;
     const node = useMemo(() => getNode(id), [id, getNode]);
     const { readonly } = useCanvasContext();
 
@@ -138,6 +134,12 @@ export const ImageNode = memo(
       setIsPreviewModalVisible(true);
     }, []);
 
+    const handleImageClick = useCallback(() => {
+      if (selected || readonly) {
+        handlePreview();
+      }
+    }, [selected, readonly, handlePreview]);
+
     const onTitleChange = (newTitle: string) => {
       setNodeDataByEntity(
         {
@@ -206,10 +208,6 @@ export const ImageNode = memo(
             'nodrag nopan select-text': isOperating,
           })}
         >
-          {!isPreview && !hideActions && !isDragging && !readonly && (
-            <ActionButtons type="image" nodeId={id} isNodeHovered={selected && isHovered} />
-          )}
-
           <div
             className={`
                 w-full
@@ -221,6 +219,7 @@ export const ImageNode = memo(
               <>
                 <CustomHandle
                   id={`${id}-target`}
+                  nodeId={id}
                   type="target"
                   position={Position.Left}
                   isConnected={false}
@@ -229,6 +228,7 @@ export const ImageNode = memo(
                 />
                 <CustomHandle
                   id={`${id}-source`}
+                  nodeId={id}
                   type="source"
                   position={Position.Right}
                   isConnected={false}
@@ -239,11 +239,20 @@ export const ImageNode = memo(
             )}
 
             <div className={cn('flex flex-col h-full relative box-border', MAX_HEIGHT_CLASS)}>
-              <div className="relative w-full rounded-lg overflow-y-auto">
-                {showTitle && isHovered && (
+              <div className="relative w-full h-full rounded-lg overflow-hidden">
+                {showTitle && (
                   <div
-                    className="absolute top-0 left-0 right-0 z-10 rounded-t-lg px-1"
-                    style={{ textShadow: '0px 0px 3px #ffffff' }}
+                    className={cn(
+                      'absolute top-0 left-0 right-0 z-10 rounded-t-lg px-1 transition-opacity duration-200',
+                      {
+                        'opacity-100': selected || isHovered,
+                        'opacity-0': !selected && !isHovered,
+                      },
+                    )}
+                    style={{
+                      textShadow: '0px 0px 3px #ffffff',
+                      backgroundColor: 'transparent',
+                    }}
                   >
                     <NodeHeader
                       title={data.title}
@@ -255,10 +264,11 @@ export const ImageNode = memo(
                   </div>
                 )}
                 <img
-                  onClick={readonly ? handlePreview : undefined}
+                  onClick={handleImageClick}
                   src={imageUrl}
                   alt={data.title || 'Image'}
-                  className="w-full h-auto object-contain"
+                  className="w-full h-full object-contain"
+                  style={{ cursor: selected || readonly ? 'pointer' : 'default' }}
                 />
 
                 {/* only for preview image */}

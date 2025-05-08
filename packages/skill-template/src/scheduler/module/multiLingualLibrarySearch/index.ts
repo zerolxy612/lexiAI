@@ -81,7 +81,7 @@ export const callMultiLingualLibrarySearch = async (
   const projectId = config.configurable.project?.projectId;
   let finalResults: Source[] = [];
 
-  const model = engine.chatModel({ temperature: 0.1 }, true);
+  const model = engine.chatModel({ temperature: 0.1 }, 'queryAnalysis');
 
   const enableQueryRewrite = params.enableQueryRewrite ?? true;
 
@@ -114,7 +114,7 @@ export const callMultiLingualLibrarySearch = async (
           `${buildRewriteQuerySystemPrompt()}\n\n${buildRewriteQueryUserPrompt({ query })}`,
           config,
           3,
-          ctx?.config?.configurable?.modelInfo,
+          ctx?.config?.configurable?.modelConfigMap?.queryAnalysis,
         );
 
         queries = rewriteResult?.queries?.rewrittenQueries || [query];
@@ -353,10 +353,15 @@ export const callMultiLingualLibrarySearch = async (
         const searchResults = sourcesToSearchResults(finalResults);
 
         // Perform reranking
-        const rerankResponse = await engine.service.rerank(query, searchResults, {
-          topN: rerankLimit || searchResults.length,
-          relevanceThreshold: rerankRelevanceThreshold,
-        });
+        const rerankResponse = await engine.service.rerank(
+          config.configurable.user,
+          query,
+          searchResults,
+          {
+            topN: rerankLimit || searchResults.length,
+            relevanceThreshold: rerankRelevanceThreshold,
+          },
+        );
 
         // Convert back to Source format
         if (rerankResponse?.data) {

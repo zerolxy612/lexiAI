@@ -39,6 +39,9 @@ import {
   ActionStep,
   Artifact,
   ActionMeta,
+  ModelScene,
+  LLMModelConfig,
+  CodeArtifact,
 } from '@refly/openapi-schema';
 import {
   BaseSkill,
@@ -80,10 +83,10 @@ import { labelClassPO2DTO, labelPO2DTO } from '../label/label.dto';
 import { SyncRequestUsageJobData, SyncTokenUsageJobData } from '../subscription/subscription.dto';
 import { SubscriptionService } from '../subscription/subscription.service';
 import {
-  ModelNotSupportedError,
   ModelUsageQuotaExceeded,
   ParamsError,
   ProjectNotFoundError,
+  ProviderItemNotFoundError,
   SkillNotFoundError,
 } from '@refly/errors';
 import { genBaseRespDataFromError } from '../../utils/exception';
@@ -95,12 +98,14 @@ import { throttle } from 'lodash';
 import { ResultAggregator } from '../../utils/result';
 import { CollabContext } from '../collab/collab.dto';
 import { DirectConnection } from '@hocuspocus/server';
-import { modelInfoPO2DTO } from '../misc/misc.dto';
 import { MiscService } from '../misc/misc.service';
 import { AutoNameCanvasJobData } from '../canvas/canvas.dto';
 import { ParserFactory } from '../knowledge/parsers/factory';
 import { CodeArtifactService } from '../code-artifact/code-artifact.service';
 import { projectPO2DTO } from '@/modules/project/project.dto';
+import { ProviderService } from '@/modules/provider/provider.service';
+import { providerPO2DTO } from '@/modules/provider/provider.dto';
+import { codeArtifactPO2DTO } from '@/modules/code-artifact/code-artifact.dto';
 
 function validateSkillTriggerCreateParam(param: SkillTriggerCreateParam) {
   if (param.triggerType === 'simpleEvent') {
@@ -132,6 +137,7 @@ export class SkillService {
     private collabService: CollabService,
     private misc: MiscService,
     private codeArtifact: CodeArtifactService,
+    private providerService: ProviderService,
     @InjectQueue(QUEUE_SKILL) private skillQueue: Queue<InvokeSkillJobData>,
     @InjectQueue(QUEUE_SKILL_TIMEOUT_CHECK)
     private timeoutCheckQueue: Queue<SkillTimeoutCheckJobData>,
@@ -203,8 +209,8 @@ export class SkillService {
         const result = await this.search.webSearch(user, req);
         return buildSuccessResponse(result);
       },
-      rerank: async (query, results, options) => {
-        const result = await this.rag.rerank(query, results, options);
+      rerank: async (user, query, results, options) => {
+        const result = await this.rag.rerank(user, query, results, options);
         return buildSuccessResponse(result);
       },
       search: async (user, req, options) => {
@@ -223,10 +229,10 @@ export class SkillService {
         const result = await this.rag.inMemorySearchWithIndexing(user, options);
         return buildSuccessResponse(result);
       },
-      crawlUrl: async (_user, url) => {
+      crawlUrl: async (user, url) => {
         try {
-          const parserFactory = new ParserFactory(this.config);
-          const jinaParser = parserFactory.createParser('jina', {
+          const parserFactory = new ParserFactory(this.config, this.providerService);
+          const jinaParser = await parserFactory.createWebParser(user, {
             resourceId: `temp-${Date.now()}`,
           });
 
@@ -407,6 +413,7 @@ export class SkillService {
         : { query: existingResult.title };
 
       param.modelName ??= existingResult.modelName;
+      param.modelItemId ??= existingResult.providerItemId;
       param.skillName ??= safeParseJSON(existingResult.actionMeta).name;
       param.context ??= safeParseJSON(existingResult.context);
       param.resultHistory ??= safeParseJSON(existingResult.history);
@@ -418,24 +425,44 @@ export class SkillService {
     param.input ||= { query: '' };
     param.skillName ||= 'commonQnA';
 
-    const defaultModel = await this.subscription.getDefaultModel();
-    param.modelName ||= defaultModel?.name;
+    const defaultModel = await this.providerService.findDefaultProviderItem(user, 'chat');
+    param.modelItemId ||= defaultModel?.itemId;
 
-    // Check for usage quota
-    const usageResult = await this.subscription.checkRequestUsage(user);
+    const modelItemId = param.modelItemId;
+    const providerItem = await this.providerService.findProviderItemById(user, modelItemId);
 
-    const modelName = param.modelName;
-    const modelInfo = await this.prisma.modelInfo.findUnique({ where: { name: modelName } });
-
-    if (!modelInfo) {
-      throw new ModelNotSupportedError(`model ${modelName} not supported`);
+    if (!providerItem || providerItem.category !== 'llm' || !providerItem.enabled) {
+      throw new ProviderItemNotFoundError(`provider item ${modelItemId} not valid`);
     }
 
-    if (!usageResult[modelInfo.tier]) {
-      throw new ModelUsageQuotaExceeded(
-        `model ${modelName} (${modelInfo.tier}) not available for current plan`,
-      );
+    const modelProviderMap = await this.providerService.prepareModelProviderMap(user, modelItemId);
+    param.modelItemId = modelProviderMap.chat.itemId;
+
+    const tiers = [];
+    for (const providerItem of Object.values(modelProviderMap)) {
+      if (providerItem.tier) {
+        tiers.push(providerItem.tier);
+      }
     }
+
+    if (tiers.length > 0) {
+      // Check for usage quota
+      const usageResult = await this.subscription.checkRequestUsage(user);
+
+      for (const tier of tiers) {
+        if (!usageResult[tier]) {
+          throw new ModelUsageQuotaExceeded(
+            `model provider (${tier}) not available for current plan`,
+          );
+        }
+      }
+    }
+
+    const modelConfigMap: Record<ModelScene, LLMModelConfig> = {
+      chat: JSON.parse(modelProviderMap.chat.config) as LLMModelConfig,
+      titleGeneration: JSON.parse(modelProviderMap.titleGeneration.config) as LLMModelConfig,
+      queryAnalysis: JSON.parse(modelProviderMap.queryAnalysis.config) as LLMModelConfig,
+    };
 
     if (param.context) {
       param.context = await this.populateSkillContext(user, param.context);
@@ -475,6 +502,13 @@ export class SkillService {
           document.content = '';
         }
       }
+
+      if (contextCopy.codeArtifacts) {
+        for (const { codeArtifact } of contextCopy.codeArtifacts) {
+          codeArtifact.content = '';
+        }
+      }
+
       return contextCopy;
     };
 
@@ -487,7 +521,11 @@ export class SkillService {
       ...param,
       uid,
       rawParam: JSON.stringify(param),
-      modelInfo: modelInfoPO2DTO(modelInfo),
+      modelConfigMap,
+      provider: {
+        ...providerPO2DTO(providerItem?.provider),
+        apiKey: providerItem?.provider?.apiKey,
+      },
     };
 
     if (existingResult) {
@@ -498,12 +536,12 @@ export class SkillService {
             uid,
             version: (existingResult.version ?? 0) + 1,
             type: 'skill',
-            tier: modelInfo.tier,
+            tier: providerItem.tier ?? '',
             status: 'executing',
             title: param.input.query,
             targetId: param.target?.entityId,
             targetType: param.target?.entityType,
-            modelName,
+            modelName: modelConfigMap.chat.modelId,
             projectId: param.projectId ?? null,
             actionMeta: JSON.stringify({
               type: 'skill',
@@ -516,6 +554,7 @@ export class SkillService {
             tplConfig: JSON.stringify(param.tplConfig),
             runtimeConfig: JSON.stringify(param.runtimeConfig),
             history: JSON.stringify(purgeResultHistory(param.resultHistory)),
+            providerItemId: providerItem.itemId,
           },
         }),
         // Delete existing step data
@@ -531,11 +570,11 @@ export class SkillService {
           resultId,
           uid,
           version: 0,
-          tier: modelInfo.tier,
+          tier: providerItem.tier,
           targetId: param.target?.entityId,
           targetType: param.target?.entityType,
           title: param.input?.query,
-          modelName,
+          modelName: modelConfigMap.chat.modelId,
           type: 'skill',
           status: 'executing',
           actionMeta: JSON.stringify({
@@ -549,6 +588,7 @@ export class SkillService {
           tplConfig: JSON.stringify(param.tplConfig),
           runtimeConfig: JSON.stringify(param.runtimeConfig),
           history: JSON.stringify(purgeResultHistory(param.resultHistory)),
+          providerItemId: providerItem.itemId,
         },
       });
       data.result = actionResultPO2DTO(result);
@@ -598,6 +638,64 @@ export class SkillService {
       for (const item of context.documents) {
         item.document = docMap.get(item.docId);
       }
+    }
+
+    // Populate code artifacts
+    if (context.codeArtifacts?.length > 0) {
+      const artifactIds = [
+        ...new Set(context.codeArtifacts.map((item) => item.artifactId).filter((id) => id)),
+      ];
+      const limit = pLimit(5);
+      const artifacts = await Promise.all(
+        artifactIds.map((id) => limit(() => this.codeArtifact.getCodeArtifactDetail(user, id))),
+      );
+      const artifactMap = new Map<string, CodeArtifact>();
+      for (const a of artifacts) {
+        artifactMap.set(a.artifactId, codeArtifactPO2DTO(a));
+      }
+
+      for (const item of context.codeArtifacts) {
+        item.codeArtifact = artifactMap.get(item.artifactId);
+      }
+
+      // Process code artifacts and add them to contentList
+      if (!context.contentList) {
+        context.contentList = [];
+      }
+
+      const codeArtifactContentList = context.codeArtifacts
+        .filter((item) => item.codeArtifact?.content)
+        .map((item) => {
+          const codeArtifact = item.codeArtifact;
+          // For long code content, preserve beginning and end
+          const MAX_CONTENT_LENGTH = 10000;
+          const PRESERVED_SECTION_LENGTH = 2000;
+
+          let processedContent = codeArtifact.content;
+
+          if (codeArtifact.content.length > MAX_CONTENT_LENGTH) {
+            const startContent = codeArtifact.content.substring(0, PRESERVED_SECTION_LENGTH);
+            const endContent = codeArtifact.content.substring(
+              codeArtifact.content.length - PRESERVED_SECTION_LENGTH,
+              codeArtifact.content.length,
+            );
+            processedContent = `${startContent}\n\n... (content truncated) ...\n\n${endContent}`;
+          }
+
+          return {
+            title: codeArtifact.title ?? 'Code',
+            content: processedContent,
+            metadata: {
+              domain: 'codeArtifact',
+              entityId: item.artifactId,
+              title: codeArtifact.title ?? 'Code',
+              language: codeArtifact.language,
+              artifactType: codeArtifact.type,
+            },
+          };
+        });
+
+      context.contentList.push(...codeArtifactContentList);
     }
 
     return context;
@@ -710,7 +808,8 @@ export class SkillService {
       context,
       tplConfig,
       runtimeConfig,
-      modelInfo,
+      modelConfigMap,
+      provider,
       resultHistory,
       projectId,
       eventListener,
@@ -733,7 +832,8 @@ export class SkillService {
       configurable: {
         ...context,
         user,
-        modelInfo,
+        modelConfigMap,
+        provider,
         locale: displayLocale,
         uiLocale: userPo.uiLocale,
         tplConfig,
@@ -786,7 +886,7 @@ export class SkillService {
 
     const { resultId, version } = data.result;
 
-    const defaultModel = await this.subscription.getDefaultModel();
+    const defaultModel = await this.providerService.findDefaultProviderItem(user, 'chat');
     this.skillEngine.setOptions({ defaultModel: defaultModel?.name });
 
     try {
@@ -855,11 +955,13 @@ export class SkillService {
       input.images = await this.misc.generateImageUrls(user, input.images);
     }
 
-    await this.requestUsageQueue.add('syncRequestUsage', {
-      uid: user.uid,
-      tier,
-      timestamp: new Date(),
-    });
+    if (tier) {
+      await this.requestUsageQueue.add('syncRequestUsage', {
+        uid: user.uid,
+        tier,
+        timestamp: new Date(),
+      });
+    }
 
     let aborted = false;
 
@@ -1145,14 +1247,17 @@ ${event.data?.input ? JSON.stringify(event.data?.input?.input) : ''}
           }
           case 'on_chat_model_end':
             if (runMeta && chunk) {
-              const modelInfo = await this.subscription.getModelInfo(String(runMeta.ls_model_name));
-              if (!modelInfo) {
+              const providerItem = await this.providerService.findLLMProviderItemByModelID(
+                user,
+                String(runMeta.ls_model_name),
+              );
+              if (!providerItem) {
                 this.logger.error(`model not found: ${String(runMeta.ls_model_name)}`);
               }
               const usage: TokenUsageItem = {
-                tier: modelInfo?.tier,
-                modelProvider: modelInfo?.provider,
-                modelName: modelInfo?.name,
+                tier: providerItem?.tier,
+                modelProvider: providerItem?.provider?.name,
+                modelName: String(runMeta.ls_model_name),
                 inputTokens: chunk.usage_metadata?.input_tokens ?? 0,
                 outputTokens: chunk.usage_metadata?.output_tokens ?? 0,
               };
@@ -1222,11 +1327,13 @@ ${event.data?.input ? JSON.stringify(event.data?.input?.input) : ''}
         }
       }
 
-      await this.requestUsageQueue.add('syncRequestUsage', {
-        uid: user.uid,
-        tier,
-        timestamp: new Date(),
-      });
+      if (tier) {
+        await this.requestUsageQueue.add('syncRequestUsage', {
+          uid: user.uid,
+          tier,
+          timestamp: new Date(),
+        });
+      }
     }
   }
 

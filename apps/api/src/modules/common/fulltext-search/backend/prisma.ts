@@ -116,7 +116,7 @@ export class PrismaFulltextSearchBackend implements FulltextSearchBackend {
           {
             title: {
               contains: req.query,
-              // mode: 'insensitive'
+              mode: 'insensitive',
             },
           },
         ],
@@ -155,7 +155,7 @@ export class PrismaFulltextSearchBackend implements FulltextSearchBackend {
       where: {
         uid: user.uid,
         deletedAt: null,
-        OR: [{ title: { contains: req.query } }],
+        OR: [{ title: { contains: req.query, mode: 'insensitive' } }],
       },
       take: req.limit ?? 20,
       orderBy: { updatedAt: 'desc' },
@@ -190,7 +190,7 @@ export class PrismaFulltextSearchBackend implements FulltextSearchBackend {
       where: {
         uid: user.uid,
         deletedAt: null,
-        OR: [{ title: { contains: req.query } }],
+        OR: [{ title: { contains: req.query, mode: 'insensitive' } }],
       },
       take: req.limit ?? 20,
       orderBy: { updatedAt: 'desc' },

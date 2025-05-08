@@ -104,19 +104,8 @@ export default () => ({
       callbackUrl: process.env.GOOGLE_CALLBACK_URL || 'test',
     },
   },
-  parser: {
-    pdf: process.env.PARSER_PDF || 'pdfjs',
-  },
-  embeddings: {
-    provider: process.env.EMBEDDINGS_PROVIDER || 'jina',
-    modelName: process.env.EMBEDDINGS_MODEL_NAME || 'jina-embeddings-v3',
-    dimensions: Number.parseInt(process.env.EMBEDDINGS_DIMENSIONS) || 768,
-    batchSize: Number.parseInt(process.env.EMBEDDINGS_BATCH_SIZE) || 512,
-  },
-  reranker: {
-    topN: Number.parseInt(process.env.RERANKER_TOP_N) || 10,
-    model: process.env.RERANKER_MODEL || 'jina-reranker-v2-base-multilingual',
-    relevanceThreshold: Number.parseFloat(process.env.RERANKER_RELEVANCE_THRESHOLD) || 0.5,
+  encryption: {
+    key: process.env.ENCRYPTION_KEY,
   },
   skill: {
     idleTimeout: Number.parseInt(process.env.SKILL_IDLE_TIMEOUT) || 1000 * 60, // 1 minute
@@ -149,12 +138,5 @@ export default () => ({
     fileParse: {
       page: Number.parseInt(process.env.QUOTA_FILE_PARSE_PAGE) || -1,
     },
-  },
-  credentials: {
-    openai: process.env.OPENAI_API_KEY,
-    jina: process.env.JINA_API_KEY,
-    fireworks: process.env.FIREWORKS_API_KEY,
-    serper: process.env.SERPER_API_KEY,
-    marker: process.env.MARKER_API_KEY,
   },
 });

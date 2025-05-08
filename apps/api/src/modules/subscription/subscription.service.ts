@@ -819,7 +819,7 @@ export class SubscriptionService implements OnModuleInit {
   async syncRequestUsage(data: SyncRequestUsageJobData) {
     const { uid, tier } = data;
 
-    if (tier === 'free') {
+    if (!tier || tier === 'free') {
       return;
     }
 
@@ -870,7 +870,8 @@ export class SubscriptionService implements OnModuleInit {
       this.prisma.tokenUsage.create({
         data: {
           ...pick(data, ['uid', 'resultId']),
-          ...pick(usage, ['tier', 'modelProvider', 'modelName', 'inputTokens', 'outputTokens']),
+          ...pick(usage, ['modelProvider', 'modelName', 'inputTokens', 'outputTokens']),
+          tier: usage.tier ?? '',
         },
       }),
       ...(usage.tier !== 'free'
@@ -992,31 +993,6 @@ export class SubscriptionService implements OnModuleInit {
     }
   }
 
-  async getDefaultModel() {
-    const models = await this.getModelList();
-    const defaultModel = models.find((model) => model.isDefault);
-
-    // If default model is present, return it
-    if (defaultModel) {
-      return defaultModel;
-    }
-
-    // Fallback to first t2 model
-    const t2Model = models.find((model) => model.tier === 't2');
-    if (t2Model) {
-      return t2Model;
-    }
-
-    // Fallback to first model
-    if (models.length > 0) {
-      return models[0];
-    }
-
-    throw new Error(
-      'No valid models configured, follow the instructions in https://docs.refly.ai/guide/self-deploy#initialize-llm-models',
-    );
-  }
-
   private async fetchModelList(): Promise<ModelInfoModel[]> {
     const models = await this.prisma.modelInfo.findMany({
       where: { enabled: true },
@@ -1024,11 +1000,6 @@ export class SubscriptionService implements OnModuleInit {
     this.modelList = models;
     this.modelListSyncedAt = new Date();
     return models;
-  }
-
-  async getModelInfo(modelName: string) {
-    const modelList = await this.getModelList();
-    return modelList.find((model) => model.name === modelName);
   }
 }
 
