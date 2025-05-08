@@ -1721,6 +1721,16 @@ const translations = {
       typeSSE: '服务器发送事件 (SSE)',
       typeStreamable: '流式 API',
       typeStdio: '标准输入输出',
+      batchImport: '批量导入',
+      batchImportTitle: '批量导入 MCP 服务器',
+      batchImportDescription:
+        '通过提供 JSON 数组一次性导入多个 MCP 服务器。数组中的每个对象应代表一个服务器配置。',
+      importServers: '导入服务器',
+      batchImportSuccess: '成功导入 {{total}} 个服务器中的 {{count}} 个',
+      batchImportPartialError: '{{total}} 个服务器中的 {{count}} 个导入失败',
+      batchImportEmptyError: '没有要导入的服务器。请提供有效的服务器配置 JSON 数组。',
+      universalFormat: '通用格式',
+      reflyFormat: 'Refly 格式',
     },
     guide: {
       title: '设置向导',

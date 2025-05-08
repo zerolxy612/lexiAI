@@ -1929,6 +1929,17 @@ const translations = {
       typeSSE: 'Server-Sent Events (SSE)',
       typeStreamable: 'Streamable API',
       typeStdio: 'Standard I/O',
+      batchImport: 'Batch Import',
+      batchImportTitle: 'Import Multiple MCP Servers',
+      batchImportDescription:
+        'Import multiple MCP servers at once by providing a JSON array. Each object in the array should represent a server configuration.',
+      importServers: 'Import Servers',
+      batchImportSuccess: 'Successfully imported {{count}} of {{total}} servers',
+      batchImportPartialError: 'Failed to import {{count}} of {{total}} servers',
+      batchImportEmptyError:
+        'No servers to import. Please provide a valid JSON array of server configurations.',
+      universalFormat: 'Universal Format',
+      reflyFormat: 'Refly Format',
     },
     account: {
       title: 'My Account',

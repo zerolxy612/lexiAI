@@ -7,7 +7,7 @@ import {
   User,
 } from '@refly/openapi-schema';
 import { McpServer as McpServerModel } from '@/generated/client';
-import { genMcpServerID } from '@refly/utils';
+// 不再需要 serverId 相关代码
 import { McpServerNotFoundError, ParamsError } from '@refly/errors';
 import { SingleFlightCache } from '@/utils/cache';
 import { EncryptionService } from '@/modules/common/encryption.service';
@@ -178,6 +178,18 @@ export class McpServerService {
       throw new ParamsError('Server name and type are required');
     }
 
+    // 检查名称是否已存在
+    const existingServer = await this.prisma.mcpServer.findFirst({
+      where: {
+        name,
+        deletedAt: null,
+      },
+    });
+
+    if (existingServer) {
+      throw new ParamsError(`MCP server with name '${name}' already exists`);
+    }
+
     // Validate required fields based on server type
     if ((type === 'sse' || type === 'streamable') && !url) {
       throw new ParamsError('URL is required for SSE and Streamable server types');
@@ -186,8 +198,6 @@ export class McpServerService {
     if (type === 'stdio' && (!command || !args)) {
       throw new ParamsError('Command and args are required for Stdio server type');
     }
-
-    const serverId = genMcpServerID();
 
     // Encrypt sensitive information
     const serverData = this.encryptServerConfig({
@@ -205,7 +215,6 @@ export class McpServerService {
 
     const server = await this.prisma.mcpServer.create({
       data: {
-        serverId,
         ...serverData,
         uid: user.uid,
       },
@@ -219,16 +228,16 @@ export class McpServerService {
    * Update an existing MCP server
    */
   async updateMcpServer(user: User, param: UpsertMcpServerRequest) {
-    const { serverId, name, type, url, command, args, env, headers, reconnect, config, enabled } =
-      param;
+    const { name, type, url, command, args, env, headers, reconnect, config, enabled } = param;
 
-    if (!serverId) {
-      throw new ParamsError('Server ID is required');
+    if (!name) {
+      throw new ParamsError('Server name is required');
     }
 
-    const server = await this.prisma.mcpServer.findUnique({
+    // 根据名称查找服务器
+    const server = await this.prisma.mcpServer.findFirst({
       where: {
-        serverId,
+        name,
         OR: [{ uid: user.uid }, { isGlobal: true }],
         deletedAt: null,
       },
@@ -281,15 +290,16 @@ export class McpServerService {
    * Delete an MCP server
    */
   async deleteMcpServer(user: User, param: DeleteMcpServerRequest) {
-    const { serverId } = param;
+    const { name } = param;
 
-    if (!serverId) {
-      throw new ParamsError('Server ID is required');
+    if (!name) {
+      throw new ParamsError('Server name is required');
     }
 
-    const server = await this.prisma.mcpServer.findUnique({
+    // 根据名称查找服务器
+    const server = await this.prisma.mcpServer.findFirst({
       where: {
-        serverId,
+        name,
         OR: [{ uid: user.uid }, { isGlobal: true }],
         deletedAt: null,
       },

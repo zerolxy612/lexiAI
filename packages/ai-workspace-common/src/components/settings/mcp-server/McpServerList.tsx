@@ -8,6 +8,7 @@ import { McpServerDTO, McpServerType } from '@refly/openapi-schema';
 import { useDeleteMcpServer } from '@refly-packages/ai-workspace-common/queries';
 import { useListMcpServersSuspense } from '@refly-packages/ai-workspace-common/queries/suspense';
 import { McpServerForm } from '@refly-packages/ai-workspace-common/components/settings/mcp-server/McpServerForm';
+import { McpServerBatchImport } from '@refly-packages/ai-workspace-common/components/settings/mcp-server/McpServerBatchImport';
 
 interface McpServerListProps {
   visible: boolean;
@@ -67,7 +68,7 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
   const confirmDelete = () => {
     if (serverToDelete) {
       deleteMutation.mutate({
-        body: { serverId: serverToDelete.serverId },
+        body: { name: serverToDelete.name },
       });
     }
   };
@@ -143,19 +144,24 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
     <div className="mcp-server-list">
       <div className="flex justify-between items-center mb-4">
         <h2>{t('settings.mcpServer.title')}</h2>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => {
-            setEditingServer(null);
-            setIsFormVisible(true);
-          }}
-        >
-          {t('settings.mcpServer.addServer')}
-        </Button>
+        <Space>
+          {/* Batch import button */}
+          <McpServerBatchImport onSuccess={refetch} />
+          {/* Add single server button */}
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => {
+              setEditingServer(null);
+              setIsFormVisible(true);
+            }}
+          >
+            {t('settings.mcpServer.addServer')}
+          </Button>
+        </Space>
       </div>
 
-      <Table dataSource={mcpServers} columns={columns} rowKey="serverId" pagination={false} />
+      <Table dataSource={mcpServers} columns={columns} rowKey="name" pagination={false} />
 
       {/* Form Modal */}
       <Modal

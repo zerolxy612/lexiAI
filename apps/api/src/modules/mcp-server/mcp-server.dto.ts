@@ -11,7 +11,7 @@ export const mcpServerPO2DTO = (server: McpServer): McpServerDTO => {
   }
 
   return {
-    ...pick(server, ['serverId', 'name', 'url', 'command', 'enabled', 'isGlobal']),
+    ...pick(server, ['name', 'url', 'command', 'enabled', 'isGlobal']),
     type: server.type as McpServerType,
     args: server.args ? JSON.parse(server.args) : null,
     env: server.env ? JSON.parse(server.env) : null,

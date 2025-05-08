@@ -8,13 +8,8 @@ export const McpServerTypeSchema = {
 
 export const McpServerDTOSchema = {
   type: 'object',
-  required: ['serverId', 'name', 'type', 'enabled', 'isGlobal', 'createdAt', 'updatedAt'],
+  required: ['name', 'type', 'enabled', 'isGlobal', 'createdAt', 'updatedAt'],
   properties: {
-    serverId: {
-      type: 'string',
-      description: 'MCP server ID',
-      example: 'mcp-g30e1b80b5g1itbemc0g5jj3',
-    },
     name: {
       type: 'string',
       description: 'MCP server name',
@@ -146,10 +141,6 @@ export const UpsertMcpServerRequestSchema = {
   type: 'object',
   required: ['name', 'type'],
   properties: {
-    serverId: {
-      type: 'string',
-      description: 'MCP server ID (only for update)',
-    },
     name: {
       type: 'string',
       description: 'MCP server name',
@@ -234,11 +225,11 @@ export const UpsertMcpServerResponseSchema = {
 
 export const DeleteMcpServerRequestSchema = {
   type: 'object',
-  required: ['serverId'],
+  required: ['name'],
   properties: {
-    serverId: {
+    name: {
       type: 'string',
-      description: 'MCP server ID to delete',
+      description: 'MCP name to delete',
     },
   },
 } as const;

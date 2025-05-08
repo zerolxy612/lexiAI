@@ -1145,10 +1145,8 @@ model PageVersion {
 model McpServer {
   /// Primary key
   pk        Int       @id @default(autoincrement())
-  /// Server id
-  serverId  String    @unique @map("server_id")
   /// Server name
-  name      String    @map("name")
+  name      String    @unique @map("name")
   /// Server type (sse, streamable, stdio)
   type      String    @map("type")
   /// Whether the server is global

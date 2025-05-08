@@ -2665,7 +2665,6 @@ components:
     McpServerDTO:
       type: object
       required:
-        - serverId
         - name
         - type
         - enabled
@@ -2673,10 +2672,6 @@ components:
         - createdAt
         - updatedAt
       properties:
-        serverId:
-          type: string
-          description: MCP server ID
-          example: mcp-g30e1b80b5g1itbemc0g5jj3
         name:
           type: string
           description: MCP server name
@@ -2771,9 +2766,6 @@ components:
         - name
         - type
       properties:
-        serverId:
-          type: string
-          description: MCP server ID (only for update)
         name:
           type: string
           description: MCP server name
@@ -2832,11 +2824,11 @@ components:
     DeleteMcpServerRequest:
       type: object
       required:
-        - serverId
+        - name
       properties:
-        serverId:
+        name:
           type: string
-          description: MCP server ID to delete
+          description: MCP name to delete
 
     DeleteMcpServerResponse:
       allOf:

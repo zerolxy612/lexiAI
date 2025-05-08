@@ -2,7 +2,6 @@ import { McpServerDTO, McpServerType } from '@refly/openapi-schema';
 
 // Form data type for MCP server
 export interface McpServerFormData {
-  serverId?: string;
   name: string;
   type: McpServerType;
   url?: string;
@@ -41,7 +40,6 @@ export interface McpServerDetailProps {
 
 // Props for MCP server delete modal
 export interface McpServerDeleteModalProps {
-  serverId: string;
   serverName: string;
   visible: boolean;
   onClose: () => void;
@@ -51,7 +49,12 @@ export interface McpServerDeleteModalProps {
 
 // Props for MCP server JSON editor
 export interface McpServerJsonEditorProps {
-  value: McpServerFormData;
-  onChange: (value: McpServerFormData) => void;
+  value: McpServerFormData | McpServerFormData[];
+  onChange: (value: McpServerFormData | McpServerFormData[]) => void;
   readOnly?: boolean;
+}
+
+// Props for MCP server batch import component
+export interface McpServerBatchImportProps {
+  onSuccess: () => void;
 }

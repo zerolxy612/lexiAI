@@ -13,7 +13,6 @@ import {
 } from 'antd';
 import { PlusOutlined, MinusCircleOutlined, CodeOutlined, FormOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { v4 as uuidv4 } from 'uuid';
 import { McpServerType } from '@refly/openapi-schema';
 import { McpServerFormProps, McpServerFormData } from './types';
 import { McpServerJsonEditor } from './McpServerJsonEditor';
@@ -30,7 +29,7 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
   initialData,
   onSubmit,
   onCancel,
-  loading = false,
+  _loading = false,
 }) => {
   const { t } = useTranslation();
   const [form] = Form.useForm<McpServerFormData>();
@@ -79,7 +78,6 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
   useEffect(() => {
     if (initialData) {
       const formValues: McpServerFormData = {
-        serverId: initialData.serverId,
         name: initialData.name,
         type: initialData.type,
         url: initialData.url,
@@ -95,9 +93,7 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
       setFormData(formValues);
       setServerType(initialData.type);
     } else {
-      // Generate a new serverId for new servers
       form.setFieldsValue({
-        serverId: uuidv4(),
         enabled: true,
       });
     }
@@ -167,11 +163,6 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
               type: 'sse',
             }}
           >
-            {/* Hidden serverId field */}
-            <Form.Item name="serverId" hidden>
-              <Input />
-            </Form.Item>
-
             {/* Basic Information */}
             <Form.Item
               name="name"

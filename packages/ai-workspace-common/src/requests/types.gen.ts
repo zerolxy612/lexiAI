@@ -7,10 +7,6 @@ export type McpServerType = 'sse' | 'streamable' | 'stdio';
 
 export type McpServerDTO = {
   /**
-   * MCP server ID
-   */
-  serverId: string;
-  /**
    * MCP server name
    */
   name: string;
@@ -96,10 +92,6 @@ export type ListMcpServersResponse = BaseResponse & {
 
 export type UpsertMcpServerRequest = {
   /**
-   * MCP server ID (only for update)
-   */
-  serverId?: string;
-  /**
    * MCP server name
    */
   name: string;
@@ -163,9 +155,9 @@ export type UpsertMcpServerResponse = BaseResponse & {
 
 export type DeleteMcpServerRequest = {
   /**
-   * MCP server ID to delete
+   * MCP name to delete
    */
-  serverId: string;
+  name: string;
 };
 
 export type DeleteMcpServerResponse = BaseResponse & {
