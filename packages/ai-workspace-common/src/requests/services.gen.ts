@@ -359,7 +359,7 @@ export const listMcpServers = <ThrowOnError extends boolean = false>(
     ThrowOnError
   >({
     ...options,
-    url: '/v1/mcp-server/list',
+    url: '/mcp-server/list',
   });
 };
 
@@ -376,7 +376,7 @@ export const createMcpServer = <ThrowOnError extends boolean = false>(
     ThrowOnError
   >({
     ...options,
-    url: '/v1/mcp-server/create',
+    url: '/mcp-server/create',
   });
 };
 
@@ -393,7 +393,7 @@ export const updateMcpServer = <ThrowOnError extends boolean = false>(
     ThrowOnError
   >({
     ...options,
-    url: '/v1/mcp-server/update',
+    url: '/mcp-server/update',
   });
 };
 
@@ -410,7 +410,7 @@ export const deleteMcpServer = <ThrowOnError extends boolean = false>(
     ThrowOnError
   >({
     ...options,
-    url: '/v1/mcp-server/delete',
+    url: '/mcp-server/delete',
   });
 };
 
@@ -427,7 +427,7 @@ export const validateMcpServer = <ThrowOnError extends boolean = false>(
     ThrowOnError
   >({
     ...options,
-    url: '/v1/mcp-server/validate',
+    url: '/mcp-server/validate',
   });
 };
 

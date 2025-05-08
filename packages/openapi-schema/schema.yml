@@ -39,7 +39,7 @@ tags:
     description: Miscellaneous endpoints
 
 paths:
-  /v1/mcp-server/list:
+  /mcp-server/list:
     get:
       tags:
         - mcp-server
@@ -68,7 +68,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ListMcpServersResponse'
 
-  /v1/mcp-server/create:
+  /mcp-server/create:
     post:
       tags:
         - mcp-server
@@ -91,7 +91,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/UpsertMcpServerResponse'
 
-  /v1/mcp-server/update:
+  /mcp-server/update:
     post:
       tags:
         - mcp-server
@@ -114,7 +114,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/UpsertMcpServerResponse'
 
-  /v1/mcp-server/delete:
+  /mcp-server/delete:
     post:
       tags:
         - mcp-server
@@ -137,7 +137,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/DeleteMcpServerResponse'
 
-  /v1/mcp-server/validate:
+  /mcp-server/validate:
     post:
       tags:
         - mcp-server
