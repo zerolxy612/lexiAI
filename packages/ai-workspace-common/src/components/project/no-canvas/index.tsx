@@ -11,7 +11,7 @@ export const NoCanvas = ({ projectId }: { projectId: string }) => {
   }));
   return (
     <div className="flex h-full w-full flex-col">
-      <div className="absolute top-0 left-0 h-16 items-center justify-between px-4 py-2">
+      <div className="absolute top-0 left-0 h-16 items-center justify-between px-4 py-2 z-10">
         {collapse && (
           <SiderPopover>
             <Button

@@ -1073,6 +1073,7 @@ const translations = {
     shareNotFound: 'Canvas Not Found',
     shareNotFoundHint:
       "The shared canvas you're trying to access could not be found. It might have been deleted or the link may be incorrect.",
+    frontPageWelcome: 'Hi {{name}}, what can I help you with today?',
     nodeTypes: {
       document: 'Document',
       resource: 'Resource',
@@ -2537,6 +2538,7 @@ const translations = {
     hideTemplates: 'Hide Template',
     duplicateCanvasEntities: 'Duplicate the canvas entities',
     noDescription: 'No description',
+    emptyList: 'Zero templates? No problem! Create yours now and inspire the community!',
   },
   project: {
     create: 'Create Project',

@@ -5,10 +5,12 @@ import { useTranslation } from 'react-i18next';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 import { useHandleSiderData } from '@refly-packages/ai-workspace-common/hooks/use-handle-sider-data';
 import { useCanvasTemplateModalShallow } from '@refly-packages/ai-workspace-common/stores/canvas-template-modal';
+import { useGetProjectCanvasId } from '@refly-packages/ai-workspace-common/hooks/use-get-project-canvasId';
 
 export const useDuplicateCanvas = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { projectId } = useGetProjectCanvasId();
   const { getCanvasList } = useHandleSiderData();
   const { setVisible, visible } = useCanvasTemplateModalShallow((state) => ({
     setVisible: state.setVisible,
@@ -21,6 +23,7 @@ export const useDuplicateCanvas = () => {
     const { data } = await getClient().duplicateShare({
       body: {
         shareId,
+        projectId,
       },
     });
     setLoading(false);
@@ -29,7 +32,11 @@ export const useDuplicateCanvas = () => {
       const canvasData = data.data;
       getCanvasList();
       if (canvasData.entityId) {
-        navigate(`/canvas/${canvasData.entityId}`);
+        if (projectId) {
+          navigate(`/project/${projectId}?canvasId=${canvasData.entityId}`);
+        } else {
+          navigate(`/canvas/${canvasData.entityId}`);
+        }
         if (visible) {
           setVisible(false);
         }

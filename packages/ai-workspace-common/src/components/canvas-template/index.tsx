@@ -152,7 +152,14 @@ export const CanvasTemplateModal = () => {
           currentCategory={currentCategory}
           setCurrentCategory={setCurrentCategory}
         />
-        <TemplateList language={language} categoryId={currentCategory} searchQuery={searchQuery} />
+
+        <TemplateList
+          source="template-library"
+          scrollableTargetId="template-library-scrollable-div"
+          language={language}
+          categoryId={currentCategory}
+          searchQuery={searchQuery}
+        />
       </div>
     </Modal>
   );

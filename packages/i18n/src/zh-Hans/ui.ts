@@ -897,6 +897,7 @@ const translations = {
     emptyText: '双击画布打开菜单或选择',
     shareNotFound: '画布不存在',
     shareNotFoundHint: '你尝试访问的共享画布无法找到。它可能已被删除，或者链接可能有误。',
+    frontPageWelcome: '嗨 {{name}}, 今天我能帮您做什么？',
     nodeTypes: {
       document: '文档',
       resource: '资源',
@@ -2345,6 +2346,7 @@ const translations = {
     hideTemplates: '隐藏模板',
     duplicateCanvasEntities: '复制该画布所包含的文档以及资源',
     noDescription: '暂无描述',
+    emptyList: '暂无模版，快来发挥你的创造力，为社区贡献模版吧～',
   },
   project: {
     create: '创建知识库',

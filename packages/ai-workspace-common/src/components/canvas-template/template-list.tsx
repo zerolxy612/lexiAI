@@ -16,6 +16,7 @@ import { useDebouncedCallback } from 'use-debounce';
 import { useNavigate } from 'react-router-dom';
 import { useDuplicateCanvas } from '@refly-packages/ai-workspace-common/hooks/use-duplicate-canvas';
 import { staticPublicEndpoint } from '@refly-packages/ai-workspace-common/utils/env';
+import cn from 'classnames';
 
 export const TemplateCard = ({
   template,
@@ -46,7 +47,7 @@ export const TemplateCard = ({
 
   return (
     <div
-      className={`${className} m-2 group relative bg-white rounded-lg overflow-hidden cursor-pointer shadow-[0_2px_8px_0_rgba(0,0,0,0.08)] hover:shadow-[0_4px_12px_0_rgba(0,0,0,0.12)] transform hover:-translate-y-0.5 transition-all duration-200 ease-in-out h-[260px]`}
+      className={`${className} m-2 group relative bg-white rounded-lg overflow-hidden cursor-pointer shadow-[0_2px_8px_0_rgba(0,0,0,0.08)] hover:shadow-[0_4px_12px_0_rgba(0,0,0,0.12)] transform hover:-translate-y-0.5 transition-all duration-200 ease-in-out h-[245px]`}
     >
       <div className="h-40 bg-gray-100 flex items-center justify-center">
         <img
@@ -56,27 +57,25 @@ export const TemplateCard = ({
         />
       </div>
 
-      <div className="mx-2 mt-1 p-2 flex justify-between items-center gap-2">
-        <div className="text-sm font-medium truncate">{template.title || t('common.untitled')}</div>
+      <div className="px-3 py-1 text-[13px] font-medium truncate">
+        {template.title || t('common.untitled')}
       </div>
 
       {showUser ? (
-        <div className="mx-2 mb-2 px-2 flex justify-between items-center gap-2">
-          <div className="flex items-center gap-1">
-            <Avatar
-              size={18}
-              src={template.shareUser?.avatar}
-              icon={!template.shareUser?.avatar && <IoPersonOutline />}
-            />
-            <div className="font-light truncate text-xs text-gray-500">{`@${template.shareUser?.name}`}</div>
-          </div>
+        <div className="px-3 mb-2 flex items-center gap-1">
+          <Avatar
+            size={18}
+            src={template.shareUser?.avatar}
+            icon={!template.shareUser?.avatar && <IoPersonOutline />}
+          />
+          <div className="font-light truncate text-xs text-gray-500">{`@${template.shareUser?.name}`}</div>
         </div>
       ) : null}
 
-      <div className="mx-2 px-2 h-[50px]">
+      <div className="px-3 h-[20px]">
         <Typography.Paragraph
-          className="text-gray-500 text-xs"
-          ellipsis={{ tooltip: true, rows: 2 }}
+          className="text-gray-400 text-xs"
+          ellipsis={{ tooltip: true, rows: 1 }}
         >
           {template.description || t('template.noDescription')}
         </Typography.Paragraph>
@@ -87,7 +86,6 @@ export const TemplateCard = ({
 
         <div className="relative w-full h-16 py-2 px-4 bg-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-between gap-3">
           <Button
-            size="large"
             type="default"
             className="flex-1 p-1 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 bg-white hover:bg-gray-100"
             onClick={handlePreview}
@@ -96,7 +94,6 @@ export const TemplateCard = ({
           </Button>
           <Button
             loading={duplicating}
-            size="large"
             type="primary"
             className="flex-1 p-1 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 delay-100"
             onClick={handleUse}
@@ -110,12 +107,22 @@ export const TemplateCard = ({
 };
 
 interface TemplateListProps {
+  source: 'front-page' | 'template-library';
   language: string;
   categoryId: string;
   searchQuery?: string;
+  scrollableTargetId: string;
+  className?: string;
 }
 
-export const TemplateList = ({ language, categoryId, searchQuery }: TemplateListProps) => {
+export const TemplateList = ({
+  source,
+  language,
+  categoryId,
+  searchQuery,
+  scrollableTargetId,
+  className,
+}: TemplateListProps) => {
   const { t } = useTranslation();
   const { visible } = useCanvasTemplateModal((state) => ({
     visible: state.visible,
@@ -136,12 +143,12 @@ export const TemplateList = ({ language, categoryId, searchQuery }: TemplateList
   });
 
   useEffect(() => {
-    if (!visible) return;
+    if (!visible || source === 'front-page') return;
     reload();
   }, [language, categoryId, visible]);
 
   useEffect(() => {
-    if (!visible) {
+    if (!visible && source === 'template-library') {
       setDataList([]);
     }
   }, [visible]);
@@ -166,22 +173,28 @@ export const TemplateList = ({ language, categoryId, searchQuery }: TemplateList
 
   const emptyState = (
     <div className="h-full flex items-center justify-center">
-      <Empty description={t('common.empty')} />
+      <Empty description={t('template.emptyList')} />
     </div>
   );
 
   return (
-    <div className="w-full h-full overflow-y-auto bg-[#F8F9FA] p-4">
+    <div
+      id={source === 'front-page' ? scrollableTargetId : undefined}
+      className={cn('w-full h-full overflow-y-auto bg-[#F8F9FA] p-4', className)}
+    >
       <Spin className="spin" spinning={isRequesting && dataList.length === 0}>
         {dataList.length > 0 ? (
-          <div id="templateScrollableDiv" className="w-full h-full overflow-y-auto">
+          <div
+            id={source === 'template-library' ? scrollableTargetId : undefined}
+            className="w-full h-full overflow-y-auto"
+          >
             <InfiniteScroll
               dataLength={dataList.length}
               next={handleLoadMore}
               hasMore={hasMore}
               loader={<Spinner />}
               endMessage={<EndMessage />}
-              scrollableTarget="templateScrollableDiv"
+              scrollableTarget={scrollableTargetId}
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2">
                 {templateCards}

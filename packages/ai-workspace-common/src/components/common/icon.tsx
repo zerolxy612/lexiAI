@@ -8,6 +8,7 @@ import {
   HiPlus,
   HiMinus,
   HiSparkles,
+  HiOutlineHome,
 } from 'react-icons/hi2';
 import { IoIosMore } from 'react-icons/io';
 import { IoLanguage } from 'react-icons/io5';
@@ -175,6 +176,7 @@ export const IconRemove = MdOutlineRemoveCircleOutline;
 export const IconFiles = LuFileStack;
 export const IconSlideshow = RiSlideshow2Line;
 export const IconRefresh = LuRefreshCw;
+export const IconHome = HiOutlineHome;
 
 export const IconChrome = ChromeIcon;
 export const ModelProviderIcons = {
