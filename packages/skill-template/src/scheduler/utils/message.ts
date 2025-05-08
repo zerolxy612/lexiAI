@@ -4,7 +4,7 @@ import {
   BaseMessage,
   BaseMessageFields,
 } from '@langchain/core/messages';
-import { ModelInfo } from '@refly/openapi-schema';
+import { LLMModelConfig } from '@refly/openapi-schema';
 
 export interface SkillPromptModule {
   buildSystemPrompt: (
@@ -73,7 +73,7 @@ export const buildFinalRequestMessages = ({
   originalQuery: string;
   optimizedQuery: string;
   rewrittenQueries?: string[];
-  modelInfo?: ModelInfo;
+  modelInfo?: LLMModelConfig;
   customInstructions?: string;
 }) => {
   const systemPrompt = module.buildSystemPrompt(locale, needPrepareContext);

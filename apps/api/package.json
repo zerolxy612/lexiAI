@@ -27,6 +27,7 @@
     "download-binaries": "node scripts/download-binaries.js"
   },
   "dependencies": {
+    "@agentic/searxng": "^7.6.4",
     "@elastic/elasticsearch": "7.17.14",
     "@golevelup/nestjs-stripe": "~0.8.2",
     "@hocuspocus/extension-database": "~2.15.0",
@@ -34,7 +35,7 @@
     "@hocuspocus/server": "~2.15.0",
     "@langchain/community": "0.3.29",
     "@langchain/core": "0.3.29",
-    "@langchain/openai": "0.4.3",
+    "@langchain/openai": "0.5.6",
     "@nest-lab/throttler-storage-redis": "^1.0.0",
     "@nestjs/bullmq": "~10.2.3",
     "@nestjs/common": "~10.3.9",
@@ -59,6 +60,7 @@
     "@qdrant/js-client-rest": "^1.9.0",
     "@refly/errors": "workspace:*",
     "@refly/openapi-schema": "workspace:*",
+    "@refly/providers": "workspace:*",
     "@refly/skill-template": "workspace:*",
     "@refly/utils": "workspace:*",
     "@sentry/cli": "^2.31.2",
@@ -71,7 +73,6 @@
     "cookie-parser": "~1.4.6",
     "express": "~4.19.2",
     "get-port": "^5.1.1",
-    "hbs": "^4.2.0",
     "helmet": "^7.1.0",
     "ioredis": "^5.4.1",
     "json-parse-even-better-errors": "^4.0.0",

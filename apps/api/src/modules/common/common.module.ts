@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from './prisma.service';
 import { RedisService } from './redis.service';
 import { QdrantService } from './qdrant.service';
+import { EncryptionService } from './encryption.service';
 import { createObjectStorageServiceFactory, OSS_EXTERNAL, OSS_INTERNAL } from './object-storage';
 import { FULLTEXT_SEARCH, createFulltextSearchFactory } from './fulltext-search';
 
@@ -11,6 +12,7 @@ import { FULLTEXT_SEARCH, createFulltextSearchFactory } from './fulltext-search'
     PrismaService,
     RedisService,
     QdrantService,
+    EncryptionService,
     {
       provide: OSS_EXTERNAL,
       useFactory: createObjectStorageServiceFactory({ visibility: 'public' }),
@@ -31,6 +33,7 @@ import { FULLTEXT_SEARCH, createFulltextSearchFactory } from './fulltext-search'
     PrismaService,
     RedisService,
     QdrantService,
+    EncryptionService,
     OSS_EXTERNAL,
     OSS_INTERNAL,
     FULLTEXT_SEARCH,

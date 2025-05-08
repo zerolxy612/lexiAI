@@ -20,6 +20,7 @@ import { SubscriptionModule } from '../subscription/subscription.module';
 import { CollabModule } from '../collab/collab.module';
 import { MiscModule } from '../misc/misc.module';
 import { CodeArtifactModule } from '../code-artifact/code-artifact.module';
+import { ProviderModule } from '@/modules/provider/provider.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { CodeArtifactModule } from '../code-artifact/code-artifact.module';
     CollabModule,
     MiscModule,
     CodeArtifactModule,
+    ProviderModule,
     BullModule.registerQueue({ name: QUEUE_SKILL }),
     BullModule.registerQueue({ name: QUEUE_SKILL_TIMEOUT_CHECK }),
     BullModule.registerQueue({ name: QUEUE_SYNC_TOKEN_USAGE }),

@@ -33,6 +33,7 @@ import { ActionService } from '../action/action.service';
 import { generateCanvasTitle, CanvasContentItem } from './canvas-title-generator';
 import { RedisService } from '@/modules/common/redis.service';
 import { ObjectStorageService, OSS_INTERNAL } from '@/modules/common/object-storage';
+import { ProviderService } from '@/modules/provider/provider.service';
 
 @Injectable()
 export class CanvasService {
@@ -45,6 +46,7 @@ export class CanvasService {
     private miscService: MiscService,
     private actionService: ActionService,
     private knowledgeService: KnowledgeService,
+    private providerService: ProviderService,
     private codeArtifactService: CodeArtifactService,
     private subscriptionService: SubscriptionService,
     @Inject(OSS_INTERNAL) private oss: ObjectStorageService,
@@ -788,11 +790,16 @@ export class CanvasService {
       return { title: '' };
     }
 
-    const defaultModel = await this.subscriptionService.getDefaultModel();
-    this.logger.log(`Using default model for auto naming: ${defaultModel?.name}`);
+    const defaultModel = await this.providerService.findDefaultProviderItem(
+      user,
+      'titleGeneration',
+    );
+    const modelConfig = JSON.parse(defaultModel.config);
+    const model = await this.providerService.prepareChatModel(user, modelConfig.modelId);
+    this.logger.log(`Using default model for auto naming: ${model.name}`);
 
     // Use the new structured title generation approach
-    const newTitle = await generateCanvasTitle(contentItems, defaultModel, this.logger);
+    const newTitle = await generateCanvasTitle(contentItems, model, this.logger);
 
     if (directUpdate && newTitle) {
       await this.updateCanvas(user, {

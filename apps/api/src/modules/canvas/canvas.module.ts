@@ -15,6 +15,7 @@ import { MiscModule } from '../misc/misc.module';
 import { SubscriptionModule } from '../subscription/subscription.module';
 import { KnowledgeModule } from '../knowledge/knowledge.module';
 import { ActionModule } from '../action/action.module';
+import { ProviderModule } from '../provider/provider.module';
 import { CodeArtifactModule } from '../code-artifact/code-artifact.module';
 
 @Module({
@@ -24,6 +25,7 @@ import { CodeArtifactModule } from '../code-artifact/code-artifact.module';
     MiscModule,
     KnowledgeModule,
     ActionModule,
+    ProviderModule,
     CodeArtifactModule,
     SubscriptionModule,
     BullModule.registerQueue({

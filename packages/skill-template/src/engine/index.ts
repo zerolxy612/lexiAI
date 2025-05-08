@@ -1,6 +1,6 @@
 import { SkillRunnableConfig } from '../base';
 import { FakeListChatModel } from '@langchain/core/utils/testing';
-import { ChatDeepSeek, ChatDeepSeekInput } from './chat-deepseek';
+import { OpenAIBaseInput } from '@langchain/openai';
 import { Document } from '@langchain/core/documents';
 import {
   CreateLabelClassRequest,
@@ -42,8 +42,10 @@ import {
   DeleteCanvasRequest,
   DeleteDocumentResponse,
   DeleteDocumentRequest,
+  ModelScene,
 } from '@refly/openapi-schema';
-import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
+import { BaseChatModel } from '@langchain/core/language_models/chat_models';
+import { getChatModel } from '@refly/providers';
 
 // TODO: unify with frontend
 export type ContentNodeType =
@@ -96,6 +98,7 @@ export interface ReflyService {
   ) => Promise<WebSearchResponse>;
   search: (user: User, req: SearchRequest, options?: SearchOptions) => Promise<SearchResponse>;
   rerank: (
+    user: User,
     query: string,
     results: SearchResult[],
     options?: { topN?: number; relevanceThreshold?: number },
@@ -167,7 +170,7 @@ export class SkillEngine {
     this.config = config;
   }
 
-  chatModel(params?: Partial<ChatDeepSeekInput>, useDefaultChatModel = false): BaseChatModel {
+  chatModel(params?: Partial<OpenAIBaseInput>, scene?: ModelScene): BaseChatModel {
     if (process.env.MOCK_LLM_RESPONSE) {
       return new FakeListChatModel({
         responses: ['This is a test'],
@@ -175,22 +178,19 @@ export class SkillEngine {
       });
     }
 
-    const config = this.config?.configurable;
+    const finalScene = scene || 'chat';
 
-    return new ChatDeepSeek({
-      model: useDefaultChatModel
-        ? this.options.defaultModel
-        : config.modelInfo?.name || this.options.defaultModel,
-      apiKey: process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY,
-      configuration: {
-        baseURL: process.env.OPENROUTER_API_KEY && 'https://openrouter.ai/api/v1',
-        defaultHeaders: {
-          'HTTP-Referer': 'https://refly.ai',
-          'X-Title': 'Refly',
-        },
+    const config = this.config?.configurable;
+    const provider = config?.provider;
+    const model = config.modelConfigMap?.[finalScene]?.modelId || this.options.defaultModel;
+
+    return getChatModel(
+      provider,
+      {
+        modelId: model,
+        modelName: model,
       },
-      ...params,
-      include_reasoning: config?.modelInfo?.capabilities?.reasoning,
-    });
+      params,
+    );
   }
 }

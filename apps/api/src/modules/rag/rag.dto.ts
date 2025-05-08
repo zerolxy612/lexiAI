@@ -38,14 +38,3 @@ export interface HybridSearchParam {
   filter?: RetrieveFilter;
   limit?: number;
 }
-
-export interface ReaderResult {
-  code: number;
-  status: number;
-  data: {
-    title: string;
-    url: string;
-    content: string;
-    publishedTime?: string;
-  };
-}

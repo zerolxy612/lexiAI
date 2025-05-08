@@ -19,6 +19,7 @@ const makeSSERequest = async (
   controller: AbortController,
   isRetry = false,
 ): Promise<Response> => {
+  console.log('isDesktop', isDesktop());
   const response = await fetch(`${serverOrigin}/v1/skill/streamInvoke`, {
     method: 'POST',
     headers: {

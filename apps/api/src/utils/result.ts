@@ -136,6 +136,7 @@ export class ResultAggregator {
         resultId,
         version,
         order,
+        tier: usageItems[0]?.tier,
         structuredData: JSON.stringify(structuredData),
         artifacts: JSON.stringify(Object.values(artifacts)),
         tokenUsage: JSON.stringify(aggregatedUsage),

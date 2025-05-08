@@ -3,7 +3,7 @@ const translations = {
     name: 'Question Answering',
     description: 'Answer questions based on the context',
     placeholder: 'Ask AI a question, press Ctrl + / to select skill...',
-    placeholderMac: 'Ask AI a question, press Cmd + / to select skill...',
+    placeholderMac: 'Ask AI a question, press ⌘ + / to select skill...',
     steps: {
       analyzeQuery: {
         name: 'Query Analysis',

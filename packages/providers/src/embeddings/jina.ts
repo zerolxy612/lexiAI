@@ -1,31 +1,24 @@
 import { Embeddings } from '@langchain/core/embeddings';
 
 export interface JinaEmbeddingsConfig {
-  modelName: string;
+  model: string;
   batchSize: number;
   maxRetries: number;
   dimensions: number;
   apiKey: string;
 }
 
-const defaultConfig: Partial<JinaEmbeddingsConfig> = {
-  modelName: 'jina-embeddings-v3',
-  batchSize: 512,
-  maxRetries: 3,
-  dimensions: 768,
-};
-
 export class JinaEmbeddings extends Embeddings {
   private config: JinaEmbeddingsConfig;
 
   constructor(config: JinaEmbeddingsConfig) {
     super(config);
-    this.config = { ...defaultConfig, ...config };
+    this.config = config;
   }
 
   private async fetch(input: string[]) {
     const payload = {
-      model: this.config.modelName,
+      model: this.config.model,
       task: 'retrieval.passage',
       dimensions: this.config.dimensions,
       late_chunking: false,
