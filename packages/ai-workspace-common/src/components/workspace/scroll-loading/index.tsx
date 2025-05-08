@@ -44,7 +44,7 @@ export const EndMessage = () => {
   const { t } = useTranslation();
   return (
     <div className="w-full flex justify-center py-6">
-      <span>{t('knowledgeLibrary.archive.item.noMore')}</span>
+      <span>{t('knowledgeLibrary.archive.item.noMoreText')}</span>
     </div>
   );
 };
