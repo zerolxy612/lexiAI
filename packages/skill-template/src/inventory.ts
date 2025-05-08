@@ -27,7 +27,6 @@ import {
   RecommendQuestions,
   CustomPrompt,
   CodeArtifacts,
-  MCPAgent,
   ImageGeneration,
 } from './skills';
 import { Agent } from './skills/agent';
@@ -66,7 +65,6 @@ export const createSkillInventory = (engine: SkillEngine): BaseSkill[] => {
     new CommonQnA(engine),
     // new RewriteDoc(engine),
     new EditDoc(engine),
-    new MCPAgent(engine),
     new Agent(engine),
   ];
 };

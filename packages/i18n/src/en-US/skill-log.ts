@@ -55,23 +55,6 @@ const translations = {
     title: 'Code Artifact Generated',
     description: 'Code artifact generated, completed in {{duration}}ms',
   },
-  // MCP Agent Translations
-  mcpAssistantModelCall: {
-    title: 'Model Call',
-    description: 'Calling model for MCP assistant response',
-  },
-  mcpAssistantModelCalling: {
-    title: 'Processing with MCP',
-    description: 'Processing query with MCP tools',
-  },
-  prepareContext: {
-    title: 'Preparing Context',
-    description: 'Preparing relevant context for your query',
-  },
-  generateDirectAnswer: {
-    title: 'Generating Direct Answer',
-    description: 'Generating a direct answer to your query',
-  },
   // Image Generation Translations
   'image.generating': {
     title: 'Generating Image',

@@ -1,4 +1,19 @@
-import { MCPTool } from './types';
+export interface MCPToolInputSchema {
+  type: string;
+  title: string;
+  description?: string;
+  required?: string[];
+  properties: Record<string, object>;
+}
+
+export interface MCPTool {
+  id: string;
+  serverId: string;
+  serverName: string;
+  name: string;
+  description?: string;
+  inputSchema: MCPToolInputSchema;
+}
 
 export const SYSTEM_PROMPT = `In this environment you have access to a set of tools you can use to answer the user's question. \
 You can use one tool per message, and will receive the result of that tool use in the user's response. You use tools step-by-step to accomplish a given task, with each tool use informed by the result of the previous tool use.

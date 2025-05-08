@@ -358,7 +358,7 @@ export class MultiServerMCPClient {
    * Close all connections.
    */
   async close(): Promise<void> {
-    getDebugLog()(`INFO: Closing all MCP connections...`);
+    getDebugLog()('INFO: Closing all MCP connections...');
 
     for (const cleanup of this._cleanupFunctions) {
       try {
@@ -373,7 +373,7 @@ export class MultiServerMCPClient {
     this._serverNameToTools = {};
     this._transportInstances = {};
 
-    getDebugLog()(`INFO: All MCP connections closed`);
+    getDebugLog()('INFO: All MCP connections closed');
   }
 
   /**
@@ -581,7 +581,7 @@ export class MultiServerMCPClient {
       `DEBUG: Using browser EventSource for server "${serverName}". Headers may not be applied correctly.`,
     );
     getDebugLog()(
-      `DEBUG: For better headers support in browsers, consider using a custom SSE implementation.`,
+      'DEBUG: For better headers support in browsers, consider using a custom SSE implementation.',
     );
 
     return new SSEClientTransport(new URL(url), {
@@ -629,7 +629,7 @@ export class MultiServerMCPClient {
       return new SSEClientTransport(new URL(url), {
         // Pass empty options for test compatibility
         eventSourceInit: {},
-        requestInit: {},
+        requestInit: { headers },
       });
     } catch (extendedError) {
       // Fall back to standard eventsource if extended-eventsource is not available

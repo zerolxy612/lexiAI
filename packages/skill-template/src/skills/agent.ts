@@ -265,10 +265,6 @@ export class Agent extends BaseSkill {
 
     // Initialize MCP client
     const client = new MultiServerMCPClient({
-      calc: {
-        type: 'sse',
-        url: 'http://localhost:8787/sse',
-      },
       'mcp-time': {
         type: 'sse',
         url: 'https://mcp.higress.ai/mcp-time/cmacdo7yu00469001xgwju1os/sse',
@@ -289,32 +285,49 @@ export class Agent extends BaseSkill {
         type: 'sse',
         url: 'https://mcp.higress.ai/mcp-wolframalpha/cmacdo7yu00469001xgwju1os/sse',
       },
+      puppeteer: {
+        command: '/Users/qiyuan/.nvm/versions/node/v20.19.0/bin/npx',
+        args: ['-y', '@modelcontextprotocol/server-puppeteer'],
+        env: {
+          ...process.env, // 包含所有当前环境变量
+        },
+      },
     });
 
-    // Initialize client and get tools in parallel
-    const [mcpTools] = await Promise.all([
-      client.getTools().catch((error) => {
-        this.engine.logger.error('Failed to get MCP tools:', error);
-        throw new Error('Failed to initialize MCP tools');
-      }),
-    ]);
+    // 添加更多调试信息
+    this.engine.logger.log('Initializing MCP client and getting tools...');
 
-    if (!mcpTools?.length) {
-      throw new Error('No tools found');
+    try {
+      // 先初始化连接
+      await client.initializeConnections();
+      this.engine.logger.log('MCP connections initialized successfully');
+
+      // 然后获取工具
+      const mcpTools = await client.getTools();
+
+      if (!mcpTools?.length) {
+        throw new Error('No tools found');
+      }
+
+      this.engine.logger.log(
+        `Loaded ${mcpTools.length} MCP tools: ${mcpTools.map((tool) => tool.name).join(', ')}`,
+      );
+
+      // Create model and tool node
+      const model = this.engine.chatModel({ temperature: 0.1 }).bindTools(mcpTools);
+      const toolNode = new ToolNode(mcpTools);
+
+      // Cache the setup
+      this._cachedSetup = { model, toolNode, mcpTools };
+
+      return this._cachedSetup;
+    } catch (error) {
+      this.engine.logger.error('Error during MCP setup:', error);
+      if (error instanceof Error) {
+        this.engine.logger.error('Error stack:', error.stack);
+      }
+      throw new Error('Failed to initialize MCP tools');
     }
-
-    this.engine.logger.log(
-      `Loaded ${mcpTools.length} MCP tools: ${mcpTools.map((tool) => tool.name).join(', ')}`,
-    );
-
-    // Create model and tool node
-    const model = this.engine.chatModel({ temperature: 0.1 }).bindTools(mcpTools);
-    const toolNode = new ToolNode(mcpTools);
-
-    // Cache the setup
-    this._cachedSetup = { model, toolNode, mcpTools };
-
-    return this._cachedSetup;
   }
 
   // LLM node - Process messages and call model

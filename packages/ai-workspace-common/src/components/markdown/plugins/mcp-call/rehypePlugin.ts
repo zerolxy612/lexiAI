@@ -28,6 +28,7 @@ const safeExtract = (content: string, regex: RegExp): string => {
 /**
  * Rehype plugin to process tool_use tags in markdown
  * 解析 <tool_use> 标签时，如果有 <result>，则同时提取 <arguments> 和 <result>，都放到同一个节点属性上；如果没有 <result>，只提取 <arguments>。
+ * 保留标签外的文本内容，不会丢失段落中的其他文本。
  */
 function rehypePlugin() {
   return (tree: any) => {
@@ -59,17 +60,45 @@ function rehypePlugin() {
               attributes['data-tool-result'] = result;
             }
 
-            // Create a new node with the extracted data
-            const newNode = {
+            // Create a new node with the extracted data for tool_use
+            const toolNode = {
               type: 'element',
               tagName: 'pre',
               properties: attributes,
               children: [],
             };
 
-            // Replace the original node
-            parent.children.splice(index, 1, newNode);
-            return [SKIP, index];
+            // Get the full match (including the tags)
+            const fullMatch = match[0];
+
+            // Split the raw text by the full match to get text before and after the tool_use tag
+            const parts = node.value.split(fullMatch);
+
+            // Create array to hold new nodes
+            const newNodes = [];
+
+            // Add text before the tool_use tag if it exists
+            if (parts[0]) {
+              newNodes.push({
+                type: 'raw',
+                value: parts[0],
+              });
+            }
+
+            // Add the tool node
+            newNodes.push(toolNode);
+
+            // Add text after the tool_use tag if it exists
+            if (parts[1]) {
+              newNodes.push({
+                type: 'raw',
+                value: parts[1],
+              });
+            }
+
+            // Replace the original node with the new nodes
+            parent.children.splice(index, 1, ...newNodes);
+            return [SKIP, index + newNodes.length - 1]; // Skip to after the last inserted node
           }
         }
       }
@@ -109,16 +138,44 @@ function rehypePlugin() {
               attributes['data-tool-result'] = result;
             }
 
-            // Create a new node with the extracted data
-            const newNode = {
+            // Create a new node with the extracted data for tool_use
+            const toolNode = {
               type: 'element',
               tagName: 'pre',
               properties: attributes,
               children: [],
             };
 
-            // Replace the paragraph with the new node
-            parent.children.splice(index, 1, newNode);
+            // Get the full match (including the tags)
+            const fullMatch = useMatch[0];
+
+            // Split the paragraph text by the full match to get text before and after the tool_use tag
+            const parts = paragraphText.split(fullMatch);
+
+            // Create new children array for the paragraph
+            const newChildren = [];
+
+            // Add text before the tool_use tag if it exists
+            if (parts[0]) {
+              newChildren.push({
+                type: 'text',
+                value: parts[0],
+              });
+            }
+
+            // Add the tool node
+            newChildren.push(toolNode);
+
+            // Add text after the tool_use tag if it exists
+            if (parts[1]) {
+              newChildren.push({
+                type: 'text',
+                value: parts[1],
+              });
+            }
+
+            // Replace the children of the paragraph with our new children
+            node.children = newChildren;
             return [SKIP, index];
           }
         }

@@ -55,31 +55,6 @@ const translations = {
     title: '组件生成完成',
     description: '组件生成完成，耗时 {{duration}} 毫秒',
   },
-  // MCP Agent 翻译
-  mcpAssistantModelCall: {
-    title: '模型调用',
-    description: '正在调用模型生成MCP助手响应',
-  },
-  mcpAssistantModelCalling: {
-    title: '{{name}} 调用中',
-    description: '正在使用 {{name}} 工具处理查询',
-  },
-  mcpCallingFinish: {
-    title: '{{name}} 调用完成',
-    description: 'JSON_PLACEHOLDER',
-  },
-  mcpCallingError: {
-    title: '{{name}} 调用失败',
-    description: 'JSON_PLACEHOLDER',
-  },
-  prepareContext: {
-    title: '准备上下文',
-    description: '正在为您的查询准备相关上下文',
-  },
-  generateDirectAnswer: {
-    title: '生成直接回答',
-    description: '正在为您的查询生成直接回答',
-  },
   // 图像生成翻译
   'image.generating': {
     title: '生成图像',
