@@ -120,7 +120,6 @@ export const ModelFormModal = memo(
           return {
             ...baseConfig,
             batchSize: values.batchSize,
-            dimensions: values.dimensions,
           };
         }
 
@@ -379,7 +378,6 @@ export const ModelFormModal = memo(
             maxOutput?: number;
             capabilities?: string[];
             batchSize?: number;
-            dimensions?: number;
             topN?: number;
             relevanceThreshold?: number;
           }
@@ -399,7 +397,6 @@ export const ModelFormModal = memo(
             formValues.capabilities = capabilitiesArray;
           } else if (filterProviderCategory === 'embedding') {
             formValues.batchSize = config.batchSize;
-            formValues.dimensions = config.dimensions;
           } else if (filterProviderCategory === 'reranker') {
             formValues.topN = config.topN;
             formValues.relevanceThreshold = config.relevanceThreshold;
@@ -495,18 +492,6 @@ export const ModelFormModal = memo(
             >
               <InputNumber
                 placeholder={t('settings.modelConfig.batchSizePlaceholder')}
-                className="w-full"
-                min={1}
-              />
-            </Form.Item>
-
-            <Form.Item
-              name="dimensions"
-              label={t('settings.modelConfig.dimensions')}
-              rules={[{ type: 'number' }]}
-            >
-              <InputNumber
-                placeholder={t('settings.modelConfig.dimensionsPlaceholder')}
                 className="w-full"
                 min={1}
               />

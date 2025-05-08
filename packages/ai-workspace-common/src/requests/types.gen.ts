@@ -3921,10 +3921,6 @@ export type EmbeddingModelConfig = {
    * Embedding model batch size
    */
   batchSize?: number;
-  /**
-   * Embedding model dimensions
-   */
-  dimensions?: number;
 };
 
 /**

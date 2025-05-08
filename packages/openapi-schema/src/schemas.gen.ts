@@ -5567,10 +5567,6 @@ export const EmbeddingModelConfigSchema = {
       type: 'number',
       description: 'Embedding model batch size',
     },
-    dimensions: {
-      type: 'number',
-      description: 'Embedding model dimensions',
-    },
   },
 } as const;
 

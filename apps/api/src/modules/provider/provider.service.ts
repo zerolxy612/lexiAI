@@ -21,7 +21,12 @@ import {
 } from '@refly/openapi-schema';
 import { Provider as ProviderModel, ProviderItem as ProviderItemModel } from '@/generated/client';
 import { genProviderItemID, genProviderID, providerInfoList, pick } from '@refly/utils';
-import { ProviderNotFoundError, ProviderItemNotFoundError, ParamsError } from '@refly/errors';
+import {
+  ProviderNotFoundError,
+  ProviderItemNotFoundError,
+  ParamsError,
+  EmbeddingNotAllowedToChangeError,
+} from '@refly/errors';
 import { SingleFlightCache } from '@/utils/cache';
 import { EncryptionService } from '@/modules/common/encryption.service';
 import pLimit from 'p-limit';
@@ -32,6 +37,8 @@ import {
   getReranker,
   getChatModel,
 } from '@refly/providers';
+import { ConfigService } from '@nestjs/config';
+import { QdrantService } from '@/modules/common/qdrant.service';
 
 interface GlobalProviderConfig {
   providers: ProviderModel[];
@@ -47,6 +54,8 @@ export class ProviderService implements OnModuleInit {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly qdrantService: QdrantService,
+    private readonly configService: ConfigService,
     private readonly encryptionService: EncryptionService,
   ) {
     this.globalProviderCache = new SingleFlightCache(this.fetchGlobalProviderConfig.bind(this));
@@ -440,7 +449,10 @@ export class ProviderService implements OnModuleInit {
     const { provider, config } = providerItem;
     const embeddingConfig: EmbeddingModelConfig = JSON.parse(config);
 
-    return getEmbeddings(provider, embeddingConfig);
+    return getEmbeddings(provider, {
+      ...embeddingConfig,
+      dimensions: this.configService.getOrThrow<number>('vectorStore.vectorDim'),
+    });
   }
 
   /**
@@ -705,6 +717,12 @@ export class ProviderService implements OnModuleInit {
 
     if (!item) {
       throw new ProviderItemNotFoundError();
+    }
+
+    if (item.category === 'embedding') {
+      if (!(await this.qdrantService.isCollectionEmpty())) {
+        throw new EmbeddingNotAllowedToChangeError();
+      }
     }
 
     return this.prisma.providerItem.update({
