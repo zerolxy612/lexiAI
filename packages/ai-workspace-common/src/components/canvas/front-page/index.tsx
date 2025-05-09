@@ -157,7 +157,7 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
   }, [reset]);
 
   return (
-    <div className="relative h-full bg-white/90">
+    <div className="relative h-full overflow-hidden bg-white/90">
       <AnimatedGridPattern
         numSquares={20}
         maxOpacity={0.1}
@@ -168,7 +168,7 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
           'skew-y-12',
         )}
       />
-      <div className="w-full h-full overflow-y-auto">
+      <div className="w-full h-full bg-white/90 overflow-y-auto" id="front-page-scrollable-div">
         <div className="relative w-full h-full p-6 max-w-4xl mx-auto z-10">
           <h3 className="text-3xl font-bold text-center text-gray-800 mt-48 mb-6 mx-2">
             {t('canvas.frontPageWelcome', { name: userProfile?.nickname || '' })}
