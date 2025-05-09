@@ -15,6 +15,8 @@ import { useUserStoreShallow } from '@refly-packages/ai-workspace-common/stores/
 import { useListSkills } from '@refly-packages/ai-workspace-common/hooks/use-find-skill';
 import { TemplateList } from '@refly-packages/ai-workspace-common/components/canvas-template/template-list';
 import { TechBackground } from './wireframe-cube';
+import { PremiumBanner } from '@refly-packages/ai-workspace-common/components/canvas/node-chat-panel';
+import { subscriptionEnabled } from '@refly-packages/ai-workspace-common/utils/env';
 
 export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
   const { t, i18n } = useTranslation();
@@ -151,82 +153,85 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
             {t('canvas.frontPageWelcome', { name: userProfile?.nickname || '' })}
           </h3>
 
-          <div className="w-full bg-white/90 backdrop-blur-sm rounded-lg shadow-sm ring-1 ring-gray-200 p-4 mx-2">
-            {selectedSkill && (
-              <div className="flex w-full justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded bg-[#6172F3] shadow-lg flex items-center justify-center flex-shrink-0">
-                    {getSkillIcon(selectedSkill.name, 'w-4 h-4 text-white')}
+          <div className="w-full bg-white/90 backdrop-blur-sm rounded-lg shadow-sm ring-1 ring-gray-200 mx-2">
+            {subscriptionEnabled && !userProfile?.subscription && <PremiumBanner />}
+            <div className="p-4">
+              {selectedSkill && (
+                <div className="flex w-full justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded bg-[#6172F3] shadow-lg flex items-center justify-center flex-shrink-0">
+                      {getSkillIcon(selectedSkill.name, 'w-4 h-4 text-white')}
+                    </div>
+                    <span className="text-sm font-medium leading-normal text-[rgba(0,0,0,0.8)] truncate">
+                      {t(`${selectedSkill.name}.name`, { ns: 'skill' })}
+                    </span>
                   </div>
-                  <span className="text-sm font-medium leading-normal text-[rgba(0,0,0,0.8)] truncate">
-                    {t(`${selectedSkill.name}.name`, { ns: 'skill' })}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="text"
+                      size="small"
+                      onClick={() => {
+                        handleSelectSkill(null);
+                        setActiveScenarioId(null);
+                      }}
+                    >
+                      {t('common.cancel')}
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="text"
-                    size="small"
-                    onClick={() => {
-                      handleSelectSkill(null);
-                      setActiveScenarioId(null);
-                    }}
-                  >
-                    {t('common.cancel')}
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            <SkillDisplay
-              containCnt={5}
-              selectedSkill={selectedSkill}
-              setSelectedSkill={handleSelectSkill}
-            />
-
-            <div className="flex flex-col">
-              <ChatInput
-                readonly={false}
-                query={query}
-                setQuery={setQuery}
-                selectedSkillName={selectedSkill?.name ?? null}
-                handleSendMessage={handleSendMessage}
-                handleSelectSkill={handleSelectSkill}
-                maxRows={6}
-                inputClassName="px-3 py-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-
-              {selectedSkill?.configSchema?.items?.length > 0 && (
-                <ConfigManager
-                  readonly={false}
-                  key={selectedSkill?.name}
-                  form={form}
-                  formErrors={formErrors}
-                  setFormErrors={setFormErrors}
-                  schema={selectedSkill?.configSchema}
-                  tplConfig={tplConfig}
-                  fieldPrefix="tplConfig"
-                  configScope="runtime"
-                  resetConfig={() => {
-                    const defaultConfig = selectedSkill?.tplConfig ?? {};
-                    setTplConfig(defaultConfig);
-                    form.setFieldValue('tplConfig', defaultConfig);
-                  }}
-                  onFormValuesChange={(_changedValues, allValues) => {
-                    setTplConfig(allValues.tplConfig);
-                  }}
-                />
               )}
 
-              <Actions
-                query={query}
-                model={skillSelectedModel}
-                setModel={setSkillSelectedModel}
-                runtimeConfig={runtimeConfig}
-                setRuntimeConfig={setRuntimeConfig}
-                handleSendMessage={handleSendMessage}
-                handleAbort={() => {}}
-                loading={isCreating}
+              <SkillDisplay
+                containCnt={5}
+                selectedSkill={selectedSkill}
+                setSelectedSkill={handleSelectSkill}
               />
+
+              <div className="flex flex-col">
+                <ChatInput
+                  readonly={false}
+                  query={query}
+                  setQuery={setQuery}
+                  selectedSkillName={selectedSkill?.name ?? null}
+                  handleSendMessage={handleSendMessage}
+                  handleSelectSkill={handleSelectSkill}
+                  maxRows={6}
+                  inputClassName="px-3 py-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+
+                {selectedSkill?.configSchema?.items?.length > 0 && (
+                  <ConfigManager
+                    readonly={false}
+                    key={selectedSkill?.name}
+                    form={form}
+                    formErrors={formErrors}
+                    setFormErrors={setFormErrors}
+                    schema={selectedSkill?.configSchema}
+                    tplConfig={tplConfig}
+                    fieldPrefix="tplConfig"
+                    configScope="runtime"
+                    resetConfig={() => {
+                      const defaultConfig = selectedSkill?.tplConfig ?? {};
+                      setTplConfig(defaultConfig);
+                      form.setFieldValue('tplConfig', defaultConfig);
+                    }}
+                    onFormValuesChange={(_changedValues, allValues) => {
+                      setTplConfig(allValues.tplConfig);
+                    }}
+                  />
+                )}
+
+                <Actions
+                  query={query}
+                  model={skillSelectedModel}
+                  setModel={setSkillSelectedModel}
+                  runtimeConfig={runtimeConfig}
+                  setRuntimeConfig={setRuntimeConfig}
+                  handleSendMessage={handleSendMessage}
+                  handleAbort={() => {}}
+                  loading={isCreating}
+                />
+              </div>
             </div>
           </div>
 

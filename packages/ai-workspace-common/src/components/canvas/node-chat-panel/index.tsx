@@ -27,7 +27,7 @@ import { useUploadImage } from '@refly-packages/ai-workspace-common/hooks/use-up
 import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/canvas';
 
 // Memoized Premium Banner Component
-const PremiumBanner = memo(() => {
+export const PremiumBanner = memo(() => {
   const { t } = useTranslation();
   const { showPremiumBanner, setShowPremiumBanner } = useLaunchpadStoreShallow((state) => ({
     showPremiumBanner: state.showPremiumBanner,
