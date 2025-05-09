@@ -178,16 +178,40 @@ export class McpServerService {
       throw new ParamsError('Server name and type are required');
     }
 
-    // 检查名称是否已存在
     const existingServer = await this.prisma.mcpServer.findFirst({
       where: {
         name,
-        deletedAt: null,
       },
     });
 
+    // 如果存在已删除的同名服务器，恢复并更新它
     if (existingServer) {
-      throw new ParamsError(`MCP server with name '${name}' already exists`);
+      this.logger.log(`Restoring deleted MCP server with name '${name}'`);
+
+      // 加密敏感信息
+      const serverData = this.encryptServerConfig({
+        name,
+        type,
+        url,
+        command,
+        args: args ? JSON.stringify(args) : null,
+        env: env ? JSON.stringify(env) : null,
+        headers: headers ? JSON.stringify(headers) : null,
+        reconnect: reconnect ? JSON.stringify(reconnect) : null,
+        config: config ? JSON.stringify(config) : null,
+        enabled,
+        deletedAt: null,
+      });
+
+      const updatedServer = await this.prisma.mcpServer.update({
+        where: {
+          pk: existingServer.pk,
+        },
+        data: serverData,
+      });
+
+      // 返回解密后的服务器配置
+      return this.decryptServerConfig(updatedServer);
     }
 
     // Validate required fields based on server type

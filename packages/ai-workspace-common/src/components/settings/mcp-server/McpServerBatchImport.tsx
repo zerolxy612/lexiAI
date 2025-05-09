@@ -120,7 +120,7 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
         // Map universal format fields to Refly format
         const server: McpServerFormData = {
           name: name, // 使用键作为名称
-          type: mapServerType(serverConfig.type),
+          type: mapServerType(serverConfig.type, serverConfig),
           enabled: serverConfig.isActive ?? true,
           url: serverConfig.baseUrl || '',
           command: serverConfig.command || '',
@@ -150,8 +150,8 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
     return [];
   };
 
-  // Map server type from universal format to Refly format
-  const mapServerType = (type: string): McpServerType => {
+  // Map server type from universal format to Refly format or infer from other fields
+  const mapServerType = (type: string, serverConfig?: any): McpServerType => {
     const typeMap: Record<string, McpServerType> = {
       sse: 'sse',
       streamable: 'streamable',
@@ -160,7 +160,35 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
       inMemory: 'sse', // Map inMemory to sse as a fallback
     };
 
-    return type && typeMap[type] ? typeMap[type] : 'sse';
+    // If type is valid, use it directly
+    if (type && typeMap[type]) {
+      return typeMap[type];
+    }
+
+    // If type is missing or invalid, infer from other fields
+    if (serverConfig) {
+      // Check if it's a stdio type (has command)
+      if (serverConfig.command) {
+        return 'stdio';
+      }
+
+      // Check URL patterns
+      const url = serverConfig.baseUrl || '';
+      if (url) {
+        // Check for SSE (URL contains 'sse')
+        if (url.toLowerCase().includes('sse')) {
+          return 'sse';
+        }
+
+        // Check for streamable (URL contains 'mcp')
+        if (url.toLowerCase().includes('mcp')) {
+          return 'streamable';
+        }
+      }
+    }
+
+    // Default fallback
+    return 'streamable';
   };
 
   // 导入服务器
