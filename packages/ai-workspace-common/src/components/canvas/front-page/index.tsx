@@ -5,7 +5,10 @@ import { ChatInput } from '@refly-packages/ai-workspace-common/components/canvas
 import { useCreateCanvas } from '@refly-packages/ai-workspace-common/hooks/canvas/use-create-canvas';
 import { useFrontPageStoreShallow } from '@refly-packages/ai-workspace-common/stores/front-page';
 import { SkillDisplay } from '@refly-packages/ai-workspace-common/components/canvas/launchpad/skill-display';
-import { getSkillIcon } from '@refly-packages/ai-workspace-common/components/common/icon';
+import {
+  getSkillIcon,
+  IconRight,
+} from '@refly-packages/ai-workspace-common/components/common/icon';
 import { Form } from '@arco-design/web-react';
 import { Button } from 'antd';
 import { ConfigManager } from '@refly-packages/ai-workspace-common/components/canvas/launchpad/config-manager';
@@ -14,9 +17,10 @@ import { useChatStoreShallow } from '@refly-packages/ai-workspace-common/stores/
 import { useUserStoreShallow } from '@refly-packages/ai-workspace-common/stores/user';
 import { useListSkills } from '@refly-packages/ai-workspace-common/hooks/use-find-skill';
 import { TemplateList } from '@refly-packages/ai-workspace-common/components/canvas-template/template-list';
-import { TechBackground } from './wireframe-cube';
 import { PremiumBanner } from '@refly-packages/ai-workspace-common/components/canvas/node-chat-panel';
 import { subscriptionEnabled } from '@refly-packages/ai-workspace-common/utils/env';
+import { useCanvasTemplateModalShallow } from '@refly-packages/ai-workspace-common/stores/canvas-template-modal';
+import { AnimatedGridPattern } from '@refly-packages/ai-workspace-common/components/magicui/animated-grid-pattern';
 
 export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
   const { t, i18n } = useTranslation();
@@ -66,6 +70,9 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
       // No need to use localStorage anymore
     },
   });
+  const { setVisible: setCanvasTemplateModalVisible } = useCanvasTemplateModalShallow((state) => ({
+    setVisible: state.setVisible,
+  }));
 
   const handleSelectSkill = useCallback(
     (skill: Skill) => {
@@ -138,6 +145,10 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
     [t],
   );
 
+  const handleViewAllTemplates = useCallback(() => {
+    setCanvasTemplateModalVisible(true);
+  }, [setCanvasTemplateModalVisible]);
+
   useEffect(() => {
     return () => {
       reset();
@@ -146,10 +157,10 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
 
   return (
     <div className="relative h-full">
+      <AnimatedGridPattern />
       <div className="w-full h-full overflow-y-auto">
-        <TechBackground />
         <div className="relative w-full h-full p-6 max-w-4xl mx-auto z-10">
-          <h3 className="text-xl font-semibold text-center text-gray-800 mt-24 mb-6 mx-2">
+          <h3 className="text-3xl font-bold text-center text-gray-800 mt-48 mb-6 mx-2">
             {t('canvas.frontPageWelcome', { name: userProfile?.nickname || '' })}
           </h3>
 
@@ -257,9 +268,19 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
             </div>
           </div>
 
-          <div className="h-[500px] overflow-hidden flex flex-col">
-            <h3 className="pt-6 mx-2">{t('template.templateLibrary')}</h3>
-            <div className="flex-1 overflow-y-auto">
+          <div className="h-full flex flex-col mt-10">
+            <div className="flex justify-between items-center pt-6 mx-2">
+              <h3 className="text-base font-medium">{t('template.templateLibrary')}</h3>
+              <Button
+                type="text"
+                size="small"
+                className="text-xs text-gray-500 gap-1 !hover:text-green-500 transition-colors"
+                onClick={handleViewAllTemplates}
+              >
+                {t('common.viewAll')} <IconRight className="w-3 h-3" />
+              </Button>
+            </div>
+            <div className="flex-1">
               <TemplateList
                 source="front-page"
                 scrollableTargetId="front-page-scrollable-div"

@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useMemo } from 'react';
-import { Empty, Avatar, Button, Typography } from 'antd';
+import { Empty, Avatar, Button, Typography, Tag } from 'antd';
 import { Spin } from '@refly-packages/ai-workspace-common/components/common/spin';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import {
@@ -47,18 +47,23 @@ export const TemplateCard = ({
 
   return (
     <div
-      className={`${className} m-2 group relative bg-white rounded-lg overflow-hidden cursor-pointer shadow-[0_2px_8px_0_rgba(0,0,0,0.08)] hover:shadow-[0_4px_12px_0_rgba(0,0,0,0.12)] transform hover:-translate-y-0.5 transition-all duration-200 ease-in-out h-[245px]`}
+      className={`${className} m-2 group relative bg-white rounded-lg overflow-hidden cursor-pointer shadow-sm hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 ease-in-out h-[245px]`}
     >
+      {template?.featured && (
+        <Tag color="green" className="absolute top-2 right-0 z-10 shadow-sm">
+          {t('common.featured')}
+        </Tag>
+      )}
       <div className="h-40 bg-gray-100 flex items-center justify-center">
         <img
-          src={`${staticPublicEndpoint}/share-cover/${template.shareId}.png`}
-          alt={`${template.title} cover`}
+          src={`${staticPublicEndpoint}/share-cover/${template?.shareId}.png`}
+          alt={`${template?.title} cover`}
           className="w-full h-full object-cover"
         />
       </div>
 
       <div className="px-3 py-1 text-[13px] font-medium truncate">
-        {template.title || t('common.untitled')}
+        <span>{template?.title || t('common.untitled')}</span>
       </div>
 
       {showUser ? (

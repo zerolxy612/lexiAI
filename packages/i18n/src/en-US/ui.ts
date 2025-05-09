@@ -110,6 +110,7 @@ const translations = {
     selectedItems: 'Selected {{count}} items',
     noItemsSelected: 'No items selected',
     clear: 'Clear',
+    featured: 'Featured',
     nodesAddedSuccess: 'Nodes added successfully',
     nodesAddedFailed: 'Failed to add nodes',
     canvasIdMissing: 'Canvas ID is missing',
@@ -1078,7 +1079,7 @@ const translations = {
     shareNotFound: 'Canvas Not Found',
     shareNotFoundHint:
       "The shared canvas you're trying to access could not be found. It might have been deleted or the link may be incorrect.",
-    frontPageWelcome: 'Hi {{name}}, what can I help you with today?',
+    frontPageWelcome: 'What can I help you create today?',
     nodeTypes: {
       document: 'Document',
       resource: 'Resource',

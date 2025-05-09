@@ -118,6 +118,7 @@ const translations = {
     selectedItems: '已选择 {{count}} 项',
     noItemsSelected: '未选择任何项',
     clear: '清除',
+    featured: '精选',
     nodesAddedSuccess: '节点添加成功',
     nodesAddedFailed: '节点添加失败',
     canvasIdMissing: '缺少画布ID',
@@ -900,7 +901,7 @@ const translations = {
     emptyText: '双击画布打开菜单或选择',
     shareNotFound: '画布不存在',
     shareNotFoundHint: '你尝试访问的共享画布无法找到。它可能已被删除，或者链接可能有误。',
-    frontPageWelcome: '嗨 {{name}}, 今天我能帮您做什么？',
+    frontPageWelcome: '今天我能帮您创作什么？',
     nodeTypes: {
       document: '文档',
       resource: '资源',

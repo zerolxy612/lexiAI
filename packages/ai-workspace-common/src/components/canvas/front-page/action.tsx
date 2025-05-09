@@ -76,7 +76,7 @@ export const Actions = memo(
     const containerRef = useRef<HTMLDivElement>(null);
 
     return (
-      <div className={cn('flex justify-between items-center py-2', className)} ref={containerRef}>
+      <div className={cn('flex justify-between items-center', className)} ref={containerRef}>
         <div className="flex items-center">
           <ModelSelector model={model} setModel={setModel} briefMode={false} trigger={['click']} />
 
