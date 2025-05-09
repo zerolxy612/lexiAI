@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@/modules/common/prisma.service';
 import {
   BatchUpsertProviderItemsRequest,
@@ -48,7 +48,7 @@ interface GlobalProviderConfig {
 const PROVIDER_ITEMS_BATCH_LIMIT = 50;
 
 @Injectable()
-export class ProviderService implements OnModuleInit {
+export class ProviderService {
   private logger = new Logger(ProviderService.name);
   private globalProviderCache: SingleFlightCache<GlobalProviderConfig>;
 
@@ -61,10 +61,6 @@ export class ProviderService implements OnModuleInit {
     this.globalProviderCache = new SingleFlightCache(this.fetchGlobalProviderConfig.bind(this));
   }
 
-  async onModuleInit() {
-    await this.initializeGlobalProvidersFromEnv();
-  }
-
   async fetchGlobalProviderConfig(): Promise<GlobalProviderConfig> {
     const providers = await this.prisma.provider.findMany({
       where: {
@@ -72,6 +68,27 @@ export class ProviderService implements OnModuleInit {
         deletedAt: null,
       },
     });
+
+    // Initialize searxng global provider if SEARXNG_BASE_URL is set
+    if (process.env.SEARXNG_BASE_URL) {
+      const searXngProvider = providers.find((provider) => provider.providerKey === 'searxng');
+      if (!searXngProvider) {
+        const provider = await this.prisma.provider.create({
+          data: {
+            providerId: genProviderID(),
+            providerKey: 'searxng',
+            name: 'SearXNG',
+            baseUrl: process.env.SEARXNG_BASE_URL,
+            enabled: true,
+            categories: 'webSearch',
+            isGlobal: true,
+          },
+        });
+        this.logger.log(`Initialized global searxng provider ${provider.providerId}`);
+
+        providers.push(provider);
+      }
+    }
 
     // Decrypt API keys for all providers
     const decryptedProviders = providers.map((provider) => ({
@@ -102,36 +119,6 @@ export class ProviderService implements OnModuleInit {
     }));
 
     return { providers: decryptedProviders, items: decryptedItems };
-  }
-
-  async initializeGlobalProvidersFromEnv() {
-    // Initialize searxng global provider if SEARXNG_BASE_URL is set
-    if (process.env.SEARXNG_BASE_URL) {
-      const searXngProvider = await this.prisma.provider.count({
-        where: {
-          providerKey: 'searxng',
-          isGlobal: true,
-          deletedAt: null,
-        },
-      });
-
-      if (searXngProvider) {
-        return;
-      }
-
-      const provider = await this.prisma.provider.create({
-        data: {
-          providerId: genProviderID(),
-          providerKey: 'searxng',
-          name: 'SearXNG',
-          baseUrl: process.env.SEARXNG_BASE_URL,
-          enabled: true,
-          categories: 'webSearch',
-          isGlobal: true,
-        },
-      });
-      this.logger.log(`Initialized global searxng provider ${provider.providerId}`);
-    }
   }
 
   async listProviders(user: User, param: ListProvidersData['query']) {
