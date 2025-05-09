@@ -10,6 +10,7 @@ import { cn, extractUrlsWithLinkify } from '@refly/utils/index';
 import { SkillRuntimeConfig } from '@refly/openapi-schema';
 
 export interface CustomAction {
+  content?: string;
   icon: React.ReactNode;
   title: string;
   onClick: () => void;
@@ -101,7 +102,9 @@ export const Actions = memo(
         <div className="flex flex-row items-center gap-2">
           {customActions?.map((action, index) => (
             <Tooltip title={action.title} key={index}>
-              <Button size="small" icon={action.icon} onClick={action.onClick} className="mr-0" />
+              <Button size="small" icon={action.icon} onClick={action.onClick} className="mr-0">
+                <span className="text-xs">{action?.content || ''}</span>
+              </Button>
             </Tooltip>
           ))}
 

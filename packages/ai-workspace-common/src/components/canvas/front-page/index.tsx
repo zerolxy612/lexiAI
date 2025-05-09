@@ -269,8 +269,9 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
                   loading={isCreating}
                   customActions={[
                     {
-                      icon: <IconPlus />,
-                      title: t('loggedHomePage.siderMenu.newCanvas'),
+                      icon: <IconPlus className="flex items-center justify-center" />,
+                      title: '',
+                      content: t('loggedHomePage.siderMenu.newCanvas'),
                       onClick: () => debouncedCreateCanvas(),
                     },
                   ]}
