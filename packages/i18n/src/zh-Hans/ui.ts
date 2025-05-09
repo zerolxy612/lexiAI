@@ -118,6 +118,7 @@ const translations = {
     selectedItems: '已选择 {{count}} 项',
     noItemsSelected: '未选择任何项',
     clear: '清除',
+    featured: '精选',
     nodesAddedSuccess: '节点添加成功',
     nodesAddedFailed: '节点添加失败',
     canvasIdMissing: '缺少画布ID',
@@ -616,6 +617,11 @@ const translations = {
       },
     ],
   },
+  frontPage: {
+    welcome: '今天我能为您完成什么工作？',
+    fromCommunity: '来自社区',
+    fromCommunityDesc: '探索将 Refly 用于工作或更广泛领域的途径。',
+  },
   emailVerification: {
     title: '邮箱验证',
     description: '请输入我们向 {{email}} 发送的验证码:',
@@ -900,6 +906,7 @@ const translations = {
     emptyText: '双击画布打开菜单或选择',
     shareNotFound: '画布不存在',
     shareNotFoundHint: '你尝试访问的共享画布无法找到。它可能已被删除，或者链接可能有误。',
+    frontPageWelcome: '今天我能为您完成什么工作？',
     nodeTypes: {
       document: '文档',
       resource: '资源',
@@ -910,6 +917,21 @@ const translations = {
       codeArtifact: '代码组件',
       website: '网站',
       mindMap: '思维导图',
+    },
+    presetScenarios: {
+      title: '预设场景',
+      generatePPT: '生成 PPT',
+      generatePPTDesc: '创建专业的演示幻灯片',
+      generatePPTQuery: '请创建一个关于[主题]的专业 PPT',
+      generateLanding: '生成营销落地页',
+      generateLandingDesc: '创建市场营销落地页',
+      generateLandingQuery: '请为[产品/服务]创建一个营销落地页',
+      generateXHS: '生成小红书卡片',
+      generateXHSDesc: '创建小红书内容卡片',
+      generateXHSQuery: '请创建一个关于[主题]的小红书内容卡片',
+      generateMediaContent: '生成自媒体文案',
+      generateMediaContentDesc: '创建引人入胜的自媒体内容',
+      generateMediaContentQuery: '请创建一篇关于[主题]的自媒体文案',
     },
     export: {
       success: '导出图片成功',
@@ -2454,6 +2476,7 @@ const translations = {
     hideTemplates: '隐藏模板',
     duplicateCanvasEntities: '复制该画布所包含的文档以及资源',
     noDescription: '暂无描述',
+    emptyList: '暂无模版，快来发挥你的创造力，为社区贡献模版吧～',
   },
   project: {
     create: '创建知识库',

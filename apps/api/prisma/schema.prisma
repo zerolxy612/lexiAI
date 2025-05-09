@@ -315,6 +315,8 @@ model CanvasTemplate {
   description    String                  @map("description")
   /// Whether this canvas template is public
   isPublic       Boolean                 @default(false) @map("is_public")
+  /// Priority
+  priority       Int                     @default(0) @map("priority")
   /// Language code
   language       String                  @map("language")
   /// Create timestamp
@@ -327,6 +329,7 @@ model CanvasTemplate {
   category       CanvasTemplateCategory? @relation(fields: [categoryId], references: [categoryId])
 
   @@index([uid, updatedAt])
+  @@index([isPublic, priority])
   @@map("canvas_templates")
 }
 

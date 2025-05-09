@@ -575,6 +575,10 @@ export const CanvasTemplateSchema = {
       type: 'string',
       description: 'Canvas template language code',
     },
+    featured: {
+      type: 'boolean',
+      description: 'Whether this canvas template is featured',
+    },
     createdAt: {
       type: 'string',
       format: 'date-time',

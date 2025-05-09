@@ -1,5 +1,4 @@
 import { useTranslation } from 'react-i18next';
-import { useSkillStoreShallow } from '@refly-packages/ai-workspace-common/stores/skill';
 import { useRef, useMemo, useCallback, useState } from 'react';
 import { useListSkills } from '@refly-packages/ai-workspace-common/hooks/use-find-skill';
 import { Skill } from '@refly-packages/ai-workspace-common/requests/types.gen';
@@ -15,26 +14,29 @@ const skillItemClasses =
   'h-7 px-1.5 rounded-md border border-solid border-gray-200 text-gray-500 bg-white flex items-center justify-center ' +
   'text-xs font-medium transition-all duration-200 ease-in-out hover:bg-gray-100 hover:text-green-600 cursor-pointer';
 
-export const SkillDisplay = () => {
+interface SkillDisplayProps {
+  containCnt?: number;
+  selectedSkill: Skill | null;
+  setSelectedSkill: (skill: Skill) => void;
+}
+export const SkillDisplay = ({
+  selectedSkill,
+  setSelectedSkill,
+  containCnt = 3,
+}: SkillDisplayProps) => {
   const { t } = useTranslation();
-  const skillStore = useSkillStoreShallow((state) => ({
-    selectedSkill: state.selectedSkill,
-    setSelectedSkill: state.setSelectedSkill,
-    setSkillManagerModalVisible: state.setSkillManagerModalVisible,
-  }));
 
   const [open, setOpen] = useState(false);
 
   const skillDisplayRef = useRef<HTMLDivElement>(null);
-  const containCnt = 3;
 
   const skills = useListSkills();
 
   const handleSkillSelect = useCallback(
     (skill: Skill) => {
-      skillStore.setSelectedSkill(skill);
+      setSelectedSkill(skill);
     },
-    [skillStore.setSelectedSkill],
+    [setSelectedSkill],
   );
 
   const displayedSkills = useMemo(() => skills.slice(0, containCnt), [skills]);
@@ -89,7 +91,7 @@ export const SkillDisplay = () => {
     [dropdownItems, open, t],
   );
 
-  if (skillStore.selectedSkill) {
+  if (selectedSkill) {
     return null;
   }
 

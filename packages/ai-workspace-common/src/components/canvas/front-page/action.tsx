@@ -1,17 +1,12 @@
-import { Button, Tooltip, Upload, Switch } from 'antd';
-import { FormInstance } from '@arco-design/web-react';
+import { Button, Tooltip, Switch } from 'antd';
 import { memo, useMemo, useRef, useCallback } from 'react';
-import { IconImage } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { IconLink, IconSend } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { useUserStoreShallow } from '@refly-packages/ai-workspace-common/stores/user';
 import { getRuntime } from '@refly/utils/env';
-import { ModelSelector } from './model-selector';
+import { ModelSelector } from '@refly-packages/ai-workspace-common/components/canvas/launchpad/chat-actions/model-selector';
 import { ModelInfo } from '@refly/openapi-schema';
 import { cn, extractUrlsWithLinkify } from '@refly/utils/index';
-import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/canvas';
-import { useUploadImage } from '@refly-packages/ai-workspace-common/hooks/use-upload-image';
-import { IContextItem } from '@refly-packages/ai-workspace-common/stores/context-panel';
 import { SkillRuntimeConfig } from '@refly/openapi-schema';
 
 export interface CustomAction {
@@ -20,42 +15,33 @@ export interface CustomAction {
   onClick: () => void;
 }
 
-interface ChatActionsProps {
+interface ActionsProps {
   query: string;
   model: ModelInfo;
   setModel: (model: ModelInfo) => void;
   runtimeConfig: SkillRuntimeConfig;
   setRuntimeConfig: (runtimeConfig: SkillRuntimeConfig) => void;
   className?: string;
-  form?: FormInstance;
   handleSendMessage: () => void;
   handleAbort: () => void;
   customActions?: CustomAction[];
-  onUploadImage?: (file: File) => Promise<void>;
-  contextItems: IContextItem[];
+  loading?: boolean;
 }
 
-export const ChatActions = memo(
-  (props: ChatActionsProps) => {
+export const Actions = memo(
+  (props: ActionsProps) => {
     const {
       query,
       model,
       setModel,
-      runtimeConfig,
-      setRuntimeConfig,
       handleSendMessage,
       customActions,
       className,
-      onUploadImage,
-      contextItems,
+      loading,
+      runtimeConfig,
+      setRuntimeConfig,
     } = props;
     const { t } = useTranslation();
-    const { canvasId, readonly } = useCanvasContext();
-    const { handleUploadImage } = useUploadImage();
-
-    const handleSendClick = () => {
-      handleSendMessage();
-    };
 
     // hooks
     const isWeb = getRuntime() === 'web';
@@ -89,16 +75,10 @@ export const ChatActions = memo(
 
     const containerRef = useRef<HTMLDivElement>(null);
 
-    return readonly ? null : (
+    return (
       <div className={cn('flex justify-between items-center', className)} ref={containerRef}>
         <div className="flex items-center">
-          <ModelSelector
-            model={model}
-            setModel={setModel}
-            briefMode={false}
-            trigger={['click']}
-            contextItems={contextItems}
-          />
+          <ModelSelector model={model} setModel={setModel} briefMode={false} trigger={['click']} />
 
           {detectedUrls?.length > 0 && (
             <div className="flex items-center gap-1 ml-2">
@@ -125,34 +105,14 @@ export const ChatActions = memo(
             </Tooltip>
           ))}
 
-          <Upload
-            accept="image/*"
-            showUploadList={false}
-            customRequest={({ file }) => {
-              if (onUploadImage) {
-                onUploadImage(file as File);
-              } else {
-                handleUploadImage(file as File, canvasId);
-              }
-            }}
-            multiple
-          >
-            <Tooltip title={t('common.uploadImage')}>
-              <Button
-                className="translate-y-[0.5px]"
-                size="small"
-                icon={<IconImage className="flex items-center" />}
-              />
-            </Tooltip>
-          </Upload>
-
           {!isWeb ? null : (
             <Button
               size="small"
               type="primary"
               disabled={!canSendMessage}
               className="text-xs flex items-center gap-1"
-              onClick={handleSendClick}
+              onClick={handleSendMessage}
+              loading={loading}
             >
               <IconSend />
               <span>{t('copilot.chatActions.send')}</span>
@@ -166,14 +126,12 @@ export const ChatActions = memo(
     return (
       prevProps.handleSendMessage === nextProps.handleSendMessage &&
       prevProps.handleAbort === nextProps.handleAbort &&
-      prevProps.contextItems === nextProps.contextItems &&
       prevProps.query === nextProps.query &&
       prevProps.runtimeConfig === nextProps.runtimeConfig &&
       prevProps.setRuntimeConfig === nextProps.setRuntimeConfig &&
-      prevProps.onUploadImage === nextProps.onUploadImage &&
       prevProps.model === nextProps.model
     );
   },
 );
 
-ChatActions.displayName = 'ChatActions';
+Actions.displayName = 'Actions';
