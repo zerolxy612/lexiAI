@@ -190,7 +190,7 @@ export const SearchList = (props: SearchListProps) => {
 
             {!hasMore && sortedItems.length > 0 && (
               <Divider dashed plain className="my-2 px-8">
-                <div className="text-xs text-gray-400">{t('common.noMoreText')}</div>
+                <div className="text-xs text-gray-400">{t('common.noMore')}</div>
               </Divider>
             )}
 
