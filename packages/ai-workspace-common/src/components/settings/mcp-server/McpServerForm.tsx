@@ -10,8 +10,20 @@ import {
   Divider,
   message,
   InputNumber,
+  Tooltip,
+  Card,
+  Typography,
+  Collapse,
 } from 'antd';
-import { PlusOutlined, MinusCircleOutlined, CodeOutlined, FormOutlined } from '@ant-design/icons';
+import {
+  PlusOutlined,
+  MinusCircleOutlined,
+  CodeOutlined,
+  FormOutlined,
+  DeleteOutlined,
+  QuestionCircleOutlined,
+  CaretRightOutlined,
+} from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { McpServerType } from '@refly/openapi-schema';
 import { McpServerFormProps, McpServerFormData } from './types';
@@ -21,6 +33,7 @@ import {
   useUpdateMcpServer,
   useValidateMcpServer,
 } from '@refly-packages/ai-workspace-common/queries';
+import { mapServerType } from '@refly-packages/ai-workspace-common/components/settings/mcp-server/utils';
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -29,7 +42,6 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
   initialData,
   onSubmit,
   onCancel,
-  _loading = false,
 }) => {
   const { t } = useTranslation();
   const [form] = Form.useForm<McpServerFormData>();
@@ -37,8 +49,10 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
   const [formData, setFormData] = useState<McpServerFormData>({
     name: '',
     type: 'sse',
-    enabled: true,
+    enabled: false,
   });
+  const [isEnabled, setIsEnabled] = useState<boolean>(initialData?.enabled || false);
+
   const [serverType, setServerType] = useState<McpServerType>(initialData?.type || 'sse');
 
   // Create and update mutations
@@ -64,13 +78,30 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
     },
   });
 
+  // 验证服务器配置
   const validateMutation = useValidateMcpServer([], {
-    onSuccess: () => {
+    onSuccess: (response) => {
+      if (!response?.data?.success) {
+        throw response.data.errMsg;
+      }
+
+      // 服务端验证成功时返回 true
       message.success(t('settings.mcpServer.validateSuccess'));
+
+      setIsEnabled(true);
+      const currentValues = form.getFieldsValue();
+      form.setFieldsValue({ ...currentValues, enabled: true });
+      setFormData({ ...formData, enabled: true });
     },
     onError: (error) => {
       message.error(t('settings.mcpServer.validateError'));
       console.error('Failed to validate MCP server:', error);
+      setIsEnabled(false);
+      const currentValues = form.getFieldsValue();
+      if (currentValues.enabled) {
+        form.setFieldsValue({ ...currentValues, enabled: false });
+      }
+      setFormData({ ...formData, enabled: false });
     },
   });
 
@@ -94,7 +125,8 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
       setServerType(initialData.type);
     } else {
       form.setFieldsValue({
-        enabled: true,
+        enabled: false,
+        type: 'sse',
       });
     }
   }, [initialData, form]);
@@ -139,7 +171,7 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
         // 映射通用格式字段到 Refly 格式
         const server: McpServerFormData = {
           name: name,
-          type: mapServerType(serverConfig.type),
+          type: mapServerType(serverConfig.type, serverConfig),
           enabled: serverConfig.isActive ?? true,
           url: serverConfig.baseUrl || '',
           command: serverConfig.command || '',
@@ -163,19 +195,6 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
     return formData;
   };
 
-  // 将服务器类型从通用格式映射到 Refly 格式
-  const mapServerType = (type: string): McpServerType => {
-    const typeMap: Record<string, McpServerType> = {
-      sse: 'sse',
-      streamable: 'streamable',
-      streamableHttp: 'streamable',
-      stdio: 'stdio',
-      inMemory: 'sse', // 将 inMemory 映射为 sse 作为后备
-    };
-
-    return type && typeMap[type] ? typeMap[type] : 'sse';
-  };
-
   // 处理 JSON 编辑器变更
   const handleJsonChange = (newData: any) => {
     // 将通用格式转换为 Refly 格式
@@ -191,6 +210,17 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
 
   // Handle form submission
   const handleFinish = (values: McpServerFormData) => {
+    // 确保表单中的enabled值与isEnabled状态一致
+    values.enabled = isEnabled;
+
+    // 如果服务器启用但未经过验证，自动进行验证
+    if (isEnabled) {
+      message.info(t('settings.mcpServer.validatingBeforeEnable'));
+      // 自动验证
+      validateMutation.mutate({ body: values });
+      return;
+    }
+
     // Prepare data for API
     const apiData = {
       ...values,
@@ -209,10 +239,14 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
     }
   };
 
-  // Handle validate button click
-  const handleValidate = () => {
-    const values = form.getFieldsValue();
-    validateMutation.mutate({ body: values });
+  // 处理启用状态变更
+  const handleEnabledChange = async (checked: boolean) => {
+    if (checked) {
+      validateMutation.mutate({ body: form.getFieldsValue() });
+    } else {
+      // 关闭时不需要验证，直接更新状态
+      setIsEnabled(false);
+    }
   };
 
   return (
@@ -279,28 +313,54 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
                   <Input placeholder={t('settings.mcpServer.commandPlaceholder')} />
                 </Form.Item>
 
-                <Divider orientation="left">{t('settings.mcpServer.args')}</Divider>
-                <Form.List name="args">
-                  {(fields, { add, remove }) => (
-                    <>
-                      {fields.map((field) => (
-                        <Form.Item key={field.key}>
-                          <Space align="baseline">
-                            <Form.Item {...field} noStyle>
-                              <Input placeholder={t('settings.mcpServer.argPlaceholder')} />
-                            </Form.Item>
-                            <MinusCircleOutlined onClick={() => remove(field.name)} />
-                          </Space>
+                <Card
+                  title={
+                    <Space>
+                      {t('settings.mcpServer.args')}
+                      <Tooltip title={t('settings.mcpServer.argsTooltip')}>
+                        <QuestionCircleOutlined />
+                      </Tooltip>
+                    </Space>
+                  }
+                  size="small"
+                  className="mb-4"
+                >
+                  <Form.List name="args">
+                    {(fields, { add, remove }) => (
+                      <>
+                        {fields.map((field) => (
+                          <Form.Item key={field.key} style={{ marginBottom: 8 }}>
+                            <div className="flex items-center">
+                              <Form.Item {...field} noStyle>
+                                <Input
+                                  placeholder={t('settings.mcpServer.argPlaceholder')}
+                                  style={{ width: 'calc(100% - 32px)' }}
+                                />
+                              </Form.Item>
+                              <Button
+                                type="text"
+                                danger
+                                icon={<DeleteOutlined />}
+                                onClick={() => remove(field.name)}
+                                style={{ marginLeft: 8 }}
+                              />
+                            </div>
+                          </Form.Item>
+                        ))}
+                        <Form.Item>
+                          <Button
+                            type="dashed"
+                            onClick={() => add('-y')}
+                            icon={<PlusOutlined />}
+                            block
+                          >
+                            {t('settings.mcpServer.addArg')}
+                          </Button>
                         </Form.Item>
-                      ))}
-                      <Form.Item>
-                        <Button type="dashed" onClick={() => add()} icon={<PlusOutlined />} block>
-                          {t('settings.mcpServer.addArg')}
-                        </Button>
-                      </Form.Item>
-                    </>
-                  )}
-                </Form.List>
+                      </>
+                    )}
+                  </Form.List>
+                </Card>
               </>
             )}
 
@@ -343,72 +403,148 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
 
             {/* Environment Variables for Stdio type */}
             {serverType === 'stdio' && (
-              <>
-                <Divider orientation="left">{t('settings.mcpServer.env')}</Divider>
+              <Card
+                title={
+                  <Space>
+                    {t('settings.mcpServer.env')}
+                    <Tooltip title={t('settings.mcpServer.envTooltip')}>
+                      <QuestionCircleOutlined />
+                    </Tooltip>
+                  </Space>
+                }
+                size="small"
+                className="mb-4"
+              >
                 <Form.List name="env">
                   {(fields, { add, remove }) => (
                     <>
                       {fields.map((field) => (
-                        <Form.Item key={field.key}>
-                          <Space align="baseline">
-                            <Form.Item name={[field.name, 'key']} noStyle>
+                        <Form.Item key={field.key} style={{ marginBottom: 12 }}>
+                          <div className="flex items-center">
+                            <Form.Item
+                              name={[field.name, 'key']}
+                              noStyle
+                              rules={[
+                                {
+                                  required: true,
+                                  message: t('settings.mcpServer.envKeyRequired'),
+                                },
+                              ]}
+                            >
                               <Input
                                 placeholder={t('settings.mcpServer.envKey')}
-                                style={{ width: 200 }}
+                                style={{ width: '40%', marginRight: 8 }}
                               />
                             </Form.Item>
-                            <Form.Item name={[field.name, 'value']} noStyle>
+                            <Form.Item
+                              name={[field.name, 'value']}
+                              noStyle
+                              rules={[
+                                {
+                                  required: true,
+                                  message: t('settings.mcpServer.envValueRequired'),
+                                },
+                              ]}
+                            >
                               <Input
                                 placeholder={t('settings.mcpServer.envValue')}
-                                style={{ width: 300 }}
+                                style={{ width: 'calc(60% - 40px)' }}
                               />
                             </Form.Item>
-                            <MinusCircleOutlined onClick={() => remove(field.name)} />
-                          </Space>
+                            <Button
+                              type="text"
+                              danger
+                              icon={<DeleteOutlined />}
+                              onClick={() => remove(field.name)}
+                              style={{ marginLeft: 8 }}
+                            />
+                          </div>
                         </Form.Item>
                       ))}
                       <Form.Item>
-                        <Button type="dashed" onClick={() => add()} icon={<PlusOutlined />} block>
+                        <Button
+                          type="dashed"
+                          onClick={() => add({ key: '', value: '' })}
+                          icon={<PlusOutlined />}
+                          block
+                        >
                           {t('settings.mcpServer.addEnv')}
                         </Button>
                       </Form.Item>
                     </>
                   )}
                 </Form.List>
-              </>
+              </Card>
             )}
 
             {/* Reconnect Configuration */}
-            <Divider orientation="left">{t('settings.mcpServer.reconnect')}</Divider>
-            <Form.Item name={['reconnect', 'enabled']} valuePropName="checked">
-              <Switch
-                checkedChildren={t('common.enabled')}
-                unCheckedChildren={t('common.disabled')}
-              />
-            </Form.Item>
+            <Collapse
+              className="mb-4"
+              bordered={false}
+              expandIcon={({ isActive }) => <CaretRightOutlined rotate={isActive ? 90 : 0} />}
+              items={[
+                {
+                  key: 'reconnect',
+                  label: (
+                    <Space>
+                      {t('settings.mcpServer.reconnect')}
+                      <Tooltip title={t('settings.mcpServer.reconnectTooltip')}>
+                        <QuestionCircleOutlined />
+                      </Tooltip>
+                    </Space>
+                  ),
+                  children: (
+                    <div className="pl-4 pr-4 pb-2">
+                      <Form.Item name={['reconnect', 'enabled']} valuePropName="checked">
+                        <Switch
+                          checkedChildren={t('common.enabled')}
+                          unCheckedChildren={t('common.disabled')}
+                        />
+                      </Form.Item>
 
-            <Form.Item
-              name={['reconnect', 'maxAttempts']}
-              label={t('settings.mcpServer.maxAttempts')}
-            >
-              <InputNumber min={1} />
-            </Form.Item>
+                      <Form.Item
+                        name={['reconnect', 'maxAttempts']}
+                        label={t('settings.mcpServer.maxAttempts')}
+                      >
+                        <InputNumber min={1} style={{ width: '100%' }} />
+                      </Form.Item>
 
-            <Form.Item name={['reconnect', 'delayMs']} label={t('settings.mcpServer.delayMs')}>
-              <InputNumber min={0} step={100} />
-            </Form.Item>
+                      <Form.Item
+                        name={['reconnect', 'delayMs']}
+                        label={t('settings.mcpServer.delayMs')}
+                      >
+                        <InputNumber min={0} step={100} style={{ width: '100%' }} />
+                      </Form.Item>
+                    </div>
+                  ),
+                },
+              ]}
+            />
 
             {/* Enabled Switch */}
-            <Form.Item
-              name="enabled"
-              label={t('settings.mcpServer.enabled')}
-              valuePropName="checked"
-            >
-              <Switch
-                checkedChildren={t('common.enabled')}
-                unCheckedChildren={t('common.disabled')}
-              />
-            </Form.Item>
+            <Card title={t('settings.mcpServer.status')} size="small" className="mb-4">
+              <div className="flex items-center justify-between">
+                <Typography.Text>
+                  {t('settings.mcpServer.enabled')}
+                  <Tooltip title={t('settings.mcpServer.enabledTooltip')}>
+                    <QuestionCircleOutlined style={{ marginLeft: 8 }} />
+                  </Tooltip>
+                </Typography.Text>
+                <Form.Item noStyle>
+                  <Switch
+                    checked={isEnabled}
+                    checkedChildren={t('common.enabled')}
+                    unCheckedChildren={t('common.disabled')}
+                    onChange={handleEnabledChange}
+                  />
+                </Form.Item>
+              </div>
+              {!validateMutation.data && !initialData?.enabled && (
+                <Typography.Text type="secondary" className="block mt-2">
+                  {t('settings.mcpServer.autoValidateHint')}
+                </Typography.Text>
+              )}
+            </Card>
 
             {/* Form Actions */}
             <Form.Item>
@@ -416,12 +552,13 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
                 <Button
                   type="primary"
                   htmlType="submit"
-                  loading={createMutation.isPending || updateMutation.isPending}
+                  loading={
+                    createMutation.isPending ||
+                    updateMutation.isPending ||
+                    validateMutation.isPending
+                  }
                 >
                   {initialData ? t('common.update') : t('common.create')}
-                </Button>
-                <Button onClick={handleValidate} loading={validateMutation.isPending}>
-                  {t('settings.mcpServer.validate')}
                 </Button>
                 <Button onClick={onCancel}>{t('common.cancel')}</Button>
               </Space>
@@ -445,12 +582,11 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
               <Button
                 type="primary"
                 onClick={() => form.submit()}
-                loading={createMutation.isPending || updateMutation.isPending}
+                loading={
+                  createMutation.isPending || updateMutation.isPending || validateMutation.isPending
+                }
               >
                 {initialData ? t('common.update') : t('common.create')}
-              </Button>
-              <Button onClick={handleValidate} loading={validateMutation.isPending}>
-                {t('settings.mcpServer.validate')}
               </Button>
               <Button onClick={onCancel}>{t('common.cancel')}</Button>
             </Space>

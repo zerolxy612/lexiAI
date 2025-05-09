@@ -1,11 +1,15 @@
 import React, { useState, useMemo } from 'react';
-import { Table, Button, Tag, Space, Tooltip, Modal, message } from 'antd';
+import { Table, Button, Tag, Space, Tooltip, Modal, message, Switch } from 'antd';
 import { EditOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 
 import { McpServerDTO, McpServerType } from '@refly/openapi-schema';
 
-import { useDeleteMcpServer } from '@refly-packages/ai-workspace-common/queries';
+import {
+  useDeleteMcpServer,
+  useUpdateMcpServer,
+  useValidateMcpServer,
+} from '@refly-packages/ai-workspace-common/queries';
 import { useListMcpServersSuspense } from '@refly-packages/ai-workspace-common/queries/suspense';
 import { McpServerForm } from '@refly-packages/ai-workspace-common/components/settings/mcp-server/McpServerForm';
 import { McpServerBatchImport } from '@refly-packages/ai-workspace-common/components/settings/mcp-server/McpServerBatchImport';
@@ -43,6 +47,35 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
     },
   });
 
+  // Update MCP server mutation
+  const updateMutation = useUpdateMcpServer([], {
+    onSuccess: () => {
+      message.success(t('settings.mcpServer.updateSuccess'));
+      // 刷新列表数据
+      refetch();
+    },
+    onError: (error) => {
+      message.error(t('settings.mcpServer.updateError'));
+      console.error('Failed to update MCP server:', error);
+    },
+  });
+
+  // Validate MCP server mutation
+  const validateMutation = useValidateMcpServer([], {
+    onSuccess: (response) => {
+      if (!response?.data?.success) {
+        throw response.data.errMsg;
+      }
+
+      // 服务端验证成功时返回 true
+      message.success(t('settings.mcpServer.validateSuccess'));
+    },
+    onError: (error) => {
+      message.error(t('settings.mcpServer.validateError'));
+      console.error('Failed to validate MCP server:', error);
+    },
+  });
+
   // Handle form submission
   const handleFormSubmit = () => {
     // Form submission is handled in the form component
@@ -62,6 +95,48 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
   const handleDelete = (server: McpServerDTO) => {
     setServerToDelete(server);
     setDeleteModalVisible(true);
+  };
+
+  // Handle enable/disable switch
+  const handleEnableSwitch = async (checked: boolean, server: McpServerDTO) => {
+    try {
+      // 如果要启用，先进行验证
+      if (checked) {
+        await validateMutation.mutateAsync({
+          body: {
+            name: server.name,
+            type: server.type,
+            url: server.url,
+            command: server.command,
+            args: server.args,
+            env: server.env,
+            headers: server.headers,
+            reconnect: server.reconnect,
+            config: server.config,
+            enabled: true,
+          },
+        });
+      }
+
+      // 验证通过或者是禁用操作，更新服务器状态
+      updateMutation.mutate({
+        body: {
+          name: server.name,
+          type: server.type,
+          url: server.url,
+          command: server.command,
+          args: server.args,
+          env: server.env,
+          headers: server.headers,
+          reconnect: server.reconnect,
+          config: server.config,
+          enabled: checked,
+        },
+      });
+    } catch (error) {
+      // 验证失败，不做任何更改
+      console.error('Server validation failed:', error);
+    }
   };
 
   // Confirm delete
@@ -110,10 +185,15 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
       title: t('settings.mcpServer.status'),
       dataIndex: 'enabled',
       key: 'enabled',
-      render: (enabled: boolean) => (
-        <Tag color={enabled ? 'success' : 'error'}>
-          {enabled ? t('common.enabled') : t('common.disabled')}
-        </Tag>
+      render: (enabled: boolean, record: McpServerDTO) => (
+        <Switch
+          checked={enabled}
+          onChange={(checked) => handleEnableSwitch(checked, record)}
+          loading={updateMutation.isPending || validateMutation.isPending}
+          disabled={record.isGlobal}
+          checkedChildren={t('common.enabled')}
+          unCheckedChildren={t('common.disabled')}
+        />
       ),
     },
     {

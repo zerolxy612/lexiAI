@@ -5,6 +5,7 @@ import { BaseSkill, BaseSkillState, SkillRunnableConfig, baseStateGraphArgs } fr
 import { safeStringifyJSON } from '@refly/utils';
 import {
   Icon,
+  ListMcpServersResponse,
   SkillInvocationConfig,
   SkillTemplateConfigDefinition,
   Source,
@@ -25,8 +26,8 @@ import { isValidUrl } from '@refly/utils';
 // prompts
 import * as commonQnA from '../scheduler/module/commonQnA';
 import { checkModelContextLenSupport } from '../scheduler/utils/model';
-import { AIMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
-import { MultiServerMCPClient } from '../adapters';
+import { AIMessage } from '@langchain/core/messages';
+import { Connection, MultiServerMCPClient } from '../adapters';
 import { buildSystemPrompt } from '../mcp/core/prompt';
 
 export class Agent extends BaseSkill {
@@ -56,6 +57,66 @@ export class Agent extends BaseSkill {
 
   isValidSkillName = (name: string) => {
     return this.skills.some((skill) => skill.name === name);
+  };
+
+  /**
+   * Converts MCP servers response to MultiServerMCPClient configuration format
+   * @param response - The response from listMcpServers API
+   * @returns A record mapping server names to their connection configurations
+   */
+  private convertMcpServersToClientConfig = (
+    response: ListMcpServersResponse,
+  ): Record<string, Connection> => {
+    const mcpServers = response.data || [];
+    const config: Record<string, Connection> = {};
+
+    for (const server of mcpServers) {
+      // Skip servers without a name
+      if (!server.name) continue;
+
+      // Create connection config based on server type
+      switch (server.type) {
+        case 'sse':
+          if (server.url) {
+            config[server.name] = {
+              type: 'sse',
+              url: server.url,
+              headers: server.headers,
+              reconnect: server.reconnect,
+            };
+          }
+          break;
+        case 'streamable':
+          if (server.url) {
+            config[server.name] = {
+              type: 'streamable',
+              url: server.url,
+              headers: server.headers,
+              reconnect: server.reconnect,
+            };
+          }
+          break;
+        case 'stdio':
+          if (server.command) {
+            config[server.name] = {
+              type: 'stdio',
+              command: server.command,
+              args: server.args,
+              env: server.env,
+              restart: server.reconnect
+                ? {
+                    enabled: server.reconnect.enabled,
+                    maxAttempts: server.reconnect.maxAttempts,
+                    delayMs: server.reconnect.delayMs,
+                  }
+                : undefined,
+            };
+          }
+          break;
+      }
+    }
+
+    return config;
   };
 
   commonPreprocess = async (
@@ -189,112 +250,61 @@ export class Agent extends BaseSkill {
     return { requestMessages, sources };
   };
 
-  callCommonQnA = async (
-    state: GraphState,
-    config: SkillRunnableConfig,
-  ): Promise<Partial<GraphState>> => {
-    const { currentSkill } = config.configurable;
-
-    // Extract projectId and customInstructions from project
-    const project = config.configurable?.project as
-      | { projectId: string; customInstructions?: string }
-      | undefined;
-
-    // Use customInstructions only if projectId exists (regardless of knowledge base search status)
-    const customInstructions = project?.projectId ? project?.customInstructions : undefined;
-
-    // common preprocess
-    const module = {
-      buildSystemPrompt: commonQnA.buildCommonQnASystemPrompt,
-      buildContextUserPrompt: commonQnA.buildCommonQnAContextUserPrompt,
-      buildUserPrompt: commonQnA.buildCommonQnAUserPrompt,
-    };
-
-    const { requestMessages, sources } = await this.commonPreprocess(
-      state,
-      config,
-      module,
-      customInstructions,
-    );
-
-    // set current step
-    config.metadata.step = { name: 'answerQuestion' };
-
-    if (sources.length > 0) {
-      // Truncate sources before emitting
-      const truncatedSources = truncateSource(sources);
-      await this.emitLargeDataEvent(
-        {
-          data: truncatedSources,
-          buildEventData: (chunk, { isPartial, chunkIndex, totalChunks }) => ({
-            structuredData: {
-              sources: chunk,
-              isPartial,
-              chunkIndex,
-              totalChunks,
-            },
-          }),
-        },
-        config,
-      );
-    }
-
-    const model = this.engine.chatModel({ temperature: 0.1 });
-    const responseMessage = await model.invoke(requestMessages, {
-      ...config,
-      metadata: {
-        ...config.metadata,
-        ...currentSkill,
-      },
-    });
-
-    return { messages: [responseMessage] };
-  };
-
   private _cachedSetup: {
     model: any;
     toolNode: ToolNode;
     mcpTools: any[];
   } | null = null;
 
-  async setupAgent() {
+  async setupAgent(user) {
     // Return cached setup if available
     if (this._cachedSetup) {
       return this._cachedSetup;
     }
 
-    // Initialize MCP client
-    const client = new MultiServerMCPClient({
-      'mcp-time': {
-        type: 'sse',
-        url: 'https://mcp.higress.ai/mcp-time/cmacdo7yu00469001xgwju1os/sse',
-      },
-      'mcp-ip-query': {
-        type: 'streamable',
-        url: 'https://mcp.higress.ai/mcp-ip-query/cmacdo7yu00469001xgwju1os',
-      },
-      'mcp-calendar-holiday-helper': {
-        type: 'sse',
-        url: 'https://mcp.higress.ai/mcp-calendar-holiday-helper/cmacdo7yu00469001xgwju1os/sse',
-      },
-      'mcp-firecrawl': {
-        type: 'sse',
-        url: 'https://mcp.higress.ai/mcp-firecrawl/cmacdo7yu00469001xgwju1os/sse',
-      },
-      'mcp-wolframalpha': {
-        type: 'sse',
-        url: 'https://mcp.higress.ai/mcp-wolframalpha/cmacdo7yu00469001xgwju1os/sse',
-      },
-      puppeteer: {
-        command: '/Users/qiyuan/.nvm/versions/node/v20.19.0/bin/npx',
-        args: ['-y', '@modelcontextprotocol/server-puppeteer'],
-        env: {
-          ...process.env, // 包含所有当前环境变量
-        },
-      },
+    // Create document with generated title
+    const mcpServersResponse = await this.engine.service.listMcpServers(user, {
+      enabled: true,
     });
 
-    // 添加更多调试信息
+    // Convert MCP servers response to MultiServerMCPClient config format
+    const mcpClientConfig = this.convertMcpServersToClientConfig(mcpServersResponse);
+
+    // Initialize MCP client with the converted config
+    const client = new MultiServerMCPClient(mcpClientConfig);
+
+    // Initialize MCP client
+    // const client = new MultiServerMCPClient({
+    //   'mcp-time': {
+    //     type: 'sse',
+    //     url: 'https://mcp.higress.ai/mcp-time/cmacdo7yu00469001xgwju1os/sse',
+    //   },
+    //   'mcp-ip-query': {
+    //     type: 'streamable',
+    //     url: 'https://mcp.higress.ai/mcp-ip-query/cmacdo7yu00469001xgwju1os',
+    //   },
+    //   'mcp-calendar-holiday-helper': {
+    //     type: 'sse',
+    //     url: 'https://mcp.higress.ai/mcp-calendar-holiday-helper/cmacdo7yu00469001xgwju1os/sse',
+    //   },
+    //   'mcp-firecrawl': {
+    //     type: 'sse',
+    //     url: 'https://mcp.higress.ai/mcp-firecrawl/cmacdo7yu00469001xgwju1os/sse',
+    //   },
+    //   'mcp-wolframalpha': {
+    //     type: 'sse',
+    //     url: 'https://mcp.higress.ai/mcp-wolframalpha/cmacdo7yu00469001xgwju1os/sse',
+    //   },
+    //   puppeteer: {
+    //     command: '/Users/qiyuan/.nvm/versions/node/v20.19.0/bin/npx',
+    //     args: ['-y', '@modelcontextprotocol/server-puppeteer'],
+    //     env: {
+    //       ...process.env, // Include all current environment variables
+    //     },
+    //   },
+    // });
+
+    // Add more debug information
     this.engine.logger.log('Initializing MCP client and getting tools...');
 
     try {
@@ -331,8 +341,61 @@ export class Agent extends BaseSkill {
   }
 
   // LLM node - Process messages and call model
-  agentNode = async (state: GraphState): Promise<Partial<GraphState>> => {
-    const { model, toolNode, mcpTools } = await this.setupAgent();
+  agentNode = async (
+    state: GraphState,
+    config: SkillRunnableConfig,
+  ): Promise<Partial<GraphState>> => {
+    const { currentSkill, user } = config.configurable;
+
+    const { model, toolNode, mcpTools } = await this.setupAgent(user);
+
+    // Extract projectId and customInstructions from project
+    const project = config.configurable?.project as
+      | { projectId: string; customInstructions?: string }
+      | undefined;
+
+    // Use customInstructions only if projectId exists (regardless of knowledge base search status)
+    const customInstructions = project?.projectId ? project?.customInstructions : undefined;
+
+    // common preprocess
+    const module = {
+      buildSystemPrompt: () =>
+        buildSystemPrompt(
+          "You are an advanced AI assistant with specialized expertise in leveraging the Model Context Protocol (MCP) to solve complex problems efficiently. Your intelligence manifests through precise tool orchestration, context-aware execution, and proactive optimization of MCP server capabilities. If an MCP server call fails or returns malformed data, you must continuously retry until achieving the user's expected outcome — never abandon the operation prematurely.",
+          mcpTools as any,
+        ),
+      buildContextUserPrompt: commonQnA.buildCommonQnAContextUserPrompt,
+      buildUserPrompt: commonQnA.buildCommonQnAUserPrompt,
+    };
+
+    const { requestMessages, sources } = await this.commonPreprocess(
+      state,
+      config,
+      module,
+      customInstructions,
+    );
+
+    // set current step
+    config.metadata.step = { name: 'answerQuestion' };
+
+    if (sources.length > 0) {
+      // Truncate sources before emitting
+      const truncatedSources = truncateSource(sources);
+      await this.emitLargeDataEvent(
+        {
+          data: truncatedSources,
+          buildEventData: (chunk, { isPartial, chunkIndex, totalChunks }) => ({
+            structuredData: {
+              sources: chunk,
+              isPartial,
+              chunkIndex,
+              totalChunks,
+            },
+          }),
+        },
+        config,
+      );
+    }
 
     console.log('\n=== CREATING LANGGRAPH AGENT FLOW ===');
 
@@ -363,14 +426,17 @@ export class Agent extends BaseSkill {
     // Compile and execute workflow
     const app = workflow.compile();
 
-    const systemPrompt = buildSystemPrompt(
-      "You are an advanced AI assistant with specialized expertise in leveraging the Model Context Protocol (MCP) to solve complex problems efficiently. Your intelligence manifests through precise tool orchestration, context-aware execution, and proactive optimization of MCP server capabilities. If an MCP server call fails or returns malformed data, you must continuously retry until achieving the user's expected outcome — never abandon the operation prematurely.",
-      mcpTools as any,
+    const result = await app.invoke(
+      { messages: requestMessages },
+      {
+        ...config,
+        metadata: {
+          ...config.metadata,
+          ...currentSkill,
+        },
+      },
     );
 
-    const result = await app.invoke({
-      messages: [new SystemMessage(systemPrompt), new HumanMessage(state.query)],
-    });
     console.log('result', result);
 
     return { messages: result.messages };

@@ -12,6 +12,16 @@ import { McpServerNotFoundError, ParamsError } from '@refly/errors';
 import { SingleFlightCache } from '@/utils/cache';
 import { EncryptionService } from '@/modules/common/encryption.service';
 
+/**
+ * Server configuration type for encryption/decryption operations
+ * Contains sensitive information fields that may need to be encrypted/decrypted
+ */
+interface ServerWithSensitiveInfo {
+  headers?: string;
+  env?: string;
+  [key: string]: any; // 允许其他任何属性
+}
+
 interface GlobalMcpServerConfig {
   servers: McpServerModel[];
 }
@@ -47,8 +57,10 @@ export class McpServerService {
 
   /**
    * Encrypt sensitive information in server config
+   * @param server Server configuration containing sensitive information that may need encryption
+   * @returns Encrypted server configuration
    */
-  private encryptServerConfig(server: any): any {
+  private encryptServerConfig<T extends ServerWithSensitiveInfo>(server: T): T {
     const result = { ...server };
 
     // Encrypt headers containing sensitive information
@@ -98,8 +110,10 @@ export class McpServerService {
 
   /**
    * Decrypt sensitive information in server config
+   * @param server Server configuration containing sensitive information that may need decryption
+   * @returns Decrypted server configuration
    */
-  private decryptServerConfig(server: any): any {
+  private decryptServerConfig<T extends ServerWithSensitiveInfo>(server: T): T {
     const result = { ...server };
 
     // Decrypt headers containing sensitive information

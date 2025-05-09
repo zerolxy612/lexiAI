@@ -106,6 +106,8 @@ import { projectPO2DTO } from '@/modules/project/project.dto';
 import { ProviderService } from '@/modules/provider/provider.service';
 import { providerPO2DTO } from '@/modules/provider/provider.dto';
 import { codeArtifactPO2DTO } from '@/modules/code-artifact/code-artifact.dto';
+import { McpServerService } from '@/modules/mcp-server/mcp-server.service';
+import { mcpServerPO2DTO } from '@/modules/mcp-server/mcp-server.dto';
 
 function validateSkillTriggerCreateParam(param: SkillTriggerCreateParam) {
   if (param.triggerType === 'simpleEvent') {
@@ -138,6 +140,8 @@ export class SkillService {
     private misc: MiscService,
     private codeArtifact: CodeArtifactService,
     private providerService: ProviderService,
+    private mcpServerService: McpServerService,
+
     @InjectQueue(QUEUE_SKILL) private skillQueue: Queue<InvokeSkillJobData>,
     @InjectQueue(QUEUE_SKILL_TIMEOUT_CHECK)
     private timeoutCheckQueue: Queue<SkillTimeoutCheckJobData>,
@@ -153,6 +157,10 @@ export class SkillService {
 
   buildReflyService = (): ReflyService => {
     return {
+      listMcpServers: async (user, req) => {
+        const servers = await this.mcpServerService.listMcpServers(user, req);
+        return buildSuccessResponse(servers.map(mcpServerPO2DTO));
+      },
       createCanvas: async (user, req) => {
         const canvas = await this.canvas.createCanvas(user, req);
         return buildSuccessResponse(canvasPO2DTO(canvas));
