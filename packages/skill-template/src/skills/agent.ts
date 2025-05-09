@@ -5,7 +5,6 @@ import { BaseSkill, BaseSkillState, SkillRunnableConfig, baseStateGraphArgs } fr
 import { safeStringifyJSON } from '@refly/utils';
 import {
   Icon,
-  ListMcpServersResponse,
   SkillInvocationConfig,
   SkillTemplateConfigDefinition,
   Source,
@@ -27,8 +26,9 @@ import { isValidUrl } from '@refly/utils';
 import * as commonQnA from '../scheduler/module/commonQnA';
 import { checkModelContextLenSupport } from '../scheduler/utils/model';
 import { AIMessage } from '@langchain/core/messages';
-import { Connection, MultiServerMCPClient } from '../adapters';
+import { MultiServerMCPClient } from '../adapters';
 import { buildSystemPrompt } from '../mcp/core/prompt';
+import { convertMcpServersToClientConfig } from '../utils/mcp-utils';
 
 export class Agent extends BaseSkill {
   name = 'agent';
@@ -57,66 +57,6 @@ export class Agent extends BaseSkill {
 
   isValidSkillName = (name: string) => {
     return this.skills.some((skill) => skill.name === name);
-  };
-
-  /**
-   * Converts MCP servers response to MultiServerMCPClient configuration format
-   * @param response - The response from listMcpServers API
-   * @returns A record mapping server names to their connection configurations
-   */
-  private convertMcpServersToClientConfig = (
-    response: ListMcpServersResponse,
-  ): Record<string, Connection> => {
-    const mcpServers = response.data || [];
-    const config: Record<string, Connection> = {};
-
-    for (const server of mcpServers) {
-      // Skip servers without a name
-      if (!server.name) continue;
-
-      // Create connection config based on server type
-      switch (server.type) {
-        case 'sse':
-          if (server.url) {
-            config[server.name] = {
-              type: 'sse',
-              url: server.url,
-              headers: server.headers,
-              reconnect: server.reconnect,
-            };
-          }
-          break;
-        case 'streamable':
-          if (server.url) {
-            config[server.name] = {
-              type: 'streamable',
-              url: server.url,
-              headers: server.headers,
-              reconnect: server.reconnect,
-            };
-          }
-          break;
-        case 'stdio':
-          if (server.command) {
-            config[server.name] = {
-              type: 'stdio',
-              command: server.command,
-              args: server.args,
-              env: { ...process.env, ...server.env },
-              restart: server.reconnect
-                ? {
-                    enabled: server.reconnect.enabled,
-                    maxAttempts: server.reconnect.maxAttempts,
-                    delayMs: server.reconnect.delayMs,
-                  }
-                : undefined,
-            };
-          }
-          break;
-      }
-    }
-
-    return config;
   };
 
   commonPreprocess = async (
@@ -268,7 +208,7 @@ export class Agent extends BaseSkill {
     });
 
     // Convert MCP servers response to MultiServerMCPClient config format
-    const mcpClientConfig = this.convertMcpServersToClientConfig(mcpServersResponse);
+    const mcpClientConfig = convertMcpServersToClientConfig(mcpServersResponse);
 
     // Initialize MCP client with the converted config
     const client = new MultiServerMCPClient(mcpClientConfig);

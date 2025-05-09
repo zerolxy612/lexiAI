@@ -7,10 +7,11 @@ import {
   User,
 } from '@refly/openapi-schema';
 import { McpServer as McpServerModel } from '@/generated/client';
-// 不再需要 serverId 相关代码
 import { McpServerNotFoundError, ParamsError } from '@refly/errors';
 import { SingleFlightCache } from '@/utils/cache';
 import { EncryptionService } from '@/modules/common/encryption.service';
+import { Connection, MultiServerMCPClient } from '@refly/skill-template/src/adapters';
+import { createMcpClientConfig } from '@refly/skill-template/src/utils/mcp-utils';
 
 /**
  * Server configuration type for encryption/decryption operations
@@ -361,11 +362,58 @@ export class McpServerService {
   }
 
   /**
+   * Test MCP server connection
+   * @param config - MCP client configuration
+   * @param timeoutMs - Connection timeout in milliseconds
+   * @returns Promise that resolves if connection is successful
+   */
+  private async testMcpConnection(
+    config: Record<string, Connection>,
+    timeoutMs = 10000,
+  ): Promise<void> {
+    if (Object.keys(config).length === 0) {
+      throw new ParamsError('Invalid server configuration');
+    }
+
+    // Create MCP client and attempt to initialize connection
+    const client = new MultiServerMCPClient(config);
+
+    // Set timeout to avoid long waits
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Connection timeout')), timeoutMs);
+    });
+
+    try {
+      // Attempt to initialize connection with timeout
+      await Promise.race([client.initializeConnections(), timeoutPromise]);
+
+      // Optionally verify tools are available
+      const tools = await client.getTools();
+      if (!tools || tools.length === 0) {
+        throw new Error('No tools found for this MCP server');
+      }
+
+      console.log({ tools });
+
+      // Close connection if successful
+      await client.close();
+    } catch (error) {
+      // Ensure client is closed even if connection fails
+      await client.close().catch(() => {
+        // Ignore errors during cleanup
+      });
+      throw error;
+    }
+  }
+
+  /**
    * Validate MCP server configuration
+   * Ensures the server can be properly connected and initialized
    */
   async validateMcpServer(_user: User, param: UpsertMcpServerRequest) {
-    const { type, url, command, args } = param;
+    const { name, type, url, command, args } = param;
 
+    // Basic parameter validation
     if (!type) {
       throw new ParamsError('Server type is required');
     }
@@ -378,8 +426,21 @@ export class McpServerService {
       throw new ParamsError('Command and args are required for Stdio server type');
     }
 
-    // Additional validation logic can be added here
+    // Test actual connection to validate server configuration
+    try {
+      this.logger.log(`Validating MCP server connection for "${name || 'unnamed server'}"`);
 
-    return true;
+      // Create client configuration using the shared utility function
+      const serverConfig = createMcpClientConfig(param);
+
+      // Test connection
+      await this.testMcpConnection(serverConfig);
+
+      this.logger.log(`MCP server "${name || 'unnamed server'}" connection validated successfully`);
+      return true;
+    } catch (error) {
+      this.logger.error(`MCP server validation failed: ${error.message}`, error.stack);
+      throw new ParamsError(`MCP server validation failed: ${error.message}`);
+    }
   }
 }
