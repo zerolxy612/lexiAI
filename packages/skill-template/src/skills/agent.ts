@@ -102,7 +102,7 @@ export class Agent extends BaseSkill {
               type: 'stdio',
               command: server.command,
               args: server.args,
-              env: server.env,
+              env: { ...process.env, ...server.env },
               restart: server.reconnect
                 ? {
                     enabled: server.reconnect.enabled,
@@ -272,37 +272,6 @@ export class Agent extends BaseSkill {
 
     // Initialize MCP client with the converted config
     const client = new MultiServerMCPClient(mcpClientConfig);
-
-    // Initialize MCP client
-    // const client = new MultiServerMCPClient({
-    //   'mcp-time': {
-    //     type: 'sse',
-    //     url: 'https://mcp.higress.ai/mcp-time/cmacdo7yu00469001xgwju1os/sse',
-    //   },
-    //   'mcp-ip-query': {
-    //     type: 'streamable',
-    //     url: 'https://mcp.higress.ai/mcp-ip-query/cmacdo7yu00469001xgwju1os',
-    //   },
-    //   'mcp-calendar-holiday-helper': {
-    //     type: 'sse',
-    //     url: 'https://mcp.higress.ai/mcp-calendar-holiday-helper/cmacdo7yu00469001xgwju1os/sse',
-    //   },
-    //   'mcp-firecrawl': {
-    //     type: 'sse',
-    //     url: 'https://mcp.higress.ai/mcp-firecrawl/cmacdo7yu00469001xgwju1os/sse',
-    //   },
-    //   'mcp-wolframalpha': {
-    //     type: 'sse',
-    //     url: 'https://mcp.higress.ai/mcp-wolframalpha/cmacdo7yu00469001xgwju1os/sse',
-    //   },
-    //   puppeteer: {
-    //     command: '/Users/qiyuan/.nvm/versions/node/v20.19.0/bin/npx',
-    //     args: ['-y', '@modelcontextprotocol/server-puppeteer'],
-    //     env: {
-    //       ...process.env, // Include all current environment variables
-    //     },
-    //   },
-    // });
 
     // Add more debug information
     this.engine.logger.log('Initializing MCP client and getting tools...');
