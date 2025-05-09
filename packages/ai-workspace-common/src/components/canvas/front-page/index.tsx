@@ -18,7 +18,10 @@ import { useUserStoreShallow } from '@refly-packages/ai-workspace-common/stores/
 import { useListSkills } from '@refly-packages/ai-workspace-common/hooks/use-find-skill';
 import { TemplateList } from '@refly-packages/ai-workspace-common/components/canvas-template/template-list';
 import { PremiumBanner } from '@refly-packages/ai-workspace-common/components/canvas/node-chat-panel';
-import { subscriptionEnabled } from '@refly-packages/ai-workspace-common/utils/env';
+import {
+  canvasTemplateEnabled,
+  subscriptionEnabled,
+} from '@refly-packages/ai-workspace-common/utils/env';
 import { useCanvasTemplateModalShallow } from '@refly-packages/ai-workspace-common/stores/canvas-template-modal';
 import { AnimatedGridPattern } from '@refly-packages/ai-workspace-common/components/magicui/animated-grid-pattern';
 import cn from 'classnames';
@@ -168,9 +171,17 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
           'skew-y-12',
         )}
       />
-      <div className="w-full h-full bg-white/90 overflow-y-auto" id="front-page-scrollable-div">
+      <div
+        className="w-full h-full flex bg-white/90 overflow-y-auto"
+        id="front-page-scrollable-div"
+      >
         <div className="relative w-full h-full p-6 max-w-4xl mx-auto z-10">
-          <h3 className="text-3xl font-bold text-center text-gray-800 mt-48 mb-6 mx-2">
+          <h3
+            className={cn(
+              'text-3xl font-bold text-center text-gray-800 mb-6 mx-2',
+              canvasTemplateEnabled ? 'mt-48' : 'mt-96',
+            )}
+          >
             {t('frontPage.welcome')}
           </h3>
 
@@ -278,31 +289,33 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
             </div>
           </div>
 
-          <div className="h-full flex flex-col mt-10">
-            <div className="flex justify-between items-center pt-6 mx-2">
-              <div>
-                <h3 className="text-base font-medium">{t('frontPage.fromCommunity')}</h3>
-                <p className="text-xs text-gray-500 mt-1">{t('frontPage.fromCommunityDesc')}</p>
+          {canvasTemplateEnabled && (
+            <div className="h-full flex flex-col mt-10">
+              <div className="flex justify-between items-center pt-6 mx-2">
+                <div>
+                  <h3 className="text-base font-medium">{t('frontPage.fromCommunity')}</h3>
+                  <p className="text-xs text-gray-500 mt-1">{t('frontPage.fromCommunityDesc')}</p>
+                </div>
+                <Button
+                  type="text"
+                  size="small"
+                  className="text-xs text-gray-500 gap-1 !hover:text-green-500 transition-colors"
+                  onClick={handleViewAllTemplates}
+                >
+                  {t('common.viewAll')} <IconRight className="w-3 h-3" />
+                </Button>
               </div>
-              <Button
-                type="text"
-                size="small"
-                className="text-xs text-gray-500 gap-1 !hover:text-green-500 transition-colors"
-                onClick={handleViewAllTemplates}
-              >
-                {t('common.viewAll')} <IconRight className="w-3 h-3" />
-              </Button>
+              <div className="flex-1">
+                <TemplateList
+                  source="front-page"
+                  scrollableTargetId="front-page-scrollable-div"
+                  language={templateLanguage}
+                  categoryId={templateCategoryId}
+                  className="!bg-transparent !px-0"
+                />
+              </div>
             </div>
-            <div className="flex-1">
-              <TemplateList
-                source="front-page"
-                scrollableTargetId="front-page-scrollable-div"
-                language={templateLanguage}
-                categoryId={templateCategoryId}
-                className="!bg-transparent !px-0"
-              />
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

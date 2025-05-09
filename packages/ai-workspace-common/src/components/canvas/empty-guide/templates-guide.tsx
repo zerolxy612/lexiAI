@@ -7,6 +7,7 @@ import { useCanvasTemplateModal } from '@refly-packages/ai-workspace-common/stor
 import { VscNotebookTemplate } from 'react-icons/vsc';
 import { useDebouncedCallback } from 'use-debounce';
 import { useCanvasStoreShallow } from '@refly-packages/ai-workspace-common/stores/canvas';
+import { canvasTemplateEnabled } from '@refly-packages/ai-workspace-common/utils/env';
 
 export const TemplatesGuide = ({ canvasId }: { canvasId: string }) => {
   const { setVisible } = useCanvasTemplateModal((state) => ({
@@ -39,7 +40,8 @@ export const TemplatesGuide = ({ canvasId }: { canvasId: string }) => {
   }, [canvasId]);
 
   return (
-    showTemplates && (
+    showTemplates &&
+    canvasTemplateEnabled && (
       <div className="mt-20" style={{ pointerEvents: 'none' }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
