@@ -191,8 +191,6 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
           onChange={(checked) => handleEnableSwitch(checked, record)}
           loading={updateMutation.isPending || validateMutation.isPending}
           disabled={record.isGlobal}
-          checkedChildren={t('common.enabled')}
-          unCheckedChildren={t('common.disabled')}
         />
       ),
     },

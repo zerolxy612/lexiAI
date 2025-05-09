@@ -648,10 +648,7 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
                   children: (
                     <div className="pl-4 pr-4 pb-2">
                       <Form.Item name={['reconnect', 'enabled']} valuePropName="checked">
-                        <Switch
-                          checkedChildren={t('common.enabled')}
-                          unCheckedChildren={t('common.disabled')}
-                        />
+                        <Switch />
                       </Form.Item>
 
                       <Form.Item
@@ -683,12 +680,7 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
                   </Tooltip>
                 </Typography.Text>
                 <Form.Item noStyle>
-                  <Switch
-                    checked={isEnabled}
-                    checkedChildren={t('common.enabled')}
-                    unCheckedChildren={t('common.disabled')}
-                    onChange={handleEnabledChange}
-                  />
+                  <Switch checked={isEnabled} onChange={handleEnabledChange} />
                 </Form.Item>
               </div>
               {!validateMutation.data && !initialData?.enabled && (
