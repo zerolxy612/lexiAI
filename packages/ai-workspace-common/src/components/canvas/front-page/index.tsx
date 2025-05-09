@@ -21,6 +21,7 @@ import { PremiumBanner } from '@refly-packages/ai-workspace-common/components/ca
 import { subscriptionEnabled } from '@refly-packages/ai-workspace-common/utils/env';
 import { useCanvasTemplateModalShallow } from '@refly-packages/ai-workspace-common/stores/canvas-template-modal';
 import { AnimatedGridPattern } from '@refly-packages/ai-workspace-common/components/magicui/animated-grid-pattern';
+import cn from 'classnames';
 
 export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
   const { t, i18n } = useTranslation();
@@ -156,15 +157,24 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
   }, [reset]);
 
   return (
-    <div className="relative h-full">
-      <AnimatedGridPattern />
+    <div className="relative h-full bg-white/90">
+      <AnimatedGridPattern
+        numSquares={20}
+        maxOpacity={0.1}
+        duration={3}
+        repeatDelay={1}
+        className={cn(
+          '[mask-image:radial-gradient(500px_circle_at_center,white,transparent)]',
+          'skew-y-12',
+        )}
+      />
       <div className="w-full h-full overflow-y-auto">
         <div className="relative w-full h-full p-6 max-w-4xl mx-auto z-10">
           <h3 className="text-3xl font-bold text-center text-gray-800 mt-48 mb-6 mx-2">
             {t('canvas.frontPageWelcome', { name: userProfile?.nickname || '' })}
           </h3>
 
-          <div className="w-full bg-white/90 backdrop-blur-sm rounded-lg shadow-sm ring-1 ring-gray-200 mx-2">
+          <div className="w-full backdrop-blur-sm rounded-lg shadow-sm ring-1 ring-gray-200 mx-2">
             {subscriptionEnabled && !userProfile?.subscription && <PremiumBanner />}
             <div className="p-4">
               {selectedSkill && (
