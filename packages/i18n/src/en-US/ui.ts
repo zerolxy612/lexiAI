@@ -1926,7 +1926,7 @@ const translations = {
       formMode: 'Form Mode',
       jsonMode: 'JSON Mode',
       jsonParseError: 'Invalid JSON format',
-      typeSSE: 'Server-Sent Events (SSE)',
+      typeSSE: 'Server-Sent Events',
       typeStreamable: 'Streamable API',
       typeStdio: 'Standard I/O',
       batchImport: 'Batch Import',

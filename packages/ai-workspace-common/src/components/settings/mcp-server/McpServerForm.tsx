@@ -17,7 +17,6 @@ import {
 } from 'antd';
 import {
   PlusOutlined,
-  MinusCircleOutlined,
   CodeOutlined,
   FormOutlined,
   DeleteOutlined,
@@ -209,14 +208,30 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
       }
     }
 
+    // Process headers for JSON mode
+    let headersData = server.headers ?? {};
+    if (Array.isArray(headersData)) {
+      headersData = headersData.reduce(
+        (acc, item) => {
+          // biome-ignore lint/complexity/useOptionalChain: <explanation>
+          if (item && item.key) {
+            acc[item.key] = item.value ?? '';
+          }
+          return acc;
+        },
+        {} as Record<string, string>,
+      );
+    }
+
     mcpServers[server.name] = {
       type: server.type,
-      description: server.config?.description || '',
+      description: server.config?.description ?? '',
       isActive: server.enabled,
-      baseUrl: server.url || '',
-      command: server.command || '',
+      baseUrl: server.url ?? '',
+      command: server.command ?? '',
       args: filteredArgs,
       env: filteredEnv,
+      headers: headersData,
     };
 
     return { mcpServers };
@@ -241,11 +256,11 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
           name: name,
           type: mapServerType(serverConfig.type, serverConfig),
           enabled: serverConfig.isActive ?? true,
-          url: serverConfig.baseUrl || '',
-          command: serverConfig.command || '',
-          args: serverConfig.args || [],
-          env: serverConfig.env || {},
-          headers: serverConfig.headers || {},
+          url: serverConfig.baseUrl ?? '',
+          command: serverConfig.command ?? '',
+          args: serverConfig.args ?? [],
+          env: serverConfig.env ?? {},
+          headers: serverConfig.headers ?? {},
           reconnect: { enabled: false },
           config: {},
         };
@@ -274,6 +289,18 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
     if (formValues.env && typeof formValues.env === 'object' && !Array.isArray(formValues.env)) {
       // Use type assertion to resolve type issues
       (formValues as any).env = convertEnvObjectToArray(formValues.env as Record<string, string>);
+    }
+
+    // Convert headers from object format to array format for form usage
+    if (
+      formValues.headers &&
+      typeof formValues.headers === 'object' &&
+      !Array.isArray(formValues.headers)
+    ) {
+      (formValues as any).headers = Object.entries(formValues.headers).map(([key, value]) => ({
+        key,
+        value,
+      }));
     }
 
     form.setFieldsValue(formValues);
@@ -373,9 +400,11 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
               rules={[{ required: true, message: t('settings.mcpServer.typeRequired') }]}
             >
               <Select onChange={handleTypeChange}>
-                <Option value="sse">{t('settings.mcpServer.typeSSE')}</Option>
-                <Option value="streamable">{t('settings.mcpServer.typeStreamable')}</Option>
-                <Option value="stdio">{t('settings.mcpServer.typeStdio')}</Option>
+                <Option value="sse">{t('settings.mcpServer.typeSSE')} (SSE)</Option>
+                <Option value="streamable">
+                  {t('settings.mcpServer.typeStreamable')} (Streamable)
+                </Option>
+                <Option value="stdio">{t('settings.mcpServer.typeStdio')} (Stdio)</Option>
               </Select>
             </Form.Item>
 
@@ -461,21 +490,27 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
                     <>
                       {fields.map((field) => (
                         <Form.Item key={field.key}>
-                          <Space align="baseline">
+                          <div className="flex items-center w-full">
                             <Form.Item name={[field.name, 'key']} noStyle>
                               <Input
                                 placeholder={t('settings.mcpServer.headerKey')}
-                                style={{ width: 200 }}
+                                style={{ width: '40%', marginRight: 8 }}
                               />
                             </Form.Item>
                             <Form.Item name={[field.name, 'value']} noStyle>
                               <Input
                                 placeholder={t('settings.mcpServer.headerValue')}
-                                style={{ width: 300 }}
+                                style={{ width: 'calc(60% - 40px)' }}
                               />
                             </Form.Item>
-                            <MinusCircleOutlined onClick={() => remove(field.name)} />
-                          </Space>
+                            <Button
+                              type="text"
+                              danger
+                              icon={<DeleteOutlined />}
+                              onClick={() => remove(field.name)}
+                              style={{ marginLeft: 8 }}
+                            />
+                          </div>
                         </Form.Item>
                       ))}
                       <Form.Item>

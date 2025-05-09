@@ -1718,7 +1718,7 @@ const translations = {
       formMode: '表单模式',
       jsonMode: 'JSON 模式',
       jsonParseError: 'JSON 格式无效',
-      typeSSE: '服务器发送事件 (SSE)',
+      typeSSE: '服务器发送事件',
       typeStreamable: '流式 API',
       typeStdio: '标准输入输出',
       batchImport: '批量导入',
