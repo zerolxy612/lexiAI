@@ -8,7 +8,6 @@ import getClient from '@refly-packages/ai-workspace-common/requests/proxiedReque
 import { DATA_NUM } from '@refly-packages/ai-workspace-common/hooks/use-handle-sider-data';
 
 export const useCreateCanvas = ({
-  source,
   projectId,
   afterCreateSuccess,
 }: { source?: string; projectId?: string; afterCreateSuccess?: () => void } = {}) => {
@@ -33,7 +32,7 @@ export const useCreateCanvas = ({
   };
 
   const debouncedCreateCanvas = useDebouncedCallback(
-    async () => {
+    async (source?: string) => {
       const { canvasList, setCanvasList } = useSiderStore.getState();
       const canvasTitle = '';
       const canvasId = await createCanvas(canvasTitle);

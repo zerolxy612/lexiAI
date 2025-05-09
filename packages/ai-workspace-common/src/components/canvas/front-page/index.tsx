@@ -8,6 +8,7 @@ import { SkillDisplay } from '@refly-packages/ai-workspace-common/components/can
 import {
   getSkillIcon,
   IconRight,
+  IconPlus,
 } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { Form } from '@arco-design/web-react';
 import { Button } from 'antd';
@@ -67,7 +68,6 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
   }));
 
   const { debouncedCreateCanvas, isCreating } = useCreateCanvas({
-    source: 'front-page',
     projectId,
     afterCreateSuccess: () => {
       // When canvas is created successfully, data is already in the store
@@ -88,7 +88,7 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
 
   const handleSendMessage = useCallback(() => {
     if (!query?.trim()) return;
-    debouncedCreateCanvas();
+    debouncedCreateCanvas('front-page');
   }, [query, debouncedCreateCanvas]);
 
   const findSkillByName = useCallback(
@@ -175,11 +175,16 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
         className="w-full h-full flex bg-white/90 overflow-y-auto"
         id="front-page-scrollable-div"
       >
-        <div className="relative w-full h-full p-6 max-w-4xl mx-auto z-10">
+        <div
+          className={cn(
+            'relative w-full h-full p-6 max-w-4xl mx-auto z-10',
+            canvasTemplateEnabled ? '' : 'flex flex-col justify-center',
+          )}
+        >
           <h3
             className={cn(
               'text-3xl font-bold text-center text-gray-800 mb-6 mx-2',
-              canvasTemplateEnabled ? 'mt-48' : 'mt-96',
+              canvasTemplateEnabled ? 'mt-48' : '',
             )}
           >
             {t('frontPage.welcome')}
@@ -262,6 +267,14 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
                   handleSendMessage={handleSendMessage}
                   handleAbort={() => {}}
                   loading={isCreating}
+                  customActions={[
+                    {
+                      icon: <IconPlus className="flex items-center justify-center" />,
+                      title: '',
+                      content: t('loggedHomePage.siderMenu.newCanvas'),
+                      onClick: () => debouncedCreateCanvas(),
+                    },
+                  ]}
                 />
               </div>
             </div>

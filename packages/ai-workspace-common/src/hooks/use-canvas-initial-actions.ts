@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useFrontPageStoreShallow } from '../stores/front-page';
 import { genActionResultID } from '@refly/utils/id';
 import { useInvokeAction } from '@refly-packages/ai-workspace-common/hooks/canvas/use-invoke-action';
 import { useAddNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-node';
 import { useChatStoreShallow } from '@refly-packages/ai-workspace-common/stores/chat';
+import { useCanvasContext } from '../context/canvas';
 
 export const useCanvasInitialActions = (canvasId: string) => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -24,6 +25,40 @@ export const useCanvasInitialActions = (canvasId: string) => {
     skillSelectedModel: state.skillSelectedModel,
   }));
 
+  // Get canvas provider to check connection status
+  const { provider } = useCanvasContext();
+  const [isConnected, setIsConnected] = useState(false);
+
+  // Store the required data to execute actions after connection
+  const pendingActionRef = useRef<{
+    source: string | null;
+    query: string;
+    selectedSkill: any;
+    modelInfo: any;
+    tplConfig: any;
+    runtimeConfig: any;
+  } | null>(null);
+
+  // Update connection status when provider status changes
+  useEffect(() => {
+    if (!provider) return;
+
+    const handleStatus = ({ status }: { status: string }) => {
+      setIsConnected(status === 'connected');
+    };
+
+    // Check initial status
+    setIsConnected(provider.status === 'connected');
+
+    // Listen for status changes
+    provider.on('status', handleStatus);
+
+    return () => {
+      provider.off('status', handleStatus);
+    };
+  }, [provider]);
+
+  // Store parameters needed for actions when URL parameters are processed
   useEffect(() => {
     const source = searchParams.get('source');
     const newParams = new URLSearchParams();
@@ -36,9 +71,27 @@ export const useCanvasInitialActions = (canvasId: string) => {
     }
     setSearchParams(newParams);
 
-    // Only proceed if source is 'front-page' and we have a query
+    // Store the data if we need to execute actions
     if (source === 'front-page' && query?.trim() && canvasId) {
-      console.log('Front page initial action:', {
+      pendingActionRef.current = {
+        source,
+        query,
+        selectedSkill,
+        modelInfo: skillSelectedModel,
+        tplConfig,
+        runtimeConfig,
+      };
+    }
+  }, [canvasId, query, selectedSkill, searchParams, skillSelectedModel, tplConfig, runtimeConfig]);
+
+  // Execute the actions once connected
+  useEffect(() => {
+    // Only proceed if we're connected and have pending actions
+    if (isConnected && pendingActionRef.current && canvasId) {
+      const { query, selectedSkill, modelInfo, tplConfig, runtimeConfig } =
+        pendingActionRef.current;
+
+      console.log('Canvas connected, executing initial action:', {
         canvasId,
         query,
         selectedSkill,
@@ -52,7 +105,7 @@ export const useCanvasInitialActions = (canvasId: string) => {
           query,
           resultId,
           selectedSkill,
-          modelInfo: skillSelectedModel,
+          modelInfo,
           tplConfig,
           runtimeConfig,
         },
@@ -69,7 +122,7 @@ export const useCanvasInitialActions = (canvasId: string) => {
           metadata: {
             status: 'executing',
             selectedSkill,
-            modelInfo: skillSelectedModel,
+            modelInfo,
             runtimeConfig,
             tplConfig,
             structuredData: {
@@ -80,6 +133,9 @@ export const useCanvasInitialActions = (canvasId: string) => {
       });
 
       reset();
+
+      // Clear pending action
+      pendingActionRef.current = null;
     }
-  }, [canvasId, query, selectedSkill, searchParams, reset]);
+  }, [canvasId, isConnected, invokeAction, addNode, reset]);
 };

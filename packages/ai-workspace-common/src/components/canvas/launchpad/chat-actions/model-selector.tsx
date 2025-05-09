@@ -344,7 +344,7 @@ export const ModelSelector = memo(
             )}
           </span>
         ) : (
-          <ModelIcon model={'gpt-4o'} size={48} type={'color'} />
+          <ModelIcon model={'gpt-4o'} size={16} type={'color'} />
         )}
       </Dropdown>
     );
