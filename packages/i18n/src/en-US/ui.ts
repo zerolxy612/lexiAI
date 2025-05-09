@@ -792,6 +792,11 @@ const translations = {
       },
     ],
   },
+  frontPage: {
+    welcome: 'What can I do for you today?',
+    fromCommunity: 'From the community',
+    fromCommunityDesc: 'Discover a way to use Refly for work, or even beyond.',
+  },
   emailVerification: {
     title: 'Email Verification',
     description: 'Please enter the verification code sent to {{email}}:',
@@ -1079,7 +1084,6 @@ const translations = {
     shareNotFound: 'Canvas Not Found',
     shareNotFoundHint:
       "The shared canvas you're trying to access could not be found. It might have been deleted or the link may be incorrect.",
-    frontPageWelcome: 'What can I help you create today?',
     nodeTypes: {
       document: 'Document',
       resource: 'Resource',

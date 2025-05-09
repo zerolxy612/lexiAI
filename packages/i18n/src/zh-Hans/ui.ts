@@ -617,6 +617,11 @@ const translations = {
       },
     ],
   },
+  frontPage: {
+    welcome: '今天我能为您完成什么工作？',
+    fromCommunity: '来自社区',
+    fromCommunityDesc: '探索将 Refly 用于工作或更广泛领域的途径。',
+  },
   emailVerification: {
     title: '邮箱验证',
     description: '请输入我们向 {{email}} 发送的验证码:',
@@ -901,7 +906,7 @@ const translations = {
     emptyText: '双击画布打开菜单或选择',
     shareNotFound: '画布不存在',
     shareNotFoundHint: '你尝试访问的共享画布无法找到。它可能已被删除，或者链接可能有误。',
-    frontPageWelcome: '今天我能帮您创作什么？',
+    frontPageWelcome: '今天我能为您完成什么工作？',
     nodeTypes: {
       document: '文档',
       resource: '资源',

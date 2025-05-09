@@ -171,7 +171,7 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
       <div className="w-full h-full bg-white/90 overflow-y-auto" id="front-page-scrollable-div">
         <div className="relative w-full h-full p-6 max-w-4xl mx-auto z-10">
           <h3 className="text-3xl font-bold text-center text-gray-800 mt-48 mb-6 mx-2">
-            {t('canvas.frontPageWelcome', { name: userProfile?.nickname || '' })}
+            {t('frontPage.welcome')}
           </h3>
 
           <div className="w-full backdrop-blur-sm rounded-lg shadow-sm ring-1 ring-gray-200 mx-2">
@@ -280,7 +280,10 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
 
           <div className="h-full flex flex-col mt-10">
             <div className="flex justify-between items-center pt-6 mx-2">
-              <h3 className="text-base font-medium">{t('template.templateLibrary')}</h3>
+              <div>
+                <h3 className="text-base font-medium">{t('frontPage.fromCommunity')}</h3>
+                <p className="text-xs text-gray-500 mt-1">{t('frontPage.fromCommunityDesc')}</p>
+              </div>
               <Button
                 type="text"
                 size="small"
