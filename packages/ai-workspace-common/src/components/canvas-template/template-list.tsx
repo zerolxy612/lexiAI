@@ -143,14 +143,13 @@ export const TemplateList = ({
   });
 
   useEffect(() => {
-    if (!visible || source === 'front-page') return;
+    if (!visible && source === 'template-library') return;
     reload();
-  }, [language, categoryId, visible]);
+  }, [language, categoryId]);
 
   useEffect(() => {
-    if (!visible && source === 'template-library') {
-      setDataList([]);
-    }
+    if (source === 'front-page') return;
+    visible ? reload() : setDataList([]);
   }, [visible]);
 
   const debounced = useDebouncedCallback(() => {

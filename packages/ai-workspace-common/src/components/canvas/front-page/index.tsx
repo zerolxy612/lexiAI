@@ -235,7 +235,7 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
             </div>
           </div>
 
-          <div className="mt-6 mx-2">
+          <div className="mt-6 mx-2 w-full">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               {presetScenarios.map((scenario) => (
                 <div
