@@ -156,7 +156,7 @@ export const NewCanvasItem = () => {
   const { debouncedCreateCanvas, isCreating: createCanvasLoading } = useCreateCanvas();
 
   return (
-    <div className="w-full" onClick={debouncedCreateCanvas}>
+    <div className="w-full" onClick={() => debouncedCreateCanvas()}>
       <Button
         className="w-full justify-start px-2"
         key="newCanvas"
