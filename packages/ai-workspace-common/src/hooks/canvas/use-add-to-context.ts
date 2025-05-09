@@ -30,7 +30,7 @@ export const useAddToContext = () => {
       const selectedContextItems = contextStore.contextItems;
       const nodeType = item?.type;
 
-      if (!showReflyPilot) {
+      if (activeResultId === 'global' && !showReflyPilot) {
         setShowReflyPilot(true);
       }
 
@@ -84,7 +84,7 @@ export const useAddToContext = () => {
         // Emit event that adding to context is completed
         emitAddToContextCompleted(item, resultId, true);
         return true;
-      }, 10);
+      }, 100);
     },
     [t],
   );
