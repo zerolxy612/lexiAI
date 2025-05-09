@@ -1411,6 +1411,7 @@ export class ShareService {
         title: canvasData.title,
         status: 'duplicating',
         stateStorageKey,
+        projectId,
       },
     });
 
