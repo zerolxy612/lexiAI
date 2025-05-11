@@ -5,7 +5,6 @@ import { IconDown } from '@arco-design/web-react/icon';
 import { AiOutlineExperiment } from 'react-icons/ai';
 import { ModelIcon } from '@lobehub/icons';
 import { getPopupContainer } from '@refly-packages/ai-workspace-common/utils/ui';
-import { PiWarningCircleBold } from 'react-icons/pi';
 import {
   LLMModelConfig,
   ModelInfo,
@@ -17,8 +16,11 @@ import {
   IconSubscription,
   IconError,
 } from '@refly-packages/ai-workspace-common/components/common/icon';
-import { LuInfinity } from 'react-icons/lu';
-import { useSiderStoreShallow } from '@refly-packages/ai-workspace-common/stores/sider';
+import { LuInfinity, LuInfo } from 'react-icons/lu';
+import {
+  SettingsModalActiveTab,
+  useSiderStoreShallow,
+} from '@refly-packages/ai-workspace-common/stores/sider';
 import { useSubscriptionUsage } from '@refly-packages/ai-workspace-common/hooks/use-subscription-usage';
 import { IContextItem } from '@refly-packages/ai-workspace-common/stores/context-panel';
 import { subscriptionEnabled } from '@refly-packages/ai-workspace-common/utils/env';
@@ -177,25 +179,41 @@ const GroupHeader = memo(
 GroupHeader.displayName = 'GroupHeader';
 
 // Memoize the selected model display
-const SelectedModelDisplay = memo(({ model }: { model: ModelInfo | null }) => {
-  const { t } = useTranslation();
+const SelectedModelDisplay = memo(
+  ({
+    model,
+    handleOpenSettingModal,
+  }: { model: ModelInfo | null; handleOpenSettingModal: () => void }) => {
+    const { t } = useTranslation();
 
-  if (!model) {
+    if (!model) {
+      return (
+        <Button
+          type="text"
+          size="small"
+          className="text-xs gap-1.5"
+          style={{ color: '#f59e0b' }}
+          icon={<LuInfo className="flex items-center" />}
+          onClick={handleOpenSettingModal}
+        >
+          {t('copilot.modelSelector.configureModel')}
+        </Button>
+      );
+    }
+
     return (
-      <>
-        <PiWarningCircleBold className="text-yellow-600" />
-        <span className="text-yellow-600">{t('copilot.modelSelector.noModelAvailable')}</span>
-      </>
+      <Button
+        type="text"
+        size="small"
+        className="text-xs gap-1.5"
+        icon={<ModelIcon model={model.name} type={'color'} />}
+      >
+        {model.label}
+        <IconDown />
+      </Button>
     );
-  }
-
-  return (
-    <>
-      <ModelIcon model={model.name} type={'color'} />
-      {model.label}
-    </>
-  );
-});
+  },
+);
 
 SelectedModelDisplay.displayName = 'SelectedModelDisplay';
 
@@ -258,6 +276,16 @@ export const ModelSelector = memo(
     );
 
     const { tokenUsage, isUsageLoading } = useSubscriptionUsage();
+
+    const { setShowSettingModal, setSettingsModalActiveTab } = useSiderStoreShallow((state) => ({
+      setShowSettingModal: state.setShowSettingModal,
+      setSettingsModalActiveTab: state.setSettingsModalActiveTab,
+    }));
+
+    const handleOpenSettingModal = useCallback(() => {
+      setShowSettingModal(true);
+      setSettingsModalActiveTab(SettingsModalActiveTab.ModelConfig);
+    }, [setShowSettingModal, setSettingsModalActiveTab]);
 
     const modelList: ModelInfo[] = useMemo(() => {
       return (
@@ -335,8 +363,8 @@ export const ModelSelector = memo(
       >
         {!briefMode ? (
           <span className="text-xs flex items-center gap-1.5 text-gray-500 cursor-pointer transition-all duration-300 hover:text-gray-700">
-            <SelectedModelDisplay model={model} />
-            <IconDown />
+            <SelectedModelDisplay model={model} handleOpenSettingModal={handleOpenSettingModal} />
+
             {!remoteModel?.capabilities?.vision && isContextIncludeImage && (
               <Tooltip title={t('copilot.modelSelector.noVisionSupport')}>
                 <IconError className="w-3.5 h-3.5 text-[#faad14]" />
