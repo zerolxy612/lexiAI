@@ -5553,7 +5553,7 @@ export const LLMModelConfigSchema = {
 export const EmbeddingModelConfigSchema = {
   type: 'object',
   description: 'Provider config for embeddings',
-  required: ['modelId'],
+  required: ['modelId', 'dimensions'],
   properties: {
     modelId: {
       type: 'string',
@@ -5562,6 +5562,10 @@ export const EmbeddingModelConfigSchema = {
     modelName: {
       type: 'string',
       description: 'Embedding model name',
+    },
+    dimensions: {
+      type: 'number',
+      description: 'Embedding model dimension',
     },
     batchSize: {
       type: 'number',

@@ -60,7 +60,6 @@ export default () => ({
     host: process.env.QDRANT_HOST || 'localhost',
     port: Number.parseInt(process.env.QDRANT_PORT) || 6333,
     apiKey: process.env.QDRANT_API_KEY,
-    vectorDim: Number.parseInt(process.env.REFLY_VEC_DIM) || 768,
   },
   fulltextSearch: {
     backend: process.env.FULLTEXT_SEARCH_BACKEND || 'prisma',

@@ -9,6 +9,7 @@ export class QdrantService implements OnModuleInit {
   private readonly INIT_TIMEOUT = 10000; // 10 seconds timeout
 
   private collectionName: string;
+  private collectionExists: boolean;
   private client: QdrantClient;
 
   constructor(private configService: ConfigService) {
@@ -18,6 +19,7 @@ export class QdrantService implements OnModuleInit {
       apiKey: this.configService.get('vectorStore.apiKey') || undefined,
     });
     this.collectionName = 'refly_vectors';
+    this.collectionExists = false;
   }
 
   static estimatePointsSize(points: PointStruct[]): number {
@@ -37,7 +39,7 @@ export class QdrantService implements OnModuleInit {
   }
 
   async onModuleInit() {
-    const initPromise = this.ensureCollectionExists();
+    const initPromise = this.checkCollectionExists();
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => {
         reject(`Qdrant initialization timed out after ${this.INIT_TIMEOUT}ms`);
@@ -53,23 +55,28 @@ export class QdrantService implements OnModuleInit {
     }
   }
 
-  async ensureCollectionExists() {
+  async checkCollectionExists() {
     const { exists } = await this.client.collectionExists(this.collectionName);
+    this.collectionExists = exists;
+  }
 
-    if (!exists) {
-      const res = await this.client.createCollection(this.collectionName, {
-        vectors: {
-          size: this.configService.getOrThrow<number>('vectorStore.vectorDim'),
-          distance: 'Cosine',
-          on_disk: true,
-        },
-        hnsw_config: { payload_m: 16, m: 0, on_disk: true },
-        on_disk_payload: true,
-      });
-      this.logger.log(`collection create success: ${res}`);
-    } else {
-      this.logger.log(`collection already exists: ${this.collectionName}`);
+  async ensureCollectionExists(vectorDim: number) {
+    if (this.collectionExists) {
+      this.logger.debug(`collection already exists: ${this.collectionName}`);
+      return;
     }
+
+    const res = await this.client.createCollection(this.collectionName, {
+      vectors: {
+        size: vectorDim,
+        distance: 'Cosine',
+        on_disk: true,
+      },
+      hnsw_config: { payload_m: 16, m: 0, on_disk: true },
+      on_disk_payload: true,
+    });
+    this.collectionExists = true;
+    this.logger.log(`collection create success: ${res}`);
 
     await Promise.all([
       this.client.createPayloadIndex(this.collectionName, {
@@ -80,6 +87,10 @@ export class QdrantService implements OnModuleInit {
   }
 
   async isCollectionEmpty() {
+    const { exists } = await this.client.collectionExists(this.collectionName);
+    if (!exists) {
+      return true;
+    }
     const { count } = await this.client.count(this.collectionName);
     return count === 0;
   }
@@ -91,6 +102,9 @@ export class QdrantService implements OnModuleInit {
    * @returns Result of the update operation
    */
   async updatePayload(filter: Filter, payload: Record<string, any>) {
+    if (!this.collectionExists) {
+      return;
+    }
     return this.client.setPayload(this.collectionName, {
       filter,
       payload,
@@ -98,6 +112,24 @@ export class QdrantService implements OnModuleInit {
   }
 
   async batchSaveData(points: PointStruct[]) {
+    if (!points.length) {
+      return;
+    }
+
+    // Get vector dimension safely by ensuring it's a number array first
+    const vector = points[0].vector;
+    let vectorDim: number;
+
+    if (!Array.isArray(vector)) {
+      throw new Error(`Cannot determine vector dimension: ${JSON.stringify(vector)}`);
+    }
+
+    vectorDim = vector.length;
+    if (vectorDim <= 0) {
+      throw new Error(`Vector dimension is not positive: ${vectorDim}`);
+    }
+
+    await this.ensureCollectionExists(vectorDim);
     return this.client.upsert(this.collectionName, {
       wait: true,
       points,
@@ -105,6 +137,10 @@ export class QdrantService implements OnModuleInit {
   }
 
   async batchDelete(filter: Filter) {
+    if (!this.collectionExists) {
+      return;
+    }
+
     return this.client.delete(this.collectionName, {
       wait: true,
       filter,
@@ -119,6 +155,10 @@ export class QdrantService implements OnModuleInit {
     },
     filter: Filter,
   ) {
+    if (!this.collectionExists) {
+      return [];
+    }
+
     return this.client.search(this.collectionName, {
       vector: args.vector,
       limit: args.limit || 10,
@@ -127,6 +167,10 @@ export class QdrantService implements OnModuleInit {
   }
 
   async scroll(param: ScrollRequest) {
+    if (!this.collectionExists) {
+      return [];
+    }
+
     const points = [];
     let currentOffset = param.offset;
 

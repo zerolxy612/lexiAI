@@ -3918,6 +3918,10 @@ export type EmbeddingModelConfig = {
    */
   modelName?: string;
   /**
+   * Embedding model dimension
+   */
+  dimensions: number;
+  /**
    * Embedding model batch size
    */
   batchSize?: number;
