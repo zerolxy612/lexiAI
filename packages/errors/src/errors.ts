@@ -8,22 +8,6 @@ export class UnknownError extends BaseError {
   };
 }
 
-export class ContentTooLargeError extends BaseError {
-  code = 'E2004';
-  messageDict = {
-    en: 'Content is too large. Maximum length is 100k characters.',
-    'zh-CN': '内容过长。最大长度为 10 万字符。',
-  };
-}
-
-export class PayloadTooLargeError extends BaseError {
-  code = 'E2005';
-  messageDict = {
-    en: 'Request payload is too large. Maximum size is 100KB.',
-    'zh-CN': '请求数据过大。最大大小为 100KB。',
-  };
-}
-
 export class ConnectionError extends BaseError {
   code = 'E0001';
   messageDict = {
@@ -109,6 +93,30 @@ export class UnsupportedFileTypeError extends BaseError {
   messageDict = {
     en: 'This file type is temporarily not supported',
     'zh-CN': '暂不支持该文件类型',
+  };
+}
+
+export class EmbeddingNotAllowedToChangeError extends BaseError {
+  code = 'E0013';
+  messageDict = {
+    en: 'Switching embedding model is not supported temporarily',
+    'zh-CN': '暂不支持切换嵌入模型',
+  };
+}
+
+export class ChatModelNotConfiguredError extends BaseError {
+  code = 'E0014';
+  messageDict = {
+    en: 'Chat model not configured, please configure a chat model in the settings',
+    'zh-CN': '未配置对话模型，请先在设置中进行配置',
+  };
+}
+
+export class EmbeddingNotConfiguredError extends BaseError {
+  code = 'E0015';
+  messageDict = {
+    en: 'Embedding model not configured, please configure an embedding model in the settings',
+    'zh-CN': '未配置嵌入模型，请先在设置中进行配置',
   };
 }
 
@@ -264,6 +272,22 @@ export class ModelNotSupportedError extends BaseError {
   };
 }
 
+export class ContentTooLargeError extends BaseError {
+  code = 'E2004';
+  messageDict = {
+    en: 'Content is too large. Maximum length is 100k characters.',
+    'zh-CN': '内容过长。最大长度为 10 万字符。',
+  };
+}
+
+export class PayloadTooLargeError extends BaseError {
+  code = 'E2005';
+  messageDict = {
+    en: 'Request payload is too large. Maximum size is 100KB.',
+    'zh-CN': '请求数据过大。最大大小为 100KB。',
+  };
+}
+
 export class ModelProviderError extends BaseError {
   code = 'E3001';
   messageDict = {
@@ -302,6 +326,9 @@ const errorMap = {
   E0010: OperationTooFrequent,
   E0011: AuthenticationExpiredError,
   E0012: UnsupportedFileTypeError,
+  E0013: EmbeddingNotAllowedToChangeError,
+  E0014: ChatModelNotConfiguredError,
+  E0015: EmbeddingNotConfiguredError,
   E1000: CanvasNotFoundError,
   E1002: ResourceNotFoundError,
   E1003: DocumentNotFoundError,

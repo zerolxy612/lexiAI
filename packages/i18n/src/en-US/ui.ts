@@ -2531,7 +2531,7 @@ const translations = {
     },
     modelSelector: {
       unlimited: 'Unlimited',
-      noModelAvailable: 'No model available',
+      configureModel: 'Click to configure models',
       premium: 'Pro Models',
       standard: 'Standard Models',
       free: 'Free Models',

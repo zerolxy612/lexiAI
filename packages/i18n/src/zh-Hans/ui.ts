@@ -2367,7 +2367,7 @@ const translations = {
     },
     modelSelector: {
       unlimited: '无限量',
-      noModelAvailable: '无可用模型',
+      configureModel: '点击配置模型',
       premium: '高级模型',
       standard: '标准模型',
       free: '免费模型',
