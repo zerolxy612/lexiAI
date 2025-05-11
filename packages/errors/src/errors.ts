@@ -104,6 +104,22 @@ export class EmbeddingNotAllowedToChangeError extends BaseError {
   };
 }
 
+export class ChatModelNotConfiguredError extends BaseError {
+  code = 'E0014';
+  messageDict = {
+    en: 'Chat model not configured, please configure a chat model in the settings',
+    'zh-CN': '未配置对话模型，请先在设置中进行配置',
+  };
+}
+
+export class EmbeddingNotConfiguredError extends BaseError {
+  code = 'E0015';
+  messageDict = {
+    en: 'Embedding model not configured, please configure an embedding model in the settings',
+    'zh-CN': '未配置嵌入模型，请先在设置中进行配置',
+  };
+}
+
 export class CanvasNotFoundError extends BaseError {
   code = 'E1000';
   messageDict = {
@@ -311,6 +327,8 @@ const errorMap = {
   E0011: AuthenticationExpiredError,
   E0012: UnsupportedFileTypeError,
   E0013: EmbeddingNotAllowedToChangeError,
+  E0014: ChatModelNotConfiguredError,
+  E0015: EmbeddingNotConfiguredError,
   E1000: CanvasNotFoundError,
   E1002: ResourceNotFoundError,
   E1003: DocumentNotFoundError,

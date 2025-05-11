@@ -26,6 +26,8 @@ import {
   ProviderItemNotFoundError,
   ParamsError,
   EmbeddingNotAllowedToChangeError,
+  EmbeddingNotConfiguredError,
+  ChatModelNotConfiguredError,
 } from '@refly/errors';
 import { SingleFlightCache } from '@/utils/cache';
 import { EncryptionService } from '@/modules/common/encryption.service';
@@ -412,7 +414,7 @@ export class ProviderService {
   async prepareChatModel(user: User, modelId: string) {
     const item = await this.findLLMProviderItemByModelID(user, modelId);
     if (!item) {
-      throw new Error('No chat model configured');
+      throw new ChatModelNotConfiguredError();
     }
 
     const { provider, config } = item;
@@ -429,17 +431,14 @@ export class ProviderService {
   async prepareEmbeddings(user: User): Promise<Embeddings> {
     const providerItems = await this.findProviderItemsByCategory(user, 'embedding');
     if (!providerItems?.length) {
-      throw new Error('No embedding provider configured');
+      throw new EmbeddingNotConfiguredError();
     }
 
     const providerItem = providerItems[0];
     const { provider, config } = providerItem;
     const embeddingConfig: EmbeddingModelConfig = JSON.parse(config);
 
-    return getEmbeddings(provider, {
-      ...embeddingConfig,
-      dimensions: this.configService.getOrThrow<number>('vectorStore.vectorDim'),
-    });
+    return getEmbeddings(provider, embeddingConfig);
   }
 
   /**
