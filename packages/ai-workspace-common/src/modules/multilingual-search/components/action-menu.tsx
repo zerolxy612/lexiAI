@@ -159,7 +159,7 @@ export const ActionMenu: React.FC<ActionMenuProps> = (props) => {
 
   return (
     <Affix offsetBottom={0} target={props.getTarget}>
-      <div className="intergation-footer">
+      <div className="intergation-footer dark:bg-[#1f1f1f]">
         <div className="footer-location">
           <Checkbox
             checked={selectedItems.length && selectedItems.length === results.length}

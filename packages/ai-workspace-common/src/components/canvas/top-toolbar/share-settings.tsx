@@ -269,7 +269,7 @@ const ShareSettings = React.memo(({ canvasId, canvasTitle }: ShareSettingsProps)
             />
           </div>
         </div>
-        <div className="px-3 py-4 bg-[#F5F6F7] flex items-center justify-center gap-2 rounded-b-lg">
+        <div className="px-3 py-4 bg-[#F5F6F7] flex items-center justify-center gap-2 rounded-b-lg dark:bg-[#1f1f1f]">
           {buttons.map((button) => (
             <Tooltip
               title={t(`shareContent.${button.label}Tooltip`)}
