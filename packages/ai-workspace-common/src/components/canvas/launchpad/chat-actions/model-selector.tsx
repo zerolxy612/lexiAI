@@ -25,7 +25,7 @@ import {
   IconSubscription,
   IconError,
 } from '@refly-packages/ai-workspace-common/components/common/icon';
-import { LuInfinity, LuInfo } from 'react-icons/lu';
+import { LuInfinity, LuInfo, LuSettings2 } from 'react-icons/lu';
 import {
   SettingsModalActiveTab,
   useSiderStoreShallow,
@@ -247,6 +247,35 @@ const ModelLabel = memo(
 
 ModelLabel.displayName = 'ModelLabel';
 
+// Create a memoized settings button component
+const SettingsButton = memo(
+  ({
+    handleOpenSettingModal,
+    setDropdownOpen,
+  }: {
+    handleOpenSettingModal: () => void;
+    setDropdownOpen: (open: boolean) => void;
+  }) => {
+    const { t } = useTranslation();
+
+    const handleClick = useCallback(() => {
+      setDropdownOpen(false);
+      handleOpenSettingModal();
+    }, [setDropdownOpen, handleOpenSettingModal]);
+
+    return (
+      <div onClick={handleClick} className="text-xs flex items-center gap-2 group">
+        <LuSettings2 className="text-sm text-gray-500 group-hover:text-gray-700 flex items-center" />
+        <div className="text-xs flex items-center gap-1.5 text-gray-500 hover:text-gray-700">
+          {t('copilot.modelSelector.configureModel')}
+        </div>
+      </div>
+    );
+  },
+);
+
+SettingsButton.displayName = 'SettingsButton';
+
 const isModelDisabled = (meter: TokenUsageMeter, model: ModelInfo) => {
   if (meter && model) {
     if (model.tier === 't1') {
@@ -365,8 +394,26 @@ export const ModelSelector = memo(
           list = [...list, header, ...items];
         }
       }
+
+      // Add settings button at the bottom
+      list.push({
+        key: 'settings',
+        type: 'divider',
+        className: '!my-1',
+      });
+
+      list.push({
+        key: 'settings-button',
+        label: (
+          <SettingsButton
+            handleOpenSettingModal={handleOpenSettingModal}
+            setDropdownOpen={setDropdownOpen}
+          />
+        ),
+      });
+
       return list;
-    }, [sortedGroups, isContextIncludeImage]);
+    }, [sortedGroups, isContextIncludeImage, handleOpenSettingModal, setDropdownOpen]);
 
     // Automatically select available model when:
     // 1. No model is selected

@@ -142,7 +142,7 @@ const ModelItem = memo(
     }, [model, onDelete]);
 
     return (
-      <div className="relative mb-3 px-5 py-0.5 hover:bg-gray-100 rounded-md cursor-pointer border border-solid border-gray-100 group">
+      <div className="bg-white relative mb-3 px-5 py-0.5 hover:bg-gray-100 rounded-md cursor-pointer border border-solid border-gray-100 group">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex-1 flex items-center gap-2">
             <ModelIcon
