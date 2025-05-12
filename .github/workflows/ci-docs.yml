@@ -29,5 +29,10 @@ jobs:
           cache: 'pnpm'
           cache-dependency-path: 'docs/pnpm-lock.yaml'
 
-      - name: Install dependencies and build
-        run: cd docs && pnpm install && pnpm build
+      - name: Install dependencies
+        run: pnpm install --ignore-workspace
+        working-directory: docs
+
+      - name: Build
+        run: pnpm build
+        working-directory: docs

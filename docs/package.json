@@ -1,4 +1,6 @@
 {
+  "name": "refly-docs",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vitepress dev",
