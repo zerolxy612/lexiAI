@@ -53,8 +53,8 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
       mcpServers[server.name] = {
         type: server.type,
         description: server.config?.description || '',
-        isActive: server.enabled,
-        baseUrl: server.url || '',
+        enabled: server.enabled,
+        url: server.url || '',
         command: server.command || '',
         args: server.args || [],
         env: server.env || {},
@@ -71,21 +71,21 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
         'Example Server 1': {
           type: 'sse',
           description: 'Example SSE server',
-          isActive: true,
-          baseUrl: 'http://localhost:3000',
+          enabled: true,
+          url: 'http://localhost:3000',
           env: {},
         },
         'Example Server 2': {
           type: 'streamable',
           description: 'Example Streamable server',
-          isActive: true,
-          baseUrl: 'http://localhost:3001',
+          enabled: true,
+          url: 'http://localhost:3001',
           env: {},
         },
         'Example Server 3': {
           type: 'stdio',
           description: 'Example Stdio server',
-          isActive: true,
+          enabled: true,
           command: 'npx',
           args: ['-y', '@modelcontextprotocol/server-example'],
           env: {},
@@ -121,8 +121,8 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
         const server: McpServerFormData = {
           name: name, // 使用键作为名称
           type: mapServerType(serverConfig.type, serverConfig),
-          enabled: serverConfig.isActive ?? true,
-          url: serverConfig.baseUrl || '',
+          enabled: serverConfig.enabled ?? true,
+          url: serverConfig.url || '',
           command: serverConfig.command || '',
           args: serverConfig.args || [],
           env: serverConfig.env || {},

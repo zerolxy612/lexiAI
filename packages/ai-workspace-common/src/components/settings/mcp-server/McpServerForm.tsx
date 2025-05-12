@@ -226,8 +226,8 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
     mcpServers[server.name] = {
       type: server.type,
       description: server.config?.description ?? '',
-      isActive: server.enabled,
-      baseUrl: server.url ?? '',
+      enabled: server.enabled,
+      url: server.url ?? '',
       command: server.command ?? '',
       args: filteredArgs,
       env: filteredEnv,
@@ -255,8 +255,8 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
         const server: McpServerFormData = {
           name: name,
           type: mapServerType(serverConfig.type, serverConfig),
-          enabled: serverConfig.isActive ?? true,
-          url: serverConfig.baseUrl ?? '',
+          enabled: serverConfig.enabled ?? true,
+          url: serverConfig.url ?? '',
           command: serverConfig.command ?? '',
           args: serverConfig.args ?? [],
           env: serverConfig.env ?? {},
@@ -326,6 +326,20 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
         string,
         string
       >;
+    }
+
+    // Convert headers from array format to object format required by API
+    if (submitValues.headers && Array.isArray(submitValues.headers)) {
+      // Similar to env variables, convert headers to object format
+      submitValues.headers = (submitValues.headers as any[]).reduce(
+        (acc, { key, value }) => {
+          if (key) {
+            acc[key] = value || '';
+          }
+          return acc;
+        },
+        {} as Record<string, string>,
+      );
     }
 
     // If server is enabled but not validated, automatically validate

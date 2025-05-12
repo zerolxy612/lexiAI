@@ -23,7 +23,7 @@ export const mapServerType = (type: string, serverConfig?: any): McpServerType =
     }
 
     // Check URL patterns
-    const url = serverConfig.baseUrl || '';
+    const url = serverConfig.url || '';
     if (url) {
       // Check for SSE (URL contains 'sse')
       if (url.toLowerCase().includes('sse')) {
