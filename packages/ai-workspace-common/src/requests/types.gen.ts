@@ -4011,6 +4011,10 @@ export type ProviderItem = {
    * Provider item order
    */
   order?: number;
+  /**
+   * Provider item group
+   */
+  group?: string;
 };
 
 export type ListProvidersResponse = BaseResponse & {
@@ -4096,6 +4100,10 @@ export type UpsertProviderItemRequest = {
    * Provider item order
    */
   order?: number;
+  /**
+   * Provider item group
+   */
+  group?: string;
 };
 
 export type UpsertProviderItemResponse = BaseResponse & {

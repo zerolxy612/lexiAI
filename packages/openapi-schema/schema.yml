@@ -6583,6 +6583,9 @@ components:
         order:
           type: number
           description: Provider item order
+        group:
+          type: string
+          description: Provider item group
     ListProvidersResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -6675,6 +6678,9 @@ components:
         order:
           type: number
           description: Provider item order
+        group:
+          type: string
+          description: Provider item group
     UpsertProviderItemResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'

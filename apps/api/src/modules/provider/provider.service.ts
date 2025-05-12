@@ -596,7 +596,7 @@ export class ProviderService {
   }
 
   async createProviderItem(user: User, param: UpsertProviderItemRequest) {
-    const { providerId, name, category, enabled, config, order } = param;
+    const { providerId, name, category, enabled, config, order, group } = param;
 
     if (!providerId || !category || !name) {
       throw new ParamsError('Invalid model item parameters');
@@ -634,6 +634,7 @@ export class ProviderService {
         providerId,
         enabled,
         order,
+        group,
         uid: user.uid,
         tier: option?.tier,
         config: JSON.stringify(option?.config ?? config),
@@ -680,6 +681,7 @@ export class ProviderService {
         providerId: item.providerId,
         enabled: item.enabled,
         order: item.order,
+        group: item.group,
         uid: user.uid,
         config: JSON.stringify(item.config),
       })),
@@ -687,7 +689,7 @@ export class ProviderService {
   }
 
   async updateProviderItem(user: User, param: UpsertProviderItemRequest) {
-    const { itemId, name, enabled, config, providerId, order } = param;
+    const { itemId, name, enabled, config, providerId, order, group } = param;
 
     if (!itemId) {
       throw new ParamsError('Item ID is required');
@@ -720,6 +722,7 @@ export class ProviderService {
         enabled,
         providerId,
         order,
+        group,
         ...(config ? { config: JSON.stringify(config) } : {}),
       },
     });
@@ -779,6 +782,7 @@ export class ProviderService {
             enabled: item.enabled,
             providerId: item.providerId,
             order: item.order,
+            group: item.group,
             ...(item.config ? { config: JSON.stringify(item.config) } : {}),
           },
         });
