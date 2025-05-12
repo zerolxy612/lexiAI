@@ -47,6 +47,10 @@ export const subscriptionEnabled =
   getBrowserValue(() => Boolean(window.ENV?.SUBSCRIPTION_ENABLED), false) ||
   Boolean(import.meta.env.VITE_SUBSCRIPTION_ENABLED);
 
+export const canvasTemplateEnabled =
+  getBrowserValue(() => Boolean(window.ENV?.CANVAS_TEMPLATE_ENABLED), false) ||
+  Boolean(import.meta.env.VITE_CANVAS_TEMPLATE_ENABLED);
+
 export const sentryEnabled =
   getBrowserValue(() => Boolean(window.ENV?.SENTRY_ENABLED), false) ||
   Boolean(import.meta.env.VITE_SENTRY_ENABLED);

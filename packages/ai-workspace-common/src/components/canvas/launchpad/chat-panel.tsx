@@ -140,7 +140,7 @@ export const ChatPanel = ({
   const [form] = Form.useForm();
 
   // hooks
-  const { canvasId } = useCanvasContext();
+  const { canvasId, readonly } = useCanvasContext();
   const { handleFilterErrorTip } = useContextFilterErrorTip();
   const { addNode } = useAddNode();
   const { invokeAction, abortAction } = useInvokeAction();
@@ -390,6 +390,7 @@ export const ChatPanel = ({
 
             <div>
               <ChatInput
+                readonly={readonly}
                 query={chatStore.newQAText}
                 setQuery={chatStore.setNewQAText}
                 selectedSkillName={selectedSkill?.name}
@@ -403,6 +404,7 @@ export const ChatPanel = ({
 
             {selectedSkill?.configSchema?.items?.length ? (
               <ConfigManager
+                readonly={readonly}
                 key={selectedSkill?.name}
                 form={form}
                 formErrors={formErrors}

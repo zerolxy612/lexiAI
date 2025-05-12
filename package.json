@@ -12,6 +12,7 @@
     "start:electron": "turbo run start:electron --filter=@refly/api",
     "build": "turbo run build",
     "build:api": "turbo run build --filter=@refly/api",
+    "build:api:fast": "turbo run build:fast --filter=@refly/api",
     "build:web": "turbo run build --filter=@refly/web",
     "build:extension": "turbo run build --filter=@refly/extension",
     "build:electron": "turbo run build:electron --filter=@refly/api",
@@ -56,13 +57,5 @@
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": ["biome check --write"],
     "*.json": ["biome format --write"]
-  },
-  "dependencies": {
-    "@types/react-beautiful-dnd": "^13.1.8",
-    "@types/react-virtualized-auto-sizer": "^1.0.8",
-    "@types/react-window": "^1.8.8",
-    "react-beautiful-dnd": "^13.1.1",
-    "react-virtualized-auto-sizer": "^1.0.26",
-    "react-window": "^1.8.11"
   }
 }

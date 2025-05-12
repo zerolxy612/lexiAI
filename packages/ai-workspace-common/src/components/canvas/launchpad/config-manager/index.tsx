@@ -24,7 +24,6 @@ import {
 } from '@refly/openapi-schema';
 import { useTranslation } from 'react-i18next';
 import { useContextPanelStore } from '@refly-packages/ai-workspace-common/stores/context-panel';
-import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/canvas';
 
 const TextArea = Input.TextArea;
 
@@ -227,6 +226,7 @@ interface ConfigManagerProps {
   headerIcon?: React.ReactNode;
   configScope?: 'runtime' | 'template';
   formErrors: Record<string, string>;
+  readonly: boolean;
   resetConfig?: () => void;
   setFormErrors: (errors: any) => void;
   onFormValuesChange?: (changedValues: any, allValues: any) => void;
@@ -260,6 +260,7 @@ export const ConfigManager = React.memo(
       tplConfig,
       configScope,
       formErrors,
+      readonly,
       setFormErrors,
       onFormValuesChange,
       onExpandChange,
@@ -267,7 +268,6 @@ export const ConfigManager = React.memo(
     const [resetCounter, setResetCounter] = useState<number>(0);
     const [formValues, setFormValues] = useState<Record<string, DynamicConfigValue>>({});
     const [isExpanded, setIsExpanded] = useState<boolean>(true);
-    const { readonly } = useCanvasContext();
 
     // Use refs to track initialization state
     const initializedRef = useRef(false);

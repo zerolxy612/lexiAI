@@ -57,7 +57,13 @@ export class WebSearch extends BaseSkill {
     config: SkillRunnableConfig,
   ): Promise<Partial<GraphState>> => {
     const { messages = [], images = [] } = state;
-    const { locale = 'en', currentSkill, project, runtimeConfig } = config.configurable;
+    const {
+      locale = 'en',
+      currentSkill,
+      project,
+      runtimeConfig,
+      modelConfigMap,
+    } = config.configurable;
 
     // Extract customInstructions from project if available
     const customInstructions = project?.customInstructions;
@@ -185,7 +191,7 @@ export class WebSearch extends BaseSkill {
       originalQuery: query,
       optimizedQuery,
       rewrittenQueries,
-      modelInfo: config?.configurable?.modelInfo,
+      modelInfo: modelConfigMap.chat,
       customInstructions,
     });
 

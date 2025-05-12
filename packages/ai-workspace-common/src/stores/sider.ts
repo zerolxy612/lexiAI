@@ -16,6 +16,10 @@ export enum SettingsModalActiveTab {
   Language = 'language',
   Subscription = 'subscription',
   Account = 'account',
+  ModelProviders = 'modelProviders',
+  ModelConfig = 'modelConfig',
+  ParserConfig = 'parserConfig',
+  DefaultModel = 'defaultModel',
 }
 
 interface SiderState {

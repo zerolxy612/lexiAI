@@ -22,6 +22,10 @@ import { FULLTEXT_SEARCH, FulltextSearchService } from '@/modules/common/fulltex
 import { ParamsError } from '@refly/errors';
 import { detectLanguage, TimeTracker } from '@refly/utils';
 import { searchResultsToSources, sourcesToSearchResults } from '@refly/utils';
+import { SerperWebSearcher } from '@/utils/web-search/serper';
+import { ProviderService } from '@/modules/provider/provider.service';
+import { SearXNGWebSearcher } from '@/utils/web-search/searxng';
+import { BaseWebSearcher } from '@/utils/web-search/base';
 
 interface ProcessedSearchRequest extends SearchRequest {
   user?: User; // search user on behalf of
@@ -29,50 +33,6 @@ interface ProcessedSearchRequest extends SearchRequest {
 
 interface UserEntity extends Entity {
   user: User;
-}
-
-// Add interface for better type safety
-interface SerperSearchResult {
-  searchParameters: {
-    q: string;
-    hl: string;
-    type: string;
-    num: number;
-    location: string;
-    engine: string;
-    gl: string;
-  };
-  organic: Array<{
-    title: string;
-    link: string;
-    snippet: string;
-    sitelinks?: { title: string; link: string }[];
-    position: number;
-  }>;
-  knowledgeGraph?: {
-    title: string;
-    type: string;
-    description?: string;
-    descriptionUrl?: string;
-    website?: string;
-    imageUrl?: string;
-    attributes?: Record<string, string>;
-  };
-  answerBox?: {
-    title?: string;
-    url?: string;
-    snippet?: string;
-    answer?: string;
-  };
-  peopleAlsoAsk?: Array<{
-    question: string;
-    link: string;
-    snippet: string;
-    title: string;
-  }>;
-  relatedSearches?: Array<{
-    query: string;
-  }>;
 }
 
 @Injectable()
@@ -83,6 +43,7 @@ export class SearchService {
     private configService: ConfigService,
     private prisma: PrismaService,
     private rag: RAGService,
+    private providerService: ProviderService,
     @Inject(FULLTEXT_SEARCH) private fts: FulltextSearchService,
   ) {}
 
@@ -411,98 +372,30 @@ export class SearchService {
   }
 
   async webSearch(
-    _user: User,
+    user: User,
     req: WebSearchRequest | BatchWebSearchRequest,
   ): Promise<WebSearchResult[]> {
-    const limit = req?.limit || 10;
+    const provider = await this.providerService.findProviderByCategory(user, 'webSearch');
 
-    try {
-      const queries = 'queries' in req ? req.queries : [req];
-      const queryPayload = queries.map((query) => ({
-        ...query,
-        num: limit,
-        gl: 'us', // TODO: support multiple locales
-        location: 'United States', // TODO: support multiple locations
-      }));
-
-      const res = await fetch('https://google.serper.dev/search', {
-        method: 'post',
-        headers: {
-          'X-API-KEY': this.configService.get('credentials.serper'),
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(queryPayload),
+    let webSearcher: BaseWebSearcher;
+    if (!provider) {
+      webSearcher = new SearXNGWebSearcher();
+    } else if (provider.providerKey === 'serper') {
+      webSearcher = new SerperWebSearcher({
+        apiKey: provider.apiKey,
+        defaultLimit: 10,
+        defaultCountry: 'us',
+        defaultLocation: 'United States',
       });
-
-      const jsonContent = await res.json();
-      const results = this.parseSearchResults(jsonContent);
-
-      return 'queries' in req ? results : results?.slice(0, limit);
-    } catch (e) {
-      this.logger.error(`Batch web search error: ${e}`);
-      return [];
-    }
-  }
-
-  // Helper to parse results consistently
-  private parseSearchResults(jsonContent: any): WebSearchResult[] {
-    const contexts: WebSearchResult[] = [];
-
-    if (Array.isArray(jsonContent)) {
-      // Handle batch results
-      for (const result of jsonContent) {
-        contexts.push(...this.parseSingleSearchResult(result));
-      }
+    } else if (provider.providerKey === 'searxng') {
+      webSearcher = new SearXNGWebSearcher({
+        apiUrl: provider.baseUrl,
+      });
     } else {
-      // Handle single result
-      contexts.push(...this.parseSingleSearchResult(jsonContent));
+      throw new Error(`Unsupported web search provider: ${provider.providerKey}`);
     }
 
-    return contexts;
-  }
-
-  private parseSingleSearchResult(result: SerperSearchResult): WebSearchResult[] {
-    const contexts: WebSearchResult[] = [];
-    const searchLocale = result.searchParameters?.hl || 'unknown';
-
-    if (result.knowledgeGraph) {
-      const url = result.knowledgeGraph.descriptionUrl || result.knowledgeGraph.website;
-      const snippet = result.knowledgeGraph.description;
-      if (url && snippet) {
-        contexts.push({
-          name: result.knowledgeGraph.title || '',
-          url,
-          snippet,
-          locale: searchLocale,
-        });
-      }
-    }
-
-    if (result.answerBox) {
-      const url = result.answerBox.url;
-      const snippet = result.answerBox.snippet || result.answerBox.answer;
-      if (url && snippet) {
-        contexts.push({
-          name: result.answerBox.title || '',
-          url,
-          snippet,
-          locale: searchLocale,
-        });
-      }
-    }
-
-    if (result.organic) {
-      for (const c of result.organic) {
-        contexts.push({
-          name: c.title,
-          url: c.link,
-          snippet: c.snippet || '',
-          locale: searchLocale,
-        });
-      }
-    }
-
-    return contexts;
+    return webSearcher.search(req);
   }
 
   async search(user: User, req: SearchRequest, options?: SearchOptions): Promise<SearchResult[]> {
@@ -526,7 +419,7 @@ export class SearchService {
 
     if (options?.enableReranker) {
       this.logger.log(`Reranker enabled for query: ${req.query}`);
-      const rerankedResults = await this.rag.rerank(req.query, results.flat());
+      const rerankedResults = await this.rag.rerank(user, req.query, results.flat());
       this.logger.log(`Reranked results: ${JSON.stringify(rerankedResults)}`);
 
       return rerankedResults;
@@ -598,7 +491,7 @@ export class SearchService {
         try {
           const rerankResults = sourcesToSearchResults(finalResults);
 
-          const rerankResponse = await this.rag.rerank(query, rerankResults, {
+          const rerankResponse = await this.rag.rerank(user, query, rerankResults, {
             topN: rerankLimit || rerankResults.length,
             relevanceThreshold: rerankRelevanceThreshold,
           });

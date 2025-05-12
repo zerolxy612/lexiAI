@@ -45,7 +45,7 @@ export class TemplateService {
       skip: (page - 1) * pageSize,
       take: pageSize,
       include: { category: true },
-      orderBy: { createdAt: 'desc' },
+      orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }],
     });
 
     return templates;

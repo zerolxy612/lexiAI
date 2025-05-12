@@ -22,7 +22,7 @@ const MemoizedSkillResponseNodePreview = memo(SkillResponseNodePreview, (prevPro
 
 MemoizedSkillResponseNodePreview.displayName = 'MemoizedSkillResponseNodePreview';
 
-const EmptyThreadWelcome = memo(() => {
+export const EmptyThreadWelcome = memo(() => {
   const { t } = useTranslation();
   const { userProfile } = useUserStoreShallow((state) => ({
     userProfile: state.userProfile,

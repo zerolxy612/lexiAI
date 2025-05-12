@@ -4,19 +4,18 @@ import {
   ActionStep,
   ActionType,
   EntityType,
+  ModelInfo,
   ModelTier,
 } from '@refly/openapi-schema';
 import {
   ActionResult as ActionResultModel,
   ActionStep as ActionStepModel,
-  ModelInfo as ModelInfoModel,
 } from '@/generated/client';
 import { pick } from '../../utils';
-import { modelInfoPO2DTO } from '../misc/misc.dto';
 
 export type ActionDetail = ActionResultModel & {
   steps?: ActionStepModel[];
-  modelInfo?: ModelInfoModel;
+  modelInfo?: ModelInfo;
 };
 
 export function actionStepPO2DTO(step: ActionStepModel): ActionStep {
@@ -46,6 +45,6 @@ export function actionResultPO2DTO(result: ActionDetail): ActionResult {
     createdAt: result.createdAt.toJSON(),
     updatedAt: result.updatedAt.toJSON(),
     steps: result.steps?.map(actionStepPO2DTO),
-    modelInfo: result.modelInfo ? modelInfoPO2DTO(result.modelInfo) : undefined,
+    modelInfo: result.modelInfo,
   };
 }

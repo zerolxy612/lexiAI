@@ -49,7 +49,7 @@ export class MarkerParser extends BaseParser {
   constructor(options: MarkerOptions = {}) {
     super(options);
     this.apiUrl = options.apiUrl ?? 'https://www.datalab.to/api/v1/marker';
-    this.apiKey = options.apiKey;
+    this.apiKey = options.apiKey || process.env.MARKER_API_KEY;
     this.maxPolls = options.maxPolls ?? 30;
     this.pollInterval = options.pollInterval ?? 2000; // 2 seconds
 
