@@ -201,6 +201,8 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingModel, setEditingModel] = useState<ProviderItem | null>(null);
+  const [activeCollapseKeys, setActiveCollapseKeys] = useState<string[]>([]);
+  const [userHasInteracted, setUserHasInteracted] = useState(false);
 
   const { userProfile, setUserProfile } = useUserStoreShallow((state) => ({
     userProfile: state.userProfile,
@@ -406,17 +408,36 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
     model?: ProviderItem,
   ) => {
     if (categoryType === 'llm') {
+      let updatedItems = [...modelItems];
       if (type === 'create') {
-        setModelItems([...modelItems, model]);
+        updatedItems = [...modelItems, model];
+        setModelItems(updatedItems);
       } else if (type === 'update') {
-        setModelItems([
+        updatedItems = [
           ...modelItems.map((item) => (item.itemId === model.itemId ? { ...model } : item)),
-        ]);
+        ];
+        setModelItems(updatedItems);
 
         const types = getDefaultModelTypes(model.itemId);
         if (types.length) {
           updateDefaultModel(types, model?.enabled ? model : null);
         }
+      }
+
+      if (model) {
+        setTimeout(() => {
+          const groups = handleGroupModelList(updatedItems);
+          const groupWithModel = groups.find((group) =>
+            group.models.some((m) => m.itemId === model.itemId),
+          );
+
+          if (groupWithModel) {
+            // Open the group containing the model
+            setActiveCollapseKeys((prev) =>
+              prev.includes(groupWithModel.key) ? prev : [...prev, groupWithModel.key],
+            );
+          }
+        }, 0);
       }
     } else if (categoryType === 'embedding') {
       setEmbedding(model);
@@ -443,11 +464,39 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
   const { handleGroupModelList } = useGroupModels();
   const sortedGroups = useMemo(() => handleGroupModelList(filteredModels), [filteredModels]);
 
+  // When search query changes, update active collapse keys to show matching groups
+  useEffect(() => {
+    if (searchQuery.trim() && userHasInteracted) {
+      const matchingGroupKeys = sortedGroups
+        .filter((group) =>
+          group.models.some((model) =>
+            model.name?.toLowerCase().includes(searchQuery.toLowerCase()),
+          ),
+        )
+        .map((group) => group.key);
+
+      setActiveCollapseKeys(matchingGroupKeys);
+    }
+  }, [searchQuery, sortedGroups, userHasInteracted]);
+
+  // Update active keys when groups change (initial load)
+  useEffect(() => {
+    if (sortedGroups.length > 0 && !userHasInteracted) {
+      setActiveCollapseKeys(sortedGroups.map((group) => group.key));
+    }
+  }, [sortedGroups, userHasInteracted]);
+
   useEffect(() => {
     if (visible) {
       getProviderItems();
     }
   }, [visible]);
+
+  // Handle collapse panel change
+  const handleCollapseChange = (keys: string | string[]) => {
+    setUserHasInteracted(true);
+    setActiveCollapseKeys(typeof keys === 'string' ? [keys] : keys);
+  };
 
   return (
     <div className="p-4 pt-0 h-full overflow-hidden flex flex-col">
@@ -516,7 +565,8 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
           <div className="mb-4 w-full">
             <Collapse
               size="small"
-              defaultActiveKey={sortedGroups.map((group) => group.key)}
+              activeKey={activeCollapseKeys}
+              onChange={handleCollapseChange}
               bordered={false}
               className="bg-transparent"
               items={sortedGroups.map((group) => ({
