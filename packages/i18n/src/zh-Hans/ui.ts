@@ -1517,6 +1517,7 @@ const translations = {
       viewTutorial: '查看文档',
       tour: '查看教程',
       template: '模板',
+      home: '首页',
     },
   },
   knowledgeLibrary: {
@@ -1925,6 +1926,9 @@ const translations = {
       relevanceThreshold: '相关性阈值',
       relevanceThresholdPlaceholder: '请设置相关性阈值',
       clickToSet: '点击设置',
+      group: '分组名称',
+      groupPlaceholder: '请设置分组名称，用于分类管理模型',
+      default: '默认分组',
     },
     modelTier: {
       free: '免费',

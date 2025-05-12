@@ -3828,6 +3828,10 @@ export type ModelInfo = {
    * Whether this model is the default model
    */
   isDefault?: boolean;
+  /**
+   * Model group
+   */
+  group?: string;
 };
 
 export type ListModelsResponse = BaseResponse & {

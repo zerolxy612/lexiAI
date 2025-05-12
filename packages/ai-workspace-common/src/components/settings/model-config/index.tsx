@@ -15,6 +15,7 @@ import {
   Divider,
   Tag,
   Modal,
+  Collapse,
 } from 'antd';
 import { Spin } from '@refly-packages/ai-workspace-common/components/common/spin';
 import { LuPlus, LuSearch } from 'react-icons/lu';
@@ -27,6 +28,7 @@ import {
 import { LLMModelConfig, ProviderCategory, ProviderItem } from '@refly/openapi-schema';
 import { ModelIcon } from '@lobehub/icons';
 import { modelEmitter } from '@refly-packages/ai-workspace-common/utils/event-emitter/model';
+import { useGroupModels } from '@refly-packages/ai-workspace-common/hooks/use-group-models';
 import { ModelFormModal } from './model-form';
 import { useUserStoreShallow } from '@refly-packages/ai-workspace-common/stores/user';
 
@@ -36,6 +38,13 @@ const MODEL_TIER_TO_COLOR = {
   free: 'green',
   t1: 'blue',
   t2: 'orange',
+};
+
+const panelStyle: React.CSSProperties = {
+  marginBottom: 12,
+  borderRadius: 8,
+  border: 'none',
+  background: 'rgba(0,0,0, 0.02)',
 };
 
 const ActionDropdown = ({
@@ -133,7 +142,7 @@ const ModelItem = memo(
     }, [model, onDelete]);
 
     return (
-      <div className="relative mb-3 px-5 py-0.5 hover:bg-gray-50 rounded-md cursor-pointer border border-solid border-gray-100 group">
+      <div className="relative mb-3 px-5 py-0.5 hover:bg-gray-100 rounded-md cursor-pointer border border-solid border-gray-100 group">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex-1 flex items-center gap-2">
             <ModelIcon
@@ -430,6 +439,10 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
     return items.filter((model) => model.name?.toLowerCase().includes(lowerQuery));
   }, [modelItems, searchQuery]);
 
+  // Use the utility function instead of inline implementation
+  const { handleGroupModelList } = useGroupModels();
+  const sortedGroups = useMemo(() => handleGroupModelList(filteredModels), [filteredModels]);
+
   useEffect(() => {
     if (visible) {
       getProviderItems();
@@ -500,22 +513,31 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
             )}
           </Empty>
         ) : (
-          <>
-            <div>
-              {filteredModels.map((model) => (
-                <ModelItem
-                  key={model.itemId}
-                  model={model}
-                  onEdit={handleEditModel}
-                  onDelete={handleDeleteModel}
-                  onToggleEnabled={handleToggleEnabled}
-                  isSubmitting={isUpdating}
-                />
-              ))}
-            </div>
+          <div className="mb-4 w-full">
+            <Collapse
+              size="small"
+              defaultActiveKey={sortedGroups.map((group) => group.key)}
+              bordered={false}
+              className="bg-transparent"
+              items={sortedGroups.map((group) => ({
+                key: group.key,
+                label: <span className="font-medium text-base">{group.name}</span>,
+                style: panelStyle,
+                children: group.models.map((model) => (
+                  <ModelItem
+                    key={model.itemId}
+                    model={model}
+                    onEdit={handleEditModel}
+                    onDelete={handleDeleteModel}
+                    onToggleEnabled={handleToggleEnabled}
+                    isSubmitting={isUpdating}
+                  />
+                )),
+              }))}
+            />
 
             <div className="text-center text-gray-400 text-sm mt-4 pb-10">{t('common.noMore')}</div>
-          </>
+          </div>
         )}
       </div>
 

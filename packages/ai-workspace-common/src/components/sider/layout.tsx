@@ -9,8 +9,8 @@ import {
 
 import {
   IconCanvas,
+  IconHome,
   IconPlus,
-  IconTemplate,
 } from '@refly-packages/ai-workspace-common/components/common/icon';
 import cn from 'classnames';
 
@@ -43,11 +43,7 @@ import { AiOutlineMenuFold, AiOutlineUser } from 'react-icons/ai';
 import { SubscriptionHint } from '@refly-packages/ai-workspace-common/components/subscription/hint';
 import { FaGithub } from 'react-icons/fa6';
 import { useKnowledgeBaseStoreShallow } from '@refly-packages/ai-workspace-common/stores/knowledge-base';
-import { useCanvasTemplateModalShallow } from '@refly-packages/ai-workspace-common/stores/canvas-template-modal';
-import {
-  canvasTemplateEnabled,
-  subscriptionEnabled,
-} from '@refly-packages/ai-workspace-common/utils/env';
+import { subscriptionEnabled } from '@refly-packages/ai-workspace-common/utils/env';
 import { CanvasTemplateModal } from '@refly-packages/ai-workspace-common/components/canvas-template';
 import { SiderLoggedOut } from './sider-logged-out';
 import { CreateProjectModal } from '@refly-packages/ai-workspace-common/components/project/project-create';
@@ -337,10 +333,6 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
     setSettingsModalActiveTab: state.setSettingsModalActiveTab,
   }));
 
-  const { setVisible: setShowCanvasTemplateModal } = useCanvasTemplateModalShallow((state) => ({
-    setVisible: state.setVisible,
-  }));
-
   const { isLoadingCanvas, isLoadingProjects } = useHandleSiderData(true);
 
   const { t } = useTranslation();
@@ -352,6 +344,7 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
   const defaultOpenKeys = useMemo(() => ['Canvas', 'Library'], []);
 
   const canvasId = location.pathname.split('/').pop();
+  const isHome = useMatch('/canvas/:canvasId') && canvasId === 'empty';
   const { debouncedCreateCanvas } = useCreateCanvas({
     projectId: null,
     afterCreateSuccess: () => {
@@ -449,19 +442,22 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
 
         <SearchQuickOpenBtn />
 
-        {canvasTemplateEnabled && (
-          <div
-            className="flex-shrink-0 h-10 my-1 mx-2 flex items-center justify-between pl-6 pr-3 text-gray-600 hover:bg-gray-100 cursor-pointer rounded-lg"
-            onClick={() => setShowCanvasTemplateModal(true)}
-          >
-            <div className="flex justify-between items-center w-full">
-              <div className="flex items-center gap-2">
-                <IconTemplate key="template" style={{ fontSize: 20 }} />
-                <span>{t('loggedHomePage.siderMenu.template')}</span>
-              </div>
+        <div
+          className={cn(
+            'flex-shrink-0 h-10 my-1 mx-2 flex items-center justify-between pl-6 pr-3 text-gray-600 hover:bg-gray-100 cursor-pointer rounded-lg',
+            {
+              'bg-gray-100': isHome,
+            },
+          )}
+          onClick={() => navigate('/')}
+        >
+          <div className="flex justify-between items-center w-full">
+            <div className="flex items-center gap-2">
+              <IconHome key="home" style={{ fontSize: 20 }} />
+              <span>{t('loggedHomePage.siderMenu.home')}</span>
             </div>
           </div>
-        )}
+        </div>
 
         {/* Main menu section with flexible layout */}
         <div className="flex-1 overflow-hidden flex flex-col min-h-[250px]">

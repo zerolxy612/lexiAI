@@ -388,6 +388,7 @@ export const ModelFormModal = memo(
 
           interface FormValuesType {
             name: string;
+            group: string;
             modelId: string;
             providerId: string;
             enabled: boolean;
@@ -404,6 +405,7 @@ export const ModelFormModal = memo(
 
           const formValues: FormValuesType = {
             name: model?.name || '',
+            group: model?.group || '',
             modelId: config.modelId,
             providerId: model?.providerId || '',
             enabled: model?.enabled ?? true,
@@ -662,6 +664,10 @@ export const ModelFormModal = memo(
               rules={[{ required: true, message: t('settings.modelConfig.namePlaceholder') }]}
             >
               <Input placeholder={t('settings.modelConfig.namePlaceholder')} />
+            </Form.Item>
+
+            <Form.Item name="group" label={t('settings.modelConfig.group')}>
+              <Input placeholder={t('settings.modelConfig.groupPlaceholder')} />
             </Form.Item>
 
             {renderCategorySpecificFields}

@@ -17,6 +17,8 @@ import {
   useCanvasStore,
   useCanvasStoreShallow,
 } from '@refly-packages/ai-workspace-common/stores/canvas';
+import { IconHome } from '@refly-packages/ai-workspace-common/components/common/icon';
+import { useTranslation } from 'react-i18next';
 
 export const iconClassName =
   'w-3.5 h-3.5 flex-shrink-0 flex items-center justify-center hover:text-gray-700';
@@ -45,6 +47,7 @@ export const ProjectDirectory = ({ projectId, source }: ProjectDirectoryProps) =
     loadingSource,
     getSourceList,
   } = useHandleSiderData(true);
+  const { t } = useTranslation();
   const { canvasId } = useGetProjectCanvasId();
   const navigate = useNavigate();
   const { collapse, setCollapse, canvasList } = useSiderStoreShallow((state) => ({
@@ -161,6 +164,22 @@ export const ProjectDirectory = ({ projectId, source }: ProjectDirectoryProps) =
         />
 
         <Divider className="my-2" />
+        <div
+          className={cn(
+            'h-[38px] py-2 px-3 flex items-center justify-between text-gray-600 hover:bg-gray-50 cursor-pointer',
+            {
+              'bg-gray-100 font-medium': !canvasId || canvasId === 'empty',
+            },
+          )}
+          onClick={() => navigate(`/project/${projectId}`)}
+        >
+          <div className="flex justify-between items-center w-full">
+            <div className="flex items-center gap-2">
+              <IconHome key="home" style={{ fontSize: 20 }} />
+              <span>{t('loggedHomePage.siderMenu.home')}</span>
+            </div>
+          </div>
+        </div>
 
         <CanvasMenu
           isFetching={isLoadingCanvas}

@@ -5455,6 +5455,10 @@ export const ModelInfoSchema = {
       type: 'boolean',
       description: 'Whether this model is the default model',
     },
+    group: {
+      type: 'string',
+      description: 'Model group',
+    },
   },
 } as const;
 

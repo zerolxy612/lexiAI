@@ -1,5 +1,14 @@
 import { useEffect, useState, useMemo, useCallback, memo } from 'react';
-import { Button, Dropdown, DropdownProps, MenuProps, Progress, Skeleton, Tooltip } from 'antd';
+import {
+  Button,
+  Divider,
+  Dropdown,
+  DropdownProps,
+  MenuProps,
+  Progress,
+  Skeleton,
+  Tooltip,
+} from 'antd';
 import { useTranslation } from 'react-i18next';
 import { IconDown } from '@arco-design/web-react/icon';
 import { AiOutlineExperiment } from 'react-icons/ai';
@@ -25,6 +34,7 @@ import { useSubscriptionUsage } from '@refly-packages/ai-workspace-common/hooks/
 import { IContextItem } from '@refly-packages/ai-workspace-common/stores/context-panel';
 import { subscriptionEnabled } from '@refly-packages/ai-workspace-common/utils/env';
 import { modelEmitter } from '@refly-packages/ai-workspace-common/utils/event-emitter/model';
+import { useGroupModels } from '@refly-packages/ai-workspace-common/hooks/use-group-models';
 import './index.scss';
 
 interface ModelSelectorProps {
@@ -317,22 +327,46 @@ export const ModelSelector = memo(
             contextLimit: config.contextLimit,
             maxOutput: config.maxOutput,
             capabilities: config.capabilities,
+            group: item.group,
           };
         }) || []
       );
     }, [providerItemList?.data]);
 
+    const { handleGroupModelList } = useGroupModels();
+    const sortedGroups = useMemo(() => handleGroupModelList(modelList), [modelList]);
     const isContextIncludeImage = useMemo(() => {
       return contextItems?.some((item) => item.type === 'image');
     }, [contextItems]);
 
     const droplist: MenuProps['items'] = useMemo(() => {
-      return modelList.map((model) => ({
-        key: model.name,
-        label: <ModelLabel model={model} isContextIncludeImage={isContextIncludeImage} />,
-        icon: <ModelIcon model={model.name} size={16} type={'color'} />,
-      }));
-    }, [modelList, isContextIncludeImage]);
+      let list = [];
+      for (const group of sortedGroups) {
+        if (group?.models?.length > 0) {
+          const header = {
+            key: group.key,
+            type: 'group',
+            label: (
+              <Divider
+                className="!my-1 !p-0"
+                variant="dashed"
+                orientation="left"
+                orientationMargin="0"
+              >
+                <div className="text-[13px] max-w-[300px] truncate">{group.name}</div>
+              </Divider>
+            ),
+          };
+          const items = group.models.map((model) => ({
+            key: model.name,
+            label: <ModelLabel model={model} isContextIncludeImage={isContextIncludeImage} />,
+            icon: <ModelIcon model={model.name} size={16} type={'color'} />,
+          }));
+          list = [...list, header, ...items];
+        }
+      }
+      return list;
+    }, [sortedGroups, isContextIncludeImage]);
 
     // Automatically select available model when:
     // 1. No model is selected

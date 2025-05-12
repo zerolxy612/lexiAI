@@ -6410,6 +6410,9 @@ components:
         isDefault:
           type: boolean
           description: Whether this model is the default model
+        group:
+          type: string
+          description: Model group
     ListModelsResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'

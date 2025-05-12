@@ -1706,6 +1706,7 @@ const translations = {
       viewTutorial: 'View Docs',
       tour: 'View Tutorial',
       template: 'Template',
+      home: 'Home',
     },
   },
   knowledgeLibrary: {
@@ -2136,6 +2137,9 @@ const translations = {
       relevanceThreshold: 'Relevance Threshold',
       relevanceThresholdPlaceholder: 'Please set the relevance threshold',
       clickToSet: 'Click to Set',
+      default: 'Default Group',
+      group: 'Group Name',
+      groupPlaceholder: 'Please set up group name to categorize and manage the models',
     },
     modelTier: {
       free: 'Free',
