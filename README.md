@@ -11,7 +11,7 @@
 
 Refly is an open-source AI-native creation engine powered by 13+ leading AI models. Its intuitive free-form canvas interface integrates multi-threaded conversations, multimodal inputs (text/images/files), RAG retrieval process, browser extension web clipper, contextual memory, AI document editing capabilities, code artifact generation (HTML/SVG/Mermaid/React), and website visualization engine, empowering you to effortlessly transform ideas into complete works with interactive visualizations and web applications.
 
-[🚀 v0.5.0 Released! Now Supporting knowledge base partition management and linear conversations ⚡️](https://docs.refly.ai/changelog/v0.5.0)
+[🚀 v0.6.0 Released! Now Supporting brand new home page and custom model providers (BYOK) ⚡️](https://docs.refly.ai/changelog/v0.6.0)
 
 [Refly Cloud](https://refly.ai/) · [Self-hosting](https://docs.refly.ai/guide/self-deploy) · [Forum](https://github.com/refly-ai/refly/discussions) · [Discord](https://discord.gg/bWjffrb89h) · [Twitter](https://x.com/reflyai) · [Documentation](https://docs.refly.ai/)
 
@@ -43,9 +43,9 @@ Refly is an open-source AI-native creation engine powered by 13+ leading AI mode
 
 > Before installing ReflyAI, ensure your machine meets these minimum system requirements:
 >
-> CPU >= 2 cores
+> CPU >= 1 cores
 >
-> Memory >= 4GB
+> Memory >= 2GB
 
 ### Self-deploy with Docker
 
@@ -227,7 +227,7 @@ We would also like to thank the following open-source projects that make ReflyAI
 11. [Tanstack Query](https://github.com/tanstack/query) - Library for frontend request handling.
 12. [Radix-UI](https://github.com/radix-ui) - Library for building accessible React UI.
 13. [Elasticsearch](https://github.com/elastic/elasticsearch) - Library for building search functionality.
-14. [QDrant](https://github.com/qdrant/qdrant) - Library for building vector search functionality.
+14. [Qdrant](https://github.com/qdrant/qdrant) - Library for building vector search functionality.
 15. [Resend](https://github.com/resend/react-email) - Library for building email sending functionality.
 16. Other upstream dependencies.
 
