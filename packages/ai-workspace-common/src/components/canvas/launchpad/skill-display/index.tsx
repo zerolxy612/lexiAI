@@ -11,7 +11,7 @@ const skillItemTitleClasses =
   'inline-block max-w-[calc(100% - 8px)] overflow-hidden text-ellipsis whitespace-nowrap';
 
 const skillItemClasses =
-  'h-7 px-1.5 rounded-md border border-solid border-gray-200 text-gray-500 bg-white flex items-center justify-center ' +
+  'h-7 px-1.5 rounded-md border border-solid border-gray-200 text-gray-500 bg-white flex items-center justify-center dark:bg-gray-900 dark:text-gray-400 dark:border-gray-700' +
   'text-xs font-medium transition-all duration-200 ease-in-out hover:bg-gray-100 hover:text-green-600 cursor-pointer';
 
 interface SkillDisplayProps {
