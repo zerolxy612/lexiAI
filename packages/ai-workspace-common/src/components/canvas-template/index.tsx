@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCanvasTemplateModal } from '@refly-packages/ai-workspace-common/stores/canvas-template-modal';
 import { IconTemplate } from '@refly-packages/ai-workspace-common/components/common/icon';
@@ -129,6 +129,11 @@ export const CanvasTemplateModal = () => {
   const currentUiLocale = i18n.language as Language;
   const [language, setLanguage] = useState(currentUiLocale);
 
+  useEffect(() => {
+    if (!visible) return;
+    setLanguage(currentUiLocale);
+  }, [visible, currentUiLocale]);
+
   return (
     <Modal
       className="template-list"
@@ -155,7 +160,14 @@ export const CanvasTemplateModal = () => {
           currentCategory={currentCategory}
           setCurrentCategory={setCurrentCategory}
         />
-        <TemplateList language={language} categoryId={currentCategory} searchQuery={searchQuery} />
+
+        <TemplateList
+          source="template-library"
+          scrollableTargetId="template-library-scrollable-div"
+          language={language}
+          categoryId={currentCategory}
+          searchQuery={searchQuery}
+        />
       </div>
     </Modal>
   );

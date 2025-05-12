@@ -1,6 +1,6 @@
 tasks:
   - name: Deploy Services
-    init: cd deploy/docker && cp ../../apps/api/.env.example .env &&   docker compose up -d
+    init: cd deploy/docker && cp ../../apps/api/.env.example .env && docker compose up -d
 
 ports:
   - port: 5700
@@ -20,8 +20,8 @@ ports:
   - port: 9001
     name: MinIO Console
     visibility: private
-  - port: 9200
-    name: Elasticsearch
+  - port: 8080
+    name: SearXNG
     visibility: private
   - port: 6333
     name: Qdrant

@@ -266,6 +266,7 @@ export const SkillNodePreview = memo(({ node }: SkillNodePreviewProps) => {
       />
 
       <ChatInput
+        readonly={readonly}
         ref={chatInputRef}
         query={localQuery}
         setQuery={setQuery}
@@ -279,6 +280,7 @@ export const SkillNodePreview = memo(({ node }: SkillNodePreviewProps) => {
 
       {skill?.configSchema?.items?.length > 0 && (
         <ConfigManager
+          readonly={readonly}
           key={skill?.name}
           form={form}
           formErrors={formErrors}

@@ -25,6 +25,7 @@ export function canvasTemplatePO2DTO(
     updatedAt: template.updatedAt.toJSON(),
     shareUser: JSON.parse(template.shareUser || '{}'),
     category: template.category ? canvasTemplateCategoryPO2DTO(template.category) : undefined,
+    featured: template.priority > 0 ? true : undefined,
   };
 }
 

@@ -386,6 +386,10 @@ export type CanvasTemplate = {
    */
   language: string;
   /**
+   * Whether this canvas template is featured
+   */
+  featured?: boolean;
+  /**
    * Canvas template creation time
    */
   createdAt: string;
@@ -3918,13 +3922,13 @@ export type EmbeddingModelConfig = {
    */
   modelName?: string;
   /**
+   * Embedding model dimension
+   */
+  dimensions: number;
+  /**
    * Embedding model batch size
    */
   batchSize?: number;
-  /**
-   * Embedding model dimensions
-   */
-  dimensions?: number;
 };
 
 /**

@@ -110,6 +110,7 @@ const translations = {
     selectedItems: 'Selected {{count}} items',
     noItemsSelected: 'No items selected',
     clear: 'Clear',
+    featured: 'Featured',
     nodesAddedSuccess: 'Nodes added successfully',
     nodesAddedFailed: 'Failed to add nodes',
     canvasIdMissing: 'Canvas ID is missing',
@@ -791,6 +792,11 @@ const translations = {
       },
     ],
   },
+  frontPage: {
+    welcome: 'What can I do for you today?',
+    fromCommunity: 'From the community',
+    fromCommunityDesc: 'Discover a way to use Refly for work, or even beyond.',
+  },
   emailVerification: {
     title: 'Email Verification',
     description: 'Please enter the verification code sent to {{email}}:',
@@ -1062,7 +1068,8 @@ const translations = {
       copyToClipboard: 'Copy PNG to Clipboard',
       downloadStarted: 'Starting download...',
       downloadSuccess: 'Downloaded successfully',
-      downloadError: 'Failed to download',
+      downloadError:
+        'Download failed! The artifact does not contain SVG content. Please select the correct display type or verify the completeness of the source file code.',
       copyStarted: 'Starting to copy...',
       copySuccess: 'Copied to clipboard',
       copyError: 'Failed to copy',
@@ -1088,6 +1095,21 @@ const translations = {
       codeArtifact: 'Code Artifact',
       website: 'Website',
       mindMap: 'Mind Map',
+    },
+    presetScenarios: {
+      title: 'Preset Scenarios',
+      generatePPT: 'Generate PPT',
+      generatePPTDesc: 'Create professional presentation slides',
+      generatePPTQuery: 'Please create a professional PPT about [topic]',
+      generateLanding: 'Generate Landing Page',
+      generateLandingDesc: 'Create a marketing landing page',
+      generateLandingQuery: 'Please create a marketing landing page for [product/service]',
+      generateXHS: 'Generate Twitter Card',
+      generateXHSDesc: 'Create Twitter content card',
+      generateXHSQuery: 'Please create a Twitter content card about [topic]',
+      generateMediaContent: 'Generate Media Content',
+      generateMediaContentDesc: 'Create compelling media content',
+      generateMediaContentQuery: 'Please create media content about [topic]',
     },
     export: {
       success: 'Image exported successfully',
@@ -1260,6 +1282,7 @@ const translations = {
     nodeActions: {
       dragToConnect: 'Drag to Connect',
       clickToAdd: 'Click to Add',
+      duplicateMemo: 'Duplicate Memo',
       createMemo: 'Create Empty Memo',
       createMemoDescription:
         'Create an empty memo for quick recording ideas, supporting Markdown format',
@@ -2516,7 +2539,7 @@ const translations = {
     },
     modelSelector: {
       unlimited: 'Unlimited',
-      noModelAvailable: 'No model available',
+      configureModel: 'Click to configure models',
       premium: 'Pro Models',
       standard: 'Standard Models',
       free: 'Free Models',
@@ -2656,6 +2679,7 @@ const translations = {
     hideTemplates: 'Hide Template',
     duplicateCanvasEntities: 'Duplicate the canvas entities',
     noDescription: 'No description',
+    emptyList: 'Zero templates? No problem! Create yours now and inspire the community!',
   },
   project: {
     create: 'Create Project',

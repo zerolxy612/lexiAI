@@ -81,7 +81,7 @@ const EditChatInputComponent = (props: EditChatInputProps) => {
     [localActionMeta],
   );
 
-  const { canvasId } = useCanvasContext();
+  const { canvasId, readonly: canvasReadonly } = useCanvasContext();
   const { invokeAction } = useInvokeAction();
   const skill = useFindSkill(localActionMeta?.name);
   const {
@@ -310,6 +310,7 @@ const EditChatInputComponent = (props: EditChatInputProps) => {
         <div className="px-3">
           <ChatInput
             ref={textareaRef}
+            readonly={canvasReadonly}
             query={editQuery}
             setQuery={setEditQuery}
             selectedSkillName={localActionMeta?.name}
@@ -326,6 +327,7 @@ const EditChatInputComponent = (props: EditChatInputProps) => {
         {skill?.configSchema?.items?.length > 0 && (
           <div className="px-3">
             <ConfigManager
+              readonly={canvasReadonly}
               key={skill?.name}
               form={form}
               formErrors={formErrors}

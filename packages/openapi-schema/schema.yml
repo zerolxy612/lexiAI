@@ -2955,6 +2955,9 @@ components:
         language:
           type: string
           description: Canvas template language code
+        featured:
+          type: boolean
+          description: Whether this canvas template is featured
         createdAt:
           type: string
           format: date-time
@@ -6489,6 +6492,7 @@ components:
       description: Provider config for embeddings
       required:
         - modelId
+        - dimensions
       properties:
         modelId:
           type: string
@@ -6496,12 +6500,12 @@ components:
         modelName:
           type: string
           description: Embedding model name
+        dimensions:
+          type: number
+          description: Embedding model dimension
         batchSize:
           type: number
           description: Embedding model batch size
-        dimensions:
-          type: number
-          description: Embedding model dimensions
     RerankerModelConfig:
       type: object
       description: Provider config for rerankers

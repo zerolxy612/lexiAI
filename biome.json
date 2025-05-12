@@ -72,7 +72,9 @@
       "**/.wxt/**",
       "**/.output/**",
       "**/.turbo/**",
+      "**/.vitepress/**",
       "**/build/**",
+      "**/generated/**",
       "packages/wxt/**",
       "**/common/temp/**"
     ]

@@ -8,6 +8,7 @@ import { cn } from '@refly/utils/cn';
 import { useContextPanelStoreShallow } from '@refly-packages/ai-workspace-common/stores/context-panel';
 import { useChatStoreShallow } from '@refly-packages/ai-workspace-common/stores/chat';
 import { useLaunchpadStoreShallow } from '@refly-packages/ai-workspace-common/stores/launchpad';
+import { useSkillStoreShallow } from '@refly-packages/ai-workspace-common/stores/skill';
 
 // types
 import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/canvas';
@@ -46,6 +47,11 @@ export const LaunchPad = memo(
       newQAText: state.newQAText,
       setNewQAText: state.setNewQAText,
       resetState: state.resetState,
+    }));
+
+    const { selectedSkill, setSelectedSkill } = useSkillStoreShallow((state) => ({
+      selectedSkill: state.selectedSkill,
+      setSelectedSkill: state.setSelectedSkill,
     }));
 
     const { canvasId } = useCanvasContext();
@@ -98,7 +104,7 @@ export const LaunchPad = memo(
         data-cy="launchpad"
       >
         <div className={cn('ai-copilot-operation-body', inReflyPilot && 'p-4')}>
-          <SkillDisplay />
+          <SkillDisplay selectedSkill={selectedSkill} setSelectedSkill={setSelectedSkill} />
           <RecommendQuestionsPanel
             isOpen={recommendQuestionsOpen}
             onClose={() => setRecommendQuestionsOpen(false)}
