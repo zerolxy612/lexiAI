@@ -190,7 +190,7 @@ const HeaderActions = ({
 
   const headerContent = (
     <div
-      className={`mb-2 px-3 ${isMultiSelectMode || isSearchMode ? '' : 'flex justify-between items-center'} ${useAffix ? 'bg-white py-2 z-20 w-full shadow-sm' : ''}`}
+      className={`mb-2 px-3 ${isMultiSelectMode || isSearchMode ? '' : 'flex justify-between items-center'} ${useAffix ? 'bg-white py-2 z-20 w-full dark:bg-gray-900 shadow-sm' : ''}`}
     >
       {itemCountText && <div className="text-[10px] text-gray-500">{itemCountText}</div>}
       {actions}

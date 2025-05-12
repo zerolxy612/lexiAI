@@ -29,8 +29,8 @@ const labelRender = (props: any) => {
   return (
     <div className="flex items-center gap-2">
       <div
-        className={`text-white rounded-lg h-[30px] w-[30px] flex items-center justify-center translate-y-1 ${
-          value === 'off' ? 'bg-gray-500' : 'bg-green-600'
+        className={`text-white rounded-lg h-[30px] w-[30px] flex items-center justify-center translate-y-1 dark:text-gray-900 ${
+          value === 'off' ? 'bg-gray-500 dark:bg-gray-400' : 'bg-green-600 dark:bg-green-500'
         }`}
       >
         {value === 'off' ? (

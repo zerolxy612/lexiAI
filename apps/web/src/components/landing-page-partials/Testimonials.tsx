@@ -73,7 +73,7 @@ const ReviewCard = ({ id }: TweetData) => {
           href={`https://twitter.com/${tweet.user.screen_name}/status/${id}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-gray-600 transition-colors hover:text-gray-800"
+          className="text-gray-600 transition-colors hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100"
         >
           <IconX className="text-xl" />
         </a>
@@ -106,7 +106,7 @@ export default function Testimonials() {
         <h2 className="mt-4 font-['Alibaba_PuHuiTi_Bold',system-ui,-apple-system,sans-serif] text-3xl md:text-4xl">
           {t('landingPage.testimonials.title')}
         </h2>
-        <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600">
+        <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600 dark:text-gray-300">
           {t('landingPage.testimonials.description')}
         </p>
       </div>

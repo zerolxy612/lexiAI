@@ -260,7 +260,7 @@ const EmptyContentPrompt: FC<EmptyContentPromptProps> = ({
       </div>
 
       {/* Node list */}
-      <div className="flex-1 overflow-y-auto relative bg-gray-50" ref={listRef}>
+      <div className="flex-1 overflow-y-auto relative bg-gray-50 dark:bg-gray-950" ref={listRef}>
         {isLoadingCanvas ? (
           <div className="flex items-center justify-center h-full">
             <Spinner size="large" />
@@ -314,7 +314,7 @@ const EmptyContentPrompt: FC<EmptyContentPromptProps> = ({
                 </div>
 
                 {/* Content preview area */}
-                <div className="h-24 overflow-hidden relative bg-gray-50">
+                <div className="h-24 overflow-hidden relative bg-gray-50 dark:bg-gray-950">
                   <div style={thumbnailCardStyle}>
                     <NodeRenderer node={convertToNodeRelation(node)} isMinimap={true} />
                   </div>

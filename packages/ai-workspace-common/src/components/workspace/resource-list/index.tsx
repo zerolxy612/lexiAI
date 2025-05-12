@@ -206,7 +206,7 @@ const ResourceCard = ({ item, onDelete }: { item: Resource; onDelete: () => void
 
   return (
     <div
-      className="bg-white rounded-lg overflow-hidden border border-solid cursor-pointer border-gray-200 hover:border-green-500 transition-colors duration-200"
+      className="bg-white rounded-lg overflow-hidden border border-solid cursor-pointer border-gray-200 hover:border-green-500 transition-colors duration-200 dark:bg-gray-900 dark:border-gray-700 dark:hover-green-400"
       onClick={handleCardClick}
     >
       <div className="h-36 px-4 py-3 overflow-hidden">
@@ -215,8 +215,8 @@ const ResourceCard = ({ item, onDelete }: { item: Resource; onDelete: () => void
           className="text-xs opacity-80"
         />
       </div>
-      <Divider className="m-0 text-gray-200" />
-      <div className="px-3 pt-2 pb-1 flex justify-between items-center bg-gray-50">
+      <Divider className="m-0 text-gray-200 dark:text-gray-700" />
+      <div className="px-3 pt-2 pb-1 flex justify-between items-center bg-gray-50 dark:bg-gray-900">
         <div className="flex items-center gap-3 mb-2">
           <ResourceIcon
             url={url}
@@ -228,7 +228,7 @@ const ResourceCard = ({ item, onDelete }: { item: Resource; onDelete: () => void
             <Typography.Text className="text-sm font-medium w-48" ellipsis={{ tooltip: true }}>
               {item.title || t('common.untitled')}
             </Typography.Text>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               {time(item.updatedAt, language as LOCALE)
                 .utc()
                 .fromNow()}
@@ -288,7 +288,7 @@ const ResourceList = () => {
     <div className="h-full flex items-center justify-center">
       <Empty description={t('common.empty')}>
         <Button
-          className="text-[#00968F]"
+          className="text-green-600 dark:text-green-300"
           icon={<IconImportResource className="-mr-1 flex items-center justify-center" />}
           onClick={() => {
             setShowLibraryModal(false);

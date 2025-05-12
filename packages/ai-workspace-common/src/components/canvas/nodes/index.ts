@@ -179,7 +179,7 @@ export const getNodeCommonStyles = ({
   selected,
   isHovered,
 }: { selected: boolean; isHovered: boolean }) => `
-  bg-white 
+  bg-white dark:bg-gray-900
   rounded-xl
   box-border
   transition-all

@@ -144,6 +144,7 @@ const ModeSelector = memo(({ mode, open, setOpen, items, onModeChange, t }: Mode
       items,
       onClick: ({ key }) => onModeChange(key as 'mouse' | 'touchpad'),
       selectedKeys: [mode],
+      className: 'dark:bg-gray-800 dark:[&_.ant-dropdown-menu-item-selected]:bg-gray-700',
     }}
     trigger={['click']}
     open={open}
@@ -152,7 +153,7 @@ const ModeSelector = memo(({ mode, open, setOpen, items, onModeChange, t }: Mode
     <Tooltip title={t('canvas.toolbar.tooltip.mode')} arrow={false}>
       <Button
         type="text"
-        className="!p-0 h-[30px] w-[48px] flex items-center justify-center hover:bg-gray-100 transition-colors duration-200 group"
+        className="!p-0 h-[30px] w-[48px] flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 group"
       >
         {mode === 'mouse' ? (
           <IconMouse className={iconClass} />
@@ -351,7 +352,7 @@ export const LayoutControl: React.FC<LayoutControlProps> = memo(
 
     return (
       <>
-        <div className="absolute bottom-2 left-2.5 px-1 h-[32px] border-box flex items-center justify-center bg-white rounded-md shadow-md">
+        <div className="absolute bottom-2 left-2.5 px-1 h-[32px] border-box flex items-center justify-center bg-white rounded-md shadow-md dark:bg-gray-900">
           <ZoomControls
             currentZoom={currentZoom}
             onZoomIn={handleZoomIn}

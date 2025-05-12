@@ -103,7 +103,7 @@ const ThreadHeader = memo(
           <Button
             type="text"
             size="small"
-            className="flex items-center justify-center p-0 w-7 h-7 text-gray-500 hover:text-gray-600 min-w-0"
+            className="flex items-center justify-center p-0 w-7 h-7 text-gray-500 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300 min-w-0"
             onClick={onClose}
           >
             <IconClose className="w-4 h-4" />

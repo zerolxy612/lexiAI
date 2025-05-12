@@ -624,7 +624,9 @@ export const SkillResponseNode = memo(
           style={isPreview ? { width: 288, height: 200 } : containerStyle}
           onClick={onNodeClick}
         >
-          <div className={`h-full flex flex-col ${getNodeCommonStyles({ selected, isHovered })}`}>
+          <div
+            className={`h-full flex flex-col dark:bg-gray-900 ${getNodeCommonStyles({ selected, isHovered })}`}
+          >
             {!isPreview && !hideHandles && (
               <>
                 <CustomHandle

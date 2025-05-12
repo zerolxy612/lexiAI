@@ -93,10 +93,14 @@ export const ToolNode = ({ data, selected, id }: NodeProps<ToolNode>) => {
             p-1.5
             rounded-md 
             bg-white
-            hover:bg-gray-50
-            text-gray-600
+            dark:bg-gray-900
+            hover:bg-gray-50 
+            dark:hover:bg-gray-950
+            text-gray-600 
+            dark:text-gray-300
             shadow-[0px_1px_2px_0px_rgba(16,24,60,0.05)]
             border border-[#EAECF0]
+            dark:border-[#344054]
           "
         >
           <MoreHorizontal className="w-3.5 h-3.5" />

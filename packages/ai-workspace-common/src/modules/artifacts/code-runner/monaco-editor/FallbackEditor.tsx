@@ -26,21 +26,21 @@ const FallbackEditor = ({
     switch (language) {
       case 'javascript':
       case 'typescript':
-        return 'bg-gray-50 text-blue-800';
+        return 'bg-gray-50 text-blue-800 dark:bg-gray-900 dark:text-blue-100';
       case 'html':
-        return 'bg-gray-50 text-red-800';
+        return 'bg-gray-50 text-red-800 dark:bg-gray-900 dark:text-red-100';
       case 'css':
-        return 'bg-gray-50 text-purple-800';
+        return 'bg-gray-50 text-purple-800 dark:bg-gray-900 dark:text-purple-100';
       default:
-        return 'bg-gray-50';
+        return 'bg-gray-50 dark:bg-gray-900';
     }
   };
 
   return (
-    <div className="h-full flex flex-col border border-gray-200 rounded">
-      <div className="bg-blue-50 text-blue-800 px-4 py-2 text-sm flex items-center justify-between border-b border-gray-200">
+    <div className="h-full flex flex-col border border-gray-200 rounded dark:border-gray-700">
+      <div className="bg-blue-50 text-blue-800 px-4 py-2 text-sm flex items-center justify-between border-b border-gray-200 dark:bg-blue-900 dark:text-blue-100">
         <span>{t('codeArtifact.editor.fallbackMode')}</span>
-        <span className="text-xs px-2 py-1 bg-blue-100 rounded">{language}</span>
+        <span className="text-xs px-2 py-1 bg-blue-100 rounded dark:bg-blue-800">{language}</span>
       </div>
       <textarea
         ref={textareaRef}

@@ -223,7 +223,7 @@ const PlanItem = (props: {
 
           <Divider className="my-4" />
           {(capabilities || [])?.map((capability, index) => (
-            <div className="py-2 text-gray-600" key={index}>
+            <div className="py-2 text-gray-600 dark:text-gray-300" key={index}>
               <FaLightbulb className="text-yellow-500 mr-1" size={12} />
               <span>{capability.before}</span>
               <span className="font-bold text-black">{capability.highlight}</span>

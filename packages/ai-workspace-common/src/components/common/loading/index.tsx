@@ -11,7 +11,7 @@ export const SuspenseLoading = () => {
         <img src={Logo} alt="Refly" className="w-12 h-12 mr-3" />
         <span className="text-3xl font-bold">Refly </span>
       </div>
-      <div className="text-gray-600">
+      <div className="text-gray-600 dark:text-gray-300">
         <IconLoading className="mr-2" />
         <span>{t('common.appStarting')}</span>
       </div>

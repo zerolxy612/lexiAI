@@ -46,7 +46,7 @@ export const TemplateCard = ({
 
   return (
     <div
-      className={`${className} m-2 group relative bg-white rounded-lg overflow-hidden cursor-pointer shadow-[0_2px_8px_0_rgba(0,0,0,0.08)] hover:shadow-[0_4px_12px_0_rgba(0,0,0,0.12)] transform hover:-translate-y-0.5 transition-all duration-200 ease-in-out h-[260px]`}
+      className={`${className} m-2 group relative bg-white dark:bg-gray-900 rounded-lg overflow-hidden cursor-pointer shadow-[0_2px_8px_0_rgba(0,0,0,0.08)] hover:shadow-[0_4px_12px_0_rgba(0,0,0,0.12)] transform hover:-translate-y-0.5 transition-all duration-200 ease-in-out h-[260px]`}
     >
       <div className="h-40 bg-gray-100 flex items-center justify-center">
         <img
@@ -171,7 +171,7 @@ export const TemplateList = ({ language, categoryId, searchQuery }: TemplateList
   );
 
   return (
-    <div className="w-full h-full overflow-y-auto bg-[#F8F9FA] p-4">
+    <div className="w-full h-full overflow-y-auto bg-[#F8F9FA] p-4 dark:bg-gray-900">
       <Spin className="spin" spinning={isRequesting && dataList.length === 0}>
         {dataList.length > 0 ? (
           <div id="templateScrollableDiv" className="w-full h-full overflow-y-auto">

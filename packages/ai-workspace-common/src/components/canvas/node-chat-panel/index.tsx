@@ -46,7 +46,7 @@ const PremiumBanner = memo(() => {
   return (
     <div className="flex items-center justify-between px-2 py-0.5 bg-gray-100 border-b">
       <div className="flex items-center justify-between gap-2 w-full">
-        <span className="text-xs text-gray-600 flex-1 whitespace-nowrap">
+        <span className="text-xs text-gray-600 dark:text-gray-300 flex-1 whitespace-nowrap">
           {t('copilot.premiumBanner.message')}
         </span>
         <div className="flex items-center gap-0.5">
@@ -396,7 +396,7 @@ export const ChatPanel = memo(
           <div
             className={cn(
               'ai-copilot-chat-container chat-input-container rounded-[7px] overflow-hidden',
-              'border border-gray-100 border-solid',
+              'border border-gray-100 border-solid dark:border-gray-700',
             )}
           >
             <SelectedSkillHeader

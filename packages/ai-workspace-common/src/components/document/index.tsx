@@ -396,7 +396,7 @@ const DocumentEditorHeader = memo(
         <div className="mx-0 mt-4 max-w-screen-lg">
           <Input
             readOnly={readonly}
-            className="document-title !text-3xl font-bold focus:!border-transparent focus:!bg-transparent"
+            className="document-title !text-3xl font-bold focus:!border-transparent focus:!bg-transparent text-gray-600 dark:text-gray-300"
             placeholder={t('editor.placeholder.title')}
             value={document?.title}
             style={{ paddingLeft: 6 }}

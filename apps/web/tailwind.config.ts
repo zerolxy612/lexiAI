@@ -8,6 +8,7 @@ export default {
     './src/**/*.{js,jsx,ts,tsx}',
     '../../packages/ai-workspace-common/src/**/*.{js,jsx,ts,tsx}',
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       typography: {
@@ -51,8 +52,10 @@ export default {
           700: '#33363A',
           800: '#25282C',
           900: '#151719',
+          950: '#090A0A',
         },
         green: {
+          50: '#eff4f7',
           100: '#E8FFFA',
           200: '#AAEADE',
           300: '#74D5C6',
@@ -60,6 +63,8 @@ export default {
           500: '#1FAB9F',
           600: '#00968F',
           700: '#008481',
+          800: '#00716A',
+          900: '#18242c',
         },
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
@@ -67,6 +72,8 @@ export default {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         primary: {
+          300: '#E8FFFA',
+          400: '#46C0B2',
           600: '#00968F',
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',

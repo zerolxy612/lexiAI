@@ -152,7 +152,7 @@ function SidebarMinimap({
                           </div>
 
                           {/* Content preview area */}
-                          <div className="h-20 overflow-hidden relative bg-gray-50">
+                          <div className="h-20 overflow-hidden relative bg-gray-50 dark:bg-gray-950">
                             <div style={thumbnailCardStyle}>
                               <NodeRenderer node={node} isMinimap={true} />
                             </div>

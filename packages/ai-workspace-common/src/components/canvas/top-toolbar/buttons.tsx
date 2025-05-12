@@ -81,12 +81,13 @@ export const ToolbarButtons = memo(
         icon={
           <MdOutlineImage
             size={16}
-            className="flex items-center justify-center"
-            style={{ color: showPreview ? '#000' : '#9CA3AF' }}
+            className={`flex items-center justify-center ${
+              showPreview ? 'text-gray-900 dark:text-gray-300' : 'text-gray-400 dark:text-gray-500'
+            }`}
           />
         }
         onClick={() => setShowPreview(!showPreview)}
-        className="w-8 h-6 flex items-center justify-center mr-1"
+        className="w-8 h-6 flex items-center justify-center mr-1 hover:bg-gray-100 dark:hover:bg-gray-700"
       />
     );
 
@@ -96,7 +97,7 @@ export const ToolbarButtons = memo(
         icon={
           <span
             className={`flex items-center justify-center text-xs font-semibold ${
-              showReflyPilot ? 'text-green-600' : 'text-gray-500'
+              showReflyPilot ? 'text-green-500' : 'text-gray-400'
             }`}
           >
             <IconAskAI className="w-3 h-3 mr-1" />
@@ -135,7 +136,7 @@ export const ToolbarButtons = memo(
     return (
       <>
         {!readonly && (
-          <div className="flex items-center h-9 bg-[#ffffff] rounded-lg px-2 border border-solid border-1 border-[#EAECF0] box-shadow-[0px_2px_6px_0px_rgba(0,0,0,0.1)]">
+          <div className="flex items-center h-9 bg-[#ffffff] rounded-lg px-2 border border-solid border-1 border-[#EAECF0] box-shadow-[0px_2px_6px_0px_rgba(0,0,0,0.1)] dark:bg-gray-900 dark:border-gray-700">
             {hoverCardEnabled ? (
               <HoverCard {...pilotButtonConfig}>{pilotButton}</HoverCard>
             ) : (
@@ -144,7 +145,7 @@ export const ToolbarButtons = memo(
           </div>
         )}
 
-        <div className="flex items-center h-9 bg-[#ffffff] rounded-lg px-2 border border-solid border-1 border-[#EAECF0] box-shadow-[0px_2px_6px_0px_rgba(0,0,0,0.1)]">
+        <div className="flex items-center h-9 bg-[#ffffff] rounded-lg px-2 border border-solid border-1 border-[#EAECF0] box-shadow-[0px_2px_6px_0px_rgba(0,0,0,0.1)] dark:bg-gray-900 dark:border-gray-700">
           {!readonly && <Tooltip title={t('canvas.toolbar.slideshow')}>{slideshowButton}</Tooltip>}
 
           <Popover
@@ -168,11 +169,10 @@ export const ToolbarButtons = memo(
                 icon={
                   <IconSearch
                     size={16}
-                    className="flex items-center justify-center"
-                    style={{ color: '#000' }}
+                    className="flex items-center justify-center text-gray-900 dark:text-gray-300"
                   />
                 }
-                className="w-8 h-6 flex items-center justify-center mr-1"
+                className="w-8 h-6 flex items-center justify-center mr-1 hover:bg-gray-100 dark:hover:bg-gray-700"
               />
             </Tooltip>
           </Popover>

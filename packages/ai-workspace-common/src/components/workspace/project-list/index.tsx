@@ -85,7 +85,7 @@ export const ActionDropdown = ({
           overlayStyle={{ maxWidth: '300px' }}
         >
           <div
-            className="flex items-center text-red-600 flex-grow"
+            className="flex items-center text-red-600 flex-grow dark:text-red-300"
             onClick={(e) => e.stopPropagation()}
           >
             <IconDelete size={16} className="mr-2" />
@@ -140,7 +140,7 @@ const ProjectCard = ({
 
   return (
     <div
-      className="bg-white rounded-lg overflow-hidden border border-solid cursor-pointer border-gray-200 hover:border-green-500 transition-colors duration-200"
+      className="bg-white rounded-lg overflow-hidden border border-solid cursor-pointer border-gray-200 hover:border-green-500 transition-colors duration-200 dark:bg-gray-900 dark:border-gray-700 dark:hover-green-400"
       onClick={handleClick}
     >
       <div className="h-36 px-4 py-3 overflow-hidden">
@@ -152,20 +152,22 @@ const ProjectCard = ({
           />
         ) : (
           <div className="flex items-center justify-center h-full flex-col">
-            <SlPicture size={48} className="text-gray-300" />
-            <div className="mt-2 text-gray-300">{t('project.waitingUploadCover')}</div>
+            <SlPicture size={48} className="text-gray-300 dark:text-gray-600" />
+            <div className="mt-2 text-gray-300 dark:text-gray-600">
+              {t('project.waitingUploadCover')}
+            </div>
           </div>
         )}
       </div>
-      <Divider className="m-0 text-gray-200" />
-      <div className="px-3 pt-2 pb-1 flex justify-between items-center bg-gray-50">
+      <Divider className="m-0 text-gray-200 dark:text-gray-800" />
+      <div className="px-3 pt-2 pb-1 flex justify-between items-center bg-gray-50 dark:bg-gray-900">
         <div className="flex items-center gap-3 mb-2">
-          <IconProject className="ntext-gray-500" size={24} />
+          <IconProject className="text-gray-500 dark:text-gray-400" size={24} />
           <div className="flex-1 mi-w-0">
             <Typography.Text className="text-sm font-medium w-48" ellipsis={{ tooltip: true }}>
               {project?.name || t('common.untitled')}
             </Typography.Text>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               {time(project?.updatedAt, language as LOCALE)
                 .utc()
                 .fromNow()}
@@ -207,7 +209,7 @@ const CreateCard = ({
   const { t } = useTranslation();
   const [createProjectModalVisible, setCreateProjectModalVisible] = useState(false);
   return (
-    <div className="bg-gray-50 rounded-lg overflow-hidden border border-solid cursor-pointer border-gray-200 hover:border-green-500 transition-colors duration-200">
+    <div className="bg-gray-50 rounded-lg overflow-hidden border border-solid cursor-pointer border-gray-200 hover:border-green-500 transition-colors duration-200 dark:bg-gray-900 dark:border-gray-700 dark:hover-green-400">
       <div
         className="flex items-center justify-center h-full w-full flex-col"
         onClick={() => {

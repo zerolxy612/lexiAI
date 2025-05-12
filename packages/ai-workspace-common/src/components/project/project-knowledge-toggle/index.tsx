@@ -87,7 +87,7 @@ export const ProjectKnowledgeToggle: React.FC<ProjectKnowledgeToggleProps> = ({
 
   return (
     <div className={`project-kb-toggle mt-auto border-t border-gray-100 pt-2 pb-2 ${className}`}>
-      <div className="rounded-lg flex items-center justify-between bg-gray-50 p-2 pt-0 pb-0 border border-solid  hover:border-[#00968F]/30 transition-all cursor-pointer">
+      <div className="rounded-lg flex items-center justify-between bg-gray-50 p-2 pt-0 pb-0 border border-solid dark:bg-gray-800 hover:border-[#00968F]/30 transition-all cursor-pointer">
         <div className="flex items-center gap-2 flex-shrink overflow-hidden">
           <LuBrain
             className={`transition-colors duration-300 flex-shrink-0 ${enabledKnowledgeBase ? 'text-[#00968F]' : 'text-gray-500'}`}
@@ -114,7 +114,7 @@ export const ProjectKnowledgeToggle: React.FC<ProjectKnowledgeToggleProps> = ({
               }}
               dropdownRender={(menu) => (
                 <div className="rounded-md overflow-hidden shadow-lg">
-                  <div className="px-3 py-2 text-xs text-gray-600 border-b border-gray-100 bg-gray-50">
+                  <div className="px-3 py-2 text-xs text-gray-600 border-b border-gray-100 bg-gray-50 dark:text-gray-300 dark:border-gray-800 dark:bg-gray-950">
                     {t('project.switchProject')}
                   </div>
                   {loading ? (
@@ -145,7 +145,7 @@ export const ProjectKnowledgeToggle: React.FC<ProjectKnowledgeToggleProps> = ({
                   key={project.projectId}
                   value={project.projectId}
                   label={
-                    <span className="w-full text-sm text-gray-600 truncate inline-block">
+                    <span className="w-full text-sm text-gray-600 truncate inline-block dark:text-gray-300">
                       {project.name || t('common.untitled')}
                     </span>
                   }
@@ -169,7 +169,7 @@ export const ProjectKnowledgeToggle: React.FC<ProjectKnowledgeToggleProps> = ({
               ))}
             </Select>
           ) : (
-            <div className="text-sm text-gray-600 truncate inline-block h-[32px] flex items-center">
+            <div className="text-sm text-gray-600 truncate inline-block h-[32px] flex items-center dark:text-gray-300">
               <span>{t('project.askProject')}</span>
             </div>
           )}
@@ -211,7 +211,7 @@ export const ProjectKnowledgeToggle: React.FC<ProjectKnowledgeToggleProps> = ({
           >
             <div className="cursor-pointer flex items-center">
               <FiHelpCircle
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-gray-400 hover:text-gray-600 transition-colors dark:text-gray-500 dark:hover:text-gray-300"
                 size={16}
               />
             </div>

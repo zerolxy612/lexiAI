@@ -61,7 +61,7 @@ const ArtifactGallery = memo(
         {showHeader ? (
           <div className="mb-16 text-center">
             <span
-              className="mb-8 inline-flex items-center justify-center rounded-lg border border-solid border-black/10 bg-white px-6 py-2 font-['Alibaba_PuHuiTi_Bold',system-ui,-apple-system,sans-serif] text-sm"
+              className="mb-8 inline-flex items-center justify-center rounded-lg border border-solid border-black/10 bg-white dark:bg-gray-900 dark:border-white/10 px-6 py-2 font-['Alibaba_PuHuiTi_Bold',system-ui,-apple-system,sans-serif] text-sm"
               style={{
                 color: defaultHeader.color,
                 boxShadow: defaultHeader.tagShadow,
@@ -78,13 +78,13 @@ const ArtifactGallery = memo(
                 className="font-['Alibaba_PuHuiTi_Bold',system-ui,-apple-system,sans-serif]"
               >
                 <div className="mt-2">
-                  <span className="relative text-[#333333]">
+                  <span className="relative text-gray-700 dark:text-gray-200">
                     {title || defaultHeader.title[currentLang]}
-                    <span className="absolute bottom-0 left-0 h-1 w-full bg-[#333333]" />
+                    <span className="absolute bottom-0 left-0 h-1 w-full bg-gray-700 dark:bg-gray-200" />
                   </span>
                 </div>
               </Title>
-              <Paragraph className="mx-auto mt-4 max-w-3xl text-center text-gray-500">
+              <Paragraph className="mx-auto mt-4 max-w-3xl text-center text-gray-500 dark:text-gray-400">
                 {description || defaultHeader.description[currentLang]}
               </Paragraph>
             </section>
@@ -117,17 +117,16 @@ const ArtifactGallery = memo(
                 <div className="p-6 flex flex-col h-[calc(100%-12rem)]">
                   <Title
                     level={4}
-                    className="!mb-2 !mt-0 line-clamp-2"
-                    style={{ color: '#333333' }}
+                    className="!mb-2 !mt-0 line-clamp-2 bg-gray-700 text-white dark:bg-gray-200 dark:text-black"
                   >
                     {artifact.title[currentLang]}
                   </Title>
                   {artifact.description && (
-                    <Paragraph className="!mb-4 text-gray-600 line-clamp-2 flex-grow">
+                    <Paragraph className="!mb-4 text-gray-600 dark:text-gray-300 line-clamp-2 flex-grow">
                       {artifact.description[currentLang]}
                     </Paragraph>
                   )}
-                  <div className="text-sm text-gray-400 mt-auto">
+                  <div className="text-sm text-gray-400 dark:text-gray-500 mt-auto">
                     {currentLang === 'zh-CN' ? '来自' : 'From'}{' '}
                     {artifact.authorEmail ||
                       {
@@ -137,13 +136,13 @@ const ArtifactGallery = memo(
                   </div>
                 </div>
                 {/* Hover Overlay - Moved outside of cover */}
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center dark:bg-gray-100/50">
                   <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
                     <Button
                       type="primary"
                       shape="round"
                       size="large"
-                      className="bg-white text-black hover:bg-white/90 border-none shadow-[0_4px_12px_rgba(255,255,255,0.4)]"
+                      className="bg-white text-black hover:bg-white/90 border-none shadow-[0_4px_12px_rgba(255,255,255,0.4)] dark:hover:bg-gray-900/10 dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] dark:text-white dark:bg-gray-900"
                       onClick={(e) => {
                         e.preventDefault();
                         window.open(artifact.url, '_blank', 'noopener,noreferrer');
@@ -165,8 +164,7 @@ const ArtifactGallery = memo(
               type="primary"
               shape="round"
               size="large"
-              className="px-8 py-2 no-underline"
-              style={{ backgroundColor: '#333333' }}
+              className="px-8 py-2 no-underline bg-gray-700 dark:bg-gray-200"
               href="/artifact-gallery"
             >
               {currentLang === 'zh-CN' ? '探索更多作品' : 'Explore more artifacts'} 👉

@@ -20,12 +20,12 @@ const CanvasPage = () => {
     <Canvas canvasId={canvasId} />
   ) : (
     <div className="flex h-full w-full flex-col">
-      <div className="box-border flex h-16 items-center justify-between px-4 py-2">
+      <div className="box-border flex h-16 items-center justify-between px-4 py-2 dark:bg-gray-800">
         {collapse && (
           <SiderPopover>
             <Button
               type="text"
-              icon={<AiOutlineMenuUnfold size={16} className="text-gray-500" />}
+              icon={<AiOutlineMenuUnfold size={16} className="text-gray-500 dark:text-gray-400" />}
               onClick={() => {
                 setCollapse(!collapse);
               }}
@@ -34,7 +34,7 @@ const CanvasPage = () => {
         )}
       </div>
       <Empty
-        className="m-0 flex w-full flex-grow flex-col items-center justify-center"
+        className="m-0 flex w-full flex-grow flex-col items-center justify-center dark:bg-gray-800"
         description={t('common.empty')}
       >
         <Button

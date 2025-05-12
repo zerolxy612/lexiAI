@@ -58,7 +58,7 @@ const PremiumBanner = () => {
   return (
     <div className="flex items-center justify-between px-3 py-0.5 bg-gray-100 border-b">
       <div className="flex items-center justify-between gap-2 w-full">
-        <span className="text-xs text-gray-600 flex-1 whitespace-nowrap">
+        <span className="text-xs text-gray-600 dark:text-gray-300 flex-1 whitespace-nowrap">
           {t('copilot.premiumBanner.message')}
         </span>
         <div className="flex items-center gap-0.5">

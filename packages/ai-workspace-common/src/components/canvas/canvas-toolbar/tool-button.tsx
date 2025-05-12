@@ -68,11 +68,11 @@ export const ToolButton: FC<ToolButtonProps> = memo(
               hover:bg-gray-100 rounded-lg 
               transition-colors duration-200 
               group
-              ${tool.active ? 'bg-gray-100' : ''}
+              ${tool.active ? 'bg-gray-100 dark:bg-gray-800' : ''}
             `}
             icon={
               <tool.icon
-                className={`h-[18px] w-[18px] text-gray-600 group-hover:text-gray-900 ${tool.isPrimary ? 'text-primary-600' : ''}`}
+                className={`h-[18px] w-[18px] text-gray-600 group-hover:text-gray-900 dark:text-gray-300 dark:group-hover:text-gray-100 ${tool.isPrimary ? 'text-primary-600 dark:text-primary-400' : ''}`}
                 style={{ color: getIconColor(tool.value as string) }}
               />
             }
@@ -86,14 +86,14 @@ export const ToolButton: FC<ToolButtonProps> = memo(
           className={`
             h-[32px] w-[32px] 
             flex items-center justify-center 
-            hover:bg-gray-100 rounded-lg 
+            hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg 
             transition-colors duration-200 
             group
-            ${tool.active ? 'bg-gray-100' : ''}
+            ${tool.active ? 'bg-gray-100 dark:bg-gray-800' : ''}
           `}
           icon={
             <tool.icon
-              className={`h-[18px] w-[18px] text-gray-600 group-hover:text-gray-900 ${tool.isPrimary ? 'text-primary-600' : ''}`}
+              className={`h-[18px] w-[18px] text-gray-600 group-hover:text-gray-900 dark:text-gray-300 dark:group-hover:text-gray-100 ${tool.isPrimary ? 'text-primary-600 dark:text-primary-400' : ''}`}
               style={{ color: getIconColor(tool.value as string) }}
             />
           }
