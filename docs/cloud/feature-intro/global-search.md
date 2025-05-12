@@ -8,8 +8,8 @@ You can quickly open global search by clicking the search box or using the keybo
 
 Using global search, you can easily find historical canvases you have created before, and also conveniently add resources to the current canvas.
 
-![Global Search Interface Figure 1](/images/2025-04-27-00-15-33.png)
+![Global Search Interface Figure 1](/images/2025-04-27-00-15-33.webp)
 Figure 1: Global search entry and interface example.
 
-![Search Results Display Figure 2](/images/2025-04-27-00-15-46.png)
+![Search Results Display Figure 2](/images/2025-04-27-00-15-46.webp)
 Figure 2: Global search results display example, with canvases prioritized.

@@ -23,7 +23,7 @@ Create a new knowledge base to organize your resources.
 *   **Description:** (Optional) Provides supplementary descriptions or background information about the knowledge base content to help understand its purpose.
 *   **Preset Prompt:** (Optional) Sets a specific prompt for this knowledge base. This prompt will automatically take effect every time this knowledge base is called by AI, guiding the direction or content scope of the AI's response.
 
-![Create Knowledge Base Form](/images/2025-04-26-23-33-50.png)
+![Create Knowledge Base Form](/images/2025-04-26-23-33-50.webp)
 
 **Operation Steps:**
 
@@ -32,8 +32,8 @@ Create a new knowledge base to organize your resources.
 3.  In the pop-up window, fill in the **Name**, **Description** (optional), and **Preset System Prompt** (optional).
 4.  Click the **Confirm** or **Create** button to complete the creation.
 
-![Click Create Knowledge Base Button](/images/2025-04-26-23-34-00.png)
-![Fill in Knowledge Base Information](/images/2025-04-26-23-34-09.png)
+![Click Create Knowledge Base Button](/images/2025-04-26-23-34-00.webp)
+![Fill in Knowledge Base Information](/images/2025-04-26-23-34-09.webp)
 
 ## Managing Knowledge Base
 
@@ -58,18 +58,18 @@ You can search, add, delete, or remove canvases in the knowledge base.
 2.  Switch to the **Canvas** tab.
 3.  Click the **Search** icon or input box.
 4.  Enter the keyword of the canvas name you want to find.
-![Search Canvas Entry](/images/2025-04-26-23-34-20.png)
-![Enter Keyword to Search](/images/2025-04-26-23-34-28.png)
+![Search Canvas Entry](/images/2025-04-26-23-34-20.webp)
+![Enter Keyword to Search](/images/2025-04-26-23-34-28.webp)
 
 #### Add Canvas
 1.  Enter the target knowledge base.
 2.  Switch to the **Canvas** tab.
 3.  Click the **+ Add** button.
-![Add Canvas Button](/images/2025-04-26-23-34-37.png)
+![Add Canvas Button](/images/2025-04-26-23-34-37.webp)
 4.  Select **Create New Canvas** or **Add Existing Canvas**.
-![Select Add Method](/images/2025-04-26-23-34-50.png)
+![Select Add Method](/images/2025-04-26-23-34-50.webp)
 5.  If you select **Add Existing Canvas**, check the boxes for the canvases you want to add in the list, then click Confirm.
-![Select Existing Canvas](/images/2025-04-26-23-34-59.png)
+![Select Existing Canvas](/images/2025-04-26-23-34-59.webp)
 
 #### Delete Canvas
 1.  Enter the target knowledge base.
@@ -78,15 +78,15 @@ You can search, add, delete, or remove canvases in the knowledge base.
 4.  Click the **"..."** (More Options) button on the right side of the canvas entry.
 5.  Select **Delete Canvas** from the pop-up menu.
 6.  **Confirm the deletion operation again.**
-![Delete Canvas Operation](/images/2025-04-26-23-35-07.png)
+![Delete Canvas Operation](/images/2025-04-26-23-35-07.webp)
 
 #### Remove Canvas from Knowledge Base
 1.  Enter the target knowledge base.
 2.  Switch to the **Canvas** tab.
 3.  Check the checkbox in front of one or more canvas entries you want to remove.
-![Select Canvases to Remove](/images/2025-04-26-23-35-17.png)
+![Select Canvases to Remove](/images/2025-04-26-23-35-17.webp)
 4.  Click the **Delete from Knowledge Base** (or similar text remove button) above the list.
-![Click Remove Button](/images/2025-04-26-23-35-28.png)
+![Click Remove Button](/images/2025-04-26-23-35-28.webp)
 
 ### Managing Files
 
@@ -108,23 +108,23 @@ You can search, add, delete, remove, or add files to the canvas in the knowledge
 2.  Switch to the **File** tab.
 3.  Click the **Search** icon or input box.
 4.  Enter the keyword of the file name you want to find.
-![Search File Entry](/images/2025-04-26-23-35-36.png)
-![Enter Keyword to Search Files](/images/2025-04-26-23-35-46.png)
+![Search File Entry](/images/2025-04-26-23-35-36.webp)
+![Enter Keyword to Search Files](/images/2025-04-26-23-35-46.webp)
 
 #### Add File
 1.  Enter the target knowledge base.
 2.  Switch to the **File** tab.
 3.  Click the **Add** button.
 4.  Select **Add Existing File** or **Import New File**.
-![Add File Operation](/images/2025-04-26-23-36-01.png)
+![Add File Operation](/images/2025-04-26-23-36-01.webp)
 
 #### Delete File
 1.  Enter the target knowledge base.
 2.  Switch to the **File** tab.
 3.  **Method 1 (Single Delete):** Find the file you want to delete, click the **"..."** (More Options) button on its right, and select **Delete**.
-![Single File Delete](/images/2025-04-26-23-36-20.png)
+![Single File Delete](/images/2025-04-26-23-36-20.webp)
 4.  **Method 2 (Batch Delete):** Check the checkboxes in front of one or more files you want to delete.
-![Check Files](/images/2025-04-26-23-36-29.png)
+![Check Files](/images/2025-04-26-23-36-29.webp)
 5.  Click the **Delete** button above the list.
 6.  **Confirm the deletion operation again.**
 
@@ -133,7 +133,7 @@ You can search, add, delete, remove, or add files to the canvas in the knowledge
 2.  Switch to the **File** tab.
 3.  Check the checkboxes in front of one or more files you want to remove.
 4.  Click the **Remove from Knowledge Base** (or similar text remove button) above the list.
-![Click Remove Button](/images/2025-04-26-23-36-38.png)
+![Click Remove Button](/images/2025-04-26-23-36-38.webp)
 
 #### Add to Canvas
 1.  Enter the target knowledge base.

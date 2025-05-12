@@ -38,20 +38,20 @@ Choose the appropriate model based on business needs. If you need to add images,
 | Free Model | Lightweight, Enhanced Reasoning, Real-time Information Access | Grok 3 Mini Beta | A lightweight version of xAI's Grok 3, retaining some of Grok's features like real-time information access, but smaller in scale and faster in response. | Quick information summarization, informal conversations, suitable for scenarios requiring some real-time capability but with limited computing resources, math problem solving, image analysis. |
 | Free Model | Multimodal | Gemini 2.0 Flash Thinking | A variant of Gemini 2.0 Flash, emphasizing reasoning capabilities, able to think and reason before responding, thereby improving performance and accuracy. | Tasks requiring fast responses and involving some reasoning steps, educational scenarios (showing thinking process), lightweight multimodal analysis, complex reasoning, long text processing. |
 
-![图1](/images/2025-04-26-12-48-50.png)
+![图1](/images/2025-04-26-12-48-50.webp)
 ## Add Context
 
 > **Operation:** Click "Add Context" with the mouse to add other nodes to the Ask AI node, allowing the large model to process their content.
 
-![图1](/images/2025-04-26-15-30-56.png)
+![图1](/images/2025-04-26-15-30-56.webp)
 
-![图2](/images/2025-04-26-15-31-11.png)
+![图2](/images/2025-04-26-15-31-11.webp)
 ## Add Images
 
 > **Operation:** Method 1: Click the image add icon button on the Ask AI component to trigger the image adding action. Method 2: You can also directly cut images and use CTRL+V in the Ask dialog box or paste directly via connection to make the image a context for Ask AI. Method 3: Directly drag and drop images onto the canvas.
 
-![图1](/images/2025-04-26-15-31-22.png)
-![图2](/images/2025-04-26-15-31-31.png)
+![图1](/images/2025-04-26-15-31-22.webp)
+![图2](/images/2025-04-26-15-31-31.webp)
 
 
 ## Skills
@@ -75,13 +75,13 @@ Widget Introduction:
 > **Operation:**
 > 1. Click "Ask AI" in the upper right corner of the page → Select "Widget Generation" → Select the corresponding widget
 
-![图1](/images/2025-04-26-15-07-23.png)
-![图2](/images/2025-04-26-15-07-41.png)
-![图3](/images/2025-04-26-15-07-50.png)
+![图1](/images/2025-04-26-15-07-23.webp)
+![图2](/images/2025-04-26-15-07-41.webp)
+![图3](/images/2025-04-26-15-07-50.webp)
 
 > 2. In the input box of any Ask AI, type "/" to trigger the widget list → Select "Widget Generation" → Subsequent steps are the same as Method 1
 
-![图1](/images/2025-04-26-15-08-04.png)
+![图1](/images/2025-04-26-15-08-04.webp)
 ### Web Search
 
 Concept:
@@ -94,16 +94,16 @@ Concept:
 > 1. Click "Ask AI" in the upper right corner of the page → Select "Web Search" → Directly enter search content
 >    - Note: You can enable the Deep Search switch for deep search
 
-![图1](/images/2025-04-26-15-08-17.png)
-![图2](/images/2025-04-26-15-08-27.png)
-![图3](/images/2025-04-26-15-08-40.png)
-![图4](/images/2025-04-26-15-08-49.png)
-![图5](/images/2025-04-26-15-08-58.png)
-![图6](/images/2025-04-26-15-09-06.png)
+![图1](/images/2025-04-26-15-08-17.webp)
+![图2](/images/2025-04-26-15-08-27.webp)
+![图3](/images/2025-04-26-15-08-40.webp)
+![图4](/images/2025-04-26-15-08-49.webp)
+![图5](/images/2025-04-26-15-08-58.webp)
+![图6](/images/2025-04-26-15-09-06.webp)
 
 > 2. In the input box of any Ask AI, type "/" to trigger the widget list → Select "Web Search" → Subsequent steps are the same as Method 1
 
-![图1](/images/2025-04-26-15-09-19.png)
+![图1](/images/2025-04-26-15-09-19.webp)
 
 ### Knowledge Base Search
 
@@ -112,11 +112,11 @@ Concept: For the knowledge base canvases and files you have selected and added, 
 > **Operation:**
 > 1. Click "Ask AI" in the upper right corner of the page → Select "Knowledge Base Search"
 
-![图1](/images/2025-04-26-15-09-32.png)
+![图1](/images/2025-04-26-15-09-32.webp)
 
 > 2. In the "Ask AI" node → In the dialog box, type "/" to activate the widget → Select "Knowledge Base Search"
 
-![图2](/images/2025-04-26-15-09-50.png)
+![图2](/images/2025-04-26-15-09-50.webp)
 ### Custom Prompt
 
 Concept: Replace the system's prompt, allowing you to define the system prompt and also define Temperature and Top P parameters.
@@ -130,12 +130,12 @@ Parameter Details:
 > **Operation:**
 > 1. Click "Ask AI" in the upper right corner of the page → Select "More" → Select "Custom Prompt"
 
-![图1](/images/2025-04-26-15-32-23.png)
+![图1](/images/2025-04-26-15-32-23.webp)
 
 > 2. In the "Ask AI" node → In the dialog box, type "/" to activate the widget → Select "Custom Prompt"
 
-![图1](/images/2025-04-26-15-32-33.png)
-![图2](/images/2025-04-26-15-32-39.png)
+![图1](/images/2025-04-26-15-32-33.webp)
+![图2](/images/2025-04-26-15-32-39.webp)
 ### Document Writing
 
 Concept: Use the LLM model to generate content, output the markdown thinking process, and then output a document node.
@@ -144,9 +144,9 @@ Concept: Use the LLM model to generate content, output the markdown thinking pro
 > 1. Click "Ask AI" in the upper right corner of the page → Select "More" → Select "Document Writing"
 > 2. In the "Ask AI" node → In the dialog box, type "/" to activate the widget → Select "Document Writing"
 
-![图1](/images/2025-04-26-15-32-51.png)
-![图2](/images/2025-04-26-15-33-14.png)
-![图3](/images/2025-04-26-15-33-20.png)
+![图1](/images/2025-04-26-15-32-51.webp)
+![图2](/images/2025-04-26-15-33-14.webp)
+![图3](/images/2025-04-26-15-33-20.webp)
 ### Recommended Questions
 
 Concept: When the user lacks creativity, automatically infer and generate questions for the user based on the context.
@@ -155,5 +155,5 @@ Concept: When the user lacks creativity, automatically infer and generate questi
 > 1. Click "Ask AI" in the upper right corner of the page → Select "More" → Select "Recommended Questions" → Enter the question in the input box
 > 2. In the "Ask AI" node → In the dialog box, type "/" to activate the widget → Select "Recommended Questions" → Enter the question in the input box
 
-![图1](/images/2025-04-26-15-33-36.png)
-![图2](/images/2025-04-26-15-33-47.png)
+![图1](/images/2025-04-26-15-33-36.webp)
+![图2](/images/2025-04-26-15-33-47.webp)
