@@ -1884,7 +1884,7 @@ const translations = {
       title: 'MCP Server Management',
       name: 'Name',
       type: 'Type',
-      url: 'URL',
+      url: 'URL / Command',
       command: 'Command',
       args: 'Arguments',
       headers: 'Headers',

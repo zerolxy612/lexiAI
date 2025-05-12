@@ -1676,7 +1676,7 @@ const translations = {
       title: 'MCP 服务器管理',
       name: '名称',
       type: '类型',
-      url: '地址',
+      url: '地址 / 命令',
       command: '命令',
       args: '参数',
       headers: '请求头',

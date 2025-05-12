@@ -179,7 +179,18 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
       title: t('settings.mcpServer.url'),
       dataIndex: 'url',
       key: 'url',
-      render: (url: string) => url || '-',
+      render: (url: string, record: McpServerDTO) => {
+        if (record.type === 'stdio') {
+          const command = record.command || '';
+          const args = record.args
+            ? Array.isArray(record.args)
+              ? record.args.join(' ')
+              : record.args
+            : '';
+          return command ? `${command} ${args}`.trim() : '-';
+        }
+        return url || '-';
+      },
     },
     {
       title: t('settings.mcpServer.status'),
