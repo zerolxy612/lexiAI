@@ -199,7 +199,7 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
                     <div className="w-6 h-6 rounded bg-[#6172F3] shadow-lg flex items-center justify-center flex-shrink-0">
                       {getSkillIcon(selectedSkill.name, 'w-4 h-4 text-white')}
                     </div>
-                    <span className="text-sm font-medium leading-normal text-[rgba(0,0,0,0.8)] truncate">
+                    <span className="text-sm font-medium leading-normal text-[rgba(0,0,0,0.8)] truncate dark:text-[rgba(225,225,225,0.8)]">
                       {t(`${selectedSkill.name}.name`, { ns: 'skill' })}
                     </span>
                   </div>

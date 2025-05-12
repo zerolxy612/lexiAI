@@ -371,7 +371,7 @@ export const ChatPanel = ({
         <div
           className={cn(
             'ai-copilot-chat-container chat-input-container rounded-[7px] overflow-hidden',
-            embeddedMode && 'embedded-chat-panel border border-gray-100',
+            embeddedMode && 'embedded-chat-panel border border-gray-100 dark:border-gray-800',
           )}
         >
           <SelectedSkillHeader
@@ -380,7 +380,12 @@ export const ChatPanel = ({
             onClose={() => setSelectedSkill(null)}
           />
           {subscriptionEnabled && !userProfile?.subscription && <PremiumBanner />}
-          <div className={cn('px-3', embeddedMode && 'px-2')}>
+          <div
+            className={cn(
+              'px-3 bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800',
+              embeddedMode && 'px-2 bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800',
+            )}
+          >
             <ContextManager
               className="py-2"
               contextItems={contextItems}

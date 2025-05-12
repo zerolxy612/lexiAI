@@ -91,7 +91,7 @@ const NodeHeader = memo(
           <div className="w-6 h-6 rounded bg-[#6172F3] shadow-lg flex items-center justify-center flex-shrink-0">
             {getSkillIcon(selectedSkillName, 'w-4 h-4 text-white')}
           </div>
-          <span className="text-sm font-medium leading-normal text-[rgba(0,0,0,0.8)] truncate">
+          <span className="text-sm font-medium leading-normal text-[rgba(0,0,0,0.8)] truncate  dark:text-[rgba(225,225,225,0.8)]">
             {selectedSkillName
               ? t(`${selectedSkillName}.name`, { ns: 'skill' })
               : t('canvas.skill.askAI')}

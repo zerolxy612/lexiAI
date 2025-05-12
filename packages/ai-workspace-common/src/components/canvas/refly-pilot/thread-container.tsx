@@ -59,7 +59,7 @@ const ThreadHeader = memo(
     const { t } = useTranslation();
 
     return (
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white rounded-t-lg">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white dark:bg-gray-900 dark:border-gray-700 rounded-t-lg">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded bg-primary-600 shadow-lg flex items-center justify-center flex-shrink-0">
             <span className="text-white text-xs font-medium flex items-center justify-center">
@@ -220,9 +220,9 @@ export const ThreadContainer = memo(
     const containerClassName = useMemo(
       () => `
         flex-shrink-0 
-        bg-white 
+        bg-white dark:bg-gray-900
         border 
-        border-gray-200 
+        border-gray-200 dark:border-gray-700
         flex 
         flex-col
         will-change-transform
@@ -285,7 +285,7 @@ export const ThreadContainer = memo(
     return (
       <div
         ref={ref}
-        className="border border-solid border-gray-100 rounded-lg bg-transparent"
+        className="border border-solid border-gray-100 rounded-lg bg-transparent dark:border-gray-800 "
         style={outerContainerStyles}
       >
         <div className={cn(containerClassName, className)} style={containerStyles}>
@@ -302,7 +302,7 @@ export const ThreadContainer = memo(
 
           <LinearThreadContent messages={messages} contentHeight={contentHeight} />
 
-          <div className="mt-auto border-t border-gray-200 w-full max-w-[1024px] mx-auto">
+          <div className="mt-auto border-t border-gray-200 w-full max-w-[1024px] mx-auto dark:border-gray-700">
             <LaunchPad
               visible={true}
               inReflyPilot={true}

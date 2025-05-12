@@ -13,7 +13,7 @@ interface CustomEdgeData {
 const DeleteButton = ({ handleDelete }: { handleDelete: (e: React.MouseEvent) => void }) => {
   return (
     <div
-      className="flex items-center justify-center w-5 h-5 rounded-full bg-white border border-gray-200 cursor-pointer hover:bg-gray-50"
+      className="flex items-center justify-center w-5 h-5 rounded-full bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-700 cursor-pointer hover:bg-gray-50"
       onClick={handleDelete}
     >
       <IconDelete className="w-3 h-3 text-red-500" />
@@ -150,7 +150,7 @@ export const CustomEdge = memo(
               ) : (
                 label && (
                   <div
-                    className="nowheel px-2 py-1 text-[10px] text-center text-gray-700 bg-opacity-0 rounded cursor-pointer break-all"
+                    className="nowheel px-2 py-1 text-[10px] text-center text-gray-700 bg-opacity-0 rounded cursor-pointer break-all dark:text-gray-200"
                     onClick={handleLabelClick}
                   >
                     {label}

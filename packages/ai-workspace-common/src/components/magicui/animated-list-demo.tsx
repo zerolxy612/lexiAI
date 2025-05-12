@@ -151,7 +151,7 @@ const Notification = ({ name, description, icon, time }: Item) => {
       )}
     >
       <div className="flex flex-row items-center gap-3">
-        <div className="flex size-10 items-center justify-center rounded-2xl bg-white border border-gray-200">
+        <div className="flex size-10 items-center justify-center rounded-2xl bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-700">
           <img src={icon} alt={name} className="size-6" />
         </div>
         <div className="flex flex-col overflow-hidden">
