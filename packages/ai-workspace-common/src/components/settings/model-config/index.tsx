@@ -480,7 +480,7 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
         className={cn(
           isLoading || filteredModels.length === 0 ? 'flex items-center justify-center' : '',
           filteredModels.length === 0 ? 'p-4 border-dashed border-gray-200 rounded-md' : '',
-          'max-h-[400px] min-h-[50px] overflow-y-auto',
+          'min-h-[50px] overflow-y-auto',
         )}
       >
         {isLoading ? (
@@ -547,7 +547,7 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
         {t('settings.modelConfig.otherModels')}
       </Title>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 pb-8">
         <div className="flex items-center justify-between">
           <div>
             <div className="text-base font-medium">{t('settings.modelConfig.embedding')}</div>
