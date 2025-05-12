@@ -1,13 +1,14 @@
 name: Deploy Docs
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
 
 jobs:
   deploy:
-    name: Deploy
+    name: Deploy Docs
     runs-on: ubuntu-latest
     if: github.repository == 'refly-ai/refly'
     steps:
@@ -29,11 +30,11 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
-        working-directory: docs
+        working-directory: ./docs
 
       - name: Build
         run: pnpm build
-        working-directory: docs
+        working-directory: ./docs
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/pages-action@v1.5.0
@@ -42,5 +43,5 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: refly-docs
           branch: main
-          workingDirectory: docs
+          workingDirectory: ./docs
           directory: .vitepress/dist
