@@ -160,6 +160,21 @@ export type DeleteMcpServerRequest = {
   name: string;
 };
 
+export type McpServerTool = {
+  /**
+   * Tool name
+   */
+  name: string;
+  /**
+   * Tool description
+   */
+  description: string;
+};
+
+export type ValidateMcpServerResponse = BaseResponse & {
+  data?: Array<McpServerTool>;
+};
+
 export type DeleteMcpServerResponse = BaseResponse & {
   data?: null;
 };
@@ -4391,7 +4406,7 @@ export type ValidateMcpServerData = {
   body: UpsertMcpServerRequest;
 };
 
-export type ValidateMcpServerResponse = DeleteMcpServerResponse;
+export type ValidateMcpServerResponse2 = ValidateMcpServerResponse;
 
 export type ValidateMcpServerError = unknown;
 

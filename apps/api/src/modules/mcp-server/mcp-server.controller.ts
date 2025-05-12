@@ -10,6 +10,7 @@ import {
   McpServerType,
   UpsertMcpServerRequest,
   UpsertMcpServerResponse,
+  ValidateMcpServerResponse,
 } from '@refly/openapi-schema';
 import { buildSuccessResponse } from '@/utils/response';
 import { mcpServerPO2DTO } from './mcp-server.dto';
@@ -64,8 +65,8 @@ export class McpServerController {
   async validateMcpServer(
     @LoginedUser() user: UserModel,
     @Body() body: UpsertMcpServerRequest,
-  ): Promise<DeleteMcpServerResponse> {
-    await this.mcpServerService.validateMcpServer(user, body);
-    return buildSuccessResponse();
+  ): Promise<ValidateMcpServerResponse> {
+    const resp = await this.mcpServerService.validateMcpServer(user, body);
+    return buildSuccessResponse(resp);
   }
 }

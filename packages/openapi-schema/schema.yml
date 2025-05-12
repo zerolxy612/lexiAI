@@ -158,7 +158,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeleteMcpServerResponse'
+                $ref: '#/components/schemas/ValidateMcpServerResponse'
 
   /pages:
     get:
@@ -2829,6 +2829,31 @@ components:
         name:
           type: string
           description: MCP name to delete
+
+    McpServerTool:
+      type: object
+      required:
+        - name
+        - description
+      properties:
+        name:
+          type: string
+          description: Tool name
+          example: tool_name
+        description:
+          type: string
+          description: Tool description
+          example: This tool does something useful
+
+    ValidateMcpServerResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/McpServerTool'
 
     DeleteMcpServerResponse:
       allOf:

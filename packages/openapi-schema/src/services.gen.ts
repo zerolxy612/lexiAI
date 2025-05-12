@@ -21,7 +21,7 @@ import type {
   DeleteMcpServerResponse2,
   ValidateMcpServerData,
   ValidateMcpServerError,
-  ValidateMcpServerResponse,
+  ValidateMcpServerResponse2,
   ListPagesData,
   ListPagesError,
   ListPagesResponse2,
@@ -422,7 +422,7 @@ export const validateMcpServer = <ThrowOnError extends boolean = false>(
   options: Options<ValidateMcpServerData, ThrowOnError>,
 ) => {
   return (options?.client ?? client).post<
-    ValidateMcpServerResponse,
+    ValidateMcpServerResponse2,
     ValidateMcpServerError,
     ThrowOnError
   >({

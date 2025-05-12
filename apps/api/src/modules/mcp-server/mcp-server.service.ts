@@ -367,10 +367,7 @@ export class McpServerService {
    * @param timeoutMs - Connection timeout in milliseconds
    * @returns Promise that resolves if connection is successful
    */
-  private async testMcpConnection(
-    config: Record<string, Connection>,
-    timeoutMs = 10000,
-  ): Promise<void> {
+  private async testMcpConnection(config: Record<string, Connection>, timeoutMs = 10000) {
     if (Object.keys(config).length === 0) {
       throw new ParamsError('Invalid server configuration');
     }
@@ -397,6 +394,8 @@ export class McpServerService {
 
       // Close connection if successful
       await client.close();
+
+      return tools?.map((item) => ({ name: item.name, description: item.description })) || [];
     } catch (error) {
       // Ensure client is closed even if connection fails
       await client.close().catch(() => {
@@ -433,11 +432,9 @@ export class McpServerService {
       // Create client configuration using the shared utility function
       const serverConfig = createMcpClientConfig(param);
 
-      // Test connection
-      await this.testMcpConnection(serverConfig);
-
       this.logger.log(`MCP server "${name || 'unnamed server'}" connection validated successfully`);
-      return true;
+      // Test connection
+      return this.testMcpConnection(serverConfig);
     } catch (error) {
       this.logger.error(`MCP server validation failed: ${error.message}`, error.stack);
       throw new ParamsError(`MCP server validation failed: ${error.message}`);

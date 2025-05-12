@@ -234,6 +234,42 @@ export const DeleteMcpServerRequestSchema = {
   },
 } as const;
 
+export const McpServerToolSchema = {
+  type: 'object',
+  required: ['name', 'description'],
+  properties: {
+    name: {
+      type: 'string',
+      description: 'Tool name',
+      example: 'tool_name',
+    },
+    description: {
+      type: 'string',
+      description: 'Tool description',
+      example: 'This tool does something useful',
+    },
+  },
+} as const;
+
+export const ValidateMcpServerResponseSchema = {
+  allOf: [
+    {
+      $ref: '#/components/schemas/BaseResponse',
+    },
+    {
+      type: 'object',
+      properties: {
+        data: {
+          type: 'array',
+          items: {
+            $ref: '#/components/schemas/McpServerTool',
+          },
+        },
+      },
+    },
+  ],
+} as const;
+
 export const DeleteMcpServerResponseSchema = {
   allOf: [
     {
