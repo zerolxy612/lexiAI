@@ -256,7 +256,7 @@ export class Agent extends BaseSkill {
   ): Promise<Partial<GraphState>> => {
     const { currentSkill, user } = config.configurable;
 
-    const { model, toolNode, mcpTools } = await this.setupAgent(user);
+    const { model, toolNode } = await this.setupAgent(user);
 
     // Extract projectId and customInstructions from project
     const project = config.configurable?.project as
@@ -271,7 +271,6 @@ export class Agent extends BaseSkill {
       buildSystemPrompt: () =>
         buildSystemPrompt(
           "You are an advanced AI assistant with specialized expertise in leveraging the Model Context Protocol (MCP) to solve complex problems efficiently. Your intelligence manifests through precise tool orchestration, context-aware execution, and proactive optimization of MCP server capabilities. If an MCP server call fails or returns malformed data, you must continuously retry until achieving the user's expected outcome — never abandon the operation prematurely.",
-          mcpTools as any,
         ),
       buildContextUserPrompt: commonQnA.buildCommonQnAContextUserPrompt,
       buildUserPrompt: commonQnA.buildCommonQnAUserPrompt,
