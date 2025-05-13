@@ -458,9 +458,9 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
 
         <div
           className={cn(
-            'flex-shrink-0 h-10 my-1 mx-2 flex items-center justify-between pl-6 pr-3 text-gray-600 hover:bg-gray-100 cursor-pointer rounded-lg dark:text-gray-400 dark:hover:bg-gray-700',
+            'flex-shrink-0 h-10 my-1 mx-2 flex items-center justify-between pl-6 pr-3 text-gray-600 hover:bg-gray-100 cursor-pointer rounded-lg dark:text-gray-400 dark:bg-gray-900 dark:hover:bg-gray-700',
             {
-              'bg-gray-100': isHome,
+              'bg-gray-100 dark:bg-gray-700': isHome,
             },
           )}
           onClick={() => navigate('/')}
@@ -558,7 +558,7 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
                 <SubMenu
                   key={section.key}
                   title={sectionTitle}
-                  className="ant-menu-submenu-adaptive overflow-hidden"
+                  className="ant-menu-submenu-adaptive overflow-hidden border-t-1 border-b-0 border-x-0 border-solid border-gray-100 !rounded-none mx-2 dark:border-gray-800"
                   onTitleClick={() => {
                     if (section.onClick) section.onClick();
                   }}

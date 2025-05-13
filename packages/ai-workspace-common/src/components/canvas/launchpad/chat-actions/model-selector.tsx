@@ -103,8 +103,8 @@ const SettingsButton = memo(
 
     return (
       <div onClick={handleClick} className="text-xs flex items-center gap-2 group">
-        <LuSettings2 className="text-sm text-gray-500 group-hover:text-gray-700 flex items-center" />
-        <div className="text-xs flex items-center gap-1.5 text-gray-500 hover:text-gray-700">
+        <LuSettings2 className="text-sm text-gray-500 flex items-center" />
+        <div className="text-xs flex items-center gap-1.5 text-gray-500">
           {t('copilot.modelSelector.configureModel')}
         </div>
       </div>

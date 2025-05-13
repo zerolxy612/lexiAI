@@ -285,7 +285,7 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
               {presetScenarios.map((scenario) => (
                 <div
                   key={scenario.id}
-                  className={`bg-white/90 backdrop-blur-sm rounded-md ring-1 dark:bg-gray-900/90 ${
+                  className={`bg-white/90 backdrop-blur-sm rounded-md ring-1 dark:bg-gray-800/90 ${
                     activeScenarioId === scenario.id
                       ? 'ring-green-500'
                       : 'ring-gray-200 dark:ring-gray-700'
