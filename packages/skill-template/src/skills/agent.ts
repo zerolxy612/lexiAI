@@ -190,18 +190,7 @@ export class Agent extends BaseSkill {
     return { requestMessages, sources };
   };
 
-  private _cachedSetup: {
-    model: any;
-    toolNode: ToolNode;
-    mcpTools: any[];
-  } | null = null;
-
   async setupAgent(user) {
-    // Return cached setup if available
-    if (this._cachedSetup) {
-      return this._cachedSetup;
-    }
-
     // Create document with generated title
     const mcpServersResponse = await this.engine.service.listMcpServers(user, {
       enabled: true,
@@ -236,10 +225,7 @@ export class Agent extends BaseSkill {
       const model = this.engine.chatModel({ temperature: 0.1 }).bindTools(mcpTools);
       const toolNode = new ToolNode(mcpTools);
 
-      // Cache the setup
-      this._cachedSetup = { model, toolNode, mcpTools };
-
-      return this._cachedSetup;
+      return { model, toolNode, mcpTools, client };
     } catch (error) {
       this.engine.logger.error('Error during MCP setup:', error);
       if (error instanceof Error) {
@@ -255,8 +241,6 @@ export class Agent extends BaseSkill {
     config: SkillRunnableConfig,
   ): Promise<Partial<GraphState>> => {
     const { currentSkill, user } = config.configurable;
-
-    const { model, toolNode } = await this.setupAgent(user);
 
     // Extract projectId and customInstructions from project
     const project = config.configurable?.project as
@@ -307,47 +291,52 @@ export class Agent extends BaseSkill {
 
     console.log('\n=== CREATING LANGGRAPH AGENT FLOW ===');
 
-    // Define LLM node function
-    const llmNode = async (nodeState: typeof MessagesAnnotation.State) => {
-      console.log('Calling LLM with messages:', nodeState.messages.length);
-      const response = await model.invoke(nodeState.messages);
-      return { messages: [response] };
-    };
+    const { model, toolNode, client } = await this.setupAgent(user);
 
-    // Create workflow
-    const workflow = new StateGraph(MessagesAnnotation)
-      .addNode('llm', llmNode)
-      .addNode('tools', toolNode)
-      .addEdge(START, 'llm')
-      .addEdge('tools', 'llm')
-      .addConditionalEdges('llm', (graphState) => {
-        const lastMessage = graphState.messages[graphState.messages.length - 1];
-        const aiMessage = lastMessage as AIMessage;
-        if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
-          console.log('Tool calls detected, routing to tools node');
-          return 'tools';
-        }
-        console.log('No tool calls, ending the workflow');
-        return END;
-      });
+    try {
+      // Define LLM node function
+      const llmNode = async (nodeState: typeof MessagesAnnotation.State) => {
+        console.log('Calling LLM with messages:', nodeState.messages.length);
+        const response = await model.invoke(nodeState.messages);
+        return { messages: [response] };
+      };
 
-    // Compile and execute workflow
-    const app = workflow.compile();
+      // Create workflow
+      const workflow = new StateGraph(MessagesAnnotation)
+        .addNode('llm', llmNode)
+        .addNode('tools', toolNode)
+        .addEdge(START, 'llm')
+        .addEdge('tools', 'llm')
+        .addConditionalEdges('llm', (graphState) => {
+          const lastMessage = graphState.messages[graphState.messages.length - 1];
+          const aiMessage = lastMessage as AIMessage;
+          if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
+            console.log('Tool calls detected, routing to tools node');
+            return 'tools';
+          }
+          console.log('No tool calls, ending the workflow');
+          return END;
+        });
 
-    const result = await app.invoke(
-      { messages: requestMessages },
-      {
-        ...config,
-        metadata: {
-          ...config.metadata,
-          ...currentSkill,
+      // Compile and execute workflow
+      const app = workflow.compile();
+
+      const result = await app.invoke(
+        { messages: requestMessages },
+        {
+          ...config,
+          recursionLimit: 100,
+          metadata: {
+            ...config.metadata,
+            ...currentSkill,
+          },
         },
-      },
-    );
+      );
 
-    console.log('result', result);
-
-    return { messages: result.messages };
+      return { messages: result.messages };
+    } finally {
+      client.close();
+    }
   };
 
   toRunnable(): Runnable {

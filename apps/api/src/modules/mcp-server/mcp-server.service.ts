@@ -374,7 +374,6 @@ export class McpServerService {
 
     // Create MCP client and attempt to initialize connection
     const client = new MultiServerMCPClient(config);
-
     // Set timeout to avoid long waits
     const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(() => reject(new Error('Connection timeout')), timeoutMs);
