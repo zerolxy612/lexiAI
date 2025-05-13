@@ -88,7 +88,7 @@ export const SiderLogo = (props: {
           onClick={() => navigate('/')}
         >
           <img src={Logo} alt="Refly" className="h-8 w-8" />
-          <span className="text-xl font-bold text-black dark:text-gray-400" translate="no">
+          <span className="text-xl font-bold text-black dark:text-gray-100" translate="no">
             Refly
           </span>
         </div>
@@ -144,7 +144,7 @@ const SettingItem = () => {
           </div>
 
           {subscriptionEnabled && (
-            <div className="flex h-6 items-center justify-center rounded-full bg-gray-100 px-3 text-xs font-medium group-hover:bg-white dark:bg-gray-800 dark:group-hover:bg-gray-black">
+            <div className="flex h-6 items-center justify-center rounded-full bg-gray-100 px-3 text-xs font-medium group-hover:bg-white dark:bg-gray-800 dark:group-hover:bg-black">
               {t(`settings.subscription.subscriptionStatus.${planType}`)}
             </div>
           )}

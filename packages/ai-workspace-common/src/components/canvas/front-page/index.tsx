@@ -190,7 +190,7 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
             {t('frontPage.welcome')}
           </h3>
 
-          <div className="w-full backdrop-blur-sm rounded-lg shadow-sm ring-1 ring-gray-200 mx-2">
+          <div className="w-full backdrop-blur-sm rounded-lg shadow-sm ring-1 ring-gray-200 mx-2 dark:ring-gray-700">
             {subscriptionEnabled && !userProfile?.subscription && <PremiumBanner />}
             <div className="p-4">
               {selectedSkill && (
@@ -286,7 +286,9 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
                 <div
                   key={scenario.id}
                   className={`bg-white/90 backdrop-blur-sm rounded-md ring-1 dark:bg-gray-900/90 ${
-                    activeScenarioId === scenario.id ? 'ring-green-500' : 'ring-gray-200'
+                    activeScenarioId === scenario.id
+                      ? 'ring-green-500'
+                      : 'ring-gray-200 dark:ring-gray-700'
                   } py-2 px-3 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer`}
                   onClick={() =>
                     handlePresetScenario(scenario.id, scenario.skillName, scenario.query)

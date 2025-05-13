@@ -50,8 +50,8 @@ const UsageItem = ({
         <div className="title">
           <div className="title-left">
             {title}
-            <Tooltip color="white" title={<div style={{ color: '#000' }}>{description}</div>}>
-              <HiOutlineQuestionMarkCircle className="info-icon" />
+            <Tooltip color="white" title={<div className="dark:text-gray-800">{description}</div>}>
+              <HiOutlineQuestionMarkCircle className="info-icon dark:text-gray-400" />
             </Tooltip>
           </div>
           <div className="title-right">
@@ -158,7 +158,9 @@ export const Subscription = () => {
           />
         ) : (
           <>
-            <div className={`subscription-plan ${planType === 'free' ? 'free' : ''}`}>
+            <div
+              className={`subscription-plan dark:bg-gray-900/50 ${planType === 'free' ? 'free' : ''}`}
+            >
               <div className="subscription-plan-info">
                 <div className="subscription-plan-info-title">
                   {t('settings.subscription.currentPlan')}

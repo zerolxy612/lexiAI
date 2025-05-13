@@ -114,7 +114,7 @@ const PlanItem = (props: {
         ${title === 'max' && 'item-max bg-[#FFF5EB] dark:bg-[#33241A]'}
         `}
       >
-        <div className="subscribe-content-plans-item-title font-extrabold">
+        <div className="subscribe-content-plans-item-title font-extrabold dark:text-gray-100">
           {t(`settings.subscription.subscriptionStatus.${title}`)}
         </div>
 
@@ -124,7 +124,7 @@ const PlanItem = (props: {
 
         <div className="h-16">
           <div className="subscribe-content-plans-item-price">
-            <span className="price text-3xl">
+            <span className="price text-3xl dark:text-gray-100">
               {title !== 'free' ? (
                 <>
                   $
@@ -216,7 +216,9 @@ const PlanItem = (props: {
                 )}
               </div>
               {feature.count && (
-                <div className="ml-4 text-sm text-black font-medium">{feature.count}</div>
+                <div className="ml-4 text-sm text-black font-medium dark:text-gray-100">
+                  {feature.count}
+                </div>
               )}
               <div className="ml-4 text-xs text-gray-400">{feature.details}</div>
             </div>
@@ -227,7 +229,9 @@ const PlanItem = (props: {
             <div className="py-2 text-gray-600 dark:text-gray-300" key={index}>
               <FaLightbulb className="text-yellow-500 mr-1" size={12} />
               <span>{capability.before}</span>
-              <span className="font-bold text-black">{capability.highlight}</span>
+              <span className="font-bold text-black dark:text-gray-100">
+                {capability.highlight}
+              </span>
               <span>{capability.after}</span>
             </div>
           ))}

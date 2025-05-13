@@ -113,7 +113,7 @@ function Footer() {
                 <Link to="/" className="mb-4 inline-block no-underline" aria-label="Refly">
                   <div className="flex items-center gap-2">
                     <img src={Logo} alt="" className="h-8 w-8" />
-                    <span className="text-xl font-bold text-black">Refly</span>
+                    <span className="text-xl font-bold text-black dark:text-gray-100">Refly</span>
                   </div>
                 </Link>
                 <p className="mb-6 max-w-[320px] text-base leading-relaxed text-gray-600 dark:text-gray-300">
