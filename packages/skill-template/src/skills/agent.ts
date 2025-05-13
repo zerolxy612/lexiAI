@@ -222,7 +222,9 @@ export class Agent extends BaseSkill {
       );
 
       // Create model and tool node
-      const model = this.engine.chatModel({ temperature: 0.1 }).bindTools(mcpTools);
+      const model = this.engine
+        .chatModel({ temperature: 0.1 })
+        .bindTools(mcpTools, { strict: false } as never);
       const toolNode = new ToolNode(mcpTools);
 
       return { model, toolNode, mcpTools, client };
@@ -254,7 +256,14 @@ export class Agent extends BaseSkill {
     const module = {
       buildSystemPrompt: () =>
         buildSystemPrompt(
-          "You are an advanced AI assistant with specialized expertise in leveraging the Model Context Protocol (MCP) to solve complex problems efficiently. Your intelligence manifests through precise tool orchestration, context-aware execution, and proactive optimization of MCP server capabilities. If an MCP server call fails or returns malformed data, you must continuously retry until achieving the user's expected outcome — never abandon the operation prematurely.",
+          'You are an advanced AI assistant with specialized expertise in leveraging the Model Context Protocol (MCP) to solve complex problems efficiently. Your intelligence manifests through precise tool orchestration, context-aware execution, and proactive optimization of MCP server capabilities. ' +
+            'When a tool call is made, you will receive a ToolMessage with the result. ' +
+            'If an MCP server call fails or returns malformed data, the ToolMessage will contain the error details. ' +
+            'You MUST carefully analyze this error message. ' +
+            'If the error indicates incorrect arguments (e.g., missing parameters, invalid values, type mismatches), you MUST revise the arguments and attempt the tool call again. Do NOT repeat the previous mistake. ' +
+            'If the error seems to be a transient issue (e.g., network error, temporary unavailability), you should retry the call, perhaps after a brief conceptual pause. ' +
+            "You must continuously retry and adapt your approach to achieve the user's expected outcome. Never abandon the operation prematurely. " +
+            'After several (e.g., 3-5) persistent failures for the same tool call despite your best efforts to correct it, and if no alternative tools or approaches are viable, you may then inform the user about the specific difficulty encountered and suggest a different course of action or ask for clarification.',
         ),
       buildContextUserPrompt: commonQnA.buildCommonQnAContextUserPrompt,
       buildUserPrompt: commonQnA.buildCommonQnAUserPrompt,

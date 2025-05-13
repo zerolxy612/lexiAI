@@ -20,6 +20,7 @@ import {
 } from '@langchain/core/messages';
 import debug from 'debug';
 import { JSONSchemaToZod } from '@dmitryrechkin/json-schema-to-zod';
+import { z } from 'zod';
 
 // Replace direct initialization with lazy initialization
 let debugLog: debug.Debugger;
@@ -247,10 +248,12 @@ export async function loadMcpTools(
         .filter((tool: MCPTool) => !!tool.name)
         .map(async (tool: MCPTool) => {
           try {
+            const ss = JSONSchemaToZod.convert(tool.inputSchema) as any;
+
             const dst = new DynamicStructuredTool({
               name: `${toolNamePrefix}${tool.name}`,
               description: tool.description || '',
-              schema: JSONSchemaToZod.convert(tool.inputSchema),
+              schema: ss instanceof z.ZodObject || !!ss.strip ? ss.strip() : ss,
               responseFormat: 'content_and_artifact',
               func: _callTool.bind(
                 null,
@@ -259,7 +262,6 @@ export async function loadMcpTools(
                 client,
               ) as DynamicStructuredToolInput['func'],
             });
-            getDebugLog()(`INFO: Successfully loaded tool: ${dst.name}`);
             return dst;
           } catch (error) {
             getDebugLog()(`ERROR: Failed to load tool "${tool.name}":`, error);
