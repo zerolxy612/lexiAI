@@ -36,9 +36,12 @@ const SimpleReasoningContent = memo(
     return (
       <div className="mb-4">
         <div
-          className={cn('p-3 bg-gray-50 rounded-lg border border-gray-200 transition-all', {
-            'cursor-pointer hover:bg-gray-100': collapsed,
-          })}
+          className={cn(
+            'p-3 bg-gray-50 rounded-lg border border-gray-200 transition-all dark:bg-gray-950 dark:border-gray-700',
+            {
+              'cursor-pointer hover:bg-gray-100 dark:hover-gray-800': collapsed,
+            },
+          )}
         >
           {collapsed ? (
             <div
@@ -86,7 +89,7 @@ const SimpleActualContent = memo(({ content, sources }: { content: string; sourc
   if (!content) return null;
 
   return (
-    <div className="my-3 text-gray-600 text-base">
+    <div className="my-3 text-gray-600 text-base dark:text-gray-300">
       <Markdown content={content} sources={sources} mode="readonly" />
     </div>
   );
@@ -115,7 +118,7 @@ export const SimpleStepCard = memo(({ step, index }: { step: ActionStep; index: 
 
   return (
     <div className="flex flex-col gap-3 mb-6">
-      <div className="text-gray-600 text-sm flex items-center gap-2 font-medium border-b pb-2">
+      <div className="text-gray-600 text-sm flex items-center gap-2 font-medium border-b pb-2  dark:text-gray-300">
         <IconCheck className="h-4 w-4 text-green-500" />
         {t('canvas.skillResponse.stepTitle', { index })}{' '}
         {` · ${t(`${skillName}.steps.${step.name}.name`, { ns: 'skill', defaultValue: step.name })}`}

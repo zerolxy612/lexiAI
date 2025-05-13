@@ -45,7 +45,9 @@ const Render = memo<CanvasProps>((props: CanvasProps) => {
         <div className="flex-1 flex items-center p-3">
           <div className="flex-1 flex flex-col">
             <div className="flex items-center">
-              <span className="text-sm font-medium text-gray-800">{title || 'Code Artifact'}</span>
+              <span className="text-sm font-medium text-gray-800 dark:text-gray-100">
+                {title || 'Code Artifact'}
+              </span>
             </div>
 
             <div className="flex items-center text-xs text-gray-500 mt-0.5">

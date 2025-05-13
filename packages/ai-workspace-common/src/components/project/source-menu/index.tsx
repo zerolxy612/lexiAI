@@ -73,7 +73,7 @@ const AddSourceDropdown = memo(({ onAddSource, children }: AddSourceDropdownProp
         <Button
           type="default"
           size="small"
-          className="text-xs text-gray-600"
+          className="text-xs text-gray-600 dark:text-gray-300"
           icon={<IconPlus size={12} className="flex items-center justify-center" />}
         >
           {t('project.action.addSource', 'Add Source')}
@@ -220,7 +220,7 @@ const SourceItemActionDropdown = memo(
       {
         label: (
           <div className="flex items-center flex-grow">
-            <IconRemove size={16} className="mr-2 text-gray-600" />
+            <IconRemove size={16} className="mr-2 text-gray-600 dark:text-gray-300" />
             {t('project.action.remove', 'Remove from Project')}
           </div>
         ),
@@ -487,7 +487,7 @@ export const SourcesMenu = ({
         defaultActiveKey={['sources']}
         ghost
         expandIconPosition="end"
-        className="bg-white sources-collapse"
+        className="bg-white sources-collapse dark:bg-gray-900"
         items={[
           {
             key: 'sources',

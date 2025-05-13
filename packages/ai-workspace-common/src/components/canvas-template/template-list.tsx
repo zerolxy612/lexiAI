@@ -47,7 +47,7 @@ export const TemplateCard = ({
 
   return (
     <div
-      className={`${className} m-2 group relative bg-white rounded-lg overflow-hidden cursor-pointer shadow-sm hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 ease-in-out h-[245px]`}
+      className={`${className} m-2 group relative bg-white dark:bg-gray-900 rounded-lg overflow-hidden cursor-pointer shadow-sm hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 ease-in-out h-[245px]`}
     >
       {template?.featured && (
         <Tag color="green" className="absolute top-2 right-0 z-10 shadow-sm">
@@ -184,7 +184,7 @@ export const TemplateList = ({
   return (
     <div
       id={source === 'front-page' ? scrollableTargetId : undefined}
-      className={cn('w-full h-full overflow-y-auto bg-[#F8F9FA] p-4', className)}
+      className={cn('w-full h-full overflow-y-auto bg-[#F8F9FA] p-4 dark:bg-gray-900', className)}
     >
       <Spin className="spin" spinning={isRequesting && dataList.length === 0}>
         {dataList.length > 0 ? (

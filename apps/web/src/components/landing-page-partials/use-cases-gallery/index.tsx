@@ -96,7 +96,7 @@ const UseCasesGallery = memo(
         {showHeader && (
           <div className="mb-16 text-center">
             <span
-              className="mb-8 inline-flex items-center justify-center rounded-lg border border-solid border-black/10 bg-white px-6 py-2 font-['Alibaba_PuHuiTi_Bold',system-ui,-apple-system,sans-serif] text-sm"
+              className="mb-8 inline-flex items-center justify-center rounded-lg border border-solid border-black/10 bg-white px-6 py-2 font-['Alibaba_PuHuiTi_Bold',system-ui,-apple-system,sans-serif] text-sm dark:bg-gray-900"
               style={{
                 color: defaultHeader.color,
                 boxShadow: defaultHeader.tagShadow,
@@ -113,13 +113,13 @@ const UseCasesGallery = memo(
                 className="font-['Alibaba_PuHuiTi_Bold',system-ui,-apple-system,sans-serif]"
               >
                 <div className="mt-2">
-                  <span className="relative text-[#333333]">
+                  <span className="relative text-gray-700 dark:text-gray-200">
                     {title || defaultHeader.title[currentLang]}
-                    <span className="absolute bottom-0 left-0 h-1 w-full bg-[#333333]" />
+                    <span className="absolute bottom-0 left-0 h-1 w-full bg-gray-700 dark:bg-gray-200" />
                   </span>
                 </div>
               </Title>
-              <Paragraph className="mx-auto mt-4 max-w-3xl text-center text-gray-500">
+              <Paragraph className="mx-auto mt-4 max-w-3xl text-center text-gray-500 dark:text-gray-400">
                 {description || defaultHeader.description[currentLang]}
               </Paragraph>
             </section>
@@ -180,23 +180,23 @@ const UseCasesGallery = memo(
                   >
                     {useCase.title[currentLang]}
                   </Title>
-                  <Paragraph className="!mb-4 text-gray-600 line-clamp-2 flex-grow">
+                  <Paragraph className="!mb-4 text-gray-600 dark:text-gray-300 line-clamp-2 flex-grow">
                     {useCase.description[currentLang]}
                   </Paragraph>
                   {useCase.authorEmail && (
-                    <div className="text-sm text-gray-400 mt-auto">
+                    <div className="text-sm text-gray-400 mt-auto dark:text-gray-500">
                       {currentLang === 'zh-CN' ? '来自' : 'From'} {useCase.authorEmail}
                     </div>
                   )}
                 </div>
                 {/* Hover Overlay */}
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center dark:bg-white/50">
                   <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
                     <Button
                       type="primary"
                       shape="round"
                       size="large"
-                      className="bg-white text-black hover:bg-white/90 border-none shadow-[0_4px_12px_rgba(255,255,255,0.4)]"
+                      className="bg-white text-black hover:bg-white/90 border-none shadow-[0_4px_12px_rgba(255,255,255,0.4)] dark:bg-gray-900 dark:text-white dark:hover:bg-gray-900/90"
                     >
                       {currentLang === 'zh-CN' ? '查看详情' : 'View Details'}
                     </Button>

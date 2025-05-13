@@ -1687,7 +1687,15 @@ const translations = {
       defaultModel: '默认模型',
       account: '账号',
       language: '语言',
+      appearance: '外观',
       subscription: '订阅',
+    },
+    appearance: {
+      title: '外观设置',
+      themeMode: '主题模式',
+      lightMode: '浅色模式',
+      darkMode: '深色模式',
+      systemMode: '跟随系统',
     },
     guide: {
       title: '设置向导',

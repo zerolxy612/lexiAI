@@ -22,7 +22,7 @@ const CanvasPage = () => {
           <SiderPopover>
             <Button
               type="text"
-              icon={<AiOutlineMenuUnfold size={16} className="text-gray-500" />}
+              icon={<AiOutlineMenuUnfold size={16} className="text-gray-500 dark:text-gray-400" />}
               onClick={() => {
                 setCollapse(!collapse);
               }}

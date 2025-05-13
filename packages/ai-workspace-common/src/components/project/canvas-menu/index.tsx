@@ -65,7 +65,7 @@ const AddCanvasDropdown = ({
           <Button
             type="default"
             size="small"
-            className="text-xs text-gray-600"
+            className="text-xs text-gray-600 dark:text-gray-300"
             icon={<IconPlus size={12} className="flex items-center justify-center" />}
           >
             {t('project.action.addCanvas')}
@@ -262,7 +262,7 @@ export const CanvasMenu = ({
       defaultActiveKey={['canvas']}
       ghost
       expandIconPosition="end"
-      className="bg-white custom-collapse"
+      className="bg-white custom-collapse dark:bg-gray-900"
       items={[
         {
           key: 'canvas',

@@ -512,8 +512,8 @@ export function SlideshowEdit(props: PageEditProps) {
 
     if (pageLoadError) {
       return (
-        <div className="flex flex-col items-center justify-center h-[400px] bg-white rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-all shadow-sm hover:shadow-md">
-          <div className="w-16 h-16 flex items-center justify-center rounded-full bg-gray-50 mb-4">
+        <div className="flex flex-col items-center justify-center h-[400px] bg-white rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-all shadow-sm hover:shadow-md dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-gray-950">
+          <div className="w-16 h-16 flex items-center justify-center rounded-full bg-gray-50 dark:bg-gray-950 mb-4">
             <FileTextOutlined style={{ fontSize: '28px', color: '#bfbfbf' }} />
           </div>
           <p className="text-gray-500 font-medium">{t('common.emptyContent', 'No content')}</p>
@@ -524,14 +524,18 @@ export function SlideshowEdit(props: PageEditProps) {
     if (!pageDetail) {
       return (
         <div
-          className="flex flex-col items-center justify-center h-[400px] bg-white rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-all shadow-sm hover:shadow-md"
+          className="flex flex-col items-center justify-center h-[400px] bg-white rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-all shadow-sm hover:shadow-md dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-gray-950"
           onClick={handleOpenEmptyContentModal}
         >
-          <div className="w-16 h-16 flex items-center justify-center rounded-full bg-gray-50 mb-4">
+          <div className="w-16 h-16 flex items-center justify-center rounded-full bg-gray-50 dark:bg-gray-950 mb-4">
             <FileTextOutlined style={{ fontSize: '28px', color: '#bfbfbf' }} />
           </div>
-          <p className="text-gray-500 font-medium">{t('common.emptyContent', 'No content')}</p>
-          <p className="text-gray-400 text-sm mt-1">{t('common.clickToAdd', 'Click to add')}</p>
+          <p className="text-gray-500 font-medium dark:text-gray-400">
+            {t('common.emptyContent', 'No content')}
+          </p>
+          <p className="text-gray-400 text-sm mt-1 dark:text-gray-500">
+            {t('common.clickToAdd', 'Click to add')}
+          </p>
         </div>
       );
     }
@@ -574,9 +578,9 @@ export function SlideshowEdit(props: PageEditProps) {
                   // Use content-block-ID for consistency
                   handleCardClick(`content-block-${index}`);
                 }}
-                className={`transition-all duration-300 h-[400px] rounded-lg bg-white ${
+                className={`transition-all duration-300 h-[400px] rounded-lg bg-white dark:bg-gray-900 ${
                   activeNodeIndex === index
-                    ? 'shadow-[0_10px_30px_rgba(0,0,0,0.15)] transform -translate-y-1 border border-blue-400'
+                    ? 'shadow-[0_10px_30px_rgba(0,0,0,0.15)] transform -translate-y-1 border border-blue-400 dark:border-blue-500'
                     : 'shadow-md hover:shadow-lg'
                 }`}
               >
@@ -592,14 +596,18 @@ export function SlideshowEdit(props: PageEditProps) {
           </div>
         ) : (
           <div
-            className="flex flex-col items-center justify-center h-[400px] bg-white rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-all shadow-sm hover:shadow-md"
+            className="flex flex-col items-center justify-center h-[400px] bg-white rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-all shadow-sm hover:shadow-md  dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-gray-950"
             onClick={handleOpenEmptyContentModal}
           >
-            <div className="w-16 h-16 flex items-center justify-center rounded-full bg-gray-50 mb-4">
+            <div className="w-16 h-16 flex items-center justify-center rounded-full bg-gray-50 dark:bg-gray-950 mb-4">
               <FileTextOutlined style={{ fontSize: '28px', color: '#bfbfbf' }} />
             </div>
-            <p className="text-gray-500 font-medium">{t('common.emptyContent', 'No content')}</p>
-            <p className="text-gray-400 text-sm mt-1">{t('common.clickToAdd', 'Click to add')}</p>
+            <p className="text-gray-500 font-medium dark:text-gray-400">
+              {t('common.emptyContent', 'No content')}
+            </p>
+            <p className="text-gray-400 text-sm mt-1 dark:text-gray-500">
+              {t('common.clickToAdd', 'Click to add')}
+            </p>
           </div>
         )}
       </div>
@@ -707,11 +715,11 @@ export function SlideshowEdit(props: PageEditProps) {
                 onClick={handleBack}
                 icon={<ArrowLeftOutlined />}
                 type="text"
-                className="mr-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 flex-shrink-0"
+                className="mr-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 flex-shrink-0 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
               />
             )}
 
-            <div className="text-xl font-semibold text-gray-800 mr-2 truncate">
+            <div className="text-xl font-semibold text-gray-800 mr-2 truncate dark:text-gray-100">
               {pageDetail?.title || t('common.untitled')}
             </div>
           </div>
@@ -723,7 +731,7 @@ export function SlideshowEdit(props: PageEditProps) {
                 size={minimalMode ? 'small' : 'middle'}
                 onClick={handleAddNode}
                 icon={<PlusOutlined />}
-                className={`flex items-center text-gray-600 hover:!text-green-600 hover:bg-gray-50 ${
+                className={`flex items-center text-gray-600 hover:!text-green-600 hover:bg-gray-50 dark:hover:bg-gray-950 dark:text-gray-300 dark:hover:!text-green-300 ${
                   minimalMode ? 'text-xs' : ''
                 }`}
               >
@@ -736,7 +744,7 @@ export function SlideshowEdit(props: PageEditProps) {
                 size={minimalMode ? 'small' : 'middle'}
                 onClick={handleShare}
                 icon={<ShareAltOutlined />}
-                className={`flex items-center text-gray-600 hover:!text-green-600 hover:bg-gray-50 ${
+                className={`flex items-center text-gray-600 hover:!text-green-600 hover:bg-gray-50 dark:hover:bg-gray-950 dark:text-gray-300 dark:hover:!text-green-300 ${
                   minimalMode ? 'text-xs' : ''
                 }`}
               >
@@ -750,7 +758,7 @@ export function SlideshowEdit(props: PageEditProps) {
                   size={minimalMode ? 'small' : 'middle'}
                   onClick={togglePreviewMode}
                   icon={<PlayCircleOutlined />}
-                  className={`flex items-center text-gray-600 hover:!text-green-600 hover:bg-gray-50 ${
+                  className={`flex items-center text-gray-600 hover:!text-green-600 hover:bg-gray-50 dark:hover:bg-gray-950 dark:text-gray-300 dark:hover:!text-green-300 ${
                     minimalMode ? 'text-xs' : ''
                   }`}
                 >
@@ -769,7 +777,8 @@ export function SlideshowEdit(props: PageEditProps) {
       <Modal
         title={
           <div className="flex items-center text-lg font-medium">
-            <PlusOutlined className="mr-2 text-blue-500" /> {t('common.addContent', 'Add Content')}
+            <PlusOutlined className="mr-2 text-blue-500 dark:text-blue-400" />{' '}
+            {t('common.addContent', 'Add Content')}
           </div>
         }
         open={emptyContentModalVisible}
@@ -787,7 +796,9 @@ export function SlideshowEdit(props: PageEditProps) {
         maskClosable={true}
         centered={false}
         destroyOnClose={true}
-        closeIcon={<CloseCircleOutlined className="text-gray-400 hover:text-gray-600" />}
+        closeIcon={
+          <CloseCircleOutlined className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300" />
+        }
       >
         <div className="flex flex-col" style={{ height: '75vh' }}>
           <EmptyContentPrompt
@@ -809,7 +820,8 @@ export function SlideshowEdit(props: PageEditProps) {
         centered
         title={
           <div className="flex items-center text-lg font-medium">
-            <ShareAltOutlined className="mr-2 text-green-500" /> {t('common.shareLink')}
+            <ShareAltOutlined className="mr-2 text-green-500 dark:text-green-400" />{' '}
+            {t('common.shareLink')}
           </div>
         }
         open={shareModalVisible}
@@ -821,7 +833,7 @@ export function SlideshowEdit(props: PageEditProps) {
       >
         <div className="py-2">
           <div className="mb-4">
-            <div className="text-gray-700 mb-2">{t('common.whoCanView')}</div>
+            <div className="text-gray-700 mb-2 dark:text-gray-200">{t('common.whoCanView')}</div>
             <Select
               value={shareOption}
               onChange={(value) => setShareOption(value)}
@@ -831,7 +843,7 @@ export function SlideshowEdit(props: PageEditProps) {
                   value: 'internet',
                   label: (
                     <div className="flex items-center">
-                      <GlobalOutlined className="mr-2 text-green-500" />
+                      <GlobalOutlined className="mr-2 text-green-500 dark:text-green-400" />
                       {t('common.internetUsers')}
                     </div>
                   ),
@@ -840,7 +852,7 @@ export function SlideshowEdit(props: PageEditProps) {
                   value: 'notEnabled',
                   label: (
                     <div className="flex items-center">
-                      <UserOutlined className="mr-2 text-gray-500" />
+                      <UserOutlined className="mr-2 text-gray-500 dark:text-gray-400" />
                       {t('common.notEnabled')}
                     </div>
                   ),
@@ -857,27 +869,31 @@ export function SlideshowEdit(props: PageEditProps) {
               icon={<ShareAltOutlined />}
               onClick={handleShareSubmit}
               loading={isSharing}
-              className="bg-green-600 hover:bg-green-700 border-none mt-2"
+              className="bg-green-600 hover:bg-green-700 border-none mt-2 dark:bg-green-300 dark:hover:bg-green-200"
             >
               {t('common.copyShareLink')}
             </Button>
           ) : (
             <div className="mt-4">
-              <div className="text-gray-700 mb-2">{t('common.shareUrl')}</div>
+              <div className="text-gray-700 mb-2 dark:text-gray-200">{t('common.shareUrl')}</div>
               <div className="flex items-center">
-                <Input value={shareUrl} readOnly className="flex-1 bg-gray-50" />
+                <Input value={shareUrl} readOnly className="flex-1 bg-gray-50 dark:-g-gray-950" />
                 <Button
                   type="primary"
                   icon={<CopyOutlined />}
                   onClick={handleCopyShareUrl}
                   className={`ml-2 flex items-center justify-center h-[32px] ${
-                    isCopied ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'
+                    isCopied
+                      ? 'bg-green-600 hover:bg-green-700 dark:bg-green-300 dark:hover:bg-green-200'
+                      : 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-300 dark:hover:bg-blue-200'
                   } border-none`}
                 >
                   {isCopied ? t('common.copied') : t('common.copy.title')}
                 </Button>
               </div>
-              <div className="mt-4 text-gray-500 text-sm">{t('common.shareUrlDesc')}</div>
+              <div className="mt-4 text-gray-500 dark:bg-gray-400 text-sm ">
+                {t('common.shareUrlDesc')}
+              </div>
             </div>
           )}
         </div>
@@ -898,10 +914,12 @@ export function SlideshowEdit(props: PageEditProps) {
           borderRadius: '8px',
         }}
         className="wide-mode-modal"
-        closeIcon={<CloseCircleOutlined className="text-gray-500 hover:text-red-500" />}
+        closeIcon={
+          <CloseCircleOutlined className="text-gray-500 hover:text-red-500 dark:bg-gray-400 dark:hover:text-red-400" />
+        }
         maskStyle={{ background: 'rgba(0, 0, 0, 0.65)' }}
       >
-        <div className="bg-white h-full w-full flex flex-col rounded-lg overflow-hidden">
+        <div className="bg-white h-full w-full flex flex-col rounded-lg overflow-hidden dark:bg-gray-900">
           {/* Wide mode content */}
           <div className="flex-1 overflow-auto">
             {wideMode.nodeId && nodesList.find((n) => n.nodeId === wideMode.nodeId) ? (
@@ -918,7 +936,7 @@ export function SlideshowEdit(props: PageEditProps) {
               </div>
             ) : (
               <div className="flex items-center justify-center h-full">
-                <p className="text-gray-500">{t('common.wideModeLoadFailed')}</p>
+                <p className="text-gray-500 dark:bg-gray-400">{t('common.wideModeLoadFailed')}</p>
               </div>
             )}
           </div>

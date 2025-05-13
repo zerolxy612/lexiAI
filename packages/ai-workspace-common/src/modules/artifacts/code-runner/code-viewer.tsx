@@ -220,7 +220,7 @@ export default memo(
                   e.stopPropagation();
                   onTabChange?.('preview');
                 }}
-                className={`${activeTab === 'preview' ? 'bg-green-600' : 'text-gray-600'}`}
+                className={`${activeTab === 'preview' ? 'bg-green-600 dark:bg-green-500' : 'text-gray-600 dark:text-gray-300'}`}
                 size="small"
               >
                 {t('codeArtifact.tabs.preview')}
@@ -233,7 +233,7 @@ export default memo(
                   e.stopPropagation();
                   onTabChange?.('code');
                 }}
-                className={`${activeTab === 'code' ? 'bg-green-600' : 'text-gray-600'}`}
+                className={`${activeTab === 'code' ? 'bg-green-600 dark:bg-green-500' : 'text-gray-600 dark:text-gray-300'}`}
                 size="small"
               >
                 {t('codeArtifact.tabs.code')}
@@ -251,7 +251,9 @@ export default memo(
               icon={
                 <GoColumns
                   className={`size-4 ${
-                    layoutMode === 'split' ? 'text-green-600' : 'text-gray-600'
+                    layoutMode === 'split'
+                      ? 'text-green-600 dark:text-green-300'
+                      : 'text-gray-600 dark:text-gray-300'
                   }`}
                 />
               }
@@ -275,7 +277,7 @@ export default memo(
               icon={<FiCopy className="size-4" />}
               onClick={handleCopyCode}
               size="small"
-              className="text-gray-600 hover:text-blue-600"
+              className="text-gray-600 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300"
             />
           </Tooltip>
 
@@ -289,7 +291,7 @@ export default memo(
               icon={<FiDownload className="size-4" />}
               onClick={handleDownload}
               size="small"
-              className="text-gray-600 hover:text-blue-600"
+              className="text-gray-600 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300"
             />
           </Tooltip>
         </div>
@@ -300,7 +302,7 @@ export default memo(
     return (
       <div className="flex flex-col h-full border border-gray-200 bg-white">
         {/* Top header with main tab navigation */}
-        <div className="flex items-center justify-between h-12 border-b border-gray-200 bg-white py-2">
+        <div className="flex items-center justify-between h-12 border-b border-gray-200 bg-white py-2 dark:bg-gray-900 dark:border-gray-700">
           {renderTabs}
 
           <div className="flex items-center space-x-2">
@@ -312,7 +314,7 @@ export default memo(
                   icon={<FiShare2 className="size-4 text-green-600" />}
                   onClick={handleShare}
                   size="small"
-                  className="text-gray-600 hover:text-blue-600"
+                  className="text-gray-600 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300"
                 />
               </Tooltip>
             )}
@@ -324,7 +326,7 @@ export default memo(
                 onClick={handleRefresh}
                 disabled={isGenerating}
                 size="small"
-                className="text-gray-600 hover:text-blue-600"
+                className="text-gray-600 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300"
               />
             </Tooltip>
           </div>
@@ -333,7 +335,7 @@ export default memo(
         <Divider className="my-0" style={{ margin: 0, height: '1px' }} />
 
         {/* Breadcrumb and action buttons */}
-        <div className="flex justify-between items-center py-2 border-b border-gray-200 bg-white">
+        <div className="flex justify-between items-center py-2 border-b border-gray-200 bg-white dark:bg-gray-900 dark:border-gray-700">
           <div className="flex items-center space-x-2">
             {onTypeChange ? (
               <Select

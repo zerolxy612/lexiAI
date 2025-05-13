@@ -100,8 +100,8 @@ export default function MindMapRenderer({
 
   if (!parsedData) {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-4 text-gray-500 bg-gray-50">
-        <IconLoading className="h-3 w-3 animate-spin text-green-500 mb-2" />
+      <div className="flex flex-col items-center justify-center h-full p-4 text-gray-500 bg-gray-50 darkbg-gray-950 dark:text-gray-400">
+        <IconLoading className="h-3 w-3 animate-spin text-green-500 mb-2 dark:text-green-400" />
         <div>{t('canvas.nodes.mindMap.invalidMindMapData')}</div>
       </div>
     );

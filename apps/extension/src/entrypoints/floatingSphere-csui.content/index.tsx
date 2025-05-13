@@ -38,8 +38,6 @@ export default defineContentScript({
               token: {
                 colorPrimary: '#00968F',
                 borderRadius: 6,
-                controlItemBgActive: '#f1f1f0',
-                controlItemBgActiveHover: '#e0e0e0',
               },
             }}
           >

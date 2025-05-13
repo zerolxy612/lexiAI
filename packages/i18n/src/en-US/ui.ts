@@ -1894,7 +1894,15 @@ const translations = {
       defaultModel: 'Default Model',
       account: 'Account',
       language: 'Language',
+      appearance: 'Appearance',
       subscription: 'Subscription',
+    },
+    appearance: {
+      title: 'Appearance Settings',
+      themeMode: 'Theme Mode',
+      lightMode: 'Light Mode',
+      darkMode: 'Dark Mode',
+      systemMode: 'System Mode',
     },
     account: {
       title: 'My Account',

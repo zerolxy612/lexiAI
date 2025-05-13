@@ -23,17 +23,20 @@ export function Home({
       {data?.map((item) => (
         <Item
           key={item.data.entityId}
-          className={classNames(item?.isSelected ? 'selected' : '', 'search-res-item')}
+          className={classNames(
+            item?.isSelected ? 'selected' : '',
+            'search-res-item dark:text-gray-200 dark:hover:bg-gray-700',
+          )}
           value={`${item?.data?.title}__${item?.data?.entityId}`}
           activeValue={activeValue}
           onSelect={() => {
             item?.onItemClick(item.data);
           }}
         >
-          <span className="search-res-icon">{item?.icon}</span>
+          <span className="search-res-icon dark:text-gray-300">{item?.icon}</span>
           <div className="search-res-container">
             <p
-              className="search-res-title"
+              className="search-res-title dark:!text-gray-200"
               // biome-ignore lint/security/noDangerouslySetInnerHtml: trust server highlights
               dangerouslySetInnerHTML={{ __html: item?.data?.title ?? '' }}
               title={item?.data?.title?.replace(/<[^>]*>/g, '')}

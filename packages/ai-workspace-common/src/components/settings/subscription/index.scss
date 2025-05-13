@@ -59,6 +59,7 @@
     background: #fff;
     border-radius: 12px;
     box-shadow: rgba(0, 0, 0, 0.06) 5px 7px 12px 0px;
+    @apply dark:bg-gray-800 dark:border-gray-700;
 
     &-item {
       margin-bottom: 28px;
@@ -68,6 +69,7 @@
           align-items: center;
           justify-content: space-between;
           color: rgb(71, 84, 103);
+          @apply dark:text-gray-200;
 
           .title-left {
             display: flex;
@@ -82,6 +84,7 @@
             line-height: 16px;
             color: #666;
             text-align: right;
+            @apply dark:text-gray-400;
           }
 
           .info-icon {

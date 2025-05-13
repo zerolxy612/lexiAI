@@ -30,7 +30,7 @@ function Modal({ children, id, ariaLabel, show, handleClose }) {
     <>
       {/* Modal backdrop */}
       <Transition
-        className="fixed inset-0 z-50 bg-black bg-opacity-75 transition-opacity"
+        className="fixed inset-0 z-50 bg-black bg-opacity-75 transition-opacit dark:bg-white"
         show={show}
         enter="transition ease-out duration-200"
         enterStart="opacity-0"
@@ -56,7 +56,10 @@ function Modal({ children, id, ariaLabel, show, handleClose }) {
         leaveStart="opacity-100 scale-100"
         leaveEnd="opacity-0 scale-95"
       >
-        <div className="max-h-full w-full max-w-7xl overflow-auto bg-white" ref={modalContent}>
+        <div
+          className="max-h-full w-full max-w-7xl overflow-auto bg-white dark:bg-black"
+          ref={modalContent}
+        >
           {children}
         </div>
       </Transition>

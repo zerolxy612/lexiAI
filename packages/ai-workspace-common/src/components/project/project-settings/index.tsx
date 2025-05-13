@@ -97,7 +97,7 @@ export const ProjectSettings = ({
           {data?.coverUrl ? (
             <img src={data?.coverUrl} alt="Refly" className="w-10 h-10 rounded-md" />
           ) : (
-            <div className="w-10 h-10 rounded-md bg-gray-100 flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-md bg-gray-100 flex items-center justify-center flex-shrink-0 dark:bg-gray-800">
               <SlPicture size={24} className="text-gray-500" />
             </div>
           )}
@@ -127,13 +127,13 @@ export const ProjectSettings = ({
         </div>
 
         <Paragraph
-          className="text-xs p-1 !my-2 bg-gray-50 text-gray-400 rounded-md"
+          className="text-xs p-1 !my-2 bg-gray-50 text-gray-400 rounded-md dark:bg-gray-800 dark:text-gray-500"
           ellipsis={{ rows: 1, tooltip: { placement: 'right' } }}
         >
           {data?.description || t('project.noDescription')}
         </Paragraph>
 
-        <div className="flex items-center justify-between gap-2 text-xs text-gray-600">
+        <div className="flex items-center justify-between gap-2 text-xs text-gray-600 dark:text-gray-300">
           <span>{t('project.customInstructions')}</span>
           <Button
             type="text"

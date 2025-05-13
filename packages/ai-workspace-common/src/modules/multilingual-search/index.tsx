@@ -57,10 +57,10 @@ function MultilingualSearch() {
             </>
           ) : (
             <>
-              <span className="menu-item-icon flex items-center justify-center">
+              <span className="menu-item-icon flex items-center justify-center text-white dark:text-dark">
                 <TbWorldSearch className="text-lg" />
               </span>
-              <span className="intergration-header-title">
+              <span className="intergration-header-title text-white dark:text-dark">
                 {t('resource.import.fromWebSearch')}
               </span>
             </>

@@ -172,7 +172,7 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
         )}
       />
       <div
-        className="w-full h-full flex bg-white/90 overflow-y-auto"
+        className="w-full h-full flex bg-white/90 overflow-y-auto dark:bg-gray-900/90"
         id="front-page-scrollable-div"
       >
         <div
@@ -183,14 +183,14 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
         >
           <h3
             className={cn(
-              'text-3xl font-bold text-center text-gray-800 mb-6 mx-2',
+              'text-3xl font-bold text-center text-gray-800 mb-6 mx-2 dark:text-gray-100',
               canvasTemplateEnabled ? 'mt-48' : '',
             )}
           >
             {t('frontPage.welcome')}
           </h3>
 
-          <div className="w-full backdrop-blur-sm rounded-lg shadow-sm ring-1 ring-gray-200 mx-2">
+          <div className="w-full backdrop-blur-sm rounded-lg shadow-sm ring-1 ring-gray-200 mx-2 dark:ring-gray-700">
             {subscriptionEnabled && !userProfile?.subscription && <PremiumBanner />}
             <div className="p-4">
               {selectedSkill && (
@@ -199,7 +199,7 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
                     <div className="w-6 h-6 rounded bg-[#6172F3] shadow-lg flex items-center justify-center flex-shrink-0">
                       {getSkillIcon(selectedSkill.name, 'w-4 h-4 text-white')}
                     </div>
-                    <span className="text-sm font-medium leading-normal text-[rgba(0,0,0,0.8)] truncate">
+                    <span className="text-sm font-medium leading-normal text-[rgba(0,0,0,0.8)] truncate dark:text-[rgba(225,225,225,0.8)]">
                       {t(`${selectedSkill.name}.name`, { ns: 'skill' })}
                     </span>
                   </div>
@@ -285,8 +285,10 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
               {presetScenarios.map((scenario) => (
                 <div
                   key={scenario.id}
-                  className={`bg-white/90 backdrop-blur-sm rounded-md ring-1 ${
-                    activeScenarioId === scenario.id ? 'ring-green-500' : 'ring-gray-200'
+                  className={`bg-white/90 backdrop-blur-sm rounded-md ring-1 dark:bg-gray-900/90 ${
+                    activeScenarioId === scenario.id
+                      ? 'ring-green-500'
+                      : 'ring-gray-200 dark:ring-gray-700'
                   } py-2 px-3 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer`}
                   onClick={() =>
                     handlePresetScenario(scenario.id, scenario.skillName, scenario.query)
@@ -294,7 +296,9 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
                 >
                   <div className="flex items-center mb-1">
                     <div className="text-2xl mr-2">{scenario.icon}</div>
-                    <h5 className="text-sm font-medium text-gray-800">{scenario.title}</h5>
+                    <h5 className="text-sm font-medium text-gray-800 dark:text-gray-100">
+                      {scenario.title}
+                    </h5>
                   </div>
                   <p className="text-xs text-gray-600">{scenario.description}</p>
                 </div>
