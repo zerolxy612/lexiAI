@@ -1739,6 +1739,10 @@ const translations = {
       envValueRequired: '环境变量值不能为空',
       headerKeyRequired: '请求头名称不能为空',
       headerValueRequired: '请求头值不能为空',
+      noToolsAvailable: '暂无可用工具',
+      availableToolsPrefix: '可用工具: ',
+      collapse: '收起',
+      viewToolsWithCount: '查看工具 ({{count}})',
     },
     guide: {
       title: '设置向导',

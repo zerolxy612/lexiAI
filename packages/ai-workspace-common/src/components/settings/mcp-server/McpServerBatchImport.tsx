@@ -12,11 +12,11 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [jsonData, setJsonData] = useState<any>({});
   const [isImporting, setIsImporting] = useState(false);
-  // 移除选项卡状态
+  // Remove tab state
 
-  // 查询现有 MCP 服务器列表
+  // Query existing MCP server list
   const { data: mcpServersData, isLoading: isLoadingServers } = useListMcpServers({}, [], {
-    enabled: isModalVisible, // 只在模态框显示时查询
+    enabled: isModalVisible, // Only query when the modal is visible
     refetchOnWindowFocus: false,
   });
 
@@ -31,21 +31,21 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
     },
   });
 
-  // 当获取到服务器列表数据时，转换为通用格式
+  // When server list data is fetched, convert to universal format
   useEffect(() => {
     if (mcpServersData?.data && isModalVisible) {
-      // 如果有数据，则转换为通用格式
+      // If there is data, convert to universal format
       if (mcpServersData.data.length > 0) {
         const universalFormat = convertToUniversalFormat(mcpServersData.data);
         setJsonData(universalFormat);
       } else {
-        // 如果没有数据，初始化示例模板
+        // If there is no data, initialize with an example template
         setJsonData(getExampleTemplate());
       }
     }
   }, [mcpServersData, isModalVisible]);
 
-  // 将 Refly 格式转换为通用格式
+  // Convert Refly format to universal format
   const convertToUniversalFormat = (servers: any[]): any => {
     const mcpServers: Record<string, any> = {};
 
@@ -64,7 +64,7 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
     return { mcpServers };
   };
 
-  // 获取示例模板
+  // Get example template
   const getExampleTemplate = () => {
     return {
       mcpServers: {
@@ -94,10 +94,10 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
     };
   };
 
-  // 显示模态框
+  // Show modal
   const showModal = () => {
     setIsModalVisible(true);
-    // 模态框显示时会自动查询数据库，并在 useEffect 中处理数据
+    // When the modal is shown, it automatically queries the database, and data is processed in useEffect
   };
 
   // Handle JSON editor changes
@@ -119,7 +119,7 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
       for (const [name, serverConfig] of Object.entries(data.mcpServers) as [string, any][]) {
         // Map universal format fields to Refly format
         const server: McpServerFormData = {
-          name: name, // 使用键作为名称
+          name: name, // Use the key as the name
           type: mapServerType(serverConfig.type, serverConfig),
           enabled: serverConfig.enabled ?? true,
           url: serverConfig.url || '',
@@ -150,9 +150,9 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
     return [];
   };
 
-  // 导入服务器
+  // Import servers
   const handleImport = async () => {
-    // 将通用格式转换为 Refly 格式
+    // Convert universal format to Refly format
     const serversToImport = convertToReflyFormat(jsonData);
 
     if (serversToImport.length === 0) {
@@ -165,10 +165,10 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
     let errorCount = 0;
     const totalCount = serversToImport.length;
 
-    // 顺序处理服务器，避免竞争条件
+    // Process servers sequentially to avoid race conditions
     for (const server of serversToImport) {
       try {
-        // 确保每个服务器都有唯一的 ID 和必填字段
+        // Ensure each server has a unique ID and required fields
         const serverData: McpServerFormData = {
           ...server,
           name: server.name,
@@ -182,11 +182,11 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
           config: server.config || {},
         };
 
-        // 通过 API 创建服务器
+        // Create server via API
         await createMutation.mutateAsync({ body: serverData });
         successCount++;
       } catch (error) {
-        console.error('导入服务器失败:', error);
+        console.error('Failed to import server:', error);
         errorCount++;
       }
     }
@@ -201,7 +201,7 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
         }),
       );
       setIsModalVisible(false);
-      onSuccess(); // 刷新服务器列表
+      onSuccess(); // Refresh server list
     }
 
     if (errorCount > 0) {

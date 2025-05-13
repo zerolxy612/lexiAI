@@ -1881,6 +1881,10 @@ const translations = {
       mcpServer: 'MCP Server',
     },
     mcpServer: {
+      noToolsAvailable: 'No tools available',
+      availableToolsPrefix: 'Available Tools: ',
+      collapse: 'Collapse',
+      viewToolsWithCount: 'View Tools ({{count}})',
       title: 'MCP Server Management',
       name: 'Name',
       type: 'Type',
@@ -1940,6 +1944,10 @@ const translations = {
         'No servers to import. Please provide a valid JSON array of server configurations.',
       universalFormat: 'Universal Format',
       reflyFormat: 'Refly Format',
+      autoValidateHint: 'Auto-validate server configuration on save',
+      enabledTooltip: 'Enable or disable this MCP server',
+      reconnectTooltip:
+        'Configure automatic reconnection attempts if the server connection is lost',
     },
     account: {
       title: 'My Account',
@@ -2423,10 +2431,6 @@ const translations = {
           prompt:
             'Simplify the content while maintaining the same meaning in a way that a first grader can understand',
           title: 'Simplify Language',
-        },
-        summary: {
-          prompt: 'Summarize the selected content',
-          title: 'Summary',
         },
         translate: {
           prompt: 'Translate the selected content to {{language}} language',

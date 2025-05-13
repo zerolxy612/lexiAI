@@ -54,7 +54,7 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
 
   const mcpServers = useMemo(() => data?.data || [], [data]);
 
-  // 从localStorage加载工具数据
+  // Load tool data from localStorage
   useEffect(() => {
     const loadedTools: Record<string, any[]> = {};
 
@@ -79,7 +79,7 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
     onSuccess: () => {
       message.success(t('settings.mcpServer.deleteSuccess'));
       setDeleteModalVisible(false);
-      // 刷新列表数据
+      // Refresh list data
       refetch();
     },
     onError: (error) => {
@@ -92,7 +92,7 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
   const updateMutation = useUpdateMcpServer([], {
     onSuccess: () => {
       message.success(t('settings.mcpServer.updateSuccess'));
-      // 刷新列表数据
+      // Refresh list data
       refetch();
     },
     onError: (error) => {
@@ -108,19 +108,19 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
         throw response.data.errMsg;
       }
 
-      // 保存tools数据到localStorage
+      // Save tools data to localStorage
       if (response?.data?.data && response.data.data.length > 0) {
         const serverTools = response.data.data;
         const serverName = ctx.body.name || '';
 
-        // 保存到localStorage
+        // Save to localStorage
         if (serverName) {
           const toolsKey = `mcp_server_tools_${serverName}`;
           localStorage.setItem(toolsKey, JSON.stringify(serverTools));
         }
       }
 
-      // 服务端验证成功时返回 true
+      // Returns true when server-side validation is successful
       message.success(t('settings.mcpServer.validateSuccess'));
     },
     onError: (error) => {
@@ -134,7 +134,7 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
     // Form submission is handled in the form component
     setIsFormVisible(false);
     setEditingServer(null);
-    // 刷新列表数据
+    // Refresh list data
     refetch();
   };
 
@@ -153,7 +153,7 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
   // Handle enable/disable switch
   const handleEnableSwitch = async (checked: boolean, server: McpServerDTO) => {
     try {
-      // 如果要启用，先进行验证
+      // If enabling, validate first
       if (checked) {
         await validateMutation.mutateAsync({
           body: {
@@ -171,7 +171,7 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
         });
       }
 
-      // 验证通过或者是禁用操作，更新服务器状态
+      // If validation passes or it's a disable operation, update server status
       updateMutation.mutate({
         body: {
           name: server.name,
@@ -187,7 +187,7 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
         },
       });
     } catch (error) {
-      // 验证失败，不做任何更改
+      // Validation failed, do nothing
       console.error('Server validation failed:', error);
     }
   };
@@ -215,7 +215,7 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
     }
   };
 
-  // 自定义样式
+  // Custom styles
   const tableStyles = {
     header: {
       background: '#fafafa',
@@ -406,7 +406,11 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
                   <div className="py-6 px-6 text-center">
                     <Empty
                       image={Empty.PRESENTED_IMAGE_SIMPLE}
-                      description={<Typography.Text type="secondary">暂无可用工具</Typography.Text>}
+                      description={
+                        <Typography.Text type="secondary">
+                          {t('settings.mcpServer.noToolsAvailable')}
+                        </Typography.Text>
+                      }
                     />
                   </div>
                 );
@@ -420,7 +424,9 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
                         style={{ marginRight: '8px', color: '#1677ff', fontSize: '16px' }}
                       />
                       <Typography.Text strong style={{ fontSize: '14px' }}>
-                        {tools.length > 0 ? '可用工具: ' : '暂无可用工具'}
+                        {tools.length > 0
+                          ? t('settings.mcpServer.availableToolsPrefix')
+                          : t('settings.mcpServer.noToolsAvailable')}
                       </Typography.Text>
                       <Badge
                         count={tools.length}
@@ -488,7 +494,11 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
               return (
                 <Tooltip
                   title={
-                    expanded ? '收起' : hasTools ? `查看工具 (${tools.length})` : '暂无可用工具'
+                    expanded
+                      ? t('settings.mcpServer.collapse')
+                      : hasTools
+                        ? t('settings.mcpServer.viewToolsWithCount', { count: tools.length })
+                        : t('settings.mcpServer.noToolsAvailable')
                   }
                 >
                   <Button
