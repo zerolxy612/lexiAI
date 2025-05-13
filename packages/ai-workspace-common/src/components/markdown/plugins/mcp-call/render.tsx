@@ -1,25 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MarkdownMode } from '../../types';
+import { ToolOutlined } from '@ant-design/icons';
 
 // SVG icons for the component
-const ChevronDownIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="18"
-    height="18"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="w-[18px] h-[18px]"
-  >
-    <path d="m6 9 6 6 6-6" />
-  </svg>
-);
-
 const CheckIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -86,19 +70,23 @@ const MCPCall: React.FC<MCPCallProps> = (props) => {
           fontFamily: 'Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
         }}
       >
-        <div
-          className={`mr-2 text-[#A1A1AA] flex items-center transition-transform duration-200 ${isCollapsed ? 'rotate-[-90deg]' : 'rotate-0'}`}
-        >
-          <ChevronDownIcon />
-        </div>
-        <div className="flex-1 text-[15px] font-medium tracking-tight">
-          {t('components.markdown.calledMCPTool', 'Called MCP tool')}
-        </div>
-        <div className="mx-2 px-2.5 py-0.5 bg-[#23272F] rounded text-[13px] font-mono font-normal leading-6">
-          {toolName}
-        </div>
+        {/* ToolOutlined now serves as the toggle icon with rotation */}
+        <ToolOutlined
+          style={{
+            color: '#A1A1AA',
+            fontSize: '16px',
+            marginRight: '12px', // Adjusted margin for spacing
+            transition: 'transform 0.2s ease-in-out',
+            transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
+          }}
+        />
+        {/* Tool name displayed as the main text in the header */}
+        <div className="flex-1 text-[15px] font-medium tracking-tight text-white">{toolName}</div>
+        {/* Check icon for results, with adjusted margin */}
         {hasResult && (
-          <span className="ml-1 flex items-center">
+          <span className="ml-2 flex items-center">
+            {' '}
+            {/* Adjusted margin from ml-1 to ml-2 */}
             <CheckIcon />
           </span>
         )}
