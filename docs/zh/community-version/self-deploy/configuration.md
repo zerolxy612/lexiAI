@@ -15,18 +15,6 @@
 | STATIC_PUBLIC_ENDPOINT | 公开可访问的静态文件端点 (无需身份验证即可访问) | `http://localhost:5800/v1/misc` |
 | STATIC_PRIVATE_ENDPOINT | 私有静态文件端点 (需要身份验证才能访问) | `http://localhost:5800/v1/misc` |
 
-### 凭证配置
-
-| 环境变量 | 说明 | 默认值 |
-| --- | --- | --- |
-| OPENAI_API_KEY | [OpenAI](https://openai.com/) 或其他兼容供应方的 API 密钥，用于 LLM 推理和嵌入 | (未设置) |
-| OPENAI_BASE_URL | OpenAI 兼容供应方的基础 URL，用于 LLM 推理和嵌入 | (未设置) |
-| OPENROUTER_API_KEY | [OpenRouter](https://openrouter.ai/) API 密钥，用于 LLM 推理 | (未设置) |
-| JINA_API_KEY | [Jina](https://jina.ai/) API 密钥，用于嵌入和网页解析 | (未设置) |
-| FIREWORKS_API_KEY | [Fireworks](https://fireworks.ai/) API 密钥，用于嵌入 | (未设置) |
-| SERPER_API_KEY | [Serper](https://serper.dev/) API 密钥，用于在线搜索 | (未设置) |
-| MARKER_API_KEY | [Marker](https://www.datalab.to/) API 密钥，用于 PDF 解析 | (未设置) |
-
 ### 中间件
 
 Refly 依赖以下中间件来正常运行：
@@ -34,8 +22,12 @@ Refly 依赖以下中间件来正常运行：
 - **Postgres**：用于基本数据持久化
 - **Redis**：用于缓存、异步任务队列和分布式环境中的协调
 - **Qdrant**：用于通过嵌入进行语义搜索
-- **Elasticsearch**：用于工作区内的全文搜索
 - **MinIO**：用于画布、文档和资源数据的对象存储
+
+可选：
+
+- **SearXNG**：用于在线搜索
+- **Elasticsearch**：用于工作区内的全文搜索
 
 #### Postgres
 
@@ -62,15 +54,21 @@ Refly 依赖以下中间件来正常运行：
 | QDRANT_HOST | Qdrant 主机地址 | `localhost` |
 | QDRANT_PORT | Qdrant 端口 | `6333` |
 | QDRANT_API_KEY | Qdrant API 密钥 | (未设置) |
-| REFLY_VEC_DIM | 向量维度大小 | `768` |
 
-#### Elasticsearch
+#### SearXNG
 
 | 环境变量 | 说明 | 默认值 |
 | --- | --- | --- |
-| ELASTICSEARCH_URL | Elasticsearch URL | `http://localhost:9200` |
-| ELASTICSEARCH_USERNAME | Elasticsearch 用户名 | (未设置) |
-| ELASTICSEARCH_PASSWORD | Elasticsearch 密码 | (未设置) |
+| SEARXNG_BASE_URL | SearXNG 基础 URL | `http://localhost:8080/` |
+
+#### 全文搜索
+
+| 环境变量 | 说明 | 默认值 |
+| --- | --- | --- |
+| FULLTEXT_SEARCH_BACKEND | 全文搜索后端 (`prisma` 或 `elasticsearch`) | `prisma` |
+| ELASTICSEARCH_URL | Elasticsearch URL (当 `FULLTEXT_SEARCH_BACKEND` 为 `elasticsearch` 时必填) | `http://localhost:9200` |
+| ELASTICSEARCH_USERNAME | Elasticsearch 用户名 (当 `FULLTEXT_SEARCH_BACKEND` 为 `elasticsearch` 时必填) | (未设置) |
+| ELASTICSEARCH_PASSWORD | Elasticsearch 密码 (当 `FULLTEXT_SEARCH_BACKEND` 为 `elasticsearch` 时必填) | (未设置) |
 
 #### MinIO
 
@@ -156,44 +154,19 @@ Refly 需要两个 MinIO 实例：
 你可以在 [Google Developer](https://developers.google.com/identity/protocols/oauth2) 了解更多关于 Google OAuth 的信息。
 :::
 
-### 解析器配置
+### 图像处理
 
 | 环境变量 | 说明 | 默认值 |
 | --- | --- | --- |
-| PARSER_PDF | PDF 文件解析器 (可选 `pdfjs` 或 `marker`) | `pdfjs` |
+| IMAGE_MAX_AREA | 传递给 LLM 的图像最大面积 | `600 * 600` |
+| IMAGE_PAYLOAD_MODE | 图像负载模式 (`base64` 或 `url`) | `base64` |
+| IMAGE_PRESIGN_EXPIRY | 预签名图像 URL 的过期时间（秒） | `15 * 60` |
 
-::: info
-如果想使用 `marker` 作为 PDF 文件的解析器，你需要设置 `MARKER_API_KEY` 环境变量。
-:::
-
-### 嵌入配置
+### 加密
 
 | 环境变量 | 说明 | 默认值 |
 | --- | --- | --- |
-| EMBEDDINGS_PROVIDER | 嵌入提供者（可选 `jina`、`fireworks` 或 `openai`） | `jina` |
-| EMBEDDINGS_MODEL_NAME | 嵌入模型名称 | `jina-embeddings-v3` |
-| EMBEDDINGS_DIMENSIONS | 嵌入向量维度 | `768` |
-| EMBEDDINGS_BATCH_SIZE | 嵌入处理批次大小 | `512` |
-
-::: info
-默认的 `EMBEDDINGS_PROVIDER` 是 `jina`。如果你想使用其他嵌入提供者，请设置相应的环境变量。
-:::
-
-::: warning
-`EMBEDDINGS_DIMENSIONS` 必须与 Qdrant 中的 `REFLY_VEC_DIM` 设置为相同的值。
-:::
-
-### 重排序器
-
-| 环境变量 | 说明 | 默认值 |
-| --- | --- | --- |
-| RERANKER_TOP_N | 需要重排序的顶部结果数量 | `10` |
-| RERANKER_MODEL | 重排序模型名称 | `jina-reranker-v2-base-multilingual` |
-| RERANKER_RELEVANCE_THRESHOLD | 重排序相关性阈值 | `0.5` |
-
-::: warning
-目前仅支持 Jina 重排序器。你需要设置 `JINA_API_KEY` 环境变量。
-:::
+| ENCRYPTION_KEY | 用于加密和解密敏感数据的密钥 | (未设置) |
 
 ### 技能执行
 
@@ -241,20 +214,3 @@ Refly 需要两个 MinIO 实例：
 | REFLY_API_URL | Refly API 服务器 URL | `http://localhost:5800` |
 | COLLAB_URL | 协作端点 URL | `http://localhost:5801` |
 | SUBSCRIPTION_ENABLED | 是否启用订阅和计费功能 | (未设置) |
-
-## 模型配置
-
-大语言模型（LLM）配置通过 `refly_db` PostgreSQL 数据库中的 `refly.model_infos` 表进行管理。你可以通过 SQL 客户端按需调整模型。
-
-以下是各列的说明：
-
-- `name`：模型的名称（ID），应为 `${OPENAI_BASE_URL}/v1/models` 返回的 `id` 值
-- `label`：模型的标签，将在模型选择器中显示
-- `provider`：模型的提供商，用于显示模型图标（目前支持 `openai`、`anthropic`、`deepseek`、`google`、`qwen`、`mistral` 和 `meta-llama`）
-- `tier`：模型的等级，目前支持 `t1`（高级）、`t2`（标准）和 `free`
-- `enabled`：是否启用模型
-- `is_default`：是否为默认模型
-- `context_limit`：模型的上下文限制（token 数量）
-- `max_output`：模型的最大输出长度（token 数量）
-- `capabilities`：模型的能力（JSON 字符串），具有以下键：
-  - `vision`：是否支持视觉输入（接受图片作为输入）

@@ -27,20 +27,20 @@ f. Lack of inspiration: Don't know how to start, or find it difficult to find su
 2.  PPT Content Organization: Use "Ask AI" with "Prompts" and context to process the content of resource nodes into PPT content.
 3.  PPT Page Generation: By adding other similar PPT screenshot pages, allow "Ask AI" to understand the style you want, and then generate corresponding PPT page SVG images based on your style.
 4.  Merge PPT Pages into Complete Content: Integrate all SVG images to generate a complete PPT content.
-![Figure 1](/images/2025-04-27-11-20-24.png)
+![Figure 1](/images/2025-04-27-11-20-24.webp)
 
 ### Operation Steps
 
 1.  Open Refly (https://refly.ai). If you are not registered or logged in, please register and log in first.
 2.  Navigate to "Templates" -> Click Templates -> All Templates -> Find the PPT Generation Template -> Click Use Template.
-![Figure 1](/images/2025-04-27-11-20-35.png)
-![Figure 2](/images/2025-04-27-11-20-44.png)
+![Figure 1](/images/2025-04-27-11-20-35.webp)
+![Figure 2](/images/2025-04-27-11-20-44.webp)
 3.  Replace resources in the template: -> Replace the PPT generation materials in the template with your own PPT materials -> Replace the style material images in the template according to your own PPT style.
 4.  Adjust prompts: Adjust the corresponding prompts and introduce the corresponding context based on your PPT content.
-![Figure 1](/images/2025-04-27-11-20-54.png)
+![Figure 1](/images/2025-04-27-11-20-54.webp)
 5.  Import SVG images into PowerPoint and merge into a PPT: Refer to the introduction in the template.
-![Figure 1](/images/2025-04-27-11-21-07.png)
+![Figure 1](/images/2025-04-27-11-21-07.webp)
 6.  Complete PPT creation.
 
 ### Notes: Template Introduction
-![Figure 1](/images/2025-04-27-11-21-24.png)
+![Figure 1](/images/2025-04-27-11-21-24.webp)

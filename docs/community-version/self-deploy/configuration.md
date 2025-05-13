@@ -15,18 +15,6 @@ The following are the detailed configurations for the API server. You can inject
 | STATIC_PUBLIC_ENDPOINT | Public static file endpoint (which can be accessed without authentication) | `http://localhost:5800/v1/misc` |
 | STATIC_PRIVATE_ENDPOINT | Private static file endpoint (which must be accessed with authentication) | `http://localhost:5800/v1/misc` |
 
-### Credentials
-
-| Env | Description | Default Value |
-| --- | --- | --- |
-| OPENAI_API_KEY | API key for OpenAI (or any other compatible provider), used for LLM inference and embeddings | (not set) |
-| OPENAI_BASE_URL | Base URL for OpenAI compatible provider | (not set) |
-| OPENROUTER_API_KEY | [OpenRouter](https://openrouter.ai/) API key, used for LLM inference | (not set) |
-| JINA_API_KEY | [Jina](https://jina.ai/) API key, used for embeddings and weblink parsing | (not set) |
-| FIREWORKS_API_KEY | [Fireworks](https://fireworks.ai/) API key, used for embedding | (not set) |
-| SERPER_API_KEY | [Serper](https://serper.dev/) API key, used for online search | (not set) |
-| MARKER_API_KEY | [Marker](https://www.datalab.to/) API key, used for PDF parsing | (not set) |
-
 ### Middlewares
 
 Refly depends on following middlewares to function properly:
@@ -34,8 +22,12 @@ Refly depends on following middlewares to function properly:
 - **Postgres**: used for basic data persistence
 - **Redis**: used for cache, asynchronous task queue and coordination within distributed environment
 - **Qdrant**: used for semantic searching via embeddings
-- **Elasticsearch**: used for full-text searching within workspace
 - **MinIO**: used for object storage for canvas, document and resource data
+
+Optional:
+
+- **SearXNG**: used for online searching
+- **Elasticsearch**: used for full-text searching within workspace
 
 #### Postgres
 
@@ -62,15 +54,21 @@ Refer to [Prisma doc](https://www.prisma.io/docs/orm/overview/databases/postgres
 | QDRANT_HOST | Qdrant host | `localhost` |
 | QDRANT_PORT | Qdrant port | `6333` |
 | QDRANT_API_KEY | Qdrant API key | (not set) |
-| REFLY_VEC_DIM | Vector dimension size | `768` |
 
-#### Elasticsearch
+#### SearXNG
 
 | Env | Description | Default Value |
 | --- | --- | --- |
-| ELASTICSEARCH_URL | Elasticsearch URL | `http://localhost:9200` |
-| ELASTICSEARCH_USERNAME | Elasticsearch username | (not set) |
-| ELASTICSEARCH_PASSWORD | Elasticsearch username | (not set) |
+| SEARXNG_BASE_URL | SearXNG base URL | `http://localhost:8080/` |
+
+#### Full-Text Search
+
+| Env | Description | Default Value |
+| --- | --- | --- |
+| FULLTEXT_SEARCH_BACKEND | Full-text search backend (`prisma` or `elasticsearch`) | `prisma` |
+| ELASTICSEARCH_URL | Elasticsearch URL (required if `FULLTEXT_SEARCH_BACKEND` is `elasticsearch`) | `http://localhost:9200` |
+| ELASTICSEARCH_USERNAME | Elasticsearch username (required if `FULLTEXT_SEARCH_BACKEND` is `elasticsearch`) | (not set) |
+| ELASTICSEARCH_PASSWORD | Elasticsearch password (required if `FULLTEXT_SEARCH_BACKEND` is `elasticsearch`) | (not set) |
 
 #### MinIO
 
@@ -156,44 +154,19 @@ The default OAuth credentials are invalid (just a placeholder). Please set your 
 You can learn more about Google OAuth at [Google Developer](https://developers.google.com/identity/protocols/oauth2).
 :::
 
-### Parser Configuration
+### Image Processing
 
 | Env | Description | Default Value |
 | --- | --- | --- |
-| PARSER_PDF | Parser for PDF files (available options: `pdfjs`, `marker`) | `pdfjs` |
+| IMAGE_MAX_AREA | Maximum area of images passed to LLM | `600 * 600` |
+| IMAGE_PAYLOAD_MODE | Image payload mode (`base64` or `url`) | `base64` |
+| IMAGE_PRESIGN_EXPIRY | Expiry time (in seconds) for presigned image URLs | `15 * 60` |
 
-::: info
-If you want to use `marker` as the parser for PDF files, you need to set the `MARKER_API_KEY` environment variable.
-:::
-
-### Embeddings Configuration
+### Encryption
 
 | Env | Description | Default Value |
 | --- | --- | --- |
-| EMBEDDINGS_PROVIDER | Embeddings provider (either `jina`, `fireworks` or `openai`) | `jina` |
-| EMBEDDINGS_MODEL_NAME | Embeddings model name | `jina-embeddings-v3` |
-| EMBEDDINGS_DIMENSIONS | Embedding vector dimensions | `768` |
-| EMBEDDINGS_BATCH_SIZE | Batch size for embedding processing | `512` |
-
-::: info
-The default `EMBEDDINGS_PROVIDER` is `jina`. If you want to use other embeddings providers, please set the corresponding environment variables.
-:::
-
-::: warning
-`EMBEDDINGS_DIMENSIONS` must be set to the same value as `REFLY_VEC_DIM` in Qdrant.
-:::
-
-### Reranker
-
-| Env | Description | Default Value |
-| --- | --- | --- |
-| RERANKER_TOP_N | Number of top results to rerank | `10` |
-| RERANKER_MODEL | Reranker model name | `jina-reranker-v2-base-multilingual` |
-| RERANKER_RELEVANCE_THRESHOLD | Relevance threshold for reranking | `0.5` |
-
-::: warning
-Currently, only Jina rerankers are supported. You need to set the `JINA_API_KEY` environment variable.
-:::
+| ENCRYPTION_KEY | Encryption key used for encrypting and decrypting sensitive data | (not set) |
 
 ### Skill Execution
 
@@ -241,20 +214,3 @@ The following are the detailed configurations for the web frontend. You can inje
 | REFLY_API_URL | Refly API server URL | `http://localhost:5800` |
 | COLLAB_URL | Collaboration endpoint URL | `http://localhost:5801` |
 | SUBSCRIPTION_ENABLED | Whether to enable subscription and billing features | (not set) |
-
-## Model Configuration {#model-configuration}
-
-LLMs are configured via the `refly.model_infos` table within the `refly_db` PostgreSQL database. You can adjust the models as needed via the SQL client.
-
-Here is a list of explanations for the columns:
-
-- `name`: The name (ID) of the model, which should be the `id` value returned from `${OPENAI_BASE_URL}/v1/models`
-- `label`: The label of the model, which will be displayed in the model selector
-- `provider`: The provider of the model, used to display model icon (currently support `openai`, `anthropic`, `deepseek`、`google`, `qwen`, `mistral` and `meta-llama`)
-- `tier`: The tier of the model, currently support `t1` (premium), `t2` (standard) and `free`
-- `enabled`: Whether the model is enabled
-- `is_default`: Whether the model is the default model
-- `context_limit`: The context limit of the model (number of tokens)
-- `max_output`: The max output length of the model (number of tokens)
-- `capabilities`: The capabilities of the model (JSON string), with the following keys:
-  - `vision`: Whether the model supports vision (taking images as input)
