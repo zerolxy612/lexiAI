@@ -1059,7 +1059,12 @@ const translations = {
       approachingNodeLimit: '画布节点数量接近上限 ({{current}}/{{max}})，建议移除不必要的节点。',
     },
     skill: {
-      askAI: 'AI 提问',
+      askAI: 'AI 普通问答',
+      askAIDescription: '向 AI 提问，获取写作、阅读理解或问题解答等帮助',
+      switchSkillTooltip:
+        '在输入框中使用 Ctrl + / 切换技能，默认提问技能为 AI 普通问答，可切换为其他技能，如网络搜索',
+      switchSkillTooltipMac:
+        '在输入框中使用 ⌘ + / 切换技能，默认提问技能为 AI 普通问答，可切换为其他技能，如网络搜索',
     },
     skillResponse: {
       executionFailed: '执行失败，点击重试',

@@ -1244,7 +1244,13 @@ const translations = {
         'Canvas is approaching the node limit ({{current}}/{{max}}). Consider removing unnecessary nodes.',
     },
     skill: {
-      askAI: 'Ask AI',
+      askAI: 'AI Common Question Answer',
+      askAIDescription:
+        'Ask AI, get help with writing, reading comprehension, or question answering',
+      switchSkillTooltip:
+        'Use Ctrl + / in the input box to switch skill, default skill is Ask AI, you can switch to other skills, like web search, etc.',
+      switchSkillTooltipMac:
+        'Use ⌘ + / in the input box to switch skill, default skill is Ask AI, you can switch to other skills, like web search, etc.',
     },
     skillResponse: {
       executionFailed: 'Execution failed, click to retry',
