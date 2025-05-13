@@ -495,6 +495,18 @@
   }
 }
 
+/* Add dark mode styling for highlighted text */
+.dark {
+  .search-res-container {
+    .search-res-title, .search-res-desc {
+      em {
+        color: #16d6cf !important; /* Brighter teal color for dark mode */
+        font-weight: bolder !important;
+      }
+    }
+  }
+}
+
 .search-load-more {
   width: 100%;
   display: flex;
