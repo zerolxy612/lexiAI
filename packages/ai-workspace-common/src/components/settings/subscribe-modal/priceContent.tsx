@@ -108,10 +108,11 @@ const PlanItem = (props: {
       <div
         className={`
         subscribe-content-plans-item
-        ${title === 'free' && 'item-free bg-gray-50'}
-        ${title === 'plus' && 'item-plus bg-[#E8F4FC]'}
-        ${title === 'pro' && 'item-pro bg-green-50'}
-        ${title === 'max' && 'item-max bg-[#FFF5EB]'}`}
+        ${title === 'free' && 'item-free bg-gray-50 dark:bg-gray-900'}
+        ${title === 'plus' && 'item-plus bg-[#E8F4FC] dark:bg-[#1A2A3A]'}
+        ${title === 'pro' && 'item-pro bg-green-50 dark:bg-green-900'}
+        ${title === 'max' && 'item-max bg-[#FFF5EB] dark:bg-[#33241A]'}
+        `}
       >
         <div className="subscribe-content-plans-item-title font-extrabold">
           {t(`settings.subscription.subscriptionStatus.${title}`)}

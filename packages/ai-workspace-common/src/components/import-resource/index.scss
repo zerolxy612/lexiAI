@@ -46,6 +46,15 @@
 
     .ant-menu-vertical {
       border-inline-end: none;
+      @apply dark:bg-[#1f1f1f];
+      
+      .ant-menu-item-selected {
+        @apply dark:bg-neutral-800 dark:text-white;
+      }
+      
+      .ant-menu-item:hover {
+        @apply dark:bg-neutral-700;
+      }
     }
   }
 

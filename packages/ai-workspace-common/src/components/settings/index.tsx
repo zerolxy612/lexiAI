@@ -16,7 +16,8 @@ import { ParserConfig } from '@refly-packages/ai-workspace-common/components/set
 import { DefaultModel } from '@refly-packages/ai-workspace-common/components/settings/default-model';
 
 import { RiAccountBoxLine } from 'react-icons/ri';
-import { HiOutlineLanguage, HiOutlineSparkles } from 'react-icons/hi2';
+import { HiOutlineLanguage } from 'react-icons/hi2';
+import { LuPalette } from 'react-icons/lu';
 
 import './index.scss';
 import {
@@ -106,7 +107,7 @@ export const SettingModal = (props: SettingModalProps) => {
     {
       key: 'appearance',
       label: t('settings.tabs.appearance'),
-      icon: <HiOutlineSparkles style={iconStyle} />,
+      icon: <LuPalette style={iconStyle} />,
       children: <AppearanceSetting />,
     },
   ];
