@@ -56,7 +56,11 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
 
   // Create and update mutations
   const createMutation = useCreateMcpServer([], {
-    onSuccess: () => {
+    onSuccess: (response, _variables, _context) => {
+      if (!response?.data?.success) {
+        // Use a more specific error message or re-throw the server's error message
+        throw new Error(response?.data?.errMsg || 'Server creation reported failure in onSuccess');
+      }
       message.success(t('settings.mcpServer.createSuccess'));
       onSubmit(form.getFieldsValue());
     },
@@ -67,7 +71,11 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
   });
 
   const updateMutation = useUpdateMcpServer([], {
-    onSuccess: () => {
+    onSuccess: (response, _variables, _context) => {
+      if (!response?.data?.success) {
+        // Use a more specific error message or re-throw the server's error message
+        throw new Error(response?.data?.errMsg || 'Server update reported failure in onSuccess');
+      }
       message.success(t('settings.mcpServer.updateSuccess'));
       onSubmit(form.getFieldsValue());
     },

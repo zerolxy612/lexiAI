@@ -22,7 +22,10 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
 
   // Create MCP server mutation
   const createMutation = useCreateMcpServer([], {
-    onSuccess: () => {
+    onSuccess: (response, _variables, _context) => {
+      if (!response?.data?.success) {
+        throw new Error(response?.data?.errMsg || 'Server creation reported failure in onSuccess');
+      }
       // Do nothing here, we'll handle success after all servers are imported
     },
     onError: (error) => {
