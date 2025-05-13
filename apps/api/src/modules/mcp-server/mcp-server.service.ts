@@ -20,7 +20,7 @@ import { createMcpClientConfig } from '@refly/skill-template/src/utils/mcp-utils
 interface ServerWithSensitiveInfo {
   headers?: string;
   env?: string;
-  [key: string]: any; // 允许其他任何属性
+  [key: string]: any; // Allow any other properties
 }
 
 interface GlobalMcpServerConfig {
@@ -199,11 +199,11 @@ export class McpServerService {
       },
     });
 
-    // 如果存在已删除的同名服务器，恢复并更新它
+    // If a deleted server with the same name exists, restore and update it
     if (existingServer) {
       this.logger.log(`Restoring deleted MCP server with name '${name}'`);
 
-      // 加密敏感信息
+      // Encrypt sensitive information
       const serverData = this.encryptServerConfig({
         name,
         type,
@@ -225,7 +225,7 @@ export class McpServerService {
         data: serverData,
       });
 
-      // 返回解密后的服务器配置
+      // Return decrypted server configuration
       return this.decryptServerConfig(updatedServer);
     }
 
@@ -273,7 +273,7 @@ export class McpServerService {
       throw new ParamsError('Server name is required');
     }
 
-    // 根据名称查找服务器
+    // Find server by name
     const server = await this.prisma.mcpServer.findFirst({
       where: {
         name,
@@ -335,7 +335,7 @@ export class McpServerService {
       throw new ParamsError('Server name is required');
     }
 
-    // 根据名称查找服务器
+    // Find server by name
     const server = await this.prisma.mcpServer.findFirst({
       where: {
         name,
@@ -389,8 +389,6 @@ export class McpServerService {
       if (!tools || tools.length === 0) {
         throw new Error('No tools found for this MCP server');
       }
-
-      console.log({ tools });
 
       // Close connection if successful
       await client.close();

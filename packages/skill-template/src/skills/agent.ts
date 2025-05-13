@@ -31,7 +31,7 @@ import { buildSystemPrompt } from '../mcp/core/prompt';
 import { convertMcpServersToClientConfig } from '../utils/mcp-utils';
 
 export class Agent extends BaseSkill {
-  name = 'agent';
+  name = 'commonQnA';
 
   icon: Icon = { type: 'emoji', value: '💬' };
 
@@ -107,8 +107,8 @@ export class Agent extends BaseSkill {
       if (urls.length > 0) {
         this.engine.logger.log(`Processing ${urls.length} URLs from context`);
         contextUrlSources = await crawlExtractedUrls(urls, config, this, {
-          concurrencyLimit: 5,
-          batchSize: 8,
+          concurrencyLimit: 5, // Increase concurrency limit for crawling URLs
+          batchSize: 8, // Increase batch size for processing URLs
         });
         this.engine.logger.log(`Processed context URL sources count: ${contextUrlSources.length}`);
       }
@@ -116,8 +116,8 @@ export class Agent extends BaseSkill {
 
     // Extract URLs from the query and crawl them with optimized concurrent processing
     const { sources: queryUrlSources, analysis } = await extractAndCrawlUrls(query, config, this, {
-      concurrencyLimit: 5, // 增加并发爬取的URL数量限制
-      batchSize: 8, // 增加每批处理的URL数量
+      concurrencyLimit: 5, // Increase concurrency limit for crawling URLs
+      batchSize: 8, // Increase batch size for processing URLs
     });
 
     this.engine.logger.log(`URL extraction analysis: ${safeStringifyJSON(analysis)}`);
@@ -217,11 +217,11 @@ export class Agent extends BaseSkill {
     this.engine.logger.log('Initializing MCP client and getting tools...');
 
     try {
-      // 先初始化连接
+      // Initialize connections first
       await client.initializeConnections();
       this.engine.logger.log('MCP connections initialized successfully');
 
-      // 然后获取工具
+      // Then get tools
       const mcpTools = await client.getTools();
 
       if (!mcpTools?.length) {
