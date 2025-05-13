@@ -1,6 +1,26 @@
-import React, { useState, useMemo } from 'react';
-import { Table, Button, Tag, Space, Tooltip, Modal, message, Switch } from 'antd';
-import { EditOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import React, { useState, useMemo, useEffect } from 'react';
+import {
+  Table,
+  Button,
+  Tag,
+  Space,
+  Tooltip,
+  Modal,
+  message,
+  Switch,
+  Typography,
+  Card,
+  List,
+  Badge,
+  Empty,
+} from 'antd';
+import {
+  EditOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+  ToolOutlined,
+  ApiOutlined,
+} from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 
 import { McpServerDTO, McpServerType } from '@refly/openapi-schema';
@@ -24,6 +44,7 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [serverToDelete, setServerToDelete] = useState<McpServerDTO | null>(null);
+  const [serverTools, setServerTools] = useState<Record<string, any[]>>({});
 
   // Fetch MCP servers
   const { data, refetch } = useListMcpServersSuspense({}, [], {
@@ -32,6 +53,26 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
   });
 
   const mcpServers = useMemo(() => data?.data || [], [data]);
+
+  // 从localStorage加载工具数据
+  useEffect(() => {
+    const loadedTools: Record<string, any[]> = {};
+
+    for (const server of mcpServers) {
+      const toolsKey = `mcp_server_tools_${server.name}`;
+      const toolsData = localStorage.getItem(toolsKey);
+
+      if (toolsData) {
+        try {
+          loadedTools[server.name] = JSON.parse(toolsData);
+        } catch (e) {
+          console.error(`Failed to parse tools data for ${server.name}:`, e);
+        }
+      }
+    }
+
+    setServerTools(loadedTools);
+  }, [mcpServers]);
 
   // Delete MCP server mutation
   const deleteMutation = useDeleteMcpServer([], {
@@ -62,9 +103,21 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
 
   // Validate MCP server mutation
   const validateMutation = useValidateMcpServer([], {
-    onSuccess: (response) => {
+    onSuccess: (response, ctx) => {
       if (!response?.data?.success) {
         throw response.data.errMsg;
+      }
+
+      // 保存tools数据到localStorage
+      if (response?.data?.data && response.data.data.length > 0) {
+        const serverTools = response.data.data;
+        const serverName = ctx.body.name || '';
+
+        // 保存到localStorage
+        if (serverName) {
+          const toolsKey = `mcp_server_tools_${serverName}`;
+          localStorage.setItem(toolsKey, JSON.stringify(serverTools));
+        }
       }
 
       // 服务端验证成功时返回 true
@@ -162,23 +215,76 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
     }
   };
 
+  // 自定义样式
+  const tableStyles = {
+    header: {
+      background: '#fafafa',
+      fontSize: '14px',
+      fontWeight: 500,
+      padding: '12px 16px',
+    },
+    cell: {
+      padding: '12px 16px',
+    },
+    row: {
+      cursor: 'default',
+      transition: 'background-color 0.3s',
+      ':hover': {
+        background: '#f5f5f5',
+      },
+    },
+    toolCard: {
+      borderRadius: '6px',
+      boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+      border: '1px solid #f0f0f0',
+      transition: 'all 0.3s',
+      ':hover': {
+        boxShadow: '0 3px 6px rgba(0,0,0,0.05)',
+        borderColor: '#e6f4ff',
+      },
+    },
+  };
+
   // Table columns
   const columns = [
     {
       title: t('settings.mcpServer.name'),
       dataIndex: 'name',
       key: 'name',
+      ellipsis: true,
+      width: '20%',
+      onHeaderCell: () => ({
+        style: tableStyles.header,
+      }),
+      onCell: () => ({
+        style: tableStyles.cell,
+      }),
     },
     {
       title: t('settings.mcpServer.type'),
       dataIndex: 'type',
       key: 'type',
+      width: '15%',
+      onHeaderCell: () => ({
+        style: tableStyles.header,
+      }),
+      onCell: () => ({
+        style: tableStyles.cell,
+      }),
       render: (type: McpServerType) => <Tag color={getTypeColor(type)}>{type.toUpperCase()}</Tag>,
     },
     {
       title: t('settings.mcpServer.url'),
       dataIndex: 'url',
       key: 'url',
+      ellipsis: true,
+      width: '40%',
+      onHeaderCell: () => ({
+        style: tableStyles.header,
+      }),
+      onCell: () => ({
+        style: tableStyles.cell,
+      }),
       render: (url: string, record: McpServerDTO) => {
         if (record.type === 'stdio') {
           const command = record.command || '';
@@ -196,6 +302,14 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
       title: t('settings.mcpServer.status'),
       dataIndex: 'enabled',
       key: 'enabled',
+      width: '10%',
+      align: 'center' as const,
+      onHeaderCell: () => ({
+        style: tableStyles.header,
+      }),
+      onCell: () => ({
+        style: tableStyles.cell,
+      }),
       render: (enabled: boolean, record: McpServerDTO) => (
         <Switch
           checked={enabled}
@@ -208,6 +322,14 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
     {
       title: t('common.actions'),
       key: 'actions',
+      width: '15%',
+      align: 'center' as const,
+      onHeaderCell: () => ({
+        style: tableStyles.header,
+      }),
+      onCell: () => ({
+        style: tableStyles.cell,
+      }),
       render: (_: any, record: McpServerDTO) => (
         <Space size="middle">
           <Tooltip title={t('common.edit')}>
@@ -230,9 +352,14 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
   if (!visible) return null;
 
   return (
-    <div className="mcp-server-list">
-      <div className="flex justify-between items-center mb-4">
-        <h2>{t('settings.mcpServer.title')}</h2>
+    <div
+      className="mcp-server-list"
+      style={{ height: '100%', display: 'flex', flexDirection: 'column', padding: '0 1px' }}
+    >
+      <div className="flex justify-between items-center mb-5" style={{ padding: '0 4px' }}>
+        <h2 style={{ fontSize: '18px', fontWeight: 500, margin: 0 }}>
+          {t('settings.mcpServer.title')}
+        </h2>
         <Space>
           {/* Batch import button */}
           <McpServerBatchImport onSuccess={refetch} />
@@ -249,8 +376,138 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
           </Button>
         </Space>
       </div>
+      <div
+        className="table-container"
+        style={{
+          flex: 1,
+          overflow: 'auto',
+          borderRadius: '8px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+        }}
+      >
+        <Table
+          dataSource={mcpServers}
+          columns={columns}
+          rowKey="name"
+          pagination={false}
+          className="mcp-server-table"
+          style={{ borderRadius: '8px' }}
+          scroll={{ y: 'calc(100vh - 300px)' }}
+          rowClassName={() => 'mcp-server-row'}
+          onRow={() => ({
+            style: tableStyles.row,
+          })}
+          expandable={{
+            expandedRowRender: (record) => {
+              const tools = serverTools[record.name] || [];
 
-      <Table dataSource={mcpServers} columns={columns} rowKey="name" pagination={false} />
+              if (tools.length === 0) {
+                return (
+                  <div className="py-6 px-6 text-center">
+                    <Empty
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                      description={<Typography.Text type="secondary">暂无可用工具</Typography.Text>}
+                    />
+                  </div>
+                );
+              }
+
+              return (
+                <div className="mcp-server-tools py-4 px-5" style={{ background: '#f9f9f9' }}>
+                  <div className="mb-3">
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <ApiOutlined
+                        style={{ marginRight: '8px', color: '#1677ff', fontSize: '16px' }}
+                      />
+                      <Typography.Text strong style={{ fontSize: '14px' }}>
+                        {tools.length > 0 ? '可用工具: ' : '暂无可用工具'}
+                      </Typography.Text>
+                      <Badge
+                        count={tools.length}
+                        style={{
+                          backgroundColor: '#1677ff',
+                          marginLeft: '8px',
+                          fontSize: '12px',
+                          boxShadow: 'none',
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <List
+                    grid={{ gutter: 12, column: 3 }}
+                    dataSource={tools}
+                    renderItem={(tool, index) => (
+                      <List.Item key={index}>
+                        <Card
+                          hoverable
+                          size="small"
+                          className="mcp-server-tool-card"
+                          style={tableStyles.toolCard}
+                        >
+                          <Typography.Title
+                            level={5}
+                            style={{
+                              margin: '0 0 6px 0',
+                              fontSize: '14px',
+                              color: '#1677ff',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                            title={tool?.name?.split('__')?.[2] || ''}
+                          >
+                            {tool?.name?.split('__')?.[2] || ''}
+                          </Typography.Title>
+                          <Typography.Paragraph
+                            type="secondary"
+                            style={{
+                              margin: 0,
+                              fontSize: '12px',
+                              lineHeight: '1.4',
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical',
+                              overflow: 'hidden',
+                              height: '34px',
+                            }}
+                            title={tool.description}
+                          >
+                            {tool.description}
+                          </Typography.Paragraph>
+                        </Card>
+                      </List.Item>
+                    )}
+                  />
+                </div>
+              );
+            },
+            expandRowByClick: false,
+            expandIcon: ({ expanded, onExpand, record }) => {
+              const tools = serverTools[record.name] || [];
+              const hasTools = tools.length > 0;
+              return (
+                <Tooltip
+                  title={
+                    expanded ? '收起' : hasTools ? `查看工具 (${tools.length})` : '暂无可用工具'
+                  }
+                >
+                  <Button
+                    type="text"
+                    icon={<ToolOutlined />}
+                    onClick={(e) => onExpand(record, e)}
+                    style={{
+                      color: expanded ? '#1677ff' : hasTools ? '#1677ff' : '#bfbfbf',
+                      opacity: hasTools ? 1 : 0.6,
+                      transition: 'all 0.3s',
+                    }}
+                    disabled={!hasTools}
+                  />
+                </Tooltip>
+              );
+            },
+          }}
+        />
+      </div>
 
       {/* Form Modal */}
       <Modal
