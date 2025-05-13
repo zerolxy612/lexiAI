@@ -132,10 +132,10 @@ const ProviderItem = React.memo(
     }, []);
 
     return (
-      <div className="mb-3 p-4 hover:bg-gray-50 rounded-md cursor-pointer border border-solid border-gray-100">
+      <div className="mb-3 p-4 rounded-md cursor-pointer border border-solid border-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 dark:border-gray-700">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex-1 flex items-center">
-            <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center mr-3">
+            <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center mr-3 dark:bg-gray-800">
               {provider.isGlobal ? (
                 <LuGlobe size={18} />
               ) : (

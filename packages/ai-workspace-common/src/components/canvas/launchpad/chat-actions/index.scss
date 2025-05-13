@@ -2,5 +2,9 @@
   .ant-dropdown-menu {
     max-height: 48vh;
     overflow-y: auto;
+
+    .ant-dropdown-menu-item {
+      margin: 0 8px;
+    }
   }
 }

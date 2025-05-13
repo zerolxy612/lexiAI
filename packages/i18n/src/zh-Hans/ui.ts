@@ -361,7 +361,7 @@ const translations = {
         tag: '多模型支持',
         title: '集成 13+ 顶尖 AI 模型，满足不同场景需求',
         bulletPoints: [
-          '支持 Claude、DeepSeek、Gemini、GPT-4o 等高级模型',
+          '支持 Claude、DeepSeek、Gemini、GPT-4o 等先进模型',
           '提供 Claude Haiku、DeepSeek V3、Llama 等标准模型',
           '根据任务智能推荐最佳模型，确保输出质量',
         ],
@@ -492,7 +492,7 @@ const translations = {
     faq: {
       title: '常见问题',
       Q1: 'Refly 可以免费使用吗？',
-      A1: 'Refly 作为开源项目，对于个人用户，您可以通过自行部署社区版使用其所有功能。为了更多用户快速上手体验 Refly，我们为所有注册用户提供 100 个知识库文件存储额度，以及每天 5 次高级模型调用和 50 次基础模型调用。如果您需要体验进阶模型或扩大用量，可升级付费订阅套餐。',
+      A1: 'Refly 作为开源项目，对于个人用户，您可以通过自行部署社区版使用其所有功能。为了更多用户快速上手体验 Refly，我们为所有注册用户提供 100 个知识库文件存储额度，以及每天 5 次 T1 模型调用和 50 次 T2 模型调用。如果您需要体验进阶模型或扩大用量，可升级付费订阅套餐。',
       Q2: '你们支持哪些付款方式？',
       A2: '我们支持银行卡、支付宝、Amazon Pay 和 Cash App Pay。支持的付款方式可能随时有变，请以 Stripe 收银台显示的付款方式为准。',
       Q3: '如何更改或取消订阅方案？',
@@ -597,7 +597,7 @@ const translations = {
       },
       {
         before: '',
-        highlight: '高级模型',
+        highlight: '先进模型',
         after: '驱动的强大技能：生成文档、推荐问题、全网搜索、知识库搜索',
       },
       {
@@ -607,12 +607,12 @@ const translations = {
       },
       {
         before: '借助',
-        highlight: '高级模型',
+        highlight: '先进模型',
         after: '驱动的 AI Markdown 编辑器',
       },
       {
         before: '借助',
-        highlight: '高级模型',
+        highlight: '先进模型',
         after: '驱动的 PPT，SVG，可视化网页、表格和 Mermaid 图表生成',
       },
     ],
@@ -1517,6 +1517,7 @@ const translations = {
       viewTutorial: '查看文档',
       tour: '查看教程',
       template: '模板',
+      home: '首页',
     },
   },
   knowledgeLibrary: {
@@ -1744,12 +1745,12 @@ const translations = {
       subscribeNow: '立即订阅',
       manage: '管理订阅',
       currentPlan: '当前套餐',
-      t1Requests: '高级模型请求',
+      t1Requests: 'T1 模型请求',
       t1RequestsDescription:
-        '高级模型包括 Claude 3.7 Sonnet (Thinking), DeepSeek R1, o3 Mini, GPT-4o 等模型。每个成功的技能调用计为一次请求。',
-      t2Requests: '标准模型请求',
+        'T1 模型包括 Claude 3.7 Sonnet (Thinking), DeepSeek R1, o3 Mini, GPT-4o 等模型。每个成功的技能调用计为一次请求。',
+      t2Requests: 'T2 模型请求',
       t2RequestsDescription:
-        '标准模型包括 Gemini Flash 2.0, DeepSeek V3, Claude 3.5 Haiku 等模型。每个成功的技能调用计为一次请求。',
+        'T2 模型包括 Gemini Flash 2.0, DeepSeek V3, Claude 3.5 Haiku 等模型。每个成功的技能调用计为一次请求。',
       requestsRefresh: '免费用户每天会重置次数。',
       libraryStorage: '知识库文件数',
       libraryStorageDescription: '知识库中每个资源和文档计为一个文件。',
@@ -1782,8 +1783,8 @@ const translations = {
         },
         vectorStorage: '向量存储',
         fileStorage: '文件存储',
-        t1Model: '高级模型',
-        t2Model: '基础模型',
+        t1Model: 'T1 模型',
+        t2Model: 'T2 模型',
         freeModel: '免费模型',
         mediaCredit: '多媒体积分（即将推出）',
         upgrade: '立即升级',
@@ -1933,6 +1934,9 @@ const translations = {
       relevanceThreshold: '相关性阈值',
       relevanceThresholdPlaceholder: '请设置相关性阈值',
       clickToSet: '点击设置',
+      group: '分组名称',
+      groupPlaceholder: '请设置分组名称，用于分类管理模型',
+      default: '默认分组',
     },
     modelTier: {
       free: '免费',
@@ -2374,15 +2378,7 @@ const translations = {
       extensionWeblink: '网页',
     },
     modelSelector: {
-      unlimited: '无限量',
       configureModel: '点击配置模型',
-      premium: '高级模型',
-      standard: '标准模型',
-      free: '免费模型',
-      freeModelHint: '免费模型可能存在不可用情况和使用限制，建议仅用于测试用途。',
-      tokenUsed: '已使用 {{used}} / {{quota}}',
-      upgrade: '升级',
-      quotaExceeded: '额度已用尽，点击升级订阅',
       noVisionSupport: '该模型不支持消费图片',
     },
     contentSelector: {

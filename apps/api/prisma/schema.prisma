@@ -820,6 +820,8 @@ model ProviderItem {
   tier       String?   @map("tier")
   /// Order
   order      Int       @default(0) @map("order")
+  /// Group name
+  groupName  String    @default("") @map("group_name")
   /// Create timestamp
   createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz()
   /// Update timestamp

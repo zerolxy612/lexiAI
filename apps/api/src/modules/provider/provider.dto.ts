@@ -25,6 +25,7 @@ export const providerItemPO2DTO = (
 ): ProviderItem => {
   return {
     ...pick(providerItem, ['providerId', 'itemId', 'name', 'enabled', 'order']),
+    group: providerItem.groupName,
     category: providerItem.category as ProviderCategory,
     tier: providerItem.tier as ModelTier,
     provider: providerPO2DTO(providerItem.provider),
