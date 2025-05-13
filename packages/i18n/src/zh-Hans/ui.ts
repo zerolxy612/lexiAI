@@ -923,13 +923,13 @@ const translations = {
       title: '预设场景',
       generatePPT: '生成 PPT',
       generatePPTDesc: '创建专业的演示幻灯片',
-      generatePPTQuery: '请创建一个关于[主题]的专业 PPT',
+      generatePPTQuery: '请使用 HTML 格式创建一个关于[主题]的专业 PPT',
       generateLanding: '生成营销落地页',
       generateLandingDesc: '创建市场营销落地页',
-      generateLandingQuery: '请为[产品/服务]创建一个营销落地页',
+      generateLandingQuery: '请使用 HTML 格式为[产品/服务]创建一个营销落地页',
       generateXHS: '生成小红书卡片',
       generateXHSDesc: '创建小红书内容卡片',
-      generateXHSQuery: '请创建一个关于[主题]的小红书内容卡片',
+      generateXHSQuery: '请使用 HTML 格式创建一个关于[主题]的小红书内容卡片',
       generateMediaContent: '生成自媒体文案',
       generateMediaContentDesc: '创建引人入胜的自媒体内容',
       generateMediaContentQuery: '请创建一篇关于[主题]的自媒体文案',
@@ -1059,7 +1059,12 @@ const translations = {
       approachingNodeLimit: '画布节点数量接近上限 ({{current}}/{{max}})，建议移除不必要的节点。',
     },
     skill: {
-      askAI: 'AI 提问',
+      askAI: 'AI 普通问答',
+      askAIDescription: '向 AI 提问，获取写作、阅读理解或问题解答等帮助',
+      switchSkillTooltip:
+        '在输入框中使用 Ctrl + / 切换技能，默认提问技能为 AI 普通问答，可切换为其他技能，如网络搜索',
+      switchSkillTooltipMac:
+        '在输入框中使用 ⌘ + / 切换技能，默认提问技能为 AI 普通问答，可切换为其他技能，如网络搜索',
     },
     skillResponse: {
       executionFailed: '执行失败，点击重试',
