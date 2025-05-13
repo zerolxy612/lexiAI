@@ -369,6 +369,7 @@ export class ProviderService {
           itemId: genProviderItemID(),
           uid: user.uid,
           ...pick(item, ['providerId', 'category', 'name', 'enabled', 'config', 'tier']),
+          ...(item.tier ? { groupName: item.tier.toUpperCase() } : {}),
         })),
     });
   }
@@ -634,7 +635,7 @@ export class ProviderService {
         providerId,
         enabled,
         order,
-        group,
+        groupName: group,
         uid: user.uid,
         tier: option?.tier,
         config: JSON.stringify(option?.config ?? config),
@@ -722,7 +723,7 @@ export class ProviderService {
         enabled,
         providerId,
         order,
-        group,
+        groupName: group,
         ...(config ? { config: JSON.stringify(config) } : {}),
       },
     });
@@ -782,7 +783,7 @@ export class ProviderService {
             enabled: item.enabled,
             providerId: item.providerId,
             order: item.order,
-            group: item.group,
+            groupName: item.group,
             ...(item.config ? { config: JSON.stringify(item.config) } : {}),
           },
         });
