@@ -716,7 +716,7 @@ const translations = {
     faq: {
       title: 'Frequently Asked Questions',
       Q1: 'Can Refly be used for free?',
-      A1: 'As an open-source project, for individual users, you can self-deploy the community version to use all our  features. To enable more users to quickly start and experience Refly, we provide all registered users with knowledge base quota of 100 files and daily access to 5 pro model requests and 50 standard model requests. If you wish to experience advanced models or increase the usage amount, you can upgrade to a paid subscription plan.',
+      A1: 'As an open-source project, for individual users, you can self-deploy the community version to use all our features. To enable more users to quickly start and experience Refly, we provide all registered users with knowledge base quota of 100 files and daily access to 5 T1 model requests and 50 T2 model requests. If you wish to experience advanced models or increase the usage amount, you can upgrade to a paid subscription plan.',
       Q2: 'What payment methods do you support?',
       A2: 'We support bank cards, Alipay, Amazon Pay, and Cash App Pay. The supported payment methods may be subject to change at any time. Please refer to the payment methods displayed in the Stripe checkout page for the most accurate information.',
       Q3: 'How can I change or cancel my subscription plan?',
@@ -771,7 +771,7 @@ const translations = {
       },
       {
         before: 'Powerful skills driven by ',
-        highlight: 'pro models',
+        highlight: 'advanced models',
         after: ': Generate documents, recommend questions, web search, and library search.',
       },
       {
@@ -782,12 +782,12 @@ const translations = {
       },
       {
         before: 'Content creation with AI markdown editor, powered by ',
-        highlight: 'pro models',
+        highlight: 'advanced models',
         after: '',
       },
       {
         before: 'Create PPT, SVG, visual web pages, tables, and Mermaid charts with ',
-        highlight: 'pro models',
+        highlight: 'advanced models',
         after: '',
       },
     ],
@@ -1942,12 +1942,12 @@ const translations = {
       subscribeNow: 'Subscribe Now',
       manage: 'Manage Subscription',
       currentPlan: 'Current Plan',
-      t1Requests: 'Pro Requests',
+      t1Requests: 'T1 Requests',
       t1RequestsDescription:
-        'Pro models include Claude 3.7 Sonnet (Thinking), DeepSeek R1, o3 Mini, GPT-4o and others. Each successful skill call to pro models counts as one request.',
-      t2Requests: 'Standard Requests',
+        'T1 models include Claude 3.7 Sonnet (Thinking), DeepSeek R1, o3 Mini, GPT-4o and others. Each successful skill call to T1 models counts as one request.',
+      t2Requests: 'T2 Requests',
       t2RequestsDescription:
-        'Standard models include Gemini Flash 2.0, DeepSeek V3, Claude 3.5 Haiku and others. Each successful skill call to standard models counts as one request.',
+        'T2 models include Gemini Flash 2.0, DeepSeek V3, Claude 3.5 Haiku and others. Each successful skill call to T2 models counts as one request.',
       requestsRefresh: 'Request count will be reset every day for users on free plan.',
       libraryStorage: 'Library Storage',
       libraryStorageDescription: 'Each resource and document in your library counts as one file.',
@@ -1983,8 +1983,8 @@ const translations = {
         },
         vectorStorage: 'Vector Storage',
         fileStorage: 'File Storage',
-        t1Model: 'Pro Models',
-        t2Model: 'Standard Models',
+        t1Model: 'T1 Models',
+        t2Model: 'T2 Models',
         freeModel: 'Free Models',
         mediaCredit: 'Media Credit (Coming Soon)',
         upgrade: 'Upgrade Now',
@@ -2143,8 +2143,8 @@ const translations = {
     },
     modelTier: {
       free: 'Free',
-      t1: 'Premium',
-      t2: 'Standard',
+      t1: 'T1',
+      t2: 'T2',
     },
     parserConfig: {
       webSearch: 'Web Search',
@@ -2534,16 +2534,7 @@ const translations = {
       extensionWeblink: 'Extension Web Link',
     },
     modelSelector: {
-      unlimited: 'Unlimited',
       configureModel: 'Click to configure models',
-      premium: 'Pro Models',
-      standard: 'Standard Models',
-      free: 'Free Models',
-      freeModelHint:
-        'Free models are susceptible to downtime and usage restrictions. We recommend utilizing them solely for testing purposes.',
-      tokenUsed: 'Used {{used}} / {{quota}}',
-      upgrade: 'Upgrade',
-      quotaExceeded: 'Quota exceeded, click to upgrade subscription',
       noVisionSupport: 'This model does not support image processing',
     },
     contentSelector: {
