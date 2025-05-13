@@ -8,6 +8,7 @@ import {
 // components
 import { AccountSetting } from '@refly-packages/ai-workspace-common/components/settings/account-setting';
 import { LanguageSetting } from '@refly-packages/ai-workspace-common/components/settings/language-setting';
+import { AppearanceSetting } from '@refly-packages/ai-workspace-common/components/settings/appearance-setting';
 import { Subscription } from '@refly-packages/ai-workspace-common/components/settings/subscription';
 import { ModelProviders } from '@refly-packages/ai-workspace-common/components/settings/model-providers';
 import { ModelConfig } from '@refly-packages/ai-workspace-common/components/settings/model-config';
@@ -16,6 +17,7 @@ import { DefaultModel } from '@refly-packages/ai-workspace-common/components/set
 
 import { RiAccountBoxLine } from 'react-icons/ri';
 import { HiOutlineLanguage } from 'react-icons/hi2';
+import { LuPalette } from 'react-icons/lu';
 
 import './index.scss';
 import {
@@ -101,6 +103,12 @@ export const SettingModal = (props: SettingModalProps) => {
       label: t('settings.tabs.language'),
       icon: <HiOutlineLanguage style={iconStyle} />,
       children: <LanguageSetting />,
+    },
+    {
+      key: 'appearance',
+      label: t('settings.tabs.appearance'),
+      icon: <LuPalette style={iconStyle} />,
+      children: <AppearanceSetting />,
     },
   ];
 

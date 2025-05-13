@@ -44,9 +44,9 @@ export const PremiumBanner = memo(() => {
   if (!showPremiumBanner) return null;
 
   return (
-    <div className="flex items-center justify-between px-2 py-0.5 bg-gray-100 border-b">
+    <div className="flex items-center justify-between px-2 py-0.5 bg-gray-100 border-b dark:bg-gray-800">
       <div className="flex items-center justify-between gap-2 w-full">
-        <span className="text-xs text-gray-600 flex-1 whitespace-nowrap">
+        <span className="text-xs text-gray-600 dark:text-gray-300 flex-1 whitespace-nowrap">
           {t('copilot.premiumBanner.message')}
         </span>
         <div className="flex items-center gap-0.5">
@@ -91,7 +91,7 @@ const NodeHeader = memo(
           <div className="w-6 h-6 rounded bg-[#6172F3] shadow-lg flex items-center justify-center flex-shrink-0">
             {getSkillIcon(selectedSkillName, 'w-4 h-4 text-white')}
           </div>
-          <span className="text-sm font-medium leading-normal text-[rgba(0,0,0,0.8)] truncate">
+          <span className="text-sm font-medium leading-normal text-[rgba(0,0,0,0.8)] truncate  dark:text-[rgba(225,225,225,0.8)]">
             {selectedSkillName
               ? t(`${selectedSkillName}.name`, { ns: 'skill' })
               : t('canvas.skill.askAI')}
@@ -398,7 +398,7 @@ export const ChatPanel = memo(
           <div
             className={cn(
               'ai-copilot-chat-container chat-input-container rounded-[7px] overflow-hidden',
-              'border border-gray-100 border-solid',
+              'border border-gray-100 border-solid dark:border-gray-700',
             )}
           >
             <SelectedSkillHeader

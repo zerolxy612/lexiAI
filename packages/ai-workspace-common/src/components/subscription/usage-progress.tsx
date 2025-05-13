@@ -22,14 +22,14 @@ export const UsageProgress = memo<UsageProgressProps>(({ label, tooltip, used, q
   return (
     <>
       <div className="-mb-2.5 flex items-center justify-between">
-        <div className="text-xs text-gray-500 flex items-center gap-1">
+        <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
           <Tooltip className="flex flex-row items-center gap-1 cursor-pointer" title={tooltip}>
             <span>{label}</span>
             <HiOutlineQuestionMarkCircle className="text-sm flex items-center justify-center cursor-pointer" />
           </Tooltip>
         </div>
-        <div className="text-xs text-gray-500">
-          <span className="text-gray-700">
+        <div className="text-xs text-gray-500 dark:text-gray-400">
+          <span className="text-gray-700 dark:text-gray-200">
             {formatNumber(used)}/{formatNumber(quota)}
           </span>
         </div>

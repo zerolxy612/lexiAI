@@ -41,7 +41,7 @@ export const HoverCard: FC<HoverCardProps> = ({
   const { hoverCardEnabled, toggleHoverCard } = useHoverCard();
 
   const renderContent = () => (
-    <div className="w-[325px] bg-white rounded-lg overflow-hidden">
+    <div className="w-[325px] bg-white rounded-lg overflow-hidden dark:bg-gray-900">
       {videoUrl && (
         <div className="p-3 pb-2 overflow-hidden">
           <video
@@ -61,8 +61,10 @@ export const HoverCard: FC<HoverCardProps> = ({
         </div>
       )}
       <div className="px-4 py-3">
-        <h3 className="m-0 mb-2 text-base font-medium text-gray-800 leading-[1.4]">{title}</h3>
-        <p className="m-0 text-sm text-gray-500 leading-[1.5]">{description}</p>
+        <h3 className="m-0 mb-2 text-base font-medium text-gray-800 dark:text-gray-200 leading-[1.4]">
+          {title}
+        </h3>
+        <p className="m-0 text-sm text-gray-500 dark:text-gray-400 leading-[1.5]">{description}</p>
       </div>
       <Button
         type="link"

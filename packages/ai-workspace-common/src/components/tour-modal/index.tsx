@@ -80,7 +80,7 @@ const TourContent = ({ description, videoUrl, videoType }: TourContentProps) => 
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           referrerPolicy="strict-origin-when-cross-origin"
           allowFullScreen
-          className="w-full rounded-lg bg-black"
+          className="w-full rounded-lg bg-black dark:bg-gray-100"
           style={{
             opacity: isLoading ? 0 : 1,
             transition: 'opacity 0.3s ease-in-out',
@@ -101,7 +101,7 @@ const TourContent = ({ description, videoUrl, videoType }: TourContentProps) => 
         loop
         playsInline
         onPlay={handlePlay}
-        className="w-full h-full object-cover rounded-lg bg-black"
+        className="w-full h-full object-cover rounded-lg bg-black dark:bg-gray-100"
         style={{
           opacity: isLoading ? 0 : 1,
           transition: 'opacity 0.3s ease-in-out',
@@ -117,13 +117,15 @@ const TourContent = ({ description, videoUrl, videoType }: TourContentProps) => 
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-base text-gray-600">{description}</p>
+      <p className="text-base text-gray-600 dark:text-gray-300">{description}</p>
       <div className="flex justify-center">
         <div key={videoUrl} className="relative w-full" style={{ height: '400px' }}>
           {isLoading && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50 z-50 rounded-lg">
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50 z-50 rounded-lg dark:bg-gray-900">
               <Spin className="w-6 h-6" />
-              <div className="text-gray-600 text-sm mt-2">{t('canvas.toolbar.videoLoading')}</div>
+              <div className="text-gray-600 dark:text-gray-300 text-sm mt-2">
+                {t('canvas.toolbar.videoLoading')}
+              </div>
             </div>
           )}
           {renderVideo()}
@@ -202,7 +204,7 @@ export const TourModal = () => {
       footer={null}
     >
       <div className="mb-6">
-        <h2 className="mb-4 flex items-center gap-1 text-lg font-bold text-gray-900">
+        <h2 className="mb-4 flex items-center gap-1 text-lg font-bold text-gray-900 dark:text-gray-100">
           <LuLightbulb /> <span>{title}</span>
         </h2>
         <TourContent

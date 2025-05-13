@@ -242,7 +242,9 @@ export const ImportFromFile = () => {
         <div className="w-full file-upload-container">
           <Dragger {...props}>
             <RiInboxArchiveLine className="text-3xl text-[#00968f]" />
-            <p className="ant-upload-text mt-4 text-gray-600">{t('resource.import.dragOrClick')}</p>
+            <p className="ant-upload-text mt-4 text-gray-600 dark:text-gray-300">
+              {t('resource.import.dragOrClick')}
+            </p>
             <p className="ant-upload-hint text-gray-400 mt-2">{genUploadHint()}</p>
             {fileParsingUsage?.pagesLimit >= 0 && (
               <div className="text-green-500 mt-2 text-xs font-medium flex items-center justify-center gap-1">

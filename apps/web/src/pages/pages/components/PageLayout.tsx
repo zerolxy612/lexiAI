@@ -40,7 +40,7 @@ const PageLayout: React.FC<PageLayoutProps> = ({
     <Layout className="h-screen overflow-hidden bg-[#f7f9fc]">
       {/* Top navigation bar */}
       {headerContent && (
-        <div className="flex justify-between items-center px-4 py-2.5 bg-white border-b border-gray-200 z-20 shadow-sm">
+        <div className="flex justify-between items-center px-4 py-2.5 bg-white border-b border-gray-200 z-20 shadow-sm dark:bg-gray-900 dark:border-gray-700">
           {headerContent}
         </div>
       )}
@@ -52,7 +52,7 @@ const PageLayout: React.FC<PageLayoutProps> = ({
           <Layout.Sider
             width={180}
             theme="light"
-            className="bg-[#f7f9fc] border-r border-gray-200 overflow-hidden relative"
+            className="bg-[#f7f9fc] border-r border-gray-200 overflow-hidden relative dark:bg-gray-900 dark:border-gray-700"
           >
             <SidebarMinimap
               nodes={nodes}
@@ -73,10 +73,7 @@ const PageLayout: React.FC<PageLayoutProps> = ({
         )}
 
         {/* Middle content area */}
-        <Layout.Content
-          className="relative overflow-y-auto overflow-x-hidden"
-          style={{ backgroundColor: '#f7f9fc' }}
-        >
+        <Layout.Content className="relative overflow-y-auto overflow-x-hidden bg-white dark:bg-gray-900 ">
           {/* Button to show minimap */}
           {!showMinimap && (
             <div className="fixed left-0 top-60 z-500">
@@ -85,7 +82,7 @@ const PageLayout: React.FC<PageLayoutProps> = ({
                   type="default"
                   icon={<UnorderedListOutlined />}
                   onClick={toggleMinimap}
-                  className="bg-white shadow-md rounded-r-md border-l-0 h-8 hover:bg-gray-50 border border-gray-200"
+                  className="bg-white shadow-md rounded-r-md border-l-0 h-8 hover:bg-gray-50 border border-gray-200 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-gray-950"
                   style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}
                 />
               </Tooltip>

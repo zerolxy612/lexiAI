@@ -215,7 +215,11 @@ function Header() {
 
         <div className="flex items-center gap-2">
           <UILocaleList>
-            <Button type="text" size="middle" className="px-2 text-gray-600 hover:text-[#00968f]">
+            <Button
+              type="text"
+              size="middle"
+              className="px-2 text-gray-600 hover:text-green-600 dark:text-gray-300 dark:hover:text-green-300 "
+            >
               <IconLanguage className="h-4 w-4" />
               {t('language')}{' '}
               <IconDown className="ml-1 transition-transform duration-200 group-hover:rotate-180" />
@@ -226,7 +230,7 @@ function Header() {
             type="text"
             size="middle"
             onClick={() => window.open('https://github.com/refly-ai/refly', '_blank')}
-            className="flex items-center gap-1 px-4 text-gray-600 hover:text-[#00968f]"
+            className="flex items-center gap-1 px-4 text-gray-600 hover:text-green-600 dark:text-gray-300 dark:hover:text-green-300"
           >
             <FaGithub className="h-4 w-4 mr-1" />
             <span>{starCount}</span>

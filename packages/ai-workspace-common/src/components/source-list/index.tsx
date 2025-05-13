@@ -139,13 +139,13 @@ const ViewMoreItem = ({
 
   return (
     <div
-      className="flex relative flex-col flex-wrap gap-2 justify-start items-start px-3 py-3 text-xs rounded-lg cursor-pointer hover:bg-gray-50 source-list-item view-more-item border border-solid border-black/10 transition-all"
+      className="flex relative flex-col flex-wrap gap-2 justify-start items-start px-3 py-3 text-xs rounded-lg cursor-pointer hover:bg-gray-50 source-list-item view-more-item border border-solid border-black/10 transition-all dark:hover:bg-gray-900 dark:border-white/10"
       onClick={() => {
         onClick?.();
       }}
     >
       <div
-        className="w-full overflow-hidden font-medium whitespace-nowrap text-ellipsis text-zinc-500"
+        className="w-full overflow-hidden font-medium whitespace-nowrap text-ellipsis text-zinc-500 dark:text-zinc-400"
         title={t('copilot.sourceListModal.moreSources', { count: extraCnt })}
       >
         {t('copilot.sourceListModal.moreSources', { count: extraCnt })} <IconRight />

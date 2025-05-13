@@ -19,7 +19,7 @@ const StepIndicator = ({
   currentStep,
   totalSteps,
 }: { currentStep: number; totalSteps: number }) => (
-  <div className="flex items-center justify-between mb-6 bg-gray-50 rounded-lg p-4">
+  <div className="flex items-center justify-between mb-6 bg-gray-50 rounded-lg p-4 dark:bg-gray-950">
     {Array.from({ length: totalSteps }).map((_, index) => (
       <div key={index} className="flex items-center">
         <div
@@ -341,7 +341,7 @@ export default function CanvasPageTest() {
                     {pageData.data.nodeRelations.map((relation) => (
                       <div
                         key={relation.relationId}
-                        className="mb-2 p-2 bg-gray-50 rounded-md border border-gray-100 flex items-center justify-between"
+                        className="mb-2 p-2 bg-gray-50 dark:bg-gray-950 rounded-md border border-gray-100 flex items-center justify-between"
                       >
                         <div className="truncate max-w-[70%]" title={relation.nodeId}>
                           {relation.nodeId}
@@ -410,7 +410,7 @@ export default function CanvasPageTest() {
                 {availableNodes.map((node) => (
                   <div
                     key={node.data.entityId}
-                    className="mb-2 p-2 hover:bg-gray-50 rounded-md border border-gray-100 transition-colors"
+                    className="mb-2 p-2 hover:bg-gray-50 rounded-md border border-gray-100 transition-colors dark:hover:bg-gray-950 dark:border-gray-800"
                   >
                     <Checkbox
                       checked={nodeIds.includes(node.data.entityId)}
@@ -462,8 +462,8 @@ export default function CanvasPageTest() {
         </Card>
       </div>
 
-      <Card className="mt-6 shadow-sm bg-gray-50" title="使用说明">
-        <ol className="list-decimal pl-5 space-y-2 text-gray-700">
+      <Card className="mt-6 shadow-sm bg-gray-50 dark:bg-gray-950" title="使用说明">
+        <ol className="list-decimal pl-5 space-y-2 text-gray-700 dark:text-gray-200">
           <li>输入有效的 Canvas ID 并点击"加载节点"按钮</li>
           <li>点击"获取关联页面"查看是否已有关联页面</li>
           <li>从加载的节点列表中选择要添加的节点</li>

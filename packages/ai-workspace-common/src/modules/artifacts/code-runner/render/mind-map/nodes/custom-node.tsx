@@ -257,7 +257,7 @@ export const CustomNode = memo(({ id, data }: NodeProps) => {
         ref={nodeRef}
         className={classNames(
           'rounded-lg border shadow-sm transition-all',
-          { 'shadow-xs border-gray-200': isHovered },
+          { 'shadow-xs border-gray-200 dark:border-gray-700': isHovered },
           { 'nodrag nopan': !readonly && (isEditing || isOperating) },
           { nowheel: !readonly && (isEditing || isOperating) && isHovered },
           { 'select-text': isEditing || isOperating || readonly }, // Always allow selection in readonly mode

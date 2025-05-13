@@ -76,7 +76,7 @@ export const Markdown = memo(
 
     // Memoize the className to prevent inline object creation
     const markdownClassName = useMemo(
-      () => cn('markdown-body', props.className),
+      () => cn('markdown-body dark:text-gray-300', props.className),
       [props.className],
     );
 

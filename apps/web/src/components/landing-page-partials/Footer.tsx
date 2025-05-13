@@ -113,10 +113,10 @@ function Footer() {
                 <Link to="/" className="mb-4 inline-block no-underline" aria-label="Refly">
                   <div className="flex items-center gap-2">
                     <img src={Logo} alt="" className="h-8 w-8" />
-                    <span className="text-xl font-bold text-black">Refly</span>
+                    <span className="text-xl font-bold text-black dark:text-gray-100">Refly</span>
                   </div>
                 </Link>
-                <p className="mb-6 max-w-[320px] text-base leading-relaxed text-gray-600">
+                <p className="mb-6 max-w-[320px] text-base leading-relaxed text-gray-600 dark:text-gray-300">
                   {t('landingPage.anotherDescription')}
                 </p>
                 <div className="flex items-center justify-start gap-3">
@@ -160,12 +160,12 @@ function Footer() {
                   <div className="h-4 w-[1px] bg-gray-200" />
 
                   {/* Language Selector */}
-                  <div className="flex cursor-pointer items-center text-gray-600 hover:text-[#00968f]">
+                  <div className="flex cursor-pointer items-center text-gray-600 hover:text-green-600 dark:text-gray-300 dark:hover:text-green-300">
                     <UILocaleList>
                       <Button
                         type="text"
                         size="middle"
-                        className="px-2 text-gray-600 hover:text-[#00968f]"
+                        className="px-2 text-gray-600 hover:text-green-600 dark:text-gray-300 dark:hover:text-green-300 "
                       >
                         <IconLanguage className="h-4 w-4" />
                         {t('language')}{' '}

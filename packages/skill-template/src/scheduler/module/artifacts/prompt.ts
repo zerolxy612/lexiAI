@@ -313,7 +313,7 @@ This example demonstrates the assistant's preference to update existing artifact
                 <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
               </CardHeader>
               <CardContent className="p-4">
-                <p className="text-gray-600">{description}</p>
+                <p className="text-gray-600 dark:text-gray-300">{description}</p>
                 <Button 
                   onClick={handleDismiss}
                   className="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white"

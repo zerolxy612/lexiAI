@@ -40,7 +40,7 @@ const HoverMenu: React.FC<HoverMenuProps> = React.memo(
 
     return (
       <div
-        className="fixed z-[10000] transform -translate-x-1/2 transition-opacity duration-300 bg-white border border-gray-100 shadow-lg rounded-lg px-2 py-1 flex gap-2"
+        className="fixed z-[10000] transform -translate-x-1/2 transition-opacity duration-300 bg-white border border-gray-100 shadow-lg rounded-lg px-2 py-1 flex gap-2 dark:bg-gray-900 dark:border-gray-800"
         style={{
           background: 'white',
           boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
@@ -52,7 +52,7 @@ const HoverMenu: React.FC<HoverMenuProps> = React.memo(
         }}
         onMouseEnter={onMouseEnter}
       >
-        <div className="bg-white border border-gray-100 shadow-lg rounded-lg px-2 py-1 flex gap-2">
+        <div className="bg-white border border-gray-100 shadow-lg rounded-lg px-2 py-1 flex gap-2 dark:bg-gray-900 dark:border-gray-800">
           <Button type="text" onClick={handleSaveClick} icon={<IconSave />}>
             <span className="font-medium">{t('extension.floatingSphere.clipSelectedContent')}</span>
           </Button>

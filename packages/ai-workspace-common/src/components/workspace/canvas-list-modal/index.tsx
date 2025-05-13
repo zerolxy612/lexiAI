@@ -36,7 +36,7 @@ const CanvasItem = (props: {
 
   return (
     <div
-      className="bg-white rounded-lg overflow-hidden border border-solid cursor-pointer border-gray-200 hover:border-green-500 transition-colors duration-200"
+      className="bg-white rounded-lg overflow-hidden border border-solid cursor-pointer border-gray-200 hover:border-green-500 transition-colors duration-200 dark:bg-gray-900 dark:border-gray-700 dark:hover-green-400"
       onClick={() => handleClickCanvas(canvas)}
     >
       <div className="h-36 overflow-hidden">
@@ -48,19 +48,19 @@ const CanvasItem = (props: {
             key={`minimap-${canvas?.canvasId}-${canvas?.updatedAt ?? Date.now()}`}
           />
         ) : (
-          <div className="flex items-center justify-center w-full h-full bg-gray-100" />
+          <div className="flex items-center justify-center w-full h-full bg-gray-100 dark:bg-gray-800" />
         )}
       </div>
-      <Divider className="m-0 text-gray-200" />
-      <div className="px-3 pt-2 pb-1 flex justify-between items-center bg-gray-50">
+      <Divider className="m-0 text-gray-200 dark:text-gray-700" />
+      <div className="px-3 pt-2 pb-1 flex justify-between items-center bg-gray-50 dark:bg-gray-900">
         <div className="flex items-center gap-3 mb-2">
-          <IconCanvas size={24} className="text-gray-500" />
+          <IconCanvas size={24} className="text-gray-500 dark:text-gray-400" />
           <div className="flex-1 min-w-0">
             <Typography.Text className="text-sm font-medium w-48" ellipsis={{ tooltip: true }}>
               {canvas?.title || t('common.untitled')}
             </Typography.Text>
 
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               {time(canvas?.updatedAt, language as LOCALE)
                 .utc()
                 .fromNow()}

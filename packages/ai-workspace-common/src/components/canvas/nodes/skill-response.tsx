@@ -111,7 +111,7 @@ export const NodeHeader = memo(
           <div className="flex items-center gap-2">
             {showIcon && (
               <div className="w-6 h-6 rounded bg-[#F79009] shadow-lg flex items-center justify-center flex-shrink-0">
-                <IconResponse className="w-4 h-4 text-white" />
+                <IconResponse className="w-4 h-4 text-white dark:text-gray-900" />
               </div>
             )}
             {isEditing ? (
@@ -119,7 +119,7 @@ export const NodeHeader = memo(
                 ref={inputRef}
                 className={`${
                   source === 'skillResponsePreview' ? 'text-lg' : ''
-                } !border-transparent font-bold focus:!bg-transparent px-0.5 py-0 !bg-transparent !text-gray-700`}
+                } !border-transparent font-bold focus:!bg-transparent px-0.5 py-0 !bg-transparent !text-gray-700 dark:!text-gray-200`}
                 value={editTitle}
                 data-cy="skill-response-node-header-input"
                 onBlur={handleBlur}
@@ -165,7 +165,7 @@ const NodeFooter = memo(
     language: string;
   }) => {
     return (
-      <div className="flex-shrink-0 mt-2 flex flex-wrap justify-between items-center text-[10px] text-gray-400 relative z-20 gap-1">
+      <div className="flex-shrink-0 mt-2 flex flex-wrap justify-between items-center text-[10px] text-gray-400 relative z-20 gap-1 dark:text-gray-500">
         <div className="flex flex-wrap items-center gap-1 max-w-[70%]">
           {model && (
             <div className="flex items-center gap-1 overflow-hidden">
@@ -624,7 +624,9 @@ export const SkillResponseNode = memo(
           style={isPreview ? { width: 288, height: 200 } : containerStyle}
           onClick={onNodeClick}
         >
-          <div className={`h-full flex flex-col ${getNodeCommonStyles({ selected, isHovered })}`}>
+          <div
+            className={`h-full flex flex-col dark:bg-gray-900 ${getNodeCommonStyles({ selected, isHovered })}`}
+          >
             {!isPreview && !hideHandles && (
               <>
                 <CustomHandle
@@ -663,7 +665,7 @@ export const SkillResponseNode = memo(
                   {status === 'failed' && (
                     <div
                       className={cn(
-                        'flex items-center justify-center gap-1 mt-1 hover:bg-gray-50 rounded-md p-2',
+                        'flex items-center justify-center gap-1 mt-1 hover:bg-gray-50 rounded-md p-2 dark:hover:bg-gray-900',
                         readonly ? 'cursor-not-allowed' : 'cursor-pointer',
                       )}
                       onClick={() => handleRerun()}
@@ -676,7 +678,7 @@ export const SkillResponseNode = memo(
                   )}
 
                   {(status === 'waiting' || status === 'executing') && (
-                    <div className="flex items-center gap-2 bg-gray-100 rounded-md p-2">
+                    <div className="flex items-center gap-2 bg-gray-100 rounded-md p-2 dark:bg-gray-800">
                       <IconLoading className="h-3 w-3 animate-spin text-green-500" />
                       <span className="text-xs text-gray-500 max-w-48 truncate">
                         {log ? (
@@ -693,7 +695,7 @@ export const SkillResponseNode = memo(
 
                   {status !== 'failed' && sources.length > 0 && (
                     <div
-                      className="flex items-center rounded-md justify-between gap-2 border-gray-100 border-solid p-2 hover:bg-gray-50 cursor-pointer "
+                      className="flex items-center rounded-md justify-between gap-2 border-gray-100 border-solid p-2 hover:bg-gray-50 cursor-pointer dark:hover:bg-gray-900 dark:border-gray-800"
                       onClick={handleClickSources}
                     >
                       <span className="flex items-center gap-1 text-xs text-gray-500">
@@ -713,7 +715,7 @@ export const SkillResponseNode = memo(
                         .map((artifact) => (
                           <div
                             key={artifact.entityId}
-                            className="border border-solid border-gray-200 rounded-md px-2 py-2 w-full flex items-center gap-1"
+                            className="border border-solid border-gray-200 rounded-md px-2 py-2 w-full flex items-center gap-1 dark:border-gray-700"
                           >
                             {getArtifactIcon(artifact, 'text-gray-500')}
                             <span className="text-xs text-gray-500 max-w-[200px] truncate inline-block">

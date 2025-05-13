@@ -50,7 +50,7 @@ export const AppLayout = (props: AppLayoutProps) => {
       <Layout className="app-layout main">
         {showSider ? <SiderLayout source="sider" /> : null}
         <Layout
-          className="content-layout"
+          className="content-layout dark:bg-green-900"
           style={{
             height: 'calc(100vh)',
             flexGrow: 1,

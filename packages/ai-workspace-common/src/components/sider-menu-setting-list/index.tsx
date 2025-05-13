@@ -21,8 +21,10 @@ export const SiderMenuSettingList = (props: { children: React.ReactNode }) => {
       key: 'profile',
       label: (
         <div className="px-4 py-1 cursor-text">
-          <div className="text-sm font-semibold text-black">{userStore?.userProfile?.nickname}</div>
-          <div className="text-xs text-gray-500 max-w-36 truncate">
+          <div className="text-sm font-semibold text-black dark:text-gray-100">
+            {userStore?.userProfile?.nickname}
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 max-w-36 truncate">
             {userStore?.userProfile?.email ?? 'No email provided'}
           </div>
         </div>

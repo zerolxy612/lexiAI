@@ -4,10 +4,11 @@ on:
   push:
     branches:
       - main
-    paths-ignore:
-      - 'apps/api/**'
-      - 'apps/extension/**'
-      - 'packages/skill-template/**'
+    paths:
+      - 'apps/web/**'
+      - 'packages/**'
+      - '!packages/skill-template/**'
+      - '!packages/wxt/**'
   workflow_dispatch:
 
 jobs:
