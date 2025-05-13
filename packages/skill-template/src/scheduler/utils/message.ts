@@ -130,7 +130,8 @@ export const buildFinalRequestMessages = ({
 };
 
 /**
- * Applies context caching to messages - marks everything except the last message as ephemeral
+ * Applies context caching to messages - only caches up to 3 most recent messages
+ * before the final message
  *
  * According to Anthropic documentation:
  * - All messages except the final one should be marked with cache_control
@@ -140,11 +141,18 @@ export const buildFinalRequestMessages = ({
 const applyContextCaching = (messages: BaseMessage[]): BaseMessage[] => {
   if (messages.length <= 1) return messages;
 
+  // Calculate the minimum index to start caching from
+  // We want to cache at most 3 messages before the last message
+  const minCacheIndex = Math.max(0, messages.length - 4);
+
   return messages.map((message, index) => {
     // Don't cache the last message (final user query)
     if (index === messages.length - 1) return message;
 
-    // Apply caching to all other messages
+    // Don't cache messages beyond the 3 most recent (before the last one)
+    if (index < minCacheIndex) return message;
+
+    // Apply caching only to the 3 most recent messages (before the last one)
     if (message instanceof SystemMessage) {
       return new SystemMessage({
         content: [
