@@ -366,7 +366,6 @@ export const ConfigManager = React.memo(
         }
       }
 
-
       // Only update if we have changes to make
       if (Object.keys(formUpdates).length > 0) {
         // Update form state outside of React's rendering cycle
@@ -385,7 +384,16 @@ export const ConfigManager = React.memo(
       }
 
       onFormValuesChange?.({ ...formUpdates }, { tplConfig: { ...newFormValues } });
-    }, [tplConfig, schema.items, fieldPrefix, locale, form, validateTplConfig, setFormErrors, onFormValuesChange]);
+    }, [
+      tplConfig,
+      schema.items,
+      fieldPrefix,
+      locale,
+      form,
+      validateTplConfig,
+      setFormErrors,
+      onFormValuesChange,
+    ]);
 
     const handleReset = (key: string) => {
       const schemaItem = schema.items?.find((item) => item.key === key);
@@ -399,7 +407,7 @@ export const ConfigManager = React.memo(
               displayValue: String(defaultValue),
             }
           : undefined;
-      
+
       // Use safe form update to avoid render cycles
       safeFormUpdate(form, { [getFormField(fieldPrefix, key)]: resetValue });
 
@@ -429,19 +437,19 @@ export const ConfigManager = React.memo(
             if (val !== undefined && displayValue !== undefined) {
               const schemaItem = schema.items?.find((item) => item.key === key);
               const label = getDictValue(schemaItem?.labelDict || {}, locale);
-              
+
               const newValue = {
                 value: val,
                 label,
                 displayValue,
               };
-              
+
               // Update local state
               setFormValues((prev) => ({
                 ...prev,
                 [key]: newValue,
               }));
-              
+
               const newTplConfig = { ...(tplConfig || {}) };
               newTplConfig[key] = newValue;
 
@@ -461,7 +469,7 @@ export const ConfigManager = React.memo(
           }
         }
       },
-      [form, schema.items, locale, onFormValuesChange, validateField, tplConfig]
+      [form, schema.items, locale, onFormValuesChange, validateField, tplConfig],
     );
 
     return (
@@ -490,11 +498,7 @@ export const ConfigManager = React.memo(
         </div>
 
         {isExpanded && (
-          <Form
-            form={form}
-            className="config-manager__form"
-            layout="vertical"
-          >
+          <Form form={form} className="config-manager__form" layout="vertical">
             <Space direction="vertical" style={{ width: '100%' }}>
               {(schema.items || []).map((item) => {
                 const field = getFormField(fieldPrefix, item.key);

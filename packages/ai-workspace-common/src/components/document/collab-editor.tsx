@@ -92,7 +92,9 @@ export const CollaborativeEditor = memo(
           background-color: #00968F !important;
         }
         
-        ${isDarkMode ? `
+        ${
+          isDarkMode
+            ? `
         /* Dark mode placeholder style */
         .ProseMirror .is-editor-empty:first-child::before {
           color: rgba(255, 255, 255, 0.4) !important;
@@ -100,7 +102,9 @@ export const CollaborativeEditor = memo(
         .ProseMirror .is-empty::before {
           color: rgba(255, 255, 255, 0.4) !important;
         }
-        ` : ''}
+        `
+            : ''
+        }
       `;
       document.head.appendChild(styleEl);
 
