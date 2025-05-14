@@ -198,7 +198,7 @@ export const CanvasMenu = ({
 
   const removeCanvasFromProject = useCallback(
     async (canvasId: string) => {
-      const res = await getClient().deleteProjectItems({
+      const res = await getClient().updateProjectItems({
         body: {
           projectId,
           items: [
