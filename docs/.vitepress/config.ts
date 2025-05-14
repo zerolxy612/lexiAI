@@ -86,10 +86,6 @@ const sidebar = {
               link: '/community-version/self-deploy/',
             },
             {
-              text: 'Gitpod Deployment',
-              link: '/guide/use-gitpod-deploy',
-            },
-            {
               text: 'Ollama Integration',
               link: '/community-version/self-deploy/ollama',
             },
@@ -198,10 +194,6 @@ const sidebar = {
           text: '私有部署',
           items: [
             { text: '部署指南', link: '/zh/community-version/self-deploy/' },
-            {
-              text: 'Gitpod 部署',
-              link: '/zh/guide/use-gitpod-deploy',
-            },
             {
               text: 'Ollama 集成',
               link: '/zh/community-version/self-deploy/ollama',
