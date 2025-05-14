@@ -10,6 +10,8 @@ const TOOL_USE_REGEX = new RegExp(`<${TOOL_USE_TAG}[^>]*>([\\s\\S]*?)<\\/${TOOL_
 const NAME_REGEX = /<name>([\s\S]*?)<\/name>/i;
 const ARGUMENTS_REGEX = /<arguments>([\s\S]*?)<\/arguments>/i;
 const RESULT_REGEX = /<result>([\s\S]*?)<\/result>/i;
+const BASE64_IMAGE_URL_REGEX =
+  /data:image\/(?<format>png|jpeg|gif|webp|svg\+xml);base64,(?<data>[A-Za-z0-9+/=]+)/i;
 
 /**
  * Utility function to safely extract content from regex matches
@@ -27,8 +29,9 @@ const safeExtract = (content: string, regex: RegExp): string => {
 
 /**
  * Rehype plugin to process tool_use tags in markdown
- * 解析 <tool_use> 标签时，如果有 <result>，则同时提取 <arguments> 和 <result>，都放到同一个节点属性上；如果没有 <result>，只提取 <arguments>。
- * 保留标签外的文本内容，不会丢失段落中的其他文本。
+ * When parsing <tool_use> tags, if a <result> exists, extract both <arguments> and <result> and put them on the same node property.
+ * If there is no <result>, only extract <arguments>.
+ * Preserves text content outside the tags, so text in paragraphs is not lost.
  */
 function rehypePlugin() {
   return (tree: any) => {
@@ -43,21 +46,89 @@ function rehypePlugin() {
             const attributes: Record<string, string> = {};
 
             // Extract tool name using safe extraction
-            const name = safeExtract(content, NAME_REGEX);
-            if (name) {
-              attributes['data-tool-name'] = name;
+            const toolNameStr = safeExtract(content, NAME_REGEX);
+            if (toolNameStr) {
+              attributes['data-tool-name'] = toolNameStr;
             }
 
             // Extract arguments using safe extraction
-            const args = safeExtract(content, ARGUMENTS_REGEX);
-            if (args) {
-              attributes['data-tool-arguments'] = args;
+            const argsStr = safeExtract(content, ARGUMENTS_REGEX);
+            if (argsStr) {
+              attributes['data-tool-arguments'] = argsStr;
             }
 
             // Extract result using safe extraction
-            const result = safeExtract(content, RESULT_REGEX);
-            if (result) {
-              attributes['data-tool-result'] = result;
+            const resultStr = safeExtract(content, RESULT_REGEX);
+            if (resultStr) {
+              attributes['data-tool-result'] = resultStr;
+
+              // Attempt to find and process base64 image data in the result
+              let base64UrlFromDetails: string | undefined;
+              let imageFormatFromDetails: string | undefined;
+              let imageNameFromArgs = 'image'; // Default image name
+
+              // 1. Try to parse result as JSON (as per example structure)
+              try {
+                const resultObj = JSON.parse(resultStr);
+                if (resultObj.response && Array.isArray(resultObj.response)) {
+                  const imageResponse = resultObj.response.find(
+                    (r: any) =>
+                      r.type === 'image_url' && r.image_url && typeof r.image_url.url === 'string',
+                  );
+                  if (imageResponse) {
+                    const imageUrl = imageResponse.image_url.url;
+                    const imageMatch = BASE64_IMAGE_URL_REGEX.exec(imageUrl);
+                    if (imageMatch?.groups) {
+                      base64UrlFromDetails = imageUrl;
+                      imageFormatFromDetails = imageMatch.groups.format;
+                    }
+                  }
+                }
+              } catch (_e) {
+                // Not a JSON result with the expected structure, or resultStr is not JSON.
+                // Fallback to direct regex match will be attempted next.
+              }
+
+              // 2. If not found via JSON, try direct regex match on the raw result string
+              if (!base64UrlFromDetails) {
+                const directMatch = BASE64_IMAGE_URL_REGEX.exec(resultStr);
+                if (directMatch?.groups && directMatch[0]) {
+                  base64UrlFromDetails = directMatch[0]; // The full data URL
+                  imageFormatFromDetails = directMatch.groups.format;
+                }
+              }
+
+              if (base64UrlFromDetails && imageFormatFromDetails) {
+                attributes['data-tool-image-base64-url'] = base64UrlFromDetails;
+                // attributes['data-tool-image-format'] = imageFormatFromDetails; // Format is in the URL
+
+                // Attempt to get image name from arguments
+                if (argsStr) {
+                  try {
+                    const argsObj = JSON.parse(argsStr);
+                    if (typeof argsObj.params === 'string') {
+                      const paramsObj = JSON.parse(argsObj.params);
+                      if (paramsObj && typeof paramsObj.name === 'string') {
+                        const trimmedName = paramsObj.name.trim();
+                        if (trimmedName) {
+                          // Ensure non-empty name after trimming
+                          imageNameFromArgs = trimmedName;
+                        }
+                      }
+                    } else if (argsObj && typeof argsObj.name === 'string') {
+                      const trimmedName = argsObj.name.trim();
+                      if (trimmedName) {
+                        // Ensure non-empty name after trimming
+                        imageNameFromArgs = trimmedName;
+                      }
+                    }
+                  } catch (_e) {
+                    // console.warn('MCP-Call rehypePlugin: Could not parse arguments to find image name.', e);
+                  }
+                }
+                attributes['data-tool-image-name'] =
+                  `${imageNameFromArgs}.${imageFormatFromDetails}`;
+              }
             }
 
             // Create a new node with the extracted data for tool_use
@@ -127,15 +198,78 @@ function rehypePlugin() {
             }
 
             // Extract arguments using safe extraction
-            const args = safeExtract(content, ARGUMENTS_REGEX);
-            if (args) {
-              attributes['data-tool-arguments'] = args;
+            const argsStr = safeExtract(content, ARGUMENTS_REGEX);
+            if (argsStr) {
+              attributes['data-tool-arguments'] = argsStr;
             }
 
             // Extract result using safe extraction
-            const result = safeExtract(content, RESULT_REGEX);
-            if (result) {
-              attributes['data-tool-result'] = result;
+            const resultStr = safeExtract(content, RESULT_REGEX);
+            if (resultStr) {
+              attributes['data-tool-result'] = resultStr;
+
+              // Attempt to find and process base64 image data in the result (similar to raw node block)
+              let base64UrlFromDetails: string | undefined;
+              let imageFormatFromDetails: string | undefined;
+              let imageNameFromArgs = 'image'; // Default image name
+
+              try {
+                const resultObj = JSON.parse(resultStr);
+                if (resultObj.response && Array.isArray(resultObj.response)) {
+                  const imageResponse = resultObj.response.find(
+                    (r: any) =>
+                      r.type === 'image_url' && r.image_url && typeof r.image_url.url === 'string',
+                  );
+                  if (imageResponse) {
+                    const imageUrl = imageResponse.image_url.url;
+                    const imageMatch = BASE64_IMAGE_URL_REGEX.exec(imageUrl);
+                    if (imageMatch?.groups) {
+                      base64UrlFromDetails = imageUrl;
+                      imageFormatFromDetails = imageMatch.groups.format;
+                    }
+                  }
+                }
+              } catch (_e) {
+                // Not JSON or different structure
+              }
+
+              if (!base64UrlFromDetails) {
+                const directMatch = BASE64_IMAGE_URL_REGEX.exec(resultStr);
+                if (directMatch?.groups && directMatch[0]) {
+                  base64UrlFromDetails = directMatch[0];
+                  imageFormatFromDetails = directMatch.groups.format;
+                }
+              }
+
+              if (base64UrlFromDetails && imageFormatFromDetails) {
+                attributes['data-tool-image-base64-url'] = base64UrlFromDetails;
+
+                if (argsStr) {
+                  try {
+                    const argsObj = JSON.parse(argsStr);
+                    if (typeof argsObj.params === 'string') {
+                      const paramsObj = JSON.parse(argsObj.params);
+                      if (paramsObj && typeof paramsObj.name === 'string') {
+                        const trimmedName = paramsObj.name.trim();
+                        if (trimmedName) {
+                          // Ensure non-empty name after trimming
+                          imageNameFromArgs = trimmedName;
+                        }
+                      }
+                    } else if (argsObj && typeof argsObj.name === 'string') {
+                      const trimmedName = argsObj.name.trim();
+                      if (trimmedName) {
+                        // Ensure non-empty name after trimming
+                        imageNameFromArgs = trimmedName;
+                      }
+                    }
+                  } catch (_e) {
+                    // Argument parsing failed
+                  }
+                }
+                attributes['data-tool-image-name'] =
+                  `${imageNameFromArgs}.${imageFormatFromDetails}`;
+              }
             }
 
             // Create a new node with the extracted data for tool_use

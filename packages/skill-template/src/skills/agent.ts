@@ -224,7 +224,7 @@ export class Agent extends BaseSkill {
       // Create model and tool node
       const model = this.engine
         .chatModel({ temperature: 0.1 })
-        .bindTools(mcpTools, { strict: false } as never);
+        .bindTools(mcpTools, { strict: true } as never);
       const toolNode = new ToolNode(mcpTools);
 
       return { model, toolNode, mcpTools, client };

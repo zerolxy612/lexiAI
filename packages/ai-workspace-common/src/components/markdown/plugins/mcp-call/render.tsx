@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MarkdownMode } from '../../types';
 import { ToolOutlined } from '@ant-design/icons';
+import { ImagePreview } from '@refly-packages/ai-workspace-common/components/common/image-preview';
 
 // SVG icons for the component
 const CheckIcon = () => (
@@ -26,6 +27,8 @@ interface MCPCallProps {
   'data-tool-arguments'?: string;
   'data-tool-result'?: string;
   'data-tool-type'?: 'use' | 'result';
+  'data-tool-image-base64-url'?: string;
+  'data-tool-image-name'?: string;
   id?: string;
   mode?: MarkdownMode;
 }
@@ -37,6 +40,8 @@ interface MCPCallProps {
 const MCPCall: React.FC<MCPCallProps> = (props) => {
   const { t } = useTranslation();
   const [isCollapsed, setIsCollapsed] = useState(true);
+  const [isPreviewModalVisible, setIsPreviewModalVisible] = useState(false);
+  const [previewImageUrl, setPreviewImageUrl] = useState('');
 
   // Extract tool name from props
   const toolName = useMemo(() => props['data-tool-name'] || 'unknown', [props]);
@@ -60,66 +65,97 @@ const MCPCall: React.FC<MCPCallProps> = (props) => {
   // Check if result exists
   const hasResult = !!resultContent;
 
+  const imageBase64Url = props['data-tool-image-base64-url'];
+  const imageName = props['data-tool-image-name'];
+
   return (
-    <div className="my-3 rounded-lg border border-[#23272F] overflow-hidden bg-[#181A20] text-white font-mono">
-      {/* Header bar */}
-      <div
-        className="flex items-center px-4 py-2 cursor-pointer select-none bg-[#181A20] min-h-[44px]"
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        style={{
-          fontFamily: 'Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-        }}
-      >
-        {/* ToolOutlined now serves as the toggle icon with rotation */}
-        <ToolOutlined
+    <>
+      <div className="my-3 rounded-lg border border-[#23272F] overflow-hidden bg-[#181A20] text-white font-mono">
+        {/* Header bar */}
+        <div
+          className="flex items-center px-4 py-2 cursor-pointer select-none bg-[#181A20] min-h-[44px]"
+          onClick={() => setIsCollapsed(!isCollapsed)}
           style={{
-            color: '#A1A1AA',
-            fontSize: '16px',
-            marginRight: '12px', // Adjusted margin for spacing
-            transition: 'transform 0.2s ease-in-out',
-            transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
+            fontFamily: 'Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
           }}
-        />
-        {/* Tool name displayed as the main text in the header */}
-        <div className="flex-1 text-[15px] font-medium tracking-tight text-white">{toolName}</div>
-        {/* Check icon for results, with adjusted margin */}
-        {hasResult && (
-          <span className="ml-2 flex items-center">
-            {' '}
-            {/* Adjusted margin from ml-1 to ml-2 */}
-            <CheckIcon />
-          </span>
+        >
+          {/* ToolOutlined now serves as the toggle icon with rotation */}
+          <ToolOutlined
+            style={{
+              color: '#A1A1AA',
+              fontSize: '16px',
+              marginRight: '12px', // Adjusted margin for spacing
+              transition: 'transform 0.2s ease-in-out',
+              transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
+            }}
+          />
+          {/* Tool name displayed as the main text in the header */}
+          <div className="flex-1 text-[15px] font-medium tracking-tight text-white">{toolName}</div>
+          {/* Check icon for results, with adjusted margin */}
+          {hasResult && (
+            <span className="ml-2 flex items-center">
+              {' '}
+              {/* Adjusted margin from ml-1 to ml-2 */}
+              <CheckIcon />
+            </span>
+          )}
+        </div>
+
+        {/* Content section */}
+        {!isCollapsed && (
+          <div className="border-t border-[#23272F] bg-[#181A20] py-2">
+            {/* Parameters section always shown */}
+            <div>
+              <div className="px-5 py-1 text-[#A1A1AA] text-[13px] border-b border-[#23272F] font-normal">
+                {t('components.markdown.parameters', 'Parameters:')}
+              </div>
+              {/* Parameter content block with background, rounded corners, margin and padding */}
+              <div className="mx-4 my-2 rounded-md bg-[#23272F] px-4 py-3 font-mono text-[15px] font-normal whitespace-pre-wrap text-[#F4F4F5] leading-[22px]">
+                {parametersContent}
+              </div>
+            </div>
+            {/* Result section only if hasResult */}
+            {hasResult && (
+              <div>
+                <div className="px-5 py-1 text-[#A1A1AA] text-[13px] border-b border-[#23272F] font-normal">
+                  {t('components.markdown.result', 'Result:')}
+                </div>
+                {/* Result content block with background, rounded corners, margin and padding */}
+                <div className="mx-4 my-2 rounded-md bg-[#23272F] px-4 py-3 font-mono text-[15px] font-normal whitespace-pre-wrap text-[#F4F4F5] leading-[22px]">
+                  {resultContent}
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
-      {/* Content section */}
-      {!isCollapsed && (
-        <div className="border-t border-[#23272F] bg-[#181A20] py-2">
-          {/* Parameters section always shown */}
-          <div>
-            <div className="px-5 py-1 text-[#A1A1AA] text-[13px] border-b border-[#23272F] font-normal">
-              {t('components.markdown.parameters', 'Parameters:')}
-            </div>
-            {/* Parameter content block with background, rounded corners, margin and padding */}
-            <div className="mx-4 my-2 rounded-md bg-[#23272F] px-4 py-3 font-mono text-[15px] font-normal whitespace-pre-wrap text-[#F4F4F5] leading-[22px]">
-              {parametersContent}
-            </div>
+      {/* Image Preview section - styled as a separate card below the main MCPCall card */}
+      {imageBase64Url && imageName && (
+        <div className="rounded-lg border border-[#23272F] overflow-hidden cursor-pointer">
+          <div className="px-4 flex flex-col items-center">
+            <img
+              src={imageBase64Url}
+              alt={imageName}
+              className="max-w-full h-auto rounded-md mb-2 shadow-md max-h-[300px]"
+              onClick={() => {
+                setPreviewImageUrl(imageBase64Url);
+                setIsPreviewModalVisible(true);
+              }}
+            />
           </div>
-          {/* Result section only if hasResult */}
-          {hasResult && (
-            <div>
-              <div className="px-5 py-1 text-[#A1A1AA] text-[13px] border-b border-[#23272F] font-normal">
-                {t('components.markdown.result', 'Result:')}
-              </div>
-              {/* Result content block with background, rounded corners, margin and padding */}
-              <div className="mx-4 my-2 rounded-md bg-[#23272F] px-4 py-3 font-mono text-[15px] font-normal whitespace-pre-wrap text-[#F4F4F5] leading-[22px]">
-                {resultContent}
-              </div>
-            </div>
-          )}
+          {/* Image Preview Component */}
+          <div className="w-0 h-0">
+            <ImagePreview
+              isPreviewModalVisible={isPreviewModalVisible}
+              setIsPreviewModalVisible={setIsPreviewModalVisible}
+              imageUrl={previewImageUrl}
+              imageTitle={imageName}
+            />
+          </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 
