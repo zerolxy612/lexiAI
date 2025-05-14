@@ -129,7 +129,10 @@ export function DataList({
 
   return (
     <>
-      <Command.Group heading={t('knowledgeBase.quickSearch.suggest')} className="text-xs font-medium text-gray-500 dark:text-gray-400 px-2 mb-2">
+      <Command.Group
+        heading={t('knowledgeBase.quickSearch.suggest')}
+        className="text-xs font-medium text-gray-500 dark:text-gray-400 px-2 mb-2"
+      >
         <Item
           value={`create${domain}`}
           keywords={[`create${domain}`]}
@@ -140,7 +143,10 @@ export function DataList({
           {t('knowledgeBase.quickSearch.new', { domain })}
         </Item>
       </Command.Group>
-      <Command.Group heading={heading} className="text-xs font-medium text-gray-500 dark:text-gray-400 px-2 mb-2">
+      <Command.Group
+        heading={heading}
+        className="text-xs font-medium text-gray-500 dark:text-gray-400 px-2 mb-2"
+      >
         {stateDataList?.map((item, index) => (
           <Item
             key={index}
@@ -171,9 +177,9 @@ export function DataList({
       </Command.Group>
       {hasMore && displayMode === 'list' ? (
         <div className="flex justify-center w-full py-2">
-          <Button 
-            type="text" 
-            loading={isRequesting} 
+          <Button
+            type="text"
+            loading={isRequesting}
             onClick={() => loadMore(currentPage)}
             className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
           >
