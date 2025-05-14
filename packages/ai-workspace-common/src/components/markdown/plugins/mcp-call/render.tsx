@@ -70,10 +70,10 @@ const MCPCall: React.FC<MCPCallProps> = (props) => {
 
   return (
     <>
-      <div className="my-3 rounded-lg border border-[#23272F] overflow-hidden bg-[#181A20] text-white font-mono">
+      <div className="my-3 rounded-lg border border-gray-300 overflow-hidden bg-white text-black font-mono shadow-md">
         {/* Header bar */}
         <div
-          className="flex items-center px-4 py-2 cursor-pointer select-none bg-[#181A20] min-h-[44px]"
+          className="flex items-center px-4 py-2 cursor-pointer select-none bg-gray-50 min-h-[44px]"
           onClick={() => setIsCollapsed(!isCollapsed)}
           style={{
             fontFamily: 'Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
@@ -82,7 +82,7 @@ const MCPCall: React.FC<MCPCallProps> = (props) => {
           {/* ToolOutlined now serves as the toggle icon with rotation */}
           <ToolOutlined
             style={{
-              color: '#A1A1AA',
+              color: '#6B7280', // text-gray-500
               fontSize: '16px',
               marginRight: '12px', // Adjusted margin for spacing
               transition: 'transform 0.2s ease-in-out',
@@ -90,7 +90,9 @@ const MCPCall: React.FC<MCPCallProps> = (props) => {
             }}
           />
           {/* Tool name displayed as the main text in the header */}
-          <div className="flex-1 text-[15px] font-medium tracking-tight text-white">{toolName}</div>
+          <div className="flex-1 text-[15px] font-medium tracking-tight text-gray-900">
+            {toolName}
+          </div>
           {/* Check icon for results, with adjusted margin */}
           {hasResult && (
             <span className="ml-2 flex items-center">
@@ -103,25 +105,25 @@ const MCPCall: React.FC<MCPCallProps> = (props) => {
 
         {/* Content section */}
         {!isCollapsed && (
-          <div className="border-t border-[#23272F] bg-[#181A20] py-2">
+          <div className="border-t border-gray-300 bg-white py-2">
             {/* Parameters section always shown */}
             <div>
-              <div className="px-5 py-1 text-[#A1A1AA] text-[13px] border-b border-[#23272F] font-normal">
+              <div className="px-5 py-1 text-gray-600 text-[13px] border-b border-gray-300 font-normal">
                 {t('components.markdown.parameters', 'Parameters:')}
               </div>
               {/* Parameter content block with background, rounded corners, margin and padding */}
-              <div className="mx-4 my-2 rounded-md bg-[#23272F] px-4 py-3 font-mono text-[15px] font-normal whitespace-pre-wrap text-[#F4F4F5] leading-[22px]">
+              <div className="mx-4 my-2 rounded-md bg-gray-100 px-4 py-3 font-mono text-[15px] font-normal whitespace-pre-wrap text-gray-800 leading-[22px]">
                 {parametersContent}
               </div>
             </div>
             {/* Result section only if hasResult */}
             {hasResult && (
               <div>
-                <div className="px-5 py-1 text-[#A1A1AA] text-[13px] border-b border-[#23272F] font-normal">
+                <div className="px-5 py-1 text-gray-600 text-[13px] border-b border-gray-300 font-normal">
                   {t('components.markdown.result', 'Result:')}
                 </div>
                 {/* Result content block with background, rounded corners, margin and padding */}
-                <div className="mx-4 my-2 rounded-md bg-[#23272F] px-4 py-3 font-mono text-[15px] font-normal whitespace-pre-wrap text-[#F4F4F5] leading-[22px]">
+                <div className="mx-4 my-2 rounded-md bg-gray-100 px-4 py-3 font-mono text-[15px] font-normal whitespace-pre-wrap text-gray-800 leading-[22px]">
                   {resultContent}
                 </div>
               </div>
@@ -132,8 +134,8 @@ const MCPCall: React.FC<MCPCallProps> = (props) => {
 
       {/* Image Preview section - styled as a separate card below the main MCPCall card */}
       {imageBase64Url && imageName && (
-        <div className="rounded-lg border border-[#23272F] overflow-hidden cursor-pointer">
-          <div className="px-4 flex flex-col items-center">
+        <div className="my-3 rounded-lg border border-gray-300 overflow-hidden cursor-pointer bg-white">
+          <div className="px-4 flex flex-col items-center py-2">
             <img
               src={imageBase64Url}
               alt={imageName}
