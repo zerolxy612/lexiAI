@@ -16,7 +16,7 @@ const CheckIcon = () => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
-    className="w-[18px] h-[18px] text-green-500"
+    className="w-[18px] h-[18px] text-green-500 dark:text-green-400"
   >
     <path d="M20 6 9 17l-5-5" />
   </svg>
@@ -70,10 +70,10 @@ const MCPCall: React.FC<MCPCallProps> = (props) => {
 
   return (
     <>
-      <div className="my-3 rounded-lg border border-gray-300 overflow-hidden bg-white text-black font-mono shadow-md">
+      <div className="my-3 rounded-lg border border-gray-300 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-800 text-black dark:text-gray-100 font-mono shadow-md">
         {/* Header bar */}
         <div
-          className="flex items-center px-4 py-2 cursor-pointer select-none bg-gray-50 min-h-[44px]"
+          className="flex items-center px-4 py-2 cursor-pointer select-none bg-gray-50 dark:bg-gray-700 min-h-[44px]"
           onClick={() => setIsCollapsed(!isCollapsed)}
           style={{
             fontFamily: 'Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
@@ -81,8 +81,8 @@ const MCPCall: React.FC<MCPCallProps> = (props) => {
         >
           {/* ToolOutlined now serves as the toggle icon with rotation */}
           <ToolOutlined
+            className="text-gray-500 dark:text-gray-400"
             style={{
-              color: '#6B7280', // text-gray-500
               fontSize: '16px',
               marginRight: '12px', // Adjusted margin for spacing
               transition: 'transform 0.2s ease-in-out',
@@ -90,7 +90,7 @@ const MCPCall: React.FC<MCPCallProps> = (props) => {
             }}
           />
           {/* Tool name displayed as the main text in the header */}
-          <div className="flex-1 text-[15px] font-medium tracking-tight text-gray-900">
+          <div className="flex-1 text-[15px] font-medium tracking-tight text-gray-900 dark:text-gray-100">
             {toolName}
           </div>
           {/* Check icon for results, with adjusted margin */}
@@ -105,25 +105,25 @@ const MCPCall: React.FC<MCPCallProps> = (props) => {
 
         {/* Content section */}
         {!isCollapsed && (
-          <div className="border-t border-gray-300 bg-white py-2">
+          <div className="border-t border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 py-2">
             {/* Parameters section always shown */}
             <div>
-              <div className="px-5 py-1 text-gray-600 text-[13px] border-b border-gray-300 font-normal">
+              <div className="px-5 py-1 text-gray-600 dark:text-gray-400 text-[13px] border-b border-gray-300 dark:border-gray-600 font-normal">
                 {t('components.markdown.parameters', 'Parameters:')}
               </div>
               {/* Parameter content block with background, rounded corners, margin and padding */}
-              <div className="mx-4 my-2 rounded-md bg-gray-100 px-4 py-3 font-mono text-[15px] font-normal whitespace-pre-wrap text-gray-800 leading-[22px]">
+              <div className="mx-4 my-2 rounded-md bg-gray-100 dark:bg-gray-700 px-4 py-3 font-mono text-[15px] font-normal whitespace-pre-wrap text-gray-800 dark:text-gray-200 leading-[22px]">
                 {parametersContent}
               </div>
             </div>
             {/* Result section only if hasResult */}
             {hasResult && (
               <div>
-                <div className="px-5 py-1 text-gray-600 text-[13px] border-b border-gray-300 font-normal">
+                <div className="px-5 py-1 text-gray-600 dark:text-gray-400 text-[13px] border-b border-gray-300 dark:border-gray-600 font-normal">
                   {t('components.markdown.result', 'Result:')}
                 </div>
                 {/* Result content block with background, rounded corners, margin and padding */}
-                <div className="mx-4 my-2 rounded-md bg-gray-100 px-4 py-3 font-mono text-[15px] font-normal whitespace-pre-wrap text-gray-800 leading-[22px]">
+                <div className="mx-4 my-2 rounded-md bg-gray-100 dark:bg-gray-700 px-4 py-3 font-mono text-[15px] font-normal whitespace-pre-wrap text-gray-800 dark:text-gray-200 leading-[22px]">
                   {resultContent}
                 </div>
               </div>
@@ -134,7 +134,7 @@ const MCPCall: React.FC<MCPCallProps> = (props) => {
 
       {/* Image Preview section - styled as a separate card below the main MCPCall card */}
       {imageBase64Url && imageName && (
-        <div className="my-3 rounded-lg border border-gray-300 overflow-hidden cursor-pointer bg-white">
+        <div className="my-3 rounded-lg border border-gray-300 dark:border-gray-700 overflow-hidden cursor-pointer bg-white dark:bg-gray-800">
           <div className="px-4 flex flex-col items-center py-2">
             <img
               src={imageBase64Url}
