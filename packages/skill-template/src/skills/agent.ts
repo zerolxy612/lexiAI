@@ -1,8 +1,16 @@
-import { START, END, StateGraphArgs, StateGraph, MessagesAnnotation } from '@langchain/langgraph';
+import {
+  START,
+  END,
+  StateGraphArgs,
+  StateGraph,
+  MessagesAnnotation,
+  CompiledStateGraph,
+  StateDefinition,
+} from '@langchain/langgraph';
 import { z } from 'zod';
 import { Runnable } from '@langchain/core/runnables';
 import { BaseSkill, BaseSkillState, SkillRunnableConfig, baseStateGraphArgs } from '../base';
-import { safeStringifyJSON } from '@refly/utils';
+import { safeStringifyJSON, isValidUrl } from '@refly/utils';
 import {
   Icon,
   SkillInvocationConfig,
@@ -20,12 +28,11 @@ import { truncateSource } from '../scheduler/utils/truncator';
 import { buildFinalRequestMessages, SkillPromptModule } from '../scheduler/utils/message';
 import { processQuery } from '../scheduler/utils/queryProcessor';
 import { extractAndCrawlUrls, crawlExtractedUrls } from '../scheduler/utils/extract-weblink';
-import { isValidUrl } from '@refly/utils';
 
 // prompts
 import * as commonQnA from '../scheduler/module/commonQnA';
 import { checkModelContextLenSupport } from '../scheduler/utils/model';
-import { AIMessage } from '@langchain/core/messages';
+import { AIMessage, BaseMessage } from '@langchain/core/messages';
 import { MultiServerMCPClient } from '../adapters';
 import { buildSystemPrompt } from '../mcp/core/prompt';
 import { convertMcpServersToClientConfig } from '../utils/mcp-utils';
@@ -52,8 +59,8 @@ export class Agent extends BaseSkill {
     ...baseStateGraphArgs,
   };
 
-  // Default skills to be scheduled (they are actually templates!).
   skills: BaseSkill[] = createSkillTemplateInventory(this.engine);
+  private userAgentComponentsCache = new Map<string, CachedAgentComponents>();
 
   isValidSkillName = (name: string) => {
     return this.skills.some((skill) => skill.name === name);
@@ -70,7 +77,6 @@ export class Agent extends BaseSkill {
 
     config.metadata.step = { name: 'analyzeQuery' };
 
-    // Use shared query processor with shouldSkipAnalysis option
     const {
       optimizedQuery,
       query,
@@ -83,54 +89,43 @@ export class Agent extends BaseSkill {
       config,
       ctxThis: this,
       state,
-      shouldSkipAnalysis: true, // For common QnA, we can skip analysis when there's no context and chat history
+      shouldSkipAnalysis: true,
     });
 
-    // Extract custom instructions only if project ID exists
     const projectId = project?.projectId;
-
-    // Only enable knowledge base search if both projectId AND runtimeConfig.enabledKnowledgeBase are true
     const enableKnowledgeBaseSearch = !!projectId && !!runtimeConfig?.enabledKnowledgeBase;
-
     this.engine.logger.log(
       `ProjectId: ${projectId}, Enable KB Search: ${enableKnowledgeBaseSearch}`,
     );
 
-    // Process URLs from context first (frontend)
     const contextUrls = config.configurable?.urls || [];
     this.engine.logger.log(`Context URLs: ${safeStringifyJSON(contextUrls)}`);
 
-    // Process context URLs
     let contextUrlSources: Source[] = [];
     if (contextUrls.length > 0) {
       const urls = contextUrls.map((item) => item.url).filter((url) => url && isValidUrl(url));
       if (urls.length > 0) {
         this.engine.logger.log(`Processing ${urls.length} URLs from context`);
         contextUrlSources = await crawlExtractedUrls(urls, config, this, {
-          concurrencyLimit: 5, // Increase concurrency limit for crawling URLs
-          batchSize: 8, // Increase batch size for processing URLs
+          concurrencyLimit: 5,
+          batchSize: 8,
         });
         this.engine.logger.log(`Processed context URL sources count: ${contextUrlSources.length}`);
       }
     }
 
-    // Extract URLs from the query and crawl them with optimized concurrent processing
     const { sources: queryUrlSources, analysis } = await extractAndCrawlUrls(query, config, this, {
-      concurrencyLimit: 5, // Increase concurrency limit for crawling URLs
-      batchSize: 8, // Increase batch size for processing URLs
+      concurrencyLimit: 5,
+      batchSize: 8,
     });
-
     this.engine.logger.log(`URL extraction analysis: ${safeStringifyJSON(analysis)}`);
     this.engine.logger.log(`Extracted query URL sources count: ${queryUrlSources.length}`);
 
-    // Combine URL sources, prioritizing context URLs
     const urlSources = [...contextUrlSources, ...queryUrlSources];
     this.engine.logger.log(`Total URL sources count: ${urlSources.length}`);
 
     let context = '';
     let sources: Source[] = [];
-
-    // Consider URL sources for context preparation
     const hasUrlSources = urlSources.length > 0;
     const needPrepareContext =
       (hasContext || hasUrlSources || enableKnowledgeBaseSearch) && remainingTokens > 0;
@@ -149,7 +144,7 @@ export class Agent extends BaseSkill {
           maxTokens: remainingTokens,
           enableMentionedContext: hasContext,
           rewrittenQueries,
-          urlSources, // Pass URL sources to the prepareContext function
+          urlSources,
         },
         {
           config,
@@ -165,7 +160,6 @@ export class Agent extends BaseSkill {
           },
         },
       );
-
       context = preparedRes.contextStr;
       sources = preparedRes.sources;
       this.engine.logger.log(`context: ${safeStringifyJSON(context)}`);
@@ -190,70 +184,101 @@ export class Agent extends BaseSkill {
     return { requestMessages, sources };
   };
 
-  async setupAgent(user) {
-    // Create document with generated title
+  private async getOrInitializeAgentComponents(user: any): Promise<CachedAgentComponents> {
+    const userId = user?.id ?? JSON.stringify(user);
+
+    if (this.userAgentComponentsCache.has(userId)) {
+      this.engine.logger.log(`Using cached agent components for user ${userId}`);
+      return this.userAgentComponentsCache.get(userId)!;
+    }
+
+    this.engine.logger.log(`Initializing new agent components for user ${userId}`);
+
     const mcpServersResponse = await this.engine.service.listMcpServers(user, {
       enabled: true,
     });
-
-    // Convert MCP servers response to MultiServerMCPClient config format
     const mcpClientConfig = convertMcpServersToClientConfig(mcpServersResponse);
-
-    // Initialize MCP client with the converted config
-    const client = new MultiServerMCPClient(mcpClientConfig);
-
-    // Add more debug information
-    this.engine.logger.log('Initializing MCP client and getting tools...');
+    const mcpClient = new MultiServerMCPClient(mcpClientConfig);
 
     try {
-      // Initialize connections first
-      await client.initializeConnections();
-      this.engine.logger.log('MCP connections initialized successfully');
+      await mcpClient.initializeConnections();
+      this.engine.logger.log('MCP connections initialized successfully for new components');
 
-      // Then get tools
-      const mcpTools = await client.getTools();
-
+      const mcpTools = await mcpClient.getTools();
       if (!mcpTools?.length) {
-        throw new Error('No tools found');
+        throw new Error('No tools found during new components initialization');
       }
-
       this.engine.logger.log(
-        `Loaded ${mcpTools.length} MCP tools: ${mcpTools.map((tool) => tool.name).join(', ')}`,
+        `Loaded ${mcpTools.length} MCP tools for new components: ${mcpTools.map((tool) => tool.name).join(', ')}`,
       );
 
-      // Create model and tool node
-      const model = this.engine
+      const llmModel = this.engine
         .chatModel({ temperature: 0.1 })
         .bindTools(mcpTools, { strict: true } as never);
-      const toolNode = new ToolNode(mcpTools);
+      const toolNodeInstance = new ToolNode(mcpTools);
 
-      return { model, toolNode, mcpTools, client };
+      const llmNodeForCachedGraph = async (nodeState: typeof MessagesAnnotation.State) => {
+        this.engine.logger.log(
+          'Calling LLM (cached graph) with messages count:',
+          nodeState.messages.length,
+        );
+        const response = await llmModel.invoke(nodeState.messages);
+        return { messages: [response as BaseMessage] };
+      };
+
+      const workflow = new StateGraph(MessagesAnnotation)
+        .addNode('llm', llmNodeForCachedGraph)
+        .addNode('tools', toolNodeInstance)
+        .addEdge(START, 'llm')
+        .addEdge('tools', 'llm')
+        .addConditionalEdges('llm', (graphState) => {
+          const lastMessage = graphState.messages[graphState.messages.length - 1];
+          const aiMessage = lastMessage as AIMessage;
+          if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
+            this.engine.logger.log('Tool calls detected (cached graph), routing to tools node');
+            return 'tools';
+          }
+          this.engine.logger.log('No tool calls (cached graph), ending the workflow');
+          return END;
+        });
+
+      const compiledLangGraphApp = workflow.compile();
+
+      const components: CachedAgentComponents = {
+        mcpClient,
+        mcpTools,
+        llmModel,
+        toolNodeInstance,
+        compiledLangGraphApp,
+      };
+      this.userAgentComponentsCache.set(userId, components);
+      this.engine.logger.log(`Agent components initialized and cached for user ${userId}`);
+      return components;
     } catch (error) {
-      this.engine.logger.error('Error during MCP setup:', error);
+      this.engine.logger.error('Error during new agent components initialization:', error);
+      await mcpClient
+        .close()
+        .catch((closeError) =>
+          this.engine.logger.error('Error closing MCP client during setup failure:', closeError),
+        );
       if (error instanceof Error) {
-        this.engine.logger.error('Error stack:', error.stack);
+        this.engine.logger.error('Error stack for new components initialization:', error.stack);
       }
-      throw new Error('Failed to initialize MCP tools');
+      throw new Error('Failed to initialize agent components');
     }
   }
 
-  // LLM node - Process messages and call model
   agentNode = async (
     state: GraphState,
     config: SkillRunnableConfig,
   ): Promise<Partial<GraphState>> => {
     const { currentSkill, user } = config.configurable;
-
-    // Extract projectId and customInstructions from project
     const project = config.configurable?.project as
       | { projectId: string; customInstructions?: string }
       | undefined;
-
-    // Use customInstructions only if projectId exists (regardless of knowledge base search status)
     const customInstructions = project?.projectId ? project?.customInstructions : undefined;
 
-    // common preprocess
-    const module = {
+    const module: SkillPromptModule = {
       buildSystemPrompt: () =>
         buildSystemPrompt(
           'You are an advanced AI assistant with specialized expertise in leveraging the Model Context Protocol (MCP) to solve complex problems efficiently. Your intelligence manifests through precise tool orchestration, context-aware execution, and proactive optimization of MCP server capabilities. ' +
@@ -276,11 +301,9 @@ export class Agent extends BaseSkill {
       customInstructions,
     );
 
-    // set current step
     config.metadata.step = { name: 'answerQuestion' };
 
     if (sources.length > 0) {
-      // Truncate sources before emitting
       const truncatedSources = truncateSource(sources);
       await this.emitLargeDataEvent(
         {
@@ -298,58 +321,28 @@ export class Agent extends BaseSkill {
       );
     }
 
-    console.log('\n=== CREATING LANGGRAPH AGENT FLOW ===');
-
-    const { model, toolNode, client } = await this.setupAgent(user);
+    console.log('\n=== GETTING OR INITIALIZING CACHED LANGGRAPH AGENT FLOW ===');
+    const { compiledLangGraphApp } = await this.getOrInitializeAgentComponents(user);
 
     try {
-      // Define LLM node function
-      const llmNode = async (nodeState: typeof MessagesAnnotation.State) => {
-        console.log('Calling LLM with messages:', nodeState.messages.length);
-        const response = await model.invoke(nodeState.messages);
-        return { messages: [response] };
-      };
-
-      // Create workflow
-      const workflow = new StateGraph(MessagesAnnotation)
-        .addNode('llm', llmNode)
-        .addNode('tools', toolNode)
-        .addEdge(START, 'llm')
-        .addEdge('tools', 'llm')
-        .addConditionalEdges('llm', (graphState) => {
-          const lastMessage = graphState.messages[graphState.messages.length - 1];
-          const aiMessage = lastMessage as AIMessage;
-          if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
-            console.log('Tool calls detected, routing to tools node');
-            return 'tools';
-          }
-          console.log('No tool calls, ending the workflow');
-          return END;
-        });
-
-      // Compile and execute workflow
-      const app = workflow.compile();
-
-      const result = await app.invoke(
+      const result = await compiledLangGraphApp.invoke(
         { messages: requestMessages },
         {
           ...config,
-          recursionLimit: 100,
+          recursionLimit: 50,
           metadata: {
             ...config.metadata,
             ...currentSkill,
           },
         },
       );
-
       return { messages: result.messages };
     } finally {
-      client.close();
+      this.engine.logger.log('agentNode execution finished.');
     }
   };
 
   toRunnable(): Runnable {
-    // Create a simple linear workflow
     const workflow = new StateGraph<GraphState>({
       channels: this.graphState,
     })
@@ -359,4 +352,33 @@ export class Agent extends BaseSkill {
 
     return workflow.compile();
   }
+
+  public async dispose(): Promise<void> {
+    this.engine.logger.log(`Disposing Agent (${this.name}) and closing all cached MCP clients...`);
+    for (const [userId, components] of this.userAgentComponentsCache) {
+      try {
+        await components.mcpClient.close();
+        this.engine.logger.log(`Closed MCP client for user ${userId}`);
+      } catch (e) {
+        this.engine.logger.error(`Error closing MCP client for user ${userId} during dispose:`, e);
+      }
+    }
+    this.userAgentComponentsCache.clear();
+    this.engine.logger.log(`Agent (${this.name}) disposed, cache cleared.`);
+  }
+}
+
+interface CachedAgentComponents {
+  mcpClient: MultiServerMCPClient;
+  mcpTools: any[];
+  llmModel: Runnable<BaseMessage[], AIMessage>;
+  toolNodeInstance: ToolNode;
+  compiledLangGraphApp: CompiledStateGraph<
+    any, // S: State type
+    Partial<any>, // U: Update type
+    'llm' | 'tools' | '__start__', // N: Node names
+    Partial<any>, // I: Input type for invoke
+    any, // O: Output type from invoke
+    StateDefinition // C: Config type
+  >;
 }

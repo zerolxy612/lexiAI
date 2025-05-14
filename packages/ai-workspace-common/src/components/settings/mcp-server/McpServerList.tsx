@@ -19,7 +19,7 @@ import {
   DeleteOutlined,
   PlusOutlined,
   ToolOutlined,
-  ApiOutlined,
+  RightOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 
@@ -420,7 +420,7 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
                 <div className="mcp-server-tools py-4 px-5" style={{ background: '#f9f9f9' }}>
                   <div className="mb-3">
                     <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <ApiOutlined
+                      <ToolOutlined
                         style={{ marginRight: '8px', color: '#1677ff', fontSize: '16px' }}
                       />
                       <Typography.Text strong style={{ fontSize: '14px' }}>
@@ -503,14 +503,25 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
                 >
                   <Button
                     type="text"
-                    icon={<ToolOutlined />}
                     onClick={(e) => onExpand(record, e)}
                     style={{
                       color: expanded ? '#1677ff' : hasTools ? '#1677ff' : '#bfbfbf',
                       opacity: hasTools ? 1 : 0.6,
-                      transition: 'all 0.3s',
+                      transition: 'all 0.3s ease-in-out',
+                      padding: '4px 8px',
                     }}
                     disabled={!hasTools}
+                    icon={
+                      <span
+                        style={{
+                          display: 'inline-block',
+                          transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                          transition: 'transform 0.3s ease-in-out',
+                        }}
+                      >
+                        <RightOutlined />
+                      </span>
+                    }
                   />
                 </Tooltip>
               );
