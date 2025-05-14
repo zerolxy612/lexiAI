@@ -10,8 +10,7 @@ import {
   IconRight,
   IconPlus,
 } from '@refly-packages/ai-workspace-common/components/common/icon';
-import { Form } from '@arco-design/web-react';
-import { Button } from 'antd';
+import { Form, Button } from 'antd';
 import { ConfigManager } from '@refly-packages/ai-workspace-common/components/canvas/launchpad/config-manager';
 import { Actions } from './action';
 import { useChatStoreShallow } from '@refly-packages/ai-workspace-common/stores/chat';
