@@ -193,6 +193,12 @@ export class McpServerService {
       throw new ParamsError('Server name and type are required');
     }
 
+    if (type === 'stdio') {
+      throw new ParamsError(
+        "MCP servers with type 'stdio' are not supported in the web interface. Please select a different server type.",
+      );
+    }
+
     const existingServer = await this.prisma.mcpServer.findFirst({
       where: {
         name,
@@ -234,6 +240,7 @@ export class McpServerService {
       throw new ParamsError('URL is required for SSE and Streamable server types');
     }
 
+    // @ts-ignore
     if (type === 'stdio' && (!command || !args)) {
       throw new ParamsError('Command and args are required for Stdio server type');
     }

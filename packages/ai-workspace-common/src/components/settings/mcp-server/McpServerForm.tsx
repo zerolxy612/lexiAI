@@ -426,7 +426,9 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
                 <Option value="streamable">
                   {t('settings.mcpServer.typeStreamable')} (Streamable)
                 </Option>
-                <Option value="stdio">{t('settings.mcpServer.typeStdio')} (Stdio)</Option>
+                <Option value="stdio" disabled>
+                  {t('settings.mcpServer.typeStdio')} (Stdio)
+                </Option>
               </Select>
             </Form.Item>
 
