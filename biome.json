@@ -64,7 +64,6 @@
   "files": {
     "ignoreUnknown": true,
     "maxSize": 3000000,
-    "include": ["**/*.{js,jsx,ts,tsx,json,css}"],
     "ignore": [
       "**/node_modules/**",
       "**/release/**",

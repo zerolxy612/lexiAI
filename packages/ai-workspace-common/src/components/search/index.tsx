@@ -38,7 +38,7 @@ export const Search = React.memo((props: SearchProps) => {
   const { showList, onClickOutside, onSearchValueChange, ...divProps } = props;
 
   const navigate = useNavigate();
-  const {isCanvasOpen} = useGetProjectCanvasId();
+  const { isCanvasOpen } = useGetProjectCanvasId();
   // const { addNode } = useAddNode();
 
   const ref = React.useRef<HTMLDivElement | null>(null);
@@ -149,17 +149,20 @@ export const Search = React.memo((props: SearchProps) => {
     200,
   );
 
-  const handleAddToCanvas = useCallback((type: CanvasNodeType, data: any) => {
-    searchStore.setIsSearchOpen(false);
-    nodeOperationsEmitter.emit('addNode', {
-      node: {
-        type,
-        data: data,
-      },
-      shouldPreview: true,
-      needSetCenter: true,
-    });
-  }, [searchStore]);
+  const handleAddToCanvas = useCallback(
+    (type: CanvasNodeType, data: any) => {
+      searchStore.setIsSearchOpen(false);
+      nodeOperationsEmitter.emit('addNode', {
+        node: {
+          type,
+          data: data,
+        },
+        shouldPreview: true,
+        needSetCenter: true,
+      });
+    },
+    [searchStore],
+  );
 
   useEffect(() => {
     inputRef?.current?.focus();
@@ -181,89 +184,106 @@ export const Search = React.memo((props: SearchProps) => {
     };
   }, [onClickOutside]);
 
-  const renderData: RenderItem[] = useMemo(() => [
-    {
-      domain: 'canvas',
-      heading: t('loggedHomePage.quickSearch.canvas'),
-      action: false,
-      data: searchStore.searchedCanvases || [],
-      actionHeading: {
-        create: t('loggedHomePage.quickSearch.newCanvas'),
+  const renderData: RenderItem[] = useMemo(
+    () => [
+      {
+        domain: 'canvas',
+        heading: t('loggedHomePage.quickSearch.canvas'),
+        action: false,
+        data: searchStore.searchedCanvases || [],
+        actionHeading: {
+          create: t('loggedHomePage.quickSearch.newCanvas'),
+        },
+        icon: <IconCanvas style={{ fontSize: 12 }} />,
+        onItemClick: (item: SearchResult) => {
+          searchStore.setIsSearchOpen(false);
+          navigate(`/canvas/${item.id}`);
+        },
       },
-      icon: <IconCanvas style={{ fontSize: 12 }} />,
-      onItemClick: (item: SearchResult) => {
-        searchStore.setIsSearchOpen(false);
-        navigate(`/canvas/${item.id}`);
+      {
+        domain: 'document',
+        heading: t('loggedHomePage.quickSearch.document'),
+        action: false,
+        actionHeading: {
+          create: t('loggedHomePage.quickSearch.newDocument'),
+        },
+        data: searchStore.searchedDocuments || [],
+        icon: <IconDocument style={{ fontSize: 12 }} />,
+        onItemClick: (item: SearchResult) => {
+          if (!isCanvasOpen) {
+            message.error(t('workspace.noCanvasSelected'));
+            return;
+          }
+
+          handleAddToCanvas('document', {
+            entityId: item.id,
+            title: item.title,
+            contentPreview: item.contentPreview,
+          });
+        },
       },
+      {
+        domain: 'resource',
+        heading: t('loggedHomePage.quickSearch.resource'),
+        action: false,
+        actionHeading: {
+          create: t('loggedHomePage.quickSearch.newResource'),
+        },
+        data: searchStore.searchedResources || [],
+        icon: <IconResource style={{ fontSize: 12 }} />,
+        onItemClick: (item: SearchResult) => {
+          if (!isCanvasOpen) {
+            message.error(t('workspace.noCanvasSelected'));
+            return;
+          }
+
+          handleAddToCanvas('resource', {
+            entityId: item.id,
+            title: item.title,
+            contentPreview: item.contentPreview,
+          });
+        },
+      },
+    ],
+    [
+      searchStore.searchedCanvases,
+      searchStore.searchedDocuments,
+      searchStore.searchedResources,
+      t,
+      navigate,
+      isCanvasOpen,
+      handleAddToCanvas,
+    ],
+  );
+
+  const getRenderData = useCallback(
+    (domain: string) => {
+      return renderData?.find((item) => item.domain === domain);
     },
-    {
-      domain: 'document',
-      heading: t('loggedHomePage.quickSearch.document'),
-      action: false,
-      actionHeading: {
-        create: t('loggedHomePage.quickSearch.newDocument'),
-      },
-      data: searchStore.searchedDocuments || [],
-      icon: <IconDocument style={{ fontSize: 12 }} />,
-      onItemClick: (item: SearchResult) => {
-        if (!isCanvasOpen) {
-          message.error(t('workspace.noCanvasSelected'));
-          return;
-        }
+    [renderData],
+  );
 
-        handleAddToCanvas('document', {
-          entityId: item.id,
-          title: item.title,
-          contentPreview: item.contentPreview,
-        });
-      },
+  const getInputPlaceholder = useCallback(
+    (domain: string) => {
+      if (domain === 'home') {
+        return t('loggedHomePage.quickSearch.placeholderForHome');
+      }
+      if (domain === 'skill-execute') {
+        return t('loggedHomePage.quickSearch.placeholderForSkillExecute');
+      }
+      const data = getRenderData(domain);
+      return t('loggedHomePage.quickSearch.placeholderForWeblink', { domain: data?.heading });
     },
-    {
-      domain: 'resource',
-      heading: t('loggedHomePage.quickSearch.resource'),
-      action: false,
-      actionHeading: {
-        create: t('loggedHomePage.quickSearch.newResource'),
-      },
-      data: searchStore.searchedResources || [],
-      icon: <IconResource style={{ fontSize: 12 }} />,
-      onItemClick: (item: SearchResult) => {
-        if (!isCanvasOpen) {
-          message.error(t('workspace.noCanvasSelected'));
-          return;
-        }
-
-        handleAddToCanvas('resource', {
-          entityId: item.id,
-          title: item.title,
-          contentPreview: item.contentPreview,
-        });
-      },
-    },
-  ], [searchStore.searchedCanvases, searchStore.searchedDocuments, searchStore.searchedResources, t, navigate, isCanvasOpen, handleAddToCanvas]);
-
-  const getRenderData = useCallback((domain: string) => {
-    return renderData?.find((item) => item.domain === domain);
-  }, [renderData]);
-
-  const getInputPlaceholder = useCallback((domain: string) => {
-    if (domain === 'home') {
-      return t('loggedHomePage.quickSearch.placeholderForHome');
-    }
-    if (domain === 'skill-execute') {
-      return t('loggedHomePage.quickSearch.placeholderForSkillExecute');
-    }
-    const data = getRenderData(domain);
-    return t('loggedHomePage.quickSearch.placeholderForWeblink', { domain: data?.heading });
-  }, [getRenderData, t]);
+    [getRenderData, t],
+  );
 
   return (
-    <div 
-      {...divProps} 
+    <div
+      {...divProps}
       className={classNames(
         'vercel',
         'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm',
-        divProps.className
+        divProps.className,
       )}
     >
       <Command
@@ -273,10 +293,7 @@ export const Search = React.memo((props: SearchProps) => {
         filter={() => {
           return 1; // we can safely rely on the server filter
         }}
-        className={classNames(
-          showList ? 'search-active' : '',
-          'transition-all duration-200'
-        )}
+        className={classNames(showList ? 'search-active' : '', 'transition-all duration-200')}
         onKeyDownCapture={(e: React.KeyboardEvent) => {
           if (e.key === 'Enter' && !isComposing) {
             bounce();
@@ -295,8 +312,8 @@ export const Search = React.memo((props: SearchProps) => {
       >
         <div className="flex gap-1 px-3 py-2">
           {pages.map((p) => (
-            <div 
-              key={p} 
+            <div
+              key={p}
               cmdk-vercel-badge=""
               className="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs py-1 px-2 rounded-md capitalize"
             >
@@ -324,7 +341,9 @@ export const Search = React.memo((props: SearchProps) => {
         {showList && (
           <Spin spinning={loading} className="w-full h-full">
             <Command.List className="max-h-[400px] overflow-auto px-2 py-2">
-              <Command.Empty className="py-6 text-center text-gray-500 dark:text-gray-400">No results found.</Command.Empty>
+              <Command.Empty className="py-6 text-center text-gray-500 dark:text-gray-400">
+                No results found.
+              </Command.Empty>
               {activePage === 'home' && (
                 <Home
                   key={'search'}

@@ -984,7 +984,6 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
           </div>
         )}
 
-
         <MenuPopper open={menuOpen} position={menuPosition} setOpen={setMenuOpen} />
 
         {contextMenu.open && contextMenu.type === 'canvas' && (

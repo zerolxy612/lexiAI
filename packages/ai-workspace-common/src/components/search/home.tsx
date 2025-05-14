@@ -34,7 +34,11 @@ export function Home({
       {data
         .filter((item) => item?.data?.length > 0)
         .map((renderItem, index) => (
-          <Command.Group heading={renderItem?.heading} key={index} className="text-xs font-medium text-gray-500 dark:text-gray-400 px-2 mb-2">
+          <Command.Group
+            heading={renderItem?.heading}
+            key={index}
+            className="text-xs font-medium text-gray-500 dark:text-gray-400 px-2 mb-2"
+          >
             {renderItem?.data?.slice(0, 5)?.map((item, index) => (
               <Item
                 key={index}
