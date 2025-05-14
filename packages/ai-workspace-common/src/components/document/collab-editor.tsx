@@ -91,6 +91,16 @@ export const CollaborativeEditor = memo(
         .moveable-line {
           background-color: #00968F !important;
         }
+        
+        ${isDarkMode ? `
+        /* Dark mode placeholder style */
+        .ProseMirror .is-editor-empty:first-child::before {
+          color: rgba(255, 255, 255, 0.4) !important;
+        }
+        .ProseMirror .is-empty::before {
+          color: rgba(255, 255, 255, 0.4) !important;
+        }
+        ` : ''}
       `;
       document.head.appendChild(styleEl);
 
@@ -99,7 +109,7 @@ export const CollaborativeEditor = memo(
           document.head.removeChild(styleEl);
         }
       };
-    }, []);
+    }, [isDarkMode]);
 
     // Move hooks to top level
     const documentActions = useDocumentStoreShallow((state) => ({
