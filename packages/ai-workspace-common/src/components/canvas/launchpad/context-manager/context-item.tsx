@@ -30,7 +30,7 @@ export const ContextItem = ({
 }) => {
   const { t } = useTranslation();
   const { readonly } = useCanvasContext();
-  const { title, entityId, selection, metadata } = item ?? {};
+  const { title, entityId, selection, metadata, type } = item ?? {};
   const icon = getContextItemIcon(item.type, null, { withHistory: metadata?.withHistory });
   const { setSelectedNode } = useNodeSelection();
   const { getNodes } = useReactFlow();
@@ -99,14 +99,14 @@ export const ContextItem = ({
           <span className="flex items-center flex-shrink-0 mr-1">{icon}</span>
           <span
             className={cn(
-              'flex-1 whitespace-nowrap overflow-hidden text-ellipsis min-w-0 mr-1 text-gray-600 hover:text-green-600',
+              'flex-1 whitespace-nowrap overflow-hidden text-ellipsis min-w-0 mr-1 text-gray-600 hover:text-green-600 dark:text-gray-300 dark:hover:text-green-300',
               {
                 'text-gray-300': disabled,
                 'text-red-500': isLimit,
               },
             )}
           >
-            {title}
+            {title || t(`canvas.nodeTypes.${type}`)}
           </span>
           {!canNotRemove && !readonly && (
             <IconClose

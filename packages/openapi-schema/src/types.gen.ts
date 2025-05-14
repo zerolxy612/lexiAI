@@ -565,6 +565,10 @@ export type CanvasTemplate = {
    */
   language: string;
   /**
+   * Whether this canvas template is featured
+   */
+  featured?: boolean;
+  /**
    * Canvas template creation time
    */
   createdAt: string;
@@ -4003,6 +4007,10 @@ export type ModelInfo = {
    * Whether this model is the default model
    */
   isDefault?: boolean;
+  /**
+   * Model group
+   */
+  group?: string;
 };
 
 export type ListModelsResponse = BaseResponse & {
@@ -4097,13 +4105,13 @@ export type EmbeddingModelConfig = {
    */
   modelName?: string;
   /**
+   * Embedding model dimension
+   */
+  dimensions: number;
+  /**
    * Embedding model batch size
    */
   batchSize?: number;
-  /**
-   * Embedding model dimensions
-   */
-  dimensions?: number;
 };
 
 /**
@@ -4186,6 +4194,10 @@ export type ProviderItem = {
    * Provider item order
    */
   order?: number;
+  /**
+   * Provider item group
+   */
+  group?: string;
 };
 
 export type ListProvidersResponse = BaseResponse & {
@@ -4271,6 +4283,10 @@ export type UpsertProviderItemRequest = {
    * Provider item order
    */
   order?: number;
+  /**
+   * Provider item group
+   */
+  group?: string;
 };
 
 export type UpsertProviderItemResponse = BaseResponse & {

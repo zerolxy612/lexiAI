@@ -56,9 +56,9 @@ const PremiumBanner = () => {
   };
 
   return (
-    <div className="flex items-center justify-between px-3 py-0.5 bg-gray-100 border-b">
+    <div className="flex items-center justify-between px-3 py-0.5 bg-gray-100 border-b dark:bg-gray-800 dark:border-gray-700">
       <div className="flex items-center justify-between gap-2 w-full">
-        <span className="text-xs text-gray-600 flex-1 whitespace-nowrap">
+        <span className="text-xs text-gray-600 dark:text-gray-300 flex-1 whitespace-nowrap">
           {t('copilot.premiumBanner.message')}
         </span>
         <div className="flex items-center gap-0.5">
@@ -140,7 +140,7 @@ export const ChatPanel = ({
   const [form] = Form.useForm();
 
   // hooks
-  const { canvasId } = useCanvasContext();
+  const { canvasId, readonly } = useCanvasContext();
   const { handleFilterErrorTip } = useContextFilterErrorTip();
   const { addNode } = useAddNode();
   const { invokeAction, abortAction } = useInvokeAction();
@@ -371,7 +371,7 @@ export const ChatPanel = ({
         <div
           className={cn(
             'ai-copilot-chat-container chat-input-container rounded-[7px] overflow-hidden',
-            embeddedMode && 'embedded-chat-panel border border-gray-100',
+            embeddedMode && 'embedded-chat-panel border border-gray-100 dark:border-gray-700',
           )}
         >
           <SelectedSkillHeader
@@ -380,7 +380,12 @@ export const ChatPanel = ({
             onClose={() => setSelectedSkill(null)}
           />
           {subscriptionEnabled && !userProfile?.subscription && <PremiumBanner />}
-          <div className={cn('px-3', embeddedMode && 'px-2')}>
+          <div
+            className={cn(
+              'px-3 bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800',
+              embeddedMode && 'px-2 bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800',
+            )}
+          >
             <ContextManager
               className="py-2"
               contextItems={contextItems}
@@ -390,6 +395,7 @@ export const ChatPanel = ({
 
             <div>
               <ChatInput
+                readonly={readonly}
                 query={chatStore.newQAText}
                 setQuery={chatStore.setNewQAText}
                 selectedSkillName={selectedSkill?.name}
@@ -403,6 +409,7 @@ export const ChatPanel = ({
 
             {selectedSkill?.configSchema?.items?.length ? (
               <ConfigManager
+                readonly={readonly}
                 key={selectedSkill?.name}
                 form={form}
                 formErrors={formErrors}

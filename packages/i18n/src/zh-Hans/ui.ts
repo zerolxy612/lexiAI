@@ -118,6 +118,7 @@ const translations = {
     selectedItems: '已选择 {{count}} 项',
     noItemsSelected: '未选择任何项',
     clear: '清除',
+    featured: '精选',
     nodesAddedSuccess: '节点添加成功',
     nodesAddedFailed: '节点添加失败',
     canvasIdMissing: '缺少画布ID',
@@ -247,8 +248,8 @@ const translations = {
       first: '由多线程对话、代码组件、知识库集成、上下文记忆和智能搜索驱动，',
       second: 'Refly 是将创意转化为优质内容的最佳方式。',
     },
-    messageText: 'v0.5.0 发布：知识库、线性会话和更多 🚀',
-    simpleMessageText: 'v0.5.0: 知识库 🚀',
+    messageText: 'v0.6.0 发布：新首页、模型定制和幻灯片 🚀',
+    simpleMessageText: 'v0.6.0: 模型自定义和幻灯片 🚀',
     tryForFree: '开始使用',
     tryItNow: '立即体验',
     creationEngine: '创作引擎',
@@ -366,7 +367,7 @@ const translations = {
         tag: '多模型支持',
         title: '集成 13+ 顶尖 AI 模型，满足不同场景需求',
         bulletPoints: [
-          '支持 Claude、DeepSeek、Gemini、GPT-4o 等高级模型',
+          '支持 Claude、DeepSeek、Gemini、GPT-4o 等先进模型',
           '提供 Claude Haiku、DeepSeek V3、Llama 等标准模型',
           '根据任务智能推荐最佳模型，确保输出质量',
         ],
@@ -497,7 +498,7 @@ const translations = {
     faq: {
       title: '常见问题',
       Q1: 'Refly 可以免费使用吗？',
-      A1: 'Refly 作为开源项目，对于个人用户，您可以通过自行部署社区版使用其所有功能。为了更多用户快速上手体验 Refly，我们为所有注册用户提供 100 个知识库文件存储额度，以及每天 5 次高级模型调用和 50 次基础模型调用。如果您需要体验进阶模型或扩大用量，可升级付费订阅套餐。',
+      A1: 'Refly 作为开源项目，对于个人用户，您可以通过自行部署社区版使用其所有功能。为了更多用户快速上手体验 Refly，我们为所有注册用户提供 100 个知识库文件存储额度，以及每天 5 次 T1 模型调用和 50 次 T2 模型调用。如果您需要体验进阶模型或扩大用量，可升级付费订阅套餐。',
       Q2: '你们支持哪些付款方式？',
       A2: '我们支持银行卡、支付宝、Amazon Pay 和 Cash App Pay。支持的付款方式可能随时有变，请以 Stripe 收银台显示的付款方式为准。',
       Q3: '如何更改或取消订阅方案？',
@@ -602,7 +603,7 @@ const translations = {
       },
       {
         before: '',
-        highlight: '高级模型',
+        highlight: '先进模型',
         after: '驱动的强大技能：生成文档、推荐问题、全网搜索、知识库搜索',
       },
       {
@@ -612,15 +613,20 @@ const translations = {
       },
       {
         before: '借助',
-        highlight: '高级模型',
+        highlight: '先进模型',
         after: '驱动的 AI Markdown 编辑器',
       },
       {
         before: '借助',
-        highlight: '高级模型',
+        highlight: '先进模型',
         after: '驱动的 PPT，SVG，可视化网页、表格和 Mermaid 图表生成',
       },
     ],
+  },
+  frontPage: {
+    welcome: '今天我能为您完成什么工作？',
+    fromCommunity: '来自社区',
+    fromCommunityDesc: '探索将 Refly 用于工作或更广泛领域的途径。',
   },
   emailVerification: {
     title: '邮箱验证',
@@ -890,7 +896,8 @@ const translations = {
       copyToClipboard: '复制 PNG 到剪贴板',
       downloadStarted: '开始下载...',
       downloadSuccess: '下载成功',
-      downloadError: '下载失败',
+      downloadError:
+        '下载失败！小组件内未包含 SVG 内容，请选择正确的展示类型，或者检查源文件代码是否完整',
       copyStarted: '开始复制...',
       copySuccess: '已复制到剪贴板',
       copyError: '复制失败',
@@ -906,6 +913,7 @@ const translations = {
     emptyText: '双击画布打开菜单或选择',
     shareNotFound: '画布不存在',
     shareNotFoundHint: '你尝试访问的共享画布无法找到。它可能已被删除，或者链接可能有误。',
+    frontPageWelcome: '今天我能为您完成什么工作？',
     nodeTypes: {
       document: '文档',
       resource: '资源',
@@ -916,6 +924,21 @@ const translations = {
       codeArtifact: '代码组件',
       website: '网站',
       mindMap: '思维导图',
+    },
+    presetScenarios: {
+      title: '预设场景',
+      generatePPT: '生成 PPT',
+      generatePPTDesc: '创建专业的演示幻灯片',
+      generatePPTQuery: '请使用 HTML 格式创建一个关于[主题]的专业 PPT',
+      generateLanding: '生成营销落地页',
+      generateLandingDesc: '创建市场营销落地页',
+      generateLandingQuery: '请使用 HTML 格式为[产品/服务]创建一个营销落地页',
+      generateXHS: '生成小红书卡片',
+      generateXHSDesc: '创建小红书内容卡片',
+      generateXHSQuery: '请使用 HTML 格式创建一个关于[主题]的小红书内容卡片',
+      generateMediaContent: '生成自媒体文案',
+      generateMediaContentDesc: '创建引人入胜的自媒体内容',
+      generateMediaContentQuery: '请创建一篇关于[主题]的自媒体文案',
     },
     export: {
       success: '导出图片成功',
@@ -1042,7 +1065,12 @@ const translations = {
       approachingNodeLimit: '画布节点数量接近上限 ({{current}}/{{max}})，建议移除不必要的节点。',
     },
     skill: {
-      askAI: 'AI 提问',
+      askAI: 'AI 普通问答',
+      askAIDescription: '向 AI 提问，获取写作、阅读理解或问题解答等帮助',
+      switchSkillTooltip:
+        '在输入框中使用 Ctrl + / 切换技能，默认提问技能为 AI 普通问答，可切换为其他技能，如网络搜索',
+      switchSkillTooltipMac:
+        '在输入框中使用 ⌘ + / 切换技能，默认提问技能为 AI 普通问答，可切换为其他技能，如网络搜索',
     },
     skillResponse: {
       executionFailed: '执行失败，点击重试',
@@ -1081,6 +1109,7 @@ const translations = {
     nodeActions: {
       dragToConnect: '拖拽连线',
       clickToAdd: '点击添加',
+      duplicateMemo: '复制备忘录',
       createMemo: '创建空备忘录',
       createMemoDescription: '创建一个空备忘录，用于快速记录想法，支持 Markdown 格式',
       copy: '复制节点内容',
@@ -1499,6 +1528,7 @@ const translations = {
       viewTutorial: '查看文档',
       tour: '查看教程',
       template: '模板',
+      home: '首页',
     },
   },
   knowledgeLibrary: {
@@ -1669,6 +1699,7 @@ const translations = {
       defaultModel: '默认模型',
       account: '账号',
       language: '语言',
+      appearance: '外观',
       subscription: '订阅',
       mcpServer: 'MCP 服务器',
     },
@@ -1744,6 +1775,13 @@ const translations = {
       collapse: '收起',
       viewToolsWithCount: '查看工具 ({{count}})',
     },
+    appearance: {
+      title: '外观设置',
+      themeMode: '主题模式',
+      lightMode: '浅色模式',
+      darkMode: '深色模式',
+      systemMode: '跟随系统',
+    },
     guide: {
       title: '设置向导',
       description: '👋 欢迎使用 Refly！让我们开始进行一些必要的设置。',
@@ -1791,12 +1829,12 @@ const translations = {
       subscribeNow: '立即订阅',
       manage: '管理订阅',
       currentPlan: '当前套餐',
-      t1Requests: '高级模型请求',
+      t1Requests: 'T1 模型请求',
       t1RequestsDescription:
-        '高级模型包括 Claude 3.7 Sonnet (Thinking), DeepSeek R1, o3 Mini, GPT-4o 等模型。每个成功的技能调用计为一次请求。',
-      t2Requests: '标准模型请求',
+        'T1 模型包括 Claude 3.7 Sonnet (Thinking), DeepSeek R1, o3 Mini, GPT-4o 等模型。每个成功的技能调用计为一次请求。',
+      t2Requests: 'T2 模型请求',
       t2RequestsDescription:
-        '标准模型包括 Gemini Flash 2.0, DeepSeek V3, Claude 3.5 Haiku 等模型。每个成功的技能调用计为一次请求。',
+        'T2 模型包括 Gemini Flash 2.0, DeepSeek V3, Claude 3.5 Haiku 等模型。每个成功的技能调用计为一次请求。',
       requestsRefresh: '免费用户每天会重置次数。',
       libraryStorage: '知识库文件数',
       libraryStorageDescription: '知识库中每个资源和文档计为一个文件。',
@@ -1829,8 +1867,8 @@ const translations = {
         },
         vectorStorage: '向量存储',
         fileStorage: '文件存储',
-        t1Model: '高级模型',
-        t2Model: '基础模型',
+        t1Model: 'T1 模型',
+        t2Model: 'T2 模型',
         freeModel: '免费模型',
         mediaCredit: '多媒体积分（即将推出）',
         upgrade: '立即升级',
@@ -1980,6 +2018,9 @@ const translations = {
       relevanceThreshold: '相关性阈值',
       relevanceThresholdPlaceholder: '请设置相关性阈值',
       clickToSet: '点击设置',
+      group: '分组名称',
+      groupPlaceholder: '请设置分组名称，用于分类管理模型',
+      default: '默认分组',
     },
     modelTier: {
       free: '免费',
@@ -2421,15 +2462,7 @@ const translations = {
       extensionWeblink: '网页',
     },
     modelSelector: {
-      unlimited: '无限量',
-      noModelAvailable: '无可用模型',
-      premium: '高级模型',
-      standard: '标准模型',
-      free: '免费模型',
-      freeModelHint: '免费模型可能存在不可用情况和使用限制，建议仅用于测试用途。',
-      tokenUsed: '已使用 {{used}} / {{quota}}',
-      upgrade: '升级',
-      quotaExceeded: '额度已用尽，点击升级订阅',
+      configureModel: '点击配置模型',
       noVisionSupport: '该模型不支持消费图片',
     },
     contentSelector: {
@@ -2533,6 +2566,7 @@ const translations = {
     hideTemplates: '隐藏模板',
     duplicateCanvasEntities: '复制该画布所包含的文档以及资源',
     noDescription: '暂无描述',
+    emptyList: '暂无模版，快来发挥你的创造力，为社区贡献模版吧～',
   },
   project: {
     create: '创建知识库',

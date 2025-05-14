@@ -1,27 +1,21 @@
 import { useEffect, useState, useMemo, useCallback, memo } from 'react';
-import { Button, Dropdown, DropdownProps, MenuProps, Progress, Skeleton, Tooltip } from 'antd';
+import { Button, Divider, Dropdown, DropdownProps, MenuProps, Skeleton, Tooltip } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { IconDown } from '@arco-design/web-react/icon';
-import { AiOutlineExperiment } from 'react-icons/ai';
 import { ModelIcon } from '@lobehub/icons';
 import { getPopupContainer } from '@refly-packages/ai-workspace-common/utils/ui';
-import { PiWarningCircleBold } from 'react-icons/pi';
-import {
-  LLMModelConfig,
-  ModelInfo,
-  SubscriptionPlanType,
-  TokenUsageMeter,
-} from '@refly/openapi-schema';
+import { LLMModelConfig, ModelInfo, TokenUsageMeter } from '@refly/openapi-schema';
 import { useListProviderItems } from '@refly-packages/ai-workspace-common/queries';
+import { IconError } from '@refly-packages/ai-workspace-common/components/common/icon';
+import { LuInfo, LuSettings2 } from 'react-icons/lu';
 import {
-  IconSubscription,
-  IconError,
-} from '@refly-packages/ai-workspace-common/components/common/icon';
-import { LuInfinity } from 'react-icons/lu';
-import { useSiderStoreShallow } from '@refly-packages/ai-workspace-common/stores/sider';
+  SettingsModalActiveTab,
+  useSiderStoreShallow,
+} from '@refly-packages/ai-workspace-common/stores/sider';
 import { useSubscriptionUsage } from '@refly-packages/ai-workspace-common/hooks/use-subscription-usage';
 import { IContextItem } from '@refly-packages/ai-workspace-common/stores/context-panel';
-import { subscriptionEnabled } from '@refly-packages/ai-workspace-common/utils/env';
+import { modelEmitter } from '@refly-packages/ai-workspace-common/utils/event-emitter/model';
+import { useGroupModels } from '@refly-packages/ai-workspace-common/hooks/use-group-models';
 import './index.scss';
 
 interface ModelSelectorProps {
@@ -33,169 +27,42 @@ interface ModelSelectorProps {
   contextItems?: IContextItem[];
 }
 
-const UsageProgress = memo(
-  ({
-    used,
-    quota,
-    setDropdownOpen,
-  }: { used: number; quota: number; setDropdownOpen: (open: boolean) => void }) => {
-    const { t } = useTranslation();
-    const setShowSettingModal = useSiderStoreShallow((state) => state.setShowSettingModal);
-
-    const handleShowSettingModal = useCallback(() => {
-      setDropdownOpen(false);
-      setShowSettingModal(true);
-    }, [setDropdownOpen, setShowSettingModal]);
-
-    const formattedUsed = useMemo(
-      () => used?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') ?? '0',
-      [used],
-    );
-    const formattedQuota = useMemo(
-      () => quota?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') ?? '0',
-      [quota],
-    );
-
-    return (
-      <div className="flex items-center gap-1 cursor-pointer" onClick={handleShowSettingModal}>
-        {quota < 0 ? (
-          <Tooltip title={t('copilot.modelSelector.unlimited')}>
-            <LuInfinity className="text-sm" />
-          </Tooltip>
-        ) : (
-          <Progress
-            type="circle"
-            percent={(used / quota) * 100}
-            strokeColor={used >= quota ? '#EF4444' : '#46C0B2'}
-            strokeWidth={20}
-            size={14}
-            format={() =>
-              used >= quota
-                ? t('copilot.modelSelector.quotaExceeded')
-                : t('copilot.modelSelector.tokenUsed', {
-                    used: formattedUsed,
-                    quota: formattedQuota,
-                  })
-            }
-          />
-        )}
-      </div>
-    );
-  },
-  (prevProps, nextProps) => {
-    return prevProps.used === nextProps.used && prevProps.quota === nextProps.quota;
-  },
-);
-
-UsageProgress.displayName = 'UsageProgress';
-
-// Memoize model option items
-const ModelOption = memo(({ provider }: { provider: string }) => (
-  <ModelIcon model={provider} type={'color'} />
-));
-
-ModelOption.displayName = 'ModelOption';
-
-// Create a memoized group header component
-const GroupHeader = memo(
-  ({
-    type,
-    tokenUsage,
-    planTier,
-    setDropdownOpen,
-    setSubscribeModalVisible,
-  }: {
-    type: 'premium' | 'standard' | 'free';
-    tokenUsage: TokenUsageMeter;
-    planTier: SubscriptionPlanType;
-    setDropdownOpen: (open: boolean) => void;
-    setSubscribeModalVisible: (visible: boolean) => void;
-  }) => {
-    const { t } = useTranslation();
-
-    if (type === 'premium') {
-      return (
-        <div className="flex justify-between items-center">
-          <span className="text-sm">{t('copilot.modelSelector.premium')}</span>
-          {subscriptionEnabled &&
-            (planTier === 'free' && tokenUsage?.t1CountQuota === 0 ? (
-              <Button
-                type="text"
-                size="small"
-                className="text-xs !text-green-600 gap-1 translate-x-2"
-                icon={<IconSubscription />}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setDropdownOpen(false);
-                  setSubscribeModalVisible(true);
-                }}
-              >
-                {t('copilot.modelSelector.upgrade')}
-              </Button>
-            ) : (
-              <UsageProgress
-                used={tokenUsage?.t1CountUsed}
-                quota={tokenUsage?.t1CountQuota}
-                setDropdownOpen={setDropdownOpen}
-              />
-            ))}
-        </div>
-      );
-    }
-
-    if (type === 'standard') {
-      return (
-        <div className="flex justify-between items-center">
-          <div className="text-sm">{t('copilot.modelSelector.standard')}</div>
-          {subscriptionEnabled && (
-            <UsageProgress
-              used={tokenUsage?.t2CountUsed}
-              quota={tokenUsage?.t2CountQuota}
-              setDropdownOpen={setDropdownOpen}
-            />
-          )}
-        </div>
-      );
-    }
-
-    return (
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-1">
-          <span className="text-sm">{t('copilot.modelSelector.free')}</span>
-          <Tooltip title={t('copilot.modelSelector.freeModelHint')}>
-            <AiOutlineExperiment className="w-3.5 h-3.5 text-orange-500" />
-          </Tooltip>
-        </div>
-        {subscriptionEnabled && (
-          <UsageProgress used={-1} quota={-1} setDropdownOpen={setDropdownOpen} />
-        )}
-      </div>
-    );
-  },
-);
-
-GroupHeader.displayName = 'GroupHeader';
-
 // Memoize the selected model display
-const SelectedModelDisplay = memo(({ model }: { model: ModelInfo | null }) => {
-  const { t } = useTranslation();
+const SelectedModelDisplay = memo(
+  ({
+    model,
+    handleOpenSettingModal,
+  }: { model: ModelInfo | null; handleOpenSettingModal: () => void }) => {
+    const { t } = useTranslation();
 
-  if (!model) {
+    if (!model) {
+      return (
+        <Button
+          type="text"
+          size="small"
+          className="text-xs gap-1.5"
+          style={{ color: '#f59e0b' }}
+          icon={<LuInfo className="flex items-center" />}
+          onClick={handleOpenSettingModal}
+        >
+          {t('copilot.modelSelector.configureModel')}
+        </Button>
+      );
+    }
+
     return (
-      <>
-        <PiWarningCircleBold className="text-yellow-600" />
-        <span className="text-yellow-600">{t('copilot.modelSelector.noModelAvailable')}</span>
-      </>
+      <Button
+        type="text"
+        size="small"
+        className="text-xs gap-1.5"
+        icon={<ModelIcon model={model.name} type={'color'} />}
+      >
+        {model.label}
+        <IconDown />
+      </Button>
     );
-  }
-
-  return (
-    <>
-      <ModelIcon model={model.name} type={'color'} />
-      {model.label}
-    </>
-  );
-});
+  },
+);
 
 SelectedModelDisplay.displayName = 'SelectedModelDisplay';
 
@@ -217,6 +84,35 @@ const ModelLabel = memo(
 );
 
 ModelLabel.displayName = 'ModelLabel';
+
+// Create a memoized settings button component
+const SettingsButton = memo(
+  ({
+    handleOpenSettingModal,
+    setDropdownOpen,
+  }: {
+    handleOpenSettingModal: () => void;
+    setDropdownOpen: (open: boolean) => void;
+  }) => {
+    const { t } = useTranslation();
+
+    const handleClick = useCallback(() => {
+      setDropdownOpen(false);
+      handleOpenSettingModal();
+    }, [setDropdownOpen, handleOpenSettingModal]);
+
+    return (
+      <div onClick={handleClick} className="text-xs flex items-center gap-2 group">
+        <LuSettings2 className="text-sm text-gray-500 flex items-center" />
+        <div className="text-xs flex items-center gap-1.5 text-gray-500">
+          {t('copilot.modelSelector.configureModel')}
+        </div>
+      </div>
+    );
+  },
+);
+
+SettingsButton.displayName = 'SettingsButton';
 
 const isModelDisabled = (meter: TokenUsageMeter, model: ModelInfo) => {
   if (meter && model) {
@@ -242,7 +138,11 @@ export const ModelSelector = memo(
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const { t } = useTranslation();
 
-    const { data: providerItemList, isLoading: isModelListLoading } = useListProviderItems(
+    const {
+      data: providerItemList,
+      isLoading: isModelListLoading,
+      refetch: refetchModelList,
+    } = useListProviderItems(
       {
         query: {
           category: 'llm',
@@ -257,7 +157,30 @@ export const ModelSelector = memo(
       },
     );
 
+    // Listen for model update events
+    useEffect(() => {
+      const handleModelRefetch = () => {
+        refetchModelList();
+      };
+
+      modelEmitter.on('model:list:refetch', handleModelRefetch);
+
+      return () => {
+        modelEmitter.off('model:list:refetch', handleModelRefetch);
+      };
+    }, [refetchModelList]);
+
     const { tokenUsage, isUsageLoading } = useSubscriptionUsage();
+
+    const { setShowSettingModal, setSettingsModalActiveTab } = useSiderStoreShallow((state) => ({
+      setShowSettingModal: state.setShowSettingModal,
+      setSettingsModalActiveTab: state.setSettingsModalActiveTab,
+    }));
+
+    const handleOpenSettingModal = useCallback(() => {
+      setShowSettingModal(true);
+      setSettingsModalActiveTab(SettingsModalActiveTab.ModelConfig);
+    }, [setShowSettingModal, setSettingsModalActiveTab]);
 
     const modelList: ModelInfo[] = useMemo(() => {
       return (
@@ -271,22 +194,64 @@ export const ModelSelector = memo(
             contextLimit: config.contextLimit,
             maxOutput: config.maxOutput,
             capabilities: config.capabilities,
+            group: item.group,
           };
         }) || []
       );
     }, [providerItemList?.data]);
 
+    const { handleGroupModelList } = useGroupModels();
+    const sortedGroups = useMemo(() => handleGroupModelList(modelList), [modelList]);
     const isContextIncludeImage = useMemo(() => {
       return contextItems?.some((item) => item.type === 'image');
     }, [contextItems]);
 
     const droplist: MenuProps['items'] = useMemo(() => {
-      return modelList.map((model) => ({
-        key: model.name,
-        label: <ModelLabel model={model} isContextIncludeImage={isContextIncludeImage} />,
-        icon: <ModelIcon model={model.name} size={16} type={'color'} />,
-      }));
-    }, [modelList, isContextIncludeImage]);
+      let list = [];
+      for (const group of sortedGroups) {
+        if (group?.models?.length > 0) {
+          const header = {
+            key: group.key,
+            type: 'group',
+            label: (
+              <Divider
+                className="!my-1 !p-0"
+                variant="dashed"
+                orientation="left"
+                orientationMargin="0"
+              >
+                <div className="text-[13px] max-w-[300px] truncate">{group.name}</div>
+              </Divider>
+            ),
+          };
+          const items = group.models.map((model) => ({
+            key: model.name,
+            label: <ModelLabel model={model} isContextIncludeImage={isContextIncludeImage} />,
+            icon: <ModelIcon model={model.name} size={16} type={'color'} />,
+          }));
+          list = [...list, header, ...items];
+        }
+      }
+
+      // Add settings button at the bottom
+      list.push({
+        key: 'settings',
+        type: 'divider',
+        className: '!my-1',
+      });
+
+      list.push({
+        key: 'settings-button',
+        label: (
+          <SettingsButton
+            handleOpenSettingModal={handleOpenSettingModal}
+            setDropdownOpen={setDropdownOpen}
+          />
+        ),
+      });
+
+      return list;
+    }, [sortedGroups, isContextIncludeImage, handleOpenSettingModal, setDropdownOpen]);
 
     // Automatically select available model when:
     // 1. No model is selected
@@ -335,8 +300,8 @@ export const ModelSelector = memo(
       >
         {!briefMode ? (
           <span className="text-xs flex items-center gap-1.5 text-gray-500 cursor-pointer transition-all duration-300 hover:text-gray-700">
-            <SelectedModelDisplay model={model} />
-            <IconDown />
+            <SelectedModelDisplay model={model} handleOpenSettingModal={handleOpenSettingModal} />
+
             {!remoteModel?.capabilities?.vision && isContextIncludeImage && (
               <Tooltip title={t('copilot.modelSelector.noVisionSupport')}>
                 <IconError className="w-3.5 h-3.5 text-[#faad14]" />
@@ -344,7 +309,7 @@ export const ModelSelector = memo(
             )}
           </span>
         ) : (
-          <ModelIcon model={'gpt-4o'} size={48} type={'color'} />
+          <ModelIcon model={'gpt-4o'} size={16} type={'color'} />
         )}
       </Dropdown>
     );

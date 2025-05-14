@@ -666,6 +666,16 @@ export const NodeActionMenu: FC<NodeActionMenuProps> = ({
                     'https://static.refly.ai/onboarding/nodeAction/nodeAction-createEmptyMemo.webm',
                 },
               },
+              nodeType === 'memo' && {
+                key: 'duplicateMemo',
+                icon: GrClone,
+                label: t('canvas.nodeActions.duplicateMemo'),
+                onClick: () => {
+                  nodeActionEmitter.emit(createNodeEventName(nodeId, 'duplicate'));
+                  onClose?.();
+                },
+                type: 'button' as const,
+              },
               ...(!['image', 'website'].includes(nodeType)
                 ? [
                     {
@@ -862,7 +872,7 @@ export const NodeActionMenu: FC<NodeActionMenuProps> = ({
   }, [checkScrollPosition, menuItems]);
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-2 w-[200px] border border-[rgba(0,0,0,0.06)] relative">
+    <div className="bg-white rounded-lg shadow-lg p-2 w-[200px] border border-[rgba(0,0,0,0.06)] relative dark:bg-gray-900 dark:border-gray-700">
       <div
         ref={contentRef}
         className={`node-action-menu-content ${hasFixedHeight ? 'max-h-[200px] overflow-y-auto' : ''}`}
@@ -885,7 +895,7 @@ export const NodeActionMenu: FC<NodeActionMenuProps> = ({
                 rounded
                 text-sm
                 transition-colors
-                text-gray-700 hover:bg-gray-50 hover:text-gray-700
+                text-gray-700 hover:bg-gray-50 hover:text-gray-700 dark:text-gray-200 dark:hover:bg-gray-900 dark:hover:text-gray-200
                 ${item.danger ? '!text-red-600 hover:bg-red-50' : ''}
                 ${item.primary ? '!text-primary-600 hover:bg-primary-50' : ''}
                 ${item.loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
@@ -920,7 +930,7 @@ export const NodeActionMenu: FC<NodeActionMenuProps> = ({
       </div>
       {hasFixedHeight && hasMoreContent && (
         <div className="scroll-indicator" onClick={scrollToBottom}>
-          <ChevronDown className="w-4 h-4" />
+          <ChevronDown className="w-4 h-4 text-gray-800 dark:text-gray-200" />
         </div>
       )}
     </div>

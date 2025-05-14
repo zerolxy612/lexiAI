@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Form } from '@arco-design/web-react';
-import { Button } from 'antd';
+import { Button, Tooltip, Select } from 'antd';
+import { SwapOutlined } from '@ant-design/icons';
 
 import { ChatInput } from '@refly-packages/ai-workspace-common/components/canvas/launchpad/chat-input';
 import { getSkillIcon } from '@refly-packages/ai-workspace-common/components/common/icon';
@@ -25,9 +26,12 @@ import { ContextTarget } from '@refly-packages/ai-workspace-common/stores/contex
 import { ProjectKnowledgeToggle } from '@refly-packages/ai-workspace-common/components/project/project-knowledge-toggle';
 import { useUploadImage } from '@refly-packages/ai-workspace-common/hooks/use-upload-image';
 import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/canvas';
+import { useListSkills } from '@refly-packages/ai-workspace-common/hooks/use-find-skill';
+
+import './index.scss';
 
 // Memoized Premium Banner Component
-const PremiumBanner = memo(() => {
+export const PremiumBanner = memo(() => {
   const { t } = useTranslation();
   const { showPremiumBanner, setShowPremiumBanner } = useLaunchpadStoreShallow((state) => ({
     showPremiumBanner: state.showPremiumBanner,
@@ -44,9 +48,9 @@ const PremiumBanner = memo(() => {
   if (!showPremiumBanner) return null;
 
   return (
-    <div className="flex items-center justify-between px-2 py-0.5 bg-gray-100 border-b">
+    <div className="flex items-center justify-between px-2 py-0.5 bg-gray-100 border-b dark:bg-gray-800">
       <div className="flex items-center justify-between gap-2 w-full">
-        <span className="text-xs text-gray-600 flex-1 whitespace-nowrap">
+        <span className="text-xs text-gray-600 dark:text-gray-300 flex-1 whitespace-nowrap">
           {t('copilot.premiumBanner.message')}
         </span>
         <div className="flex items-center gap-0.5">
@@ -85,17 +89,81 @@ const NodeHeader = memo(
     readonly: boolean;
   }) => {
     const { t } = useTranslation();
+    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const skills = useListSkills();
+
+    const onSkillChange = useCallback(
+      (value: string) => {
+        const selectedSkill = skills.find((skill) => skill.name === value) || null;
+        setSelectedSkill(selectedSkill);
+      },
+      [skills, setSelectedSkill],
+    );
+
+    const skillOptions = useMemo(() => {
+      return skills.map((skill) => ({
+        value: skill.name,
+        name: t(`${skill.name}.name`, { ns: 'skill' }),
+        label: (
+          <div className="flex flex-col">
+            <span className="text-sm font-medium">{t(`${skill.name}.name`, { ns: 'skill' })}</span>
+            <span className="text-xs text-gray-500">
+              {t(`${skill.name}.description`, { ns: 'skill' })}
+            </span>
+          </div>
+        ),
+        textLabel: t(`${skill.name}.name`, { ns: 'skill' }),
+      }));
+    }, [t, skills]);
+
     return (
-      <div className="flex justify-between">
+      <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded bg-[#6172F3] shadow-lg flex items-center justify-center flex-shrink-0">
             {getSkillIcon(selectedSkillName, 'w-4 h-4 text-white')}
           </div>
-          <span className="text-sm font-medium leading-normal text-[rgba(0,0,0,0.8)] truncate">
-            {selectedSkillName
-              ? t(`${selectedSkillName}.name`, { ns: 'skill' })
-              : t('canvas.skill.askAI')}
-          </span>
+
+          <Tooltip
+            title={
+              isMac
+                ? t('canvas.skill.switchSkillTooltipMac', {
+                    shortcut: '⌘ + /',
+                  })
+                : t('canvas.skill.switchSkillTooltip', {
+                    shortcut: 'Ctrl + /',
+                  })
+            }
+          >
+            <div className="cursor-pointer">
+              <Select
+                value={selectedSkillName || 'default'}
+                suffixIcon={<SwapOutlined className="text-gray-400" />}
+                bordered={false}
+                disabled={readonly}
+                className="p-0 node-chat-panel-skill-select"
+                onChange={onSkillChange}
+                dropdownMatchSelectWidth={false}
+                dropdownStyle={{ minWidth: '240px' }}
+                optionLabelProp="name"
+                options={[
+                  {
+                    value: 'default',
+                    name: t('canvas.skill.askAI'),
+                    label: (
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">{t('canvas.skill.askAI')}</span>
+                        <span className="text-xs text-gray-500">
+                          {t('canvas.skill.askAIDescription')}
+                        </span>
+                      </div>
+                    ),
+                  },
+                  ...skillOptions,
+                ]}
+                placeholder={t('canvas.skill.askAI')}
+              />
+            </div>
+          </Tooltip>
         </div>
         {selectedSkillName && !readonly && (
           <Button
@@ -170,7 +238,7 @@ export const ChatPanel = memo(
     const userProfile = useUserStoreShallow((state) => state.userProfile);
     const isList = mode === 'list';
     const { handleUploadImage, handleUploadMultipleImages } = useUploadImage();
-    const { canvasId } = useCanvasContext();
+    const { canvasId, readonly: canvasReadonly } = useCanvasContext();
     const contextItemsRef = useRef(contextItems);
 
     // Get setActiveResultId from context panel store
@@ -320,6 +388,7 @@ export const ChatPanel = memo(
         />
 
         <ChatInput
+          readonly={canvasReadonly}
           ref={chatInputRef}
           query={query}
           setQuery={(value) => {
@@ -343,6 +412,7 @@ export const ChatPanel = memo(
 
         {selectedSkill?.configSchema?.items?.length && setTplConfig ? (
           <ConfigManager
+            readonly={canvasReadonly}
             key={`${selectedSkill?.name}-${Object.keys(initialTplConfig).length}`}
             form={form}
             formErrors={formErrors}
@@ -396,7 +466,7 @@ export const ChatPanel = memo(
           <div
             className={cn(
               'ai-copilot-chat-container chat-input-container rounded-[7px] overflow-hidden',
-              'border border-gray-100 border-solid',
+              'border border-gray-100 border-solid dark:border-gray-700',
             )}
           >
             <SelectedSkillHeader

@@ -28,3 +28,6 @@ common/autoinstallers/*/.npmrc
 
 # mise
 mise.toml
+
+# docs
+docs/.vitepress/cache/*

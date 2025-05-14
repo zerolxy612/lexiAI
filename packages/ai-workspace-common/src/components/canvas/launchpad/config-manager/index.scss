@@ -1,5 +1,5 @@
 .config-manager {
-  padding: 12px 0px 4px 0px;
+  padding: 12px 0px 8px 0px;
   margin: 8px 0px 0;
   border-top: 1px dashed rgba(0, 0, 0, 0.15);
 
@@ -155,14 +155,14 @@
     margin-bottom: 0;
   }
 
-  .arco-input[disabled], 
+  .arco-input[disabled],
   .arco-textarea[disabled],
   .arco-input-disabled,
   .arco-textarea-disabled {
     color: rgba(0, 0, 0, 0.9) !important;
     -webkit-text-fill-color: rgba(0, 0, 0, 0.9) !important;
   }
-  
+
   .arco-form-item-disabled .arco-form-item-label {
     color: rgba(0, 0, 0, 0.9) !important;
   }

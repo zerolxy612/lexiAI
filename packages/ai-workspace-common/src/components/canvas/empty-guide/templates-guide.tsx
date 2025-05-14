@@ -7,6 +7,7 @@ import { useCanvasTemplateModal } from '@refly-packages/ai-workspace-common/stor
 import { VscNotebookTemplate } from 'react-icons/vsc';
 import { useDebouncedCallback } from 'use-debounce';
 import { useCanvasStoreShallow } from '@refly-packages/ai-workspace-common/stores/canvas';
+import { canvasTemplateEnabled } from '@refly-packages/ai-workspace-common/utils/env';
 
 export const TemplatesGuide = ({ canvasId }: { canvasId: string }) => {
   const { setVisible } = useCanvasTemplateModal((state) => ({
@@ -39,7 +40,8 @@ export const TemplatesGuide = ({ canvasId }: { canvasId: string }) => {
   }, [canvasId]);
 
   return (
-    showTemplates && (
+    showTemplates &&
+    canvasTemplateEnabled && (
       <div className="mt-20" style={{ pointerEvents: 'none' }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -72,7 +74,7 @@ export const TemplatesGuide = ({ canvasId }: { canvasId: string }) => {
               </div>
             ))}
           <div
-            className="text-center font-bold bg-white rounded-lg m-2 flex flex-col items-center justify-center cursor-pointer shadow-[0_2px_8px_0_rgba(0,0,0,0.08)] hover:shadow-[0_4px_12px_0_rgba(0,0,0,0.12)] transform hover:-translate-y-0.5 transition-all duration-200 ease-in-out text-gray-500 hover:text-green-600 h-[260px]"
+            className="text-center font-bold bg-white rounded-lg m-2 flex flex-col items-center justify-center cursor-pointer shadow-sm hover:shadow-[0_4px_12px_0_rgba(0,0,0,0.12)] transform hover:-translate-y-0.5 transition-all duration-200 ease-in-out text-gray-500 hover:text-green-600 h-[244.5px]"
             onClick={() => setVisible(true)}
             style={{ pointerEvents: 'auto' }}
           >

@@ -237,12 +237,14 @@ const SearchListWrapper = memo(
         className={`
           h-[32px] w-[32px] 
           flex items-center justify-center 
-          hover:bg-gray-100 rounded-lg 
+          hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg 
           transition-colors duration-200 
           group
-          ${tool.active ? 'bg-gray-100' : ''}
+          ${tool.active ? 'bg-gray-100 dark:bg-gray-800' : ''}
         `}
-        icon={<tool.icon className="h-[18px] w-[18px] text-gray-600 group-hover:text-gray-900" />}
+        icon={
+          <tool.icon className="h-[18px] w-[18px] text-gray-600 group-hover:text-gray-900 dark:text-gray-300 dark:group-hover:text-gray-100" />
+        }
       />
     );
 
@@ -484,7 +486,7 @@ export const CanvasToolbar = memo<ToolbarProps>(({ onToolSelect, nodeLength }) =
 
   return (
     <div
-      className="absolute left-[12px] top-1/2 -translate-y-1/2 bg-white border border-solid border-gray-100 shadow-sm rounded-lg p-2 flex flex-col gap-2 z-10"
+      className="absolute left-[12px] top-1/2 -translate-y-1/2 bg-white border border-solid border-gray-100 shadow-sm rounded-lg p-2 flex flex-col gap-2 z-10 dark:bg-gray-900 dark:border-gray-800"
       data-cy="canvas-toolbar"
     >
       {tools.map((tool) => {

@@ -260,7 +260,7 @@ const EmptyContentPrompt: FC<EmptyContentPromptProps> = ({
       </div>
 
       {/* Node list */}
-      <div className="flex-1 overflow-y-auto relative bg-gray-50" ref={listRef}>
+      <div className="flex-1 overflow-y-auto relative bg-gray-50 dark:bg-gray-950" ref={listRef}>
         {isLoadingCanvas ? (
           <div className="flex items-center justify-center h-full">
             <Spinner size="large" />
@@ -276,8 +276,8 @@ const EmptyContentPrompt: FC<EmptyContentPromptProps> = ({
                   'relative rounded-lg transition overflow-hidden shadow-sm hover:shadow-md',
                   'cursor-pointer',
                   selectedNodeIds.includes(node.data?.entityId)
-                    ? 'bg-white shadow-md'
-                    : 'bg-white border border-gray-200 hover:border-blue-200',
+                    ? 'bg-white shadow-md dark:bg-gray-900'
+                    : 'bg-white border border-gray-200 hover:border-blue-200 dark:bg-gray-900 dark:border-gray-700 dark:hover:border-blue-700',
                 )}
                 onClick={() => handleNodeToggle(node.data?.entityId)}
               >
@@ -286,8 +286,8 @@ const EmptyContentPrompt: FC<EmptyContentPromptProps> = ({
                   className={classNames(
                     'py-2 px-3 bg-white z-10 relative flex items-center justify-between',
                     selectedNodeIds.includes(node.data?.entityId)
-                      ? 'border-b border-blue-100'
-                      : 'border-b border-gray-100',
+                      ? 'border-b border-blue-100 dark:border-blue-800'
+                      : 'border-b border-gray-100 dark:border-gray-800',
                   )}
                 >
                   <div className="flex items-center gap-2 truncate">
@@ -295,8 +295,8 @@ const EmptyContentPrompt: FC<EmptyContentPromptProps> = ({
                       className={classNames(
                         'flex items-center justify-center w-5 h-5 rounded-full text-xs',
                         selectedNodeIds.includes(node.data?.entityId)
-                          ? 'bg-blue-50 text-blue-600'
-                          : 'bg-gray-100 text-gray-600',
+                          ? 'bg-blue-50 text-blue-600 dark:bg-blue-900 dark:text-blue-300'
+                          : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300',
                       )}
                     >
                       {index + 1}
@@ -314,7 +314,7 @@ const EmptyContentPrompt: FC<EmptyContentPromptProps> = ({
                 </div>
 
                 {/* Content preview area */}
-                <div className="h-24 overflow-hidden relative bg-gray-50">
+                <div className="h-24 overflow-hidden relative bg-gray-50 dark:bg-gray-950">
                   <div style={thumbnailCardStyle}>
                     <NodeRenderer node={convertToNodeRelation(node)} isMinimap={true} />
                   </div>
@@ -333,7 +333,7 @@ const EmptyContentPrompt: FC<EmptyContentPromptProps> = ({
       </div>
 
       {/* Action bar - fixed at bottom */}
-      <div className="p-4 border-t border-gray-200 flex justify-between items-center bg-white sticky bottom-0 left-0 right-0 z-10">
+      <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-gray-900 sticky bottom-0 left-0 right-0 z-10">
         <div className="text-sm text-gray-500">
           {selectedNodeIds.length > 0
             ? t('common.selectedItems', `Selected ${selectedNodeIds.length} items`, {

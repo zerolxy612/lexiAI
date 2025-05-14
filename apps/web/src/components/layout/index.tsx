@@ -15,6 +15,7 @@ import { LibraryModal } from '@refly-packages/ai-workspace-common/components/wor
 import { ImportResourceModal } from '@refly-packages/ai-workspace-common/components/import-resource';
 import './index.scss';
 import { useSiderStoreShallow } from '@refly-packages/ai-workspace-common/stores/sider';
+import { BigSearchModal } from '@refly-packages/ai-workspace-common/components/search/modal';
 
 const Content = Layout.Content;
 
@@ -50,7 +51,7 @@ export const AppLayout = (props: AppLayoutProps) => {
       <Layout className="app-layout main">
         {showSider ? <SiderLayout source="sider" /> : null}
         <Layout
-          className="content-layout"
+          className="content-layout dark:bg-green-900"
           style={{
             height: 'calc(100vh)',
             flexGrow: 1,
@@ -60,6 +61,7 @@ export const AppLayout = (props: AppLayoutProps) => {
         >
           <Content>{props.children}</Content>
         </Layout>
+        <BigSearchModal />
         <LoginModal />
         <VerificationModal />
         <ResetPasswordModal />

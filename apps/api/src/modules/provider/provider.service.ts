@@ -21,7 +21,14 @@ import {
 } from '@refly/openapi-schema';
 import { Provider as ProviderModel, ProviderItem as ProviderItemModel } from '@/generated/client';
 import { genProviderItemID, genProviderID, providerInfoList, pick } from '@refly/utils';
-import { ProviderNotFoundError, ProviderItemNotFoundError, ParamsError } from '@refly/errors';
+import {
+  ProviderNotFoundError,
+  ProviderItemNotFoundError,
+  ParamsError,
+  EmbeddingNotAllowedToChangeError,
+  EmbeddingNotConfiguredError,
+  ChatModelNotConfiguredError,
+} from '@refly/errors';
 import { SingleFlightCache } from '@/utils/cache';
 import { EncryptionService } from '@/modules/common/encryption.service';
 import pLimit from 'p-limit';
@@ -32,6 +39,8 @@ import {
   getReranker,
   getChatModel,
 } from '@refly/providers';
+import { ConfigService } from '@nestjs/config';
+import { QdrantService } from '@/modules/common/qdrant.service';
 
 interface GlobalProviderConfig {
   providers: ProviderModel[];
@@ -47,6 +56,8 @@ export class ProviderService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly qdrantService: QdrantService,
+    private readonly configService: ConfigService,
     private readonly encryptionService: EncryptionService,
   ) {
     this.globalProviderCache = new SingleFlightCache(this.fetchGlobalProviderConfig.bind(this));
@@ -59,6 +70,27 @@ export class ProviderService {
         deletedAt: null,
       },
     });
+
+    // Initialize searxng global provider if SEARXNG_BASE_URL is set
+    if (process.env.SEARXNG_BASE_URL) {
+      const searXngProvider = providers.find((provider) => provider.providerKey === 'searxng');
+      if (!searXngProvider) {
+        const provider = await this.prisma.provider.create({
+          data: {
+            providerId: genProviderID(),
+            providerKey: 'searxng',
+            name: 'SearXNG',
+            baseUrl: process.env.SEARXNG_BASE_URL,
+            enabled: true,
+            categories: 'webSearch',
+            isGlobal: true,
+          },
+        });
+        this.logger.log(`Initialized global searxng provider ${provider.providerId}`);
+
+        providers.push(provider);
+      }
+    }
 
     // Decrypt API keys for all providers
     const decryptedProviders = providers.map((provider) => ({
@@ -337,6 +369,7 @@ export class ProviderService {
           itemId: genProviderItemID(),
           uid: user.uid,
           ...pick(item, ['providerId', 'category', 'name', 'enabled', 'config', 'tier']),
+          ...(item.tier ? { groupName: item.tier.toUpperCase() } : {}),
         })),
     });
   }
@@ -382,7 +415,7 @@ export class ProviderService {
   async prepareChatModel(user: User, modelId: string) {
     const item = await this.findLLMProviderItemByModelID(user, modelId);
     if (!item) {
-      throw new Error('No chat model configured');
+      throw new ChatModelNotConfiguredError();
     }
 
     const { provider, config } = item;
@@ -399,7 +432,7 @@ export class ProviderService {
   async prepareEmbeddings(user: User): Promise<Embeddings> {
     const providerItems = await this.findProviderItemsByCategory(user, 'embedding');
     if (!providerItems?.length) {
-      throw new Error('No embedding provider configured');
+      throw new EmbeddingNotConfiguredError();
     }
 
     const providerItem = providerItems[0];
@@ -564,7 +597,7 @@ export class ProviderService {
   }
 
   async createProviderItem(user: User, param: UpsertProviderItemRequest) {
-    const { providerId, name, category, enabled, config, order } = param;
+    const { providerId, name, category, enabled, config, order, group } = param;
 
     if (!providerId || !category || !name) {
       throw new ParamsError('Invalid model item parameters');
@@ -602,6 +635,7 @@ export class ProviderService {
         providerId,
         enabled,
         order,
+        groupName: group,
         uid: user.uid,
         tier: option?.tier,
         config: JSON.stringify(option?.config ?? config),
@@ -648,6 +682,7 @@ export class ProviderService {
         providerId: item.providerId,
         enabled: item.enabled,
         order: item.order,
+        group: item.group,
         uid: user.uid,
         config: JSON.stringify(item.config),
       })),
@@ -655,7 +690,7 @@ export class ProviderService {
   }
 
   async updateProviderItem(user: User, param: UpsertProviderItemRequest) {
-    const { itemId, name, enabled, config, providerId, order } = param;
+    const { itemId, name, enabled, config, providerId, order, group } = param;
 
     if (!itemId) {
       throw new ParamsError('Item ID is required');
@@ -673,6 +708,12 @@ export class ProviderService {
       throw new ProviderItemNotFoundError();
     }
 
+    if (item.category === 'embedding') {
+      if (!(await this.qdrantService.isCollectionEmpty())) {
+        throw new EmbeddingNotAllowedToChangeError();
+      }
+    }
+
     return this.prisma.providerItem.update({
       where: {
         pk: item.pk,
@@ -682,6 +723,7 @@ export class ProviderService {
         enabled,
         providerId,
         order,
+        groupName: group,
         ...(config ? { config: JSON.stringify(config) } : {}),
       },
     });
@@ -741,6 +783,7 @@ export class ProviderService {
             enabled: item.enabled,
             providerId: item.providerId,
             order: item.order,
+            groupName: item.group,
             ...(item.config ? { config: JSON.stringify(item.config) } : {}),
           },
         });

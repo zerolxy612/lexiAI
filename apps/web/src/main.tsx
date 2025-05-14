@@ -32,6 +32,8 @@ const AppLayout = lazy(() =>
 import '@refly-packages/ai-workspace-common/i18n/config';
 import { getEnv, setRuntime } from '@refly/utils/env';
 import { useUserStoreShallow } from '@refly-packages/ai-workspace-common/stores/user';
+import { useThemeStoreShallow } from '@refly-packages/ai-workspace-common/stores/theme';
+import { theme } from 'antd';
 import { SuspenseLoading } from '@refly-packages/ai-workspace-common/components/common/loading';
 import { sentryEnabled } from '@refly-packages/ai-workspace-common/utils/env';
 
@@ -120,10 +122,16 @@ if (sentryEnabled) {
 // Update App component to remove Suspense (moved to router definition)
 export const App = () => {
   const setRuntime = useUserStoreShallow((state) => state.setRuntime);
+  const { isDarkMode, initTheme } = useThemeStoreShallow((state) => ({
+    isDarkMode: state.isDarkMode,
+    initTheme: state.initTheme,
+  }));
 
   useEffect(() => {
     setRuntime('web');
-  }, [setRuntime]);
+    // 初始化主题
+    initTheme();
+  }, [setRuntime, initTheme]);
 
   return (
     <ConfigProvider
@@ -131,9 +139,17 @@ export const App = () => {
         token: {
           colorPrimary: '#00968F',
           borderRadius: 6,
-          controlItemBgActive: '#f1f1f0',
-          controlItemBgActiveHover: '#e0e0e0',
+          ...(isDarkMode
+            ? {
+                controlItemBgActive: 'rgba(255, 255, 255, 0.08)',
+                controlItemBgActiveHover: 'rgba(255, 255, 255, 0.12)',
+              }
+            : {
+                controlItemBgActive: '#f1f1f0',
+                controlItemBgActiveHover: '#e0e0e0',
+              }),
         },
+        algorithm: isDarkMode ? theme.darkAlgorithm : theme.defaultAlgorithm,
       }}
     >
       <Outlet />

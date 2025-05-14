@@ -861,6 +861,10 @@ export const CanvasTemplateSchema = {
       type: 'string',
       description: 'Canvas template language code',
     },
+    featured: {
+      type: 'boolean',
+      description: 'Whether this canvas template is featured',
+    },
     createdAt: {
       type: 'string',
       format: 'date-time',
@@ -5737,6 +5741,10 @@ export const ModelInfoSchema = {
       type: 'boolean',
       description: 'Whether this model is the default model',
     },
+    group: {
+      type: 'string',
+      description: 'Model group',
+    },
   },
 } as const;
 
@@ -5839,7 +5847,7 @@ export const LLMModelConfigSchema = {
 export const EmbeddingModelConfigSchema = {
   type: 'object',
   description: 'Provider config for embeddings',
-  required: ['modelId'],
+  required: ['modelId', 'dimensions'],
   properties: {
     modelId: {
       type: 'string',
@@ -5849,13 +5857,13 @@ export const EmbeddingModelConfigSchema = {
       type: 'string',
       description: 'Embedding model name',
     },
+    dimensions: {
+      type: 'number',
+      description: 'Embedding model dimension',
+    },
     batchSize: {
       type: 'number',
       description: 'Embedding model batch size',
-    },
-    dimensions: {
-      type: 'number',
-      description: 'Embedding model dimensions',
     },
   },
 } as const;
@@ -5962,6 +5970,10 @@ export const ProviderItemSchema = {
     order: {
       type: 'number',
       description: 'Provider item order',
+    },
+    group: {
+      type: 'string',
+      description: 'Provider item group',
     },
   },
 } as const;
@@ -6117,6 +6129,10 @@ export const UpsertProviderItemRequestSchema = {
     order: {
       type: 'number',
       description: 'Provider item order',
+    },
+    group: {
+      type: 'string',
+      description: 'Provider item group',
     },
   },
 } as const;

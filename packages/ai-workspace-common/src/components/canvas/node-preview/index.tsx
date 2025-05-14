@@ -184,7 +184,7 @@ export const DraggableNodePreview = memo(
 
     const previewClassName = useMemo(
       () => `
-    bg-white 
+    bg-white dark:bg-gray-900
     rounded-lg 
     will-change-transform
     ${isMaximized ? 'fixed' : ''}
@@ -309,7 +309,7 @@ export const DraggableNodePreview = memo(
     return (
       <div
         data-preview-id={node?.id}
-        className="pointer-events-none border border-solid border-gray-100 rounded-lg bg-transparent"
+        className="pointer-events-none border border-solid border-gray-100 rounded-lg bg-transparent dark:border-gray-800"
         ref={previewRef}
         style={containerStyle}
       >

@@ -110,6 +110,7 @@ const translations = {
     selectedItems: 'Selected {{count}} items',
     noItemsSelected: 'No items selected',
     clear: 'Clear',
+    featured: 'Featured',
     nodesAddedSuccess: 'Nodes added successfully',
     nodesAddedFailed: 'Failed to add nodes',
     canvasIdMissing: 'Canvas ID is missing',
@@ -407,8 +408,8 @@ const translations = {
         'Powered by multi-threaded dialogue, artifacts, knowledge integration, context memory, and intelligent search, ',
       second: 'Refly is the best way to transform ideas into quality content.',
     },
-    messageText: 'v0.5.0 Released: Project, Linear conversation and more 🚀',
-    simpleMessageText: 'v0.5.0: Ask Project 🚀',
+    messageText: 'v0.6.0 Released: New Homepage, Model Customization and Slideshow 🚀',
+    simpleMessageText: 'v0.6.0: Model Customization and Slideshow 🚀',
     tryForFree: 'Get Started',
     tryItNow: 'Try It Now',
     creationEngine: 'Creation Engine',
@@ -721,7 +722,7 @@ const translations = {
     faq: {
       title: 'Frequently Asked Questions',
       Q1: 'Can Refly be used for free?',
-      A1: 'As an open-source project, for individual users, you can self-deploy the community version to use all our  features. To enable more users to quickly start and experience Refly, we provide all registered users with knowledge base quota of 100 files and daily access to 5 pro model requests and 50 standard model requests. If you wish to experience advanced models or increase the usage amount, you can upgrade to a paid subscription plan.',
+      A1: 'As an open-source project, for individual users, you can self-deploy the community version to use all our features. To enable more users to quickly start and experience Refly, we provide all registered users with knowledge base quota of 100 files and daily access to 5 T1 model requests and 50 T2 model requests. If you wish to experience advanced models or increase the usage amount, you can upgrade to a paid subscription plan.',
       Q2: 'What payment methods do you support?',
       A2: 'We support bank cards, Alipay, Amazon Pay, and Cash App Pay. The supported payment methods may be subject to change at any time. Please refer to the payment methods displayed in the Stripe checkout page for the most accurate information.',
       Q3: 'How can I change or cancel my subscription plan?',
@@ -776,7 +777,7 @@ const translations = {
       },
       {
         before: 'Powerful skills driven by ',
-        highlight: 'pro models',
+        highlight: 'advanced models',
         after: ': Generate documents, recommend questions, web search, and library search.',
       },
       {
@@ -787,15 +788,20 @@ const translations = {
       },
       {
         before: 'Content creation with AI markdown editor, powered by ',
-        highlight: 'pro models',
+        highlight: 'advanced models',
         after: '',
       },
       {
         before: 'Create PPT, SVG, visual web pages, tables, and Mermaid charts with ',
-        highlight: 'pro models',
+        highlight: 'advanced models',
         after: '',
       },
     ],
+  },
+  frontPage: {
+    welcome: 'What can I do for you today?',
+    fromCommunity: 'From the community',
+    fromCommunityDesc: 'Discover a way to use Refly for work, or even beyond.',
   },
   emailVerification: {
     title: 'Email Verification',
@@ -1068,7 +1074,8 @@ const translations = {
       copyToClipboard: 'Copy PNG to Clipboard',
       downloadStarted: 'Starting download...',
       downloadSuccess: 'Downloaded successfully',
-      downloadError: 'Failed to download',
+      downloadError:
+        'Download failed! The artifact does not contain SVG content. Please select the correct display type or verify the completeness of the source file code.',
       copyStarted: 'Starting to copy...',
       copySuccess: 'Copied to clipboard',
       copyError: 'Failed to copy',
@@ -1094,6 +1101,22 @@ const translations = {
       codeArtifact: 'Code Artifact',
       website: 'Website',
       mindMap: 'Mind Map',
+    },
+    presetScenarios: {
+      title: 'Preset Scenarios',
+      generatePPT: 'Generate PPT',
+      generatePPTDesc: 'Create professional presentation slides',
+      generatePPTQuery: 'Please use HTML format to create a professional PPT about [topic]',
+      generateLanding: 'Generate Landing Page',
+      generateLandingDesc: 'Create a marketing landing page',
+      generateLandingQuery:
+        'Please use HTML format to create a marketing landing page for [product/service]',
+      generateXHS: 'Generate Twitter Card',
+      generateXHSDesc: 'Create Twitter content card',
+      generateXHSQuery: 'Please use HTML format to create a Twitter content card about [topic]',
+      generateMediaContent: 'Generate Media Content',
+      generateMediaContentDesc: 'Create compelling media content',
+      generateMediaContentQuery: 'Please create media content about [topic]',
     },
     export: {
       success: 'Image exported successfully',
@@ -1227,7 +1250,13 @@ const translations = {
         'Canvas is approaching the node limit ({{current}}/{{max}}). Consider removing unnecessary nodes.',
     },
     skill: {
-      askAI: 'Ask AI',
+      askAI: 'AI Common Question Answer',
+      askAIDescription:
+        'Ask AI, get help with writing, reading comprehension, or question answering',
+      switchSkillTooltip:
+        'Use Ctrl + / in the input box to switch skill, default skill is Ask AI, you can switch to other skills, like web search, etc.',
+      switchSkillTooltipMac:
+        'Use ⌘ + / in the input box to switch skill, default skill is Ask AI, you can switch to other skills, like web search, etc.',
     },
     skillResponse: {
       executionFailed: 'Execution failed, click to retry',
@@ -1266,6 +1295,7 @@ const translations = {
     nodeActions: {
       dragToConnect: 'Drag to Connect',
       clickToAdd: 'Click to Add',
+      duplicateMemo: 'Duplicate Memo',
       createMemo: 'Create Empty Memo',
       createMemoDescription:
         'Create an empty memo for quick recording ideas, supporting Markdown format',
@@ -1689,6 +1719,7 @@ const translations = {
       viewTutorial: 'View Docs',
       tour: 'View Tutorial',
       template: 'Template',
+      home: 'Home',
     },
   },
   knowledgeLibrary: {
@@ -1877,6 +1908,7 @@ const translations = {
       defaultModel: 'Default Model',
       account: 'Account',
       language: 'Language',
+      appearance: 'Appearance',
       subscription: 'Subscription',
       mcpServer: 'MCP Server',
     },
@@ -1949,6 +1981,13 @@ const translations = {
       reconnectTooltip:
         'Configure automatic reconnection attempts if the server connection is lost',
     },
+    appearance: {
+      title: 'Appearance Settings',
+      themeMode: 'Theme Mode',
+      lightMode: 'Light Mode',
+      darkMode: 'Dark Mode',
+      systemMode: 'System Mode',
+    },
     account: {
       title: 'My Account',
       avatar: 'Avatar',
@@ -1994,12 +2033,12 @@ const translations = {
       subscribeNow: 'Subscribe Now',
       manage: 'Manage Subscription',
       currentPlan: 'Current Plan',
-      t1Requests: 'Pro Requests',
+      t1Requests: 'T1 Requests',
       t1RequestsDescription:
-        'Pro models include Claude 3.7 Sonnet (Thinking), DeepSeek R1, o3 Mini, GPT-4o and others. Each successful skill call to pro models counts as one request.',
-      t2Requests: 'Standard Requests',
+        'T1 models include Claude 3.7 Sonnet (Thinking), DeepSeek R1, o3 Mini, GPT-4o and others. Each successful skill call to T1 models counts as one request.',
+      t2Requests: 'T2 Requests',
       t2RequestsDescription:
-        'Standard models include Gemini Flash 2.0, DeepSeek V3, Claude 3.5 Haiku and others. Each successful skill call to standard models counts as one request.',
+        'T2 models include Gemini Flash 2.0, DeepSeek V3, Claude 3.5 Haiku and others. Each successful skill call to T2 models counts as one request.',
       requestsRefresh: 'Request count will be reset every day for users on free plan.',
       libraryStorage: 'Library Storage',
       libraryStorageDescription: 'Each resource and document in your library counts as one file.',
@@ -2035,8 +2074,8 @@ const translations = {
         },
         vectorStorage: 'Vector Storage',
         fileStorage: 'File Storage',
-        t1Model: 'Pro Models',
-        t2Model: 'Standard Models',
+        t1Model: 'T1 Models',
+        t2Model: 'T2 Models',
         freeModel: 'Free Models',
         mediaCredit: 'Media Credit (Coming Soon)',
         upgrade: 'Upgrade Now',
@@ -2189,11 +2228,14 @@ const translations = {
       relevanceThreshold: 'Relevance Threshold',
       relevanceThresholdPlaceholder: 'Please set the relevance threshold',
       clickToSet: 'Click to Set',
+      default: 'Default Group',
+      group: 'Group Name',
+      groupPlaceholder: 'Please set up group name to categorize and manage the models',
     },
     modelTier: {
       free: 'Free',
-      t1: 'Premium',
-      t2: 'Standard',
+      t1: 'T1',
+      t2: 'T2',
     },
     parserConfig: {
       webSearch: 'Web Search',
@@ -2579,16 +2621,7 @@ const translations = {
       extensionWeblink: 'Extension Web Link',
     },
     modelSelector: {
-      unlimited: 'Unlimited',
-      noModelAvailable: 'No model available',
-      premium: 'Pro Models',
-      standard: 'Standard Models',
-      free: 'Free Models',
-      freeModelHint:
-        'Free models are susceptible to downtime and usage restrictions. We recommend utilizing them solely for testing purposes.',
-      tokenUsed: 'Used {{used}} / {{quota}}',
-      upgrade: 'Upgrade',
-      quotaExceeded: 'Quota exceeded, click to upgrade subscription',
+      configureModel: 'Click to configure models',
       noVisionSupport: 'This model does not support image processing',
     },
     contentSelector: {
@@ -2720,6 +2753,7 @@ const translations = {
     hideTemplates: 'Hide Template',
     duplicateCanvasEntities: 'Duplicate the canvas entities',
     noDescription: 'No description',
+    emptyList: 'Zero templates? No problem! Create yours now and inspire the community!',
   },
   project: {
     create: 'Create Project',

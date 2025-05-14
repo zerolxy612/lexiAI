@@ -208,7 +208,7 @@ const ActualContent = memo(
     if (!content) return null;
 
     return (
-      <div className="my-3 text-gray-600 text-base">
+      <div className="my-3 text-gray-600 dark:text-gray-300 text-base">
         <div className={`skill-response-content-${resultId}-${step.name}`}>
           <Markdown content={content} sources={sources} resultId={resultId} />
           {!readonly && (
@@ -237,7 +237,9 @@ const ArtifactItem = memo(({ artifact, onSelect }: { artifact: any; onSelect: ()
     >
       <div className="flex items-center space-x-2">
         {getArtifactIcon(artifact, 'w-4 h-4')}
-        <span className="text-gray-600 max-w-[200px] truncate inline-block">{artifact.title}</span>
+        <span className="text-gray-600 dark:text-gray-300 max-w-[200px] truncate inline-block">
+          {artifact.title}
+        </span>
       </div>
       <div
         className={cn('flex items-center space-x-1 text-xs', {
@@ -334,7 +336,7 @@ export const ActionStepCard = memo(
 
     return (
       <div className="flex flex-col gap-1">
-        <div className="my-1 text-gray-600 text-sm flex items-center gap-2 font-medium">
+        <div className="my-1 text-gray-600 text-sm flex items-center gap-2 font-medium dark:text-gray-300">
           {stepStatus === 'executing' ? (
             <IconLoading className="h-3 w-3 animate-spin text-green-500" />
           ) : (

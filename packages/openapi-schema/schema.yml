@@ -3282,6 +3282,9 @@ components:
         language:
           type: string
           description: Canvas template language code
+        featured:
+          type: boolean
+          description: Whether this canvas template is featured
         createdAt:
           type: string
           format: date-time
@@ -6734,6 +6737,9 @@ components:
         isDefault:
           type: boolean
           description: Whether this model is the default model
+        group:
+          type: string
+          description: Model group
     ListModelsResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -6816,6 +6822,7 @@ components:
       description: Provider config for embeddings
       required:
         - modelId
+        - dimensions
       properties:
         modelId:
           type: string
@@ -6823,12 +6830,12 @@ components:
         modelName:
           type: string
           description: Embedding model name
+        dimensions:
+          type: number
+          description: Embedding model dimension
         batchSize:
           type: number
           description: Embedding model batch size
-        dimensions:
-          type: number
-          description: Embedding model dimensions
     RerankerModelConfig:
       type: object
       description: Provider config for rerankers
@@ -6906,6 +6913,9 @@ components:
         order:
           type: number
           description: Provider item order
+        group:
+          type: string
+          description: Provider item group
     ListProvidersResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -6998,6 +7008,9 @@ components:
         order:
           type: number
           description: Provider item order
+        group:
+          type: string
+          description: Provider item group
     UpsertProviderItemResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'

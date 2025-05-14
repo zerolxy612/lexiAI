@@ -33,6 +33,7 @@ export default () => ({
     password: process.env.REDIS_PASSWORD,
   },
   objectStorage: {
+    reclaimPolicy: process.env.OBJECT_STORAGE_RECLAIM_POLICY || 'retain', // 'retain' or 'delete'
     backend: process.env.OBJECT_STORAGE_BACKEND || 'minio',
     fs: {
       root: process.env.OBJECT_STORAGE_FS_ROOT || path.join(process.cwd(), 'storage'),
@@ -60,10 +61,9 @@ export default () => ({
     host: process.env.QDRANT_HOST || 'localhost',
     port: Number.parseInt(process.env.QDRANT_PORT) || 6333,
     apiKey: process.env.QDRANT_API_KEY,
-    vectorDim: Number.parseInt(process.env.REFLY_VEC_DIM) || 768,
   },
   fulltextSearch: {
-    backend: process.env.FULLTEXT_SEARCH_BACKEND || 'elasticsearch',
+    backend: process.env.FULLTEXT_SEARCH_BACKEND || 'prisma',
     elasticsearch: {
       url: process.env.ELASTICSEARCH_URL || 'http://localhost:9200',
       username: process.env.ELASTICSEARCH_USERNAME,
@@ -89,7 +89,7 @@ export default () => ({
     email: {
       enabled: process.env.EMAIL_AUTH_ENABLED === 'true' || true,
       sender: process.env.EMAIL_SENDER || 'Refly <notifications@refly.ai>',
-      resendApiKey: process.env.RESEND_API_KEY,
+      resendApiKey: process.env.RESEND_API_KEY || 're_123',
     },
     github: {
       enabled: process.env.GITHUB_AUTH_ENABLED === 'true' || false,

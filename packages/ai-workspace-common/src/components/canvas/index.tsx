@@ -31,7 +31,6 @@ import {
   useCanvasStore,
   useCanvasStoreShallow,
 } from '@refly-packages/ai-workspace-common/stores/canvas';
-import { BigSearchModal } from '@refly-packages/ai-workspace-common/components/search/modal';
 import { useCanvasNodesStore } from '@refly-packages/ai-workspace-common/stores/canvas-nodes';
 import { Spin } from '@refly-packages/ai-workspace-common/components/common/spin';
 import { LayoutControl } from './layout-control';
@@ -64,6 +63,7 @@ import { useListenNodeOperationEvents } from '@refly-packages/ai-workspace-commo
 import { runtime } from '@refly-packages/ai-workspace-common/utils/env';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 import { nodeOperationsEmitter } from '@refly-packages/ai-workspace-common/events/nodeOperations';
+import { useCanvasInitialActions } from '@refly-packages/ai-workspace-common/hooks/use-canvas-initial-actions';
 
 const GRID_SIZE = 10;
 
@@ -152,6 +152,8 @@ const MiniMapNode = (props: any) => {
 
 const Flow = memo(({ canvasId }: { canvasId: string }) => {
   const { t } = useTranslation();
+  useCanvasInitialActions(canvasId);
+
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const { addNode } = useAddNode();
   const { nodes, edges } = useStore(
@@ -624,7 +626,7 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
       <MemoizedMiniMap
         position="bottom-left"
         style={miniMapStyles}
-        className="bg-white/80 w-[140px] h-[92px] !mb-[46px] !ml-[10px] rounded-lg shadow-md p-2 [&>svg]:w-full [&>svg]:h-full"
+        className="bg-white/80 dark:bg-gray-900/80 w-[140px] h-[92px] !mb-[46px] !ml-[10px] rounded-lg shadow-md p-2 [&>svg]:w-full [&>svg]:h-full"
         zoomable={false}
         pannable={false}
         nodeComponent={MiniMapNode}
@@ -909,6 +911,7 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
           <DropOverlay />
           <ReactFlow
             {...flowConfig}
+            className="bg-green-50 dark:bg-green-900"
             snapToGrid={true}
             snapGrid={[GRID_SIZE, GRID_SIZE]}
             edgeTypes={edgeTypes}
@@ -980,8 +983,6 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
             </div>
           </div>
         )}
-
-        <BigSearchModal />
 
         <MenuPopper open={menuOpen} position={menuPosition} setOpen={setMenuOpen} />
 

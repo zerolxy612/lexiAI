@@ -8,15 +8,14 @@ export const useNodeHoverEffect = (nodeId: string) => {
 
   const updateNodeAndEdges = useCallback(
     (isHovered: boolean, selected?: boolean) => {
-      // Batch update both nodes and edges in a single React state update
-      const newZIndex = isHovered ? 1001 : 0;
-
       const isGroupNode = getNodes().find((node) => node.id === nodeId)?.type === 'group';
 
       setNodes((nodes) => {
         // First pass - determine if this is a group node
         return nodes.map((node) => {
           if (node.id === nodeId) {
+            const parent = nodes.find((n) => n.id === node.parentId);
+            const parentSelected = parent?.selected;
             // For the target node itself
             if (isGroupNode) {
               return { ...node, style: { ...node.style, zIndex: selected ? 1 : -1 } };
@@ -26,7 +25,7 @@ export const useNodeHoverEffect = (nodeId: string) => {
               ...node,
               style: {
                 ...node.style,
-                zIndex: node.selected ? 1000 : newZIndex,
+                zIndex: node.selected ? 1000 : isHovered ? 1001 : parentSelected ? 2 : 0,
               },
             };
           }
@@ -42,7 +41,7 @@ export const useNodeHoverEffect = (nodeId: string) => {
           const getIrrelevantNodeIndex = (node: Node) => {
             if (!node.parentId) {
               if (node.selected) {
-                return node.type === 'group' ? 2 : 1000;
+                return node.type === 'group' ? 1 : 1000;
               }
               return node.type === 'group' ? -1 : 0;
             }

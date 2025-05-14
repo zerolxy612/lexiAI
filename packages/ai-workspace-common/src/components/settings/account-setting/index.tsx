@@ -166,7 +166,7 @@ export const AccountSetting = () => {
                   showUploadList={false}
                   beforeUpload={beforeUpload}
                 >
-                  <div className="w-full h-full group relative bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
+                  <div className="w-full h-full group relative bg-gray-200 rounded-full flex items-center justify-center overflow-hidden dark:bg-gray-800">
                     {loadingAvatar && (
                       <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
                         <AiOutlineLoading3Quarters size={22} className="animate-spin text-white" />

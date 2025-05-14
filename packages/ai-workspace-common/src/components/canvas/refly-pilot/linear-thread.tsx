@@ -22,14 +22,14 @@ const MemoizedSkillResponseNodePreview = memo(SkillResponseNodePreview, (prevPro
 
 MemoizedSkillResponseNodePreview.displayName = 'MemoizedSkillResponseNodePreview';
 
-const EmptyThreadWelcome = memo(() => {
+export const EmptyThreadWelcome = memo(() => {
   const { t } = useTranslation();
   const { userProfile } = useUserStoreShallow((state) => ({
     userProfile: state.userProfile,
   }));
 
   return (
-    <div className="flex flex-col items-center justify-center h-full px-6 py-8 text-gray-700">
+    <div className="flex flex-col items-center justify-center h-full px-6 py-8 text-gray-700 dark:text-gray-200">
       <div className="w-full max-w-lg mx-auto rounded-xl overflow-hidden p-6">
         <div className="flex items-center justify-center mb-6">
           <div className="relative">
@@ -43,7 +43,7 @@ const EmptyThreadWelcome = memo(() => {
           </div>
         </div>
 
-        <h3 className="text-xl font-semibold text-center text-gray-800 mb-1">
+        <h3 className="text-xl font-semibold text-center text-gray-800 mb-1 dark:text-gray-100">
           {t('canvas.reflyPilot.welcome.title', { name: userProfile?.nickname || '' })}
         </h3>
 

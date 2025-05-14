@@ -8,16 +8,17 @@ import { useSkillStoreShallow } from '@refly-packages/ai-workspace-common/stores
 import { cn } from '@refly/utils/cn';
 import { useListSkills } from '@refly-packages/ai-workspace-common/hooks/use-find-skill';
 import { getSkillIcon } from '@refly-packages/ai-workspace-common/components/common/icon';
-import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/canvas';
 
 const TextArea = Input.TextArea;
 
 interface ChatInputProps {
+  readonly: boolean;
   query: string;
   setQuery: (text: string) => void;
   selectedSkillName: string | null;
   inputClassName?: string;
   maxRows?: number;
+  minRows?: number;
   autoCompletionPlacement?: 'bottomLeft' | 'bottomRight' | 'topLeft' | 'topRight';
   handleSendMessage: () => void;
   handleSelectSkill?: (skill: Skill) => void;
@@ -29,12 +30,14 @@ interface ChatInputProps {
 const ChatInputComponent = forwardRef<HTMLDivElement, ChatInputProps>(
   (
     {
+      readonly,
       query,
       setQuery,
       selectedSkillName,
       inputClassName,
       autoCompletionPlacement,
       maxRows,
+      minRows,
       handleSendMessage,
       handleSelectSkill,
       onUploadImage,
@@ -44,7 +47,6 @@ const ChatInputComponent = forwardRef<HTMLDivElement, ChatInputProps>(
     ref,
   ) => {
     const { t } = useTranslation();
-    const { readonly } = useCanvasContext();
     const [isDragging, setIsDragging] = useState(false);
     const [isMac, setIsMac] = useState(false);
 
@@ -376,13 +378,14 @@ const ChatInputComponent = forwardRef<HTMLDivElement, ChatInputProps>(
               onKeyDownCapture={handleKeyDown}
               onPaste={handlePaste}
               className={cn(
-                '!m-0 bg-transparent outline-none box-border border-none resize-none focus:outline-none focus:shadow-none focus:border-none',
+                '!m-0 bg-transparent outline-none box-border border-none resize-none focus:outline-none focus:shadow-none focus:border-none focus',
                 inputClassName,
                 readonly && 'cursor-not-allowed !text-black !bg-transparent',
+                'dark:hover:bg-transparent dark:hover:!bg-none dark:focus:bg-transparent dark:active:bg-transparent dark:bg-transparent dark:!bg-transparent',
               )}
               placeholder={getPlaceholder(selectedSkillName)}
               autoSize={{
-                minRows: 1,
+                minRows: minRows ?? 1,
                 maxRows: maxRows ?? 6,
               }}
               data-cy="chat-input"
@@ -408,10 +411,11 @@ const ChatInputComponent = forwardRef<HTMLDivElement, ChatInputProps>(
               '!m-0 bg-transparent outline-none box-border border-none resize-none focus:outline-none focus:shadow-none focus:border-none',
               inputClassName,
               readonly && 'cursor-not-allowed !text-black !bg-transparent',
+              'dark:hover:bg-transparent dark:hover:!bg-none dark:focus:bg-transparent dark:active:bg-transparent dark:bg-transparent dark:!bg-transparent',
             )}
             placeholder={getPlaceholder(selectedSkillName)}
             autoSize={{
-              minRows: 1,
+              minRows: minRows ?? 1,
               maxRows: maxRows ?? 6,
             }}
             data-cy="chat-input"

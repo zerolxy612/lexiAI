@@ -171,7 +171,6 @@ export const ChatActions = memo(
       prevProps.runtimeConfig === nextProps.runtimeConfig &&
       prevProps.setRuntimeConfig === nextProps.setRuntimeConfig &&
       prevProps.onUploadImage === nextProps.onUploadImage &&
-      prevProps.onUploadMultipleImages === nextProps.onUploadMultipleImages &&
       prevProps.model === nextProps.model
     );
   },

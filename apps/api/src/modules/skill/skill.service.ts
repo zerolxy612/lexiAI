@@ -302,9 +302,10 @@ export class SkillService {
       if (!instance.displayName) {
         throw new ParamsError('skill display name is required');
       }
-      const tpl = this.skillInventory.find((tpl) => tpl.name === instance.tplName);
+      let tpl = this.skillInventory.find((tpl) => tpl.name === instance.tplName);
       if (!tpl) {
-        throw new ParamsError(`skill ${instance.tplName} not found`);
+        console.log(`skill ${instance.tplName} not found`);
+        tpl = this.skillInventory?.[0];
       }
       tplConfigMap.set(instance.tplName, tpl);
     }
