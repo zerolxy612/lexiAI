@@ -370,7 +370,7 @@ export const ChatPanel = ({
         <div
           className={cn(
             'ai-copilot-chat-container chat-input-container rounded-[7px] overflow-hidden',
-            embeddedMode && 'embedded-chat-panel border border-gray-100 dark:border-gray-700',
+            embeddedMode && 'embedded-chat-panel border !border-gray-100 dark:!border-gray-700',
           )}
         >
           <SelectedSkillHeader
