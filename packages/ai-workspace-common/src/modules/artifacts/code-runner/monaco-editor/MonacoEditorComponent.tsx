@@ -13,6 +13,7 @@ import {
   MAX_LOAD_ATTEMPTS,
   getLanguageFromType,
 } from './constants';
+import { useThemeStoreShallow } from '../../../../stores/theme';
 
 // Loading timeout in milliseconds (8 seconds)
 const EDITOR_LOADING_TIMEOUT = 1000;
@@ -36,6 +37,8 @@ const MonacoEditorComponent = React.memo(
     const [loadAttempt, setLoadAttempt] = useState(0);
     const [useFallbackEditor, setUseFallbackEditor] = useState(false);
     const [loadingTimedOut, setLoadingTimedOut] = useState(false);
+
+    const { themeMode } = useThemeStoreShallow((state) => ({ themeMode: state.themeMode }));
 
     // Get current CDN based on load attempt
     const getCurrentCDN = useCallback(() => {
@@ -340,6 +343,25 @@ const MonacoEditorComponent = React.memo(
       </div>
     );
 
+    // Determine the editor theme
+    const editorTheme = useMemo(() => {
+      if (themeMode === 'dark') {
+        return 'vs-dark';
+      }
+      if (themeMode === 'light') {
+        return 'github-custom'; // Your existing light theme
+      }
+      // Handle 'system' theme
+      if (
+        typeof window !== 'undefined' &&
+        window.matchMedia &&
+        window.matchMedia('(prefers-color-scheme: dark)').matches
+      ) {
+        return 'vs-dark';
+      }
+      return 'github-custom'; // Default to light theme for system if not dark
+    }, [themeMode]);
+
     // Create editor props with the onError handler
     const editorProps = {
       height: '100%',
@@ -395,7 +417,7 @@ const MonacoEditorComponent = React.memo(
         mouseWheelScrollSensitivity: 1.5,
         fastScrollSensitivity: 7,
       },
-      theme: 'github-custom',
+      theme: editorTheme, // Use the dynamic theme
       onError: handleEditorError,
     };
 
