@@ -339,7 +339,8 @@ export class Agent extends BaseSkill {
         mcpAvailable: mcpSuccessfullyInitializedAndToolsAvailable,
       };
 
-      // this.userAgentComponentsCache.set(userId, components);
+      this.userAgentComponentsCache.set(userId, components);
+
       this.engine.logger.log(`Agent components initialized and cached for user ${userId}`);
       return components;
     } catch (error) {
