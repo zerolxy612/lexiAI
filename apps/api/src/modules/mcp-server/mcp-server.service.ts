@@ -67,19 +67,7 @@ export class McpServerService {
     // Encrypt headers containing sensitive information
     if (result.headers) {
       try {
-        const headers = JSON.parse(result.headers);
-        for (const key of Object.keys(headers)) {
-          if (
-            key.toLowerCase().includes('token') ||
-            key.toLowerCase().includes('key') ||
-            key.toLowerCase().includes('secret') ||
-            key.toLowerCase().includes('password') ||
-            key.toLowerCase().includes('auth')
-          ) {
-            headers[key] = this.encryptionService.encrypt(headers[key]);
-          }
-        }
-        result.headers = JSON.stringify(headers);
+        result.headers = this.encryptionService.encrypt(result.headers);
       } catch (e) {
         this.logger.warn(`Failed to encrypt headers: ${e}`);
       }
@@ -88,19 +76,7 @@ export class McpServerService {
     // Encrypt environment variables containing sensitive information
     if (result.env) {
       try {
-        const env = JSON.parse(result.env);
-        for (const key of Object.keys(env)) {
-          if (
-            key.toLowerCase().includes('token') ||
-            key.toLowerCase().includes('key') ||
-            key.toLowerCase().includes('secret') ||
-            key.toLowerCase().includes('password') ||
-            key.toLowerCase().includes('auth')
-          ) {
-            env[key] = this.encryptionService.encrypt(env[key]);
-          }
-        }
-        result.env = JSON.stringify(env);
+        result.env = this.encryptionService.encrypt(result.env);
       } catch (e) {
         this.logger.warn(`Failed to encrypt env: ${e}`);
       }
@@ -120,19 +96,7 @@ export class McpServerService {
     // Decrypt headers containing sensitive information
     if (result.headers) {
       try {
-        const headers = JSON.parse(result.headers);
-        for (const key of Object.keys(headers)) {
-          if (
-            key.toLowerCase().includes('token') ||
-            key.toLowerCase().includes('key') ||
-            key.toLowerCase().includes('secret') ||
-            key.toLowerCase().includes('password') ||
-            key.toLowerCase().includes('auth')
-          ) {
-            headers[key] = this.encryptionService.decrypt(headers[key]);
-          }
-        }
-        result.headers = JSON.stringify(headers);
+        result.headers = this.encryptionService.decrypt(result.headers);
       } catch (e) {
         this.logger.warn(`Failed to decrypt headers: ${e}`);
       }
@@ -141,19 +105,7 @@ export class McpServerService {
     // Decrypt environment variables containing sensitive information
     if (result.env) {
       try {
-        const env = JSON.parse(result.env);
-        for (const key of Object.keys(env)) {
-          if (
-            key.toLowerCase().includes('token') ||
-            key.toLowerCase().includes('key') ||
-            key.toLowerCase().includes('secret') ||
-            key.toLowerCase().includes('password') ||
-            key.toLowerCase().includes('auth')
-          ) {
-            env[key] = this.encryptionService.decrypt(env[key]);
-          }
-        }
-        result.env = JSON.stringify(env);
+        result.env = this.encryptionService.decrypt(result.env);
       } catch (e) {
         this.logger.warn(`Failed to decrypt env: ${e}`);
       }

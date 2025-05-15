@@ -13,6 +13,7 @@ import {
   List,
   Badge,
   Empty,
+  theme,
 } from 'antd';
 import {
   EditOutlined,
@@ -39,6 +40,7 @@ interface McpServerListProps {
 }
 
 export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
+  const { token } = theme.useToken();
   const { t } = useTranslation();
   const [editingServer, setEditingServer] = useState<McpServerDTO | null>(null);
   const [isFormVisible, setIsFormVisible] = useState(false);
@@ -401,7 +403,6 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
           dataSource={mcpServers}
           columns={columns}
           rowKey="name"
-          bordered
           pagination={false}
           className="mcp-server-table"
           style={{ borderRadius: '8px' }}
@@ -465,7 +466,11 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
                           hoverable
                           size="small"
                           className="mcp-server-tool-card"
-                          style={tableStyles.toolCard}
+                          style={{
+                            background: token.colorBgContainer,
+                            border: `1px solid ${token.colorBorderSecondary}`,
+                            boxShadow: 'none',
+                          }}
                         >
                           <Typography.Title
                             level={5}
