@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useThemeStoreShallow } from '../stores/theme';
+import { useUserStoreShallow } from '@refly-packages/ai-workspace-common/stores/user';
 
 // Routes that should always use light mode
 const LIGHT_MODE_ROUTES = ['/', '/pricing', '/artifact-gallery', '/use-cases-gallery'];
@@ -11,6 +12,9 @@ const LIGHT_MODE_ROUTES = ['/', '/pricing', '/artifact-gallery', '/use-cases-gal
 export const useForcedLightMode = () => {
   const location = useLocation();
   const currentPath = location.pathname;
+  const { isLogin } = useUserStoreShallow((state) => ({
+    isLogin: state.isLogin,
+  }));
 
   const { setForcedLightMode } = useThemeStoreShallow((state) => ({
     setForcedLightMode: state.setForcedLightMode,
@@ -21,7 +25,7 @@ export const useForcedLightMode = () => {
     const shouldForceLightMode = LIGHT_MODE_ROUTES.some((route) => {
       // For the root path, we need an exact match
       if (route === '/') {
-        return currentPath === '/';
+        return !isLogin && currentPath === '/';
       }
       // For other paths, use exact match to ensure we don't affect subpaths
       return currentPath === route;
