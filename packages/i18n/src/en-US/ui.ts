@@ -1980,6 +1980,7 @@ const translations = {
       enabledTooltip: 'Enable or disable this MCP server',
       reconnectTooltip:
         'Configure automatic reconnection attempts if the server connection is lost',
+      stdioWebDisabledTooltip: 'Stdio protocol is not supported in the web version.',
     },
     appearance: {
       title: 'Appearance Settings',

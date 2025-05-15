@@ -22,6 +22,7 @@ import {
   DeleteOutlined,
   QuestionCircleOutlined,
   CaretRightOutlined,
+  InfoCircleOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { McpServerType } from '@refly/openapi-schema';
@@ -428,6 +429,11 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
                 </Option>
                 <Option value="stdio" disabled>
                   {t('settings.mcpServer.typeStdio')} (Stdio)
+                  <Tooltip title={t('settings.mcpServer.stdioWebDisabledTooltip')}>
+                    <InfoCircleOutlined
+                      style={{ marginLeft: '4px', color: 'rgba(0, 0, 0, 0.45)' }}
+                    />
+                  </Tooltip>
                 </Option>
               </Select>
             </Form.Item>

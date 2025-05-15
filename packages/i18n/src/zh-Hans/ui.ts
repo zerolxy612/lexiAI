@@ -92,7 +92,7 @@ const translations = {
     returnToList: '返回列表',
     shareLink: '链接分享',
     loadFailed: '加载页面失败',
-    loadFailedDesc: '请稍后再试',
+    loadFailedDesc: '请检查网络连接或稍后再试',
     noPage: '页面不存在',
     noPageDesc: '您查找的页面不存在',
     titlePlaceholder: '输入页面标题',
@@ -1752,6 +1752,7 @@ const translations = {
       typeSSE: '服务器发送事件',
       typeStreamable: '流式 API',
       typeStdio: '标准输入输出',
+      stdioWebDisabledTooltip: 'Web 版本不支持 Stdio 协议。',
       batchImport: '批量导入',
       batchImportTitle: '批量导入 MCP 服务器',
       batchImportDescription:
