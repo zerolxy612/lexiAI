@@ -265,7 +265,7 @@ const StatusBar = memo(
     }, [ydoc, docId, t]);
 
     return (
-      <div className="w-full h-10 p-3 border-x-0 border-t-0 border-b border-solid border-gray-100 flex flex-row items-center justify-between">
+      <div className="w-full h-10 p-3 border-x-0 border-t-0 border-b border-solid border-gray-100 dark:border-gray-700 flex flex-row items-center justify-between">
         <div className="flex items-center gap-2">
           <div
             className={`
