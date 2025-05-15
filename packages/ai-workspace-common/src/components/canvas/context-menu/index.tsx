@@ -461,12 +461,12 @@ export const ContextMenu: FC<ContextMenuProps> = ({ open, position, setOpen }) =
       <Button
         key={item.key}
         className={cn(
-          'w-full h-8 flex items-center gap-2 px-2 rounded text-sm hover:bg-gray-50 transition-colors',
+          'w-full h-8 flex items-center gap-2 px-2 rounded text-sm hover:bg-gray-50 transition-colors dark:bg-gray-900',
           {
-            'bg-gray-100': activeKey === item.key,
-            'text-primary-600': item.primary,
-            'text-red-600': item.danger,
-            'text-gray-700': !item.primary && !item.danger,
+            'bg-gray-100 dark:bg-gray-800': activeKey === item.key,
+            'text-primary-600 dark:text-primary-300': item.primary,
+            'text-red-600 dark:text-red-300': item.danger,
+            'text-gray-700 dark:text-gray-200': !item.primary && !item.danger,
           },
         )}
         type="text"
@@ -500,7 +500,7 @@ export const ContextMenu: FC<ContextMenuProps> = ({ open, position, setOpen }) =
   return (
     <div
       ref={menuRef}
-      className="fixed z-[9999] bg-white rounded-lg shadow-lg p-2 w-[200px] border border-[rgba(0,0,0,0.06)]"
+      className="fixed z-[9999] bg-white rounded-lg shadow-lg p-2 w-[200px] border border-[rgba(0,0,0,0.06)] dark:border-[rgba(255,255,255,0.06)] dark:bg-gray-900"
       style={{
         left: `${menuScreenPosition.x}px`,
         top: `${menuScreenPosition.y}px`,
@@ -508,7 +508,7 @@ export const ContextMenu: FC<ContextMenuProps> = ({ open, position, setOpen }) =
     >
       {menuItems.map((item) => {
         if (item.type === 'divider') {
-          return <Divider key={item.key} className="my-1 h-[1px] bg-gray-100" />;
+          return <Divider key={item.key} className="my-1 h-[1px] bg-gray-100 dark:bg-gray-900" />;
         }
 
         if (item.type === 'popover') {

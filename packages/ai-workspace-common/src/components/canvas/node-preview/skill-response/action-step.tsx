@@ -43,10 +43,13 @@ const LogBox = memo(
 
     return (
       <div
-        className={cn('my-2 p-4 border border-solid border-gray-200 rounded-lg transition-all', {
-          'px-4 py-3 cursor-pointer hover:bg-gray-50': collapsed,
-          'relative pb-0': !collapsed,
-        })}
+        className={cn(
+          'my-2 p-4 border border-solid border-gray-200 dark:border-gray-700 rounded-lg transition-all',
+          {
+            'px-4 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800': collapsed,
+            'relative pb-0': !collapsed,
+          },
+        )}
       >
         {collapsed ? (
           <div
@@ -132,9 +135,12 @@ const ReasoningContent = memo(
     return (
       <div>
         <div
-          className={cn('p-3 bg-gray-50 rounded-lg border border-gray-200 transition-all', {
-            'cursor-pointer hover:bg-gray-100': collapsed,
-          })}
+          className={cn(
+            'p-3 bg-gray-50 rounded-lg border border-gray-200 transition-all dark:bg-gray-900 dark:border-gray-700',
+            {
+              'cursor-pointer hover:bg-gray-100 dark:hover-gray-800': collapsed,
+            },
+          )}
         >
           {collapsed ? (
             <div
@@ -207,7 +213,7 @@ const ActualContent = memo(
     if (!content) return null;
 
     return (
-      <div className="my-3 text-gray-600 text-base">
+      <div className="my-3 text-gray-600 dark:text-gray-300 text-base">
         <div className={`skill-response-content-${resultId}-${step.name}`}>
           <Markdown content={content} sources={sources} resultId={resultId} />
           {!readonly && (
@@ -231,12 +237,14 @@ const ArtifactItem = memo(({ artifact, onSelect }: { artifact: any; onSelect: ()
   return (
     <div
       key={artifact.entityId}
-      className="my-2 px-4 py-2 h-12 border border-solid border-gray-200 rounded-lg flex items-center justify-between space-x-2 cursor-pointer hover:bg-gray-50"
+      className="my-2 px-4 py-2 h-12 border border-solid border-gray-200 dark:border-gray-700 rounded-lg flex items-center justify-between space-x-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
       onClick={onSelect}
     >
       <div className="flex items-center space-x-2">
         {getArtifactIcon(artifact, 'w-4 h-4')}
-        <span className="text-gray-600 max-w-[200px] truncate inline-block">{artifact.title}</span>
+        <span className="text-gray-600 dark:text-gray-300 max-w-[200px] truncate inline-block">
+          {artifact.title}
+        </span>
       </div>
       <div
         className={cn('flex items-center space-x-1 text-xs', {
@@ -333,7 +341,7 @@ export const ActionStepCard = memo(
 
     return (
       <div className="flex flex-col gap-1">
-        <div className="my-1 text-gray-600 text-sm flex items-center gap-2 font-medium">
+        <div className="my-1 text-gray-600 text-sm flex items-center gap-2 font-medium dark:text-gray-300">
           {stepStatus === 'executing' ? (
             <IconLoading className="h-3 w-3 animate-spin text-green-500" />
           ) : (

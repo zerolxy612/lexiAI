@@ -31,7 +31,6 @@ import {
   useCanvasStore,
   useCanvasStoreShallow,
 } from '@refly-packages/ai-workspace-common/stores/canvas';
-import { BigSearchModal } from '@refly-packages/ai-workspace-common/components/search/modal';
 import { useCanvasNodesStore } from '@refly-packages/ai-workspace-common/stores/canvas-nodes';
 import { Spin } from '@refly-packages/ai-workspace-common/components/common/spin';
 import { LayoutControl } from './layout-control';
@@ -627,7 +626,7 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
       <MemoizedMiniMap
         position="bottom-left"
         style={miniMapStyles}
-        className="bg-white/80 w-[140px] h-[92px] !mb-[46px] !ml-[10px] rounded-lg shadow-md p-2 [&>svg]:w-full [&>svg]:h-full"
+        className="bg-white/80 dark:bg-gray-900/80 w-[140px] h-[92px] !mb-[46px] !ml-[10px] rounded-lg shadow-md p-2 [&>svg]:w-full [&>svg]:h-full"
         zoomable={false}
         pannable={false}
         nodeComponent={MiniMapNode}
@@ -912,6 +911,7 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
           <DropOverlay />
           <ReactFlow
             {...flowConfig}
+            className="bg-green-50 dark:bg-green-900"
             snapToGrid={true}
             snapGrid={[GRID_SIZE, GRID_SIZE]}
             edgeTypes={edgeTypes}
@@ -983,8 +983,6 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
             </div>
           </div>
         )}
-
-        <BigSearchModal />
 
         <MenuPopper open={menuOpen} position={menuPosition} setOpen={setMenuOpen} />
 

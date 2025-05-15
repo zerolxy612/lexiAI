@@ -13,6 +13,7 @@ import {
   MAX_LOAD_ATTEMPTS,
   getLanguageFromType,
 } from './constants';
+import { useThemeStoreShallow } from '../../../../stores/theme';
 
 // Loading timeout in milliseconds (8 seconds)
 const EDITOR_LOADING_TIMEOUT = 1000;
@@ -36,6 +37,8 @@ const MonacoEditorComponent = React.memo(
     const [loadAttempt, setLoadAttempt] = useState(0);
     const [useFallbackEditor, setUseFallbackEditor] = useState(false);
     const [loadingTimedOut, setLoadingTimedOut] = useState(false);
+
+    const { themeMode } = useThemeStoreShallow((state) => ({ themeMode: state.themeMode }));
 
     // Get current CDN based on load attempt
     const getCurrentCDN = useCallback(() => {
@@ -289,19 +292,19 @@ const MonacoEditorComponent = React.memo(
     if (loadingError) {
       return (
         <div className="h-full">
-          <div className="h-full flex items-center justify-center bg-gray-50 text-gray-700 p-4 rounded border border-gray-200">
+          <div className="h-full flex items-center justify-center bg-gray-50 text-gray-700 p-4 rounded border border-gray-200 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-700">
             <div className="text-center">
               <p className="mb-2 font-medium">{t('codeArtifact.editor.loadError')}</p>
-              <p className="text-sm text-gray-500">{loadingError}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{loadingError}</p>
               <div className="mt-4 flex flex-col sm:flex-row gap-3 justify-center">
                 <Button
-                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors dark:bg-blue-400 dark:hover:bg-blue-300 dark:text-gray-900"
                   onClick={() => window.location.reload()}
                 >
                   {t('common.refresh')}
                 </Button>
                 <Button
-                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors"
+                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
                   onClick={() => setUseFallbackEditor(true)}
                 >
                   {t('codeArtifact.editor.useFallback')}
@@ -332,13 +335,32 @@ const MonacoEditorComponent = React.memo(
 
     // Add generation indicator when Monaco is forced during generation
     const generationIndicator = isGenerating && (
-      <div className="bg-blue-50 text-blue-800 px-4 py-2 text-sm flex items-center justify-between">
+      <div className="bg-blue-50 text-blue-800 px-4 py-2 text-sm flex items-center justify-between dark:bg-blue-900 dark:text-blue-200">
         <div className="flex items-center">
-          <div className="mr-2 w-3 h-3 bg-blue-500 rounded-full animate-pulse" />
+          <div className="mr-2 w-3 h-3 bg-blue-500 rounded-full animate-pulse dark:bg-blue-400" />
           {t('codeArtifact.editor.generatingContent')}
         </div>
       </div>
     );
+
+    // Determine the editor theme
+    const editorTheme = useMemo(() => {
+      if (themeMode === 'dark') {
+        return 'vs-dark';
+      }
+      if (themeMode === 'light') {
+        return 'github-custom'; // Your existing light theme
+      }
+      // Handle 'system' theme
+      if (
+        typeof window !== 'undefined' &&
+        window.matchMedia &&
+        window.matchMedia('(prefers-color-scheme: dark)').matches
+      ) {
+        return 'vs-dark';
+      }
+      return 'github-custom'; // Default to light theme for system if not dark
+    }, [themeMode]);
 
     // Create editor props with the onError handler
     const editorProps = {
@@ -350,7 +372,7 @@ const MonacoEditorComponent = React.memo(
       beforeMount: handleEditorWillMount,
       onMount: handleEditorDidMount,
       loading: (
-        <div className="text-gray-500 flex items-center justify-center h-full">
+        <div className="text-gray-500 flex items-center justify-center h-full dark:text-gray-400">
           {t('codeArtifact.editor.loading')}
         </div>
       ),
@@ -395,7 +417,7 @@ const MonacoEditorComponent = React.memo(
         mouseWheelScrollSensitivity: 1.5,
         fastScrollSensitivity: 7,
       },
-      theme: 'github-custom',
+      theme: editorTheme, // Use the dynamic theme
       onError: handleEditorError,
     };
 

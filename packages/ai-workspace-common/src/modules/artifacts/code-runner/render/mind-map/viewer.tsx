@@ -232,7 +232,7 @@ const MindMap = React.memo(
     const fitViewOptions = useMemo(() => ({ padding: 0.2 }), []);
 
     return (
-      <div className="h-full w-full rounded-lg overflow-hidden border border-gray-100 bg-gray-50">
+      <div className="h-full w-full rounded-lg overflow-hidden border border-gray-100 bg-gray-50 dark:bg-gray-950 dark:border-gray-800">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -258,14 +258,14 @@ const MindMap = React.memo(
         >
           <Controls
             showInteractive={false}
-            className="bg-white border border-gray-200 shadow-sm"
+            className="bg-white border border-gray-200 shadow-sm dark:bg-gray-900 dark:border-gray-700"
             position="bottom-right"
           />
           <Background
             variant={BackgroundVariant.Dots}
             gap={24}
             size={1.5}
-            color="#94a3b8"
+            className="bg-green-50 dark:bg-green-900"
             bgColor="#eef4f7"
           />
         </ReactFlow>

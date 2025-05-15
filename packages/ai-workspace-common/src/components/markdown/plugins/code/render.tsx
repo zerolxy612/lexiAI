@@ -143,14 +143,14 @@ const PreCode = React.memo(
     // Render the code preview if in preview mode and the type is previewable
     if (viewMode === 'preview' && isPreviewable) {
       return (
-        <div className="relative group p-4 border rounded bg-white overflow-auto">
+        <div className="relative group p-4 border rounded bg-white overflow-auto dark:bg-gray-900">
           <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             <Space>
               <Tooltip title={t('copilot.message.copy', 'Copy code')}>
                 <Button
                   type="default"
                   size="small"
-                  className="flex items-center justify-center bg-white/80 hover:bg-white border border-gray-200"
+                  className="flex items-center justify-center bg-white/80 hover:bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-700"
                   icon={<IconCopy />}
                   onClick={handleCopy}
                 />
@@ -159,7 +159,7 @@ const PreCode = React.memo(
                 <Button
                   type="default"
                   size="small"
-                  className="flex items-center justify-center bg-white/80 hover:bg-white border border-gray-200"
+                  className="flex items-center justify-center bg-white/80 hover:bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-700"
                   icon={<IconCode />}
                   onClick={toggleViewMode}
                 />
@@ -171,7 +171,7 @@ const PreCode = React.memo(
                   <Button
                     type="default"
                     size="small"
-                    className="flex items-center justify-center bg-white/80 hover:bg-white border border-gray-200"
+                    className="flex items-center justify-center bg-white/80 hover:bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-700"
                     icon={<IconCodeArtifact />}
                     onClick={handleCreateCodeArtifact}
                   />
@@ -192,7 +192,7 @@ const PreCode = React.memo(
     // Otherwise render normal code block with improved buttons
     return (
       <pre className={cn('relative group')}>
-        <div className="absolute top-2 right-2 z-50 flex transition-all duration-200 ease-in-out bg-white/80 backdrop-blur-sm rounded-md shadow-sm border border-gray-100">
+        <div className="absolute top-2 right-2 z-50 flex transition-all duration-200 ease-in-out bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-md shadow-sm border border-gray-100 dark:border-gray-800">
           <Space>
             <Tooltip title={t('copilot.message.copy', 'Copy code')}>
               <Button

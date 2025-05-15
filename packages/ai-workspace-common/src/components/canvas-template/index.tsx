@@ -79,9 +79,12 @@ const TemplateCategoryList = ({
   const categories = data?.data ?? [];
   const categoryStyle = useCallback(
     (isActive: boolean) =>
-      cn('cursor-pointer p-2 rounded-md hover:bg-gray-100 w-full truncate flex items-center', {
-        'bg-gray-100 font-medium': isActive,
-      }),
+      cn(
+        'cursor-pointer p-2 rounded-md hover:bg-gray-100 w-full truncate flex items-center dark:hover:bg-gray-800',
+        {
+          'bg-gray-100 font-medium dark:bg-gray-800': isActive,
+        },
+      ),
     [],
   );
 

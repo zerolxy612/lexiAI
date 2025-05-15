@@ -9,8 +9,8 @@ import {
 
 import {
   IconCanvas,
+  IconHome,
   IconPlus,
-  IconTemplate,
 } from '@refly-packages/ai-workspace-common/components/common/icon';
 import cn from 'classnames';
 
@@ -43,11 +43,7 @@ import { AiOutlineMenuFold, AiOutlineUser } from 'react-icons/ai';
 import { SubscriptionHint } from '@refly-packages/ai-workspace-common/components/subscription/hint';
 import { FaGithub } from 'react-icons/fa6';
 import { useKnowledgeBaseStoreShallow } from '@refly-packages/ai-workspace-common/stores/knowledge-base';
-import { useCanvasTemplateModalShallow } from '@refly-packages/ai-workspace-common/stores/canvas-template-modal';
-import {
-  canvasTemplateEnabled,
-  subscriptionEnabled,
-} from '@refly-packages/ai-workspace-common/utils/env';
+import { subscriptionEnabled } from '@refly-packages/ai-workspace-common/utils/env';
 import { CanvasTemplateModal } from '@refly-packages/ai-workspace-common/components/canvas-template';
 import { SiderLoggedOut } from './sider-logged-out';
 import { CreateProjectModal } from '@refly-packages/ai-workspace-common/components/project/project-create';
@@ -88,7 +84,10 @@ export const SiderLogo = (props: {
           onClick={() => navigate('/')}
         >
           <img src={Logo} alt="Refly" className="h-8 w-8" />
-          <span className="text-xl font-bold text-black" translate="no">
+          <span
+            className="text-xl font-bold text-black dark:text-gray-100 dark:text-gray-100"
+            translate="no"
+          >
             Refly
           </span>
         </div>
@@ -98,7 +97,7 @@ export const SiderLogo = (props: {
             type="default"
             icon={<FaGithub className="h-3.5 w-3.5" />}
             onClick={() => window.open('https://github.com/refly-ai/refly', '_blank')}
-            className="flex h-6 items-center gap-0.5 bg-white px-1.5 text-xs font-bold"
+            className="flex h-6 items-center gap-0.5 bg-white px-1.5 text-xs font-bold dark:bg-gray-900"
           >
             {starCount}
           </Button>
@@ -108,7 +107,7 @@ export const SiderLogo = (props: {
         <div>
           <Button
             type="text"
-            icon={<AiOutlineMenuFold size={16} className="text-gray-500" />}
+            icon={<AiOutlineMenuFold size={16} className="text-gray-500 dark:text-gray-400" />}
             onClick={() => setCollapse(true)}
           />
         </div>
@@ -132,16 +131,19 @@ const SettingItem = () => {
           <div className="flex items-center">
             <Avatar size={32} src={userProfile?.avatar} icon={<AiOutlineUser />} />
             <span
-              className={cn('ml-2 max-w-[180px] truncate font-semibold text-gray-600', {
-                'max-w-[80px]': subscriptionEnabled,
-              })}
+              className={cn(
+                'ml-2 max-w-[180px] truncate font-semibold text-gray-600 dark:text-gray-300',
+                {
+                  'max-w-[80px]': subscriptionEnabled,
+                },
+              )}
             >
               {userProfile?.nickname}
             </span>
           </div>
 
           {subscriptionEnabled && (
-            <div className="flex h-6 items-center justify-center rounded-full bg-gray-100 px-3 text-xs font-medium group-hover:bg-white">
+            <div className="flex h-6 items-center justify-center rounded-full bg-gray-100 px-3 text-xs font-medium group-hover:bg-white dark:bg-gray-800 dark:group-hover:bg-black">
               {t(`settings.subscription.subscriptionStatus.${planType}`)}
             </div>
           )}
@@ -162,9 +164,11 @@ export const NewCanvasItem = () => {
         key="newCanvas"
         loading={createCanvasLoading}
         type="text"
-        icon={<IconPlus className="text-green-600" />}
+        icon={<IconPlus className="text-green-600 dark:text-green-300" />}
       >
-        <span className="text-green-600">{t('loggedHomePage.siderMenu.newCanvas')}</span>
+        <span className="text-green-600 dark:text-green-300">
+          {t('loggedHomePage.siderMenu.newCanvas')}
+        </span>
       </Button>
     </div>
   );
@@ -180,10 +184,10 @@ export const NewProjectItem = () => {
       <div key="newProject" className="w-full" onClick={() => setCreateProjectModalVisible(true)}>
         <Button
           type="text"
-          icon={<IconPlus className="text-green-600" />}
+          icon={<IconPlus className="text-green-600 dark:text-green-300" />}
           className="w-full justify-start px-2"
         >
-          <span className="text-green-600">{t('project.create')}</span>
+          <span className="text-green-600 dark:text-green-300">{t('project.create')}</span>
         </Button>
       </div>
 
@@ -215,9 +219,10 @@ export const CanvasListItem = ({ canvas }: { canvas: SiderData }) => {
     <div
       key={canvas.id}
       className={cn(
-        'group relative my-1 px-2 rounded text-sm leading-8 text-gray-600 hover:bg-gray-50',
+        'group relative my-1 px-2 rounded text-sm leading-8 text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-950',
         {
           '!bg-gray-100 font-medium !text-green-600': selectedKey === canvas.id,
+          'dark:!bg-gray-800 dark:!text-green-300': selectedKey === canvas.id, // 新增的dark模式选中状态
         },
       )}
       onClick={() => {
@@ -226,7 +231,9 @@ export const CanvasListItem = ({ canvas }: { canvas: SiderData }) => {
     >
       <div className="flex w-40 items-center justify-between">
         <div className="flex items-center gap-3">
-          <IconCanvas className={cn({ 'text-green-600': selectedKey === canvas.id })} />
+          <IconCanvas
+            className={cn({ 'text-green-600 dark:text-green-300': selectedKey === canvas.id })}
+          />
           <div className="w-28 truncate">{canvas?.name || t('common.untitled')}</div>
         </div>
 
@@ -262,12 +269,12 @@ export const ProjectListItem = ({ project }: { project: SiderData }) => {
   return (
     <div
       key={project.id}
-      className="group relative my-1 px-2 rounded text-sm leading-8 text-gray-600 hover:bg-gray-50"
+      className="group relative my-1 px-2 rounded text-sm leading-8 text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-950"
       onClick={handleProjectClick}
     >
       <div className="flex w-40 items-center justify-between">
         <div className="flex items-center gap-3">
-          <IconProject className="text-gray-500" />
+          <IconProject className="text-gray-500 dark:text-gray-400" />
           <div className="w-28 truncate">{project?.name || t('common.untitled')}</div>
         </div>
       </div>
@@ -279,13 +286,13 @@ const ViewAllButton = ({ onClick }: { onClick: () => void }) => {
   const { t } = useTranslation();
   return (
     <Button
-      className="group w-full px-2 text-gray-500 text-xs mb-2 !bg-transparent hover:!text-green-600"
+      className="group w-full px-2 text-gray-500 text-xs mb-2 !bg-transparent hover:!text-green-600 dark:text-gray-400 dark:hover:!text-green-300"
       type="text"
       size="small"
       onClick={onClick}
       iconPosition="end"
       icon={
-        <IconRight className="flex items-center text-gray-500 hover:text-green-600 group-hover:text-green-600" />
+        <IconRight className="flex items-center text-gray-500 hover:text-green-600 group-hover:text-green-600 dark:text-gray-400 dark:hover:!text-green-300" />
       }
     >
       {t('common.viewAll')}
@@ -337,10 +344,6 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
     setSettingsModalActiveTab: state.setSettingsModalActiveTab,
   }));
 
-  const { setVisible: setShowCanvasTemplateModal } = useCanvasTemplateModalShallow((state) => ({
-    setVisible: state.setVisible,
-  }));
-
   const { isLoadingCanvas, isLoadingProjects } = useHandleSiderData(true);
 
   const { t } = useTranslation();
@@ -352,6 +355,7 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
   const defaultOpenKeys = useMemo(() => ['Canvas', 'Library'], []);
 
   const canvasId = location.pathname.split('/').pop();
+  const isHome = useMatch('/canvas/:canvasId') && canvasId === 'empty';
   const { debouncedCreateCanvas } = useCreateCanvas({
     projectId: null,
     afterCreateSuccess: () => {
@@ -375,7 +379,10 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
       name: 'canvas',
       icon: <IconCanvas key="canvas" style={{ fontSize: 20 }} />,
       actionIcon: (
-        <LuList size={16} className="flex items-center text-gray-500 hover:text-gray-700" />
+        <LuList
+          size={16}
+          className="flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:!text-gray-200"
+        />
       ),
       actionHandler: () => setShowCanvasListModal(true),
     },
@@ -384,7 +391,10 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
       name: 'library',
       icon: <IconLibrary key="library" style={{ fontSize: 20 }} />,
       actionIcon: (
-        <LuList size={16} className="flex items-center text-gray-500 hover:text-gray-700" />
+        <LuList
+          size={16}
+          className="flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:!text-gray-200"
+        />
       ),
       actionHandler: () => setShowLibraryModal(true),
     },
@@ -440,7 +450,7 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
     <Sider
       width={source === 'sider' ? (collapse ? 0 : 220) : 220}
       className={cn(
-        'border border-solid border-gray-100 bg-white shadow-sm',
+        'border border-solid border-gray-100 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900',
         source === 'sider' ? 'h-[calc(100vh)]' : 'h-[calc(100vh-100px)] rounded-r-lg',
       )}
     >
@@ -449,19 +459,22 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
 
         <SearchQuickOpenBtn />
 
-        {canvasTemplateEnabled && (
-          <div
-            className="flex-shrink-0 h-10 my-1 mx-2 flex items-center justify-between pl-6 pr-3 text-gray-600 hover:bg-gray-100 cursor-pointer rounded-lg"
-            onClick={() => setShowCanvasTemplateModal(true)}
-          >
-            <div className="flex justify-between items-center w-full">
-              <div className="flex items-center gap-2">
-                <IconTemplate key="template" style={{ fontSize: 20 }} />
-                <span>{t('loggedHomePage.siderMenu.template')}</span>
-              </div>
+        <div
+          className={cn(
+            'flex-shrink-0 h-10 my-1 mx-2 flex items-center justify-between pl-6 pr-3 text-gray-600 hover:bg-gray-100 cursor-pointer rounded-lg dark:text-gray-400 dark:bg-gray-900 dark:hover:bg-gray-700',
+            {
+              'bg-gray-100 dark:bg-gray-700': isHome,
+            },
+          )}
+          onClick={() => navigate('/')}
+        >
+          <div className="flex justify-between items-center w-full">
+            <div className="flex items-center gap-2">
+              <IconHome key="home" style={{ fontSize: 20 }} />
+              <span>{t('loggedHomePage.siderMenu.home')}</span>
             </div>
           </div>
-        )}
+        </div>
 
         {/* Main menu section with flexible layout */}
         <div className="flex-1 overflow-hidden flex flex-col min-h-[250px]">
@@ -474,7 +487,7 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
           >
             {siderSections.map((section) => {
               const sectionTitle = (
-                <div className="flex items-center justify-between w-full text-gray-600 group select-none">
+                <div className="flex items-center justify-between w-full text-gray-600 group select-none dark:text-gray-300">
                   <div className="flex items-center gap-2">
                     {section.icon}
                     <span>{t(`loggedHomePage.siderMenu.${section.name}`)}</span>
@@ -483,7 +496,7 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
                     <Button
                       type="text"
                       size="small"
-                      className="px-1 text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                      className="px-1 text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity duration-200 dark:text-gray-400"
                       icon={section.actionIcon}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -497,7 +510,7 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
               );
 
               const sectionContent = (
-                <div className="flex-1 overflow-hidden flex flex-col bg-white select-none">
+                <div className="flex-1 overflow-hidden flex flex-col bg-white select-none dark:bg-gray-900">
                   <div className="flex-none pl-5 pr-2">
                     {section.key === 'Canvas' && <NewCanvasItem />}
                     {section.key === 'Library' && <NewProjectItem />}
@@ -548,7 +561,7 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
                 <SubMenu
                   key={section.key}
                   title={sectionTitle}
-                  className="ant-menu-submenu-adaptive overflow-hidden"
+                  className="ant-menu-submenu-adaptive overflow-hidden border-t-1 border-b-0 border-x-0 border-solid border-gray-100 !rounded-none mx-2 dark:border-gray-800"
                   onTitleClick={() => {
                     if (section.onClick) section.onClick();
                   }}
@@ -570,9 +583,9 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
 
           <div
             onClick={() =>
-              window.open('https://github.com/refly-ai/refly/releases/tag/v0.5.0', '_blank')
+              window.open('https://github.com/refly-ai/refly/releases/tag/v0.6.0', '_blank')
             }
-            className="mb-2 flex items-start text-[#00968F] hover:bg-gray-50 whitespace-normal h-auto cursor-pointer"
+            className="mb-2 flex items-start text-[#00968F] hover:bg-gray-50 whitespace-normal h-auto cursor-pointer dark:hover:bg-dark dark:text-gray-300"
           >
             <span className="flex items-start gap-2 leading-6 w-full ">
               <Tag
@@ -586,7 +599,7 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
 
           {!!userProfile?.uid && (
             <div
-              className="flex h-12 items-center justify-between cursor-pointer hover:bg-gray-100 rounded-md px-2"
+              className="flex h-12 items-center justify-between cursor-pointer hover:bg-gray-100 rounded-md px-2 dark:text-gray-300 dark:hover:bg-gray-800"
               data-cy="settings-menu-item"
             >
               <SettingItem />

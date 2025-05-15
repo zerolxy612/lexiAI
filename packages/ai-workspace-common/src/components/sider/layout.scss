@@ -4,9 +4,6 @@
 
 // Adaptive submenu styles
 .ant-menu-submenu-adaptive {
-  border-top: 1px solid #f0f0f0;
-  border-radius: 0 !important;
-  margin: 0 8px;
   &.ant-menu-submenu-open {
     flex: 1;
     display: flex;

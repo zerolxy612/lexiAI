@@ -135,7 +135,7 @@ const ArtifactRenderer = memo(
 
     return (
       <div
-        className={`h-full bg-white ${!isFullscreen ? 'rounded px-4 pb-4' : 'w-full'} ${isMinimap ? 'p-1' : ''}`}
+        className={`h-full bg-white dark:bg-gray-900 ${!isFullscreen ? 'rounded px-4 pb-4' : 'w-full'} ${isMinimap ? 'p-1' : ''}`}
       >
         <div className="h-full w-full overflow-hidden flex flex-col">
           {isMinimap ? (

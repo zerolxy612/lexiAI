@@ -242,7 +242,9 @@ export const ImportFromFile = () => {
         <div className="w-full file-upload-container">
           <Dragger {...props}>
             <RiInboxArchiveLine className="text-3xl text-[#00968f]" />
-            <p className="ant-upload-text mt-4 text-gray-600">{t('resource.import.dragOrClick')}</p>
+            <p className="ant-upload-text mt-4 text-gray-600 dark:text-gray-300">
+              {t('resource.import.dragOrClick')}
+            </p>
             <p className="ant-upload-hint text-gray-400 mt-2">{genUploadHint()}</p>
             {fileParsingUsage?.pagesLimit >= 0 && (
               <div className="text-green-500 mt-2 text-xs font-medium flex items-center justify-center gap-1">
@@ -258,7 +260,7 @@ export const ImportFromFile = () => {
       </div>
 
       {/* footer */}
-      <div className="w-full flex justify-between items-center border-t border-solid border-[#e5e5e5] border-x-0 border-b-0 p-[16px] rounded-none">
+      <div className="w-full flex justify-between items-center border-t border-solid border-[#e5e5e5] dark:border-[#2f2f2f] border-x-0 border-b-0 p-[16px] rounded-none">
         <div className="flex items-center gap-x-[8px]">
           <p className="font-bold whitespace-nowrap text-md text-[#00968f]">
             {t('resource.import.fileCount', { count: fileList?.length || 0 })}

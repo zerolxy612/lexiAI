@@ -47,14 +47,14 @@ export const TemplateCard = ({
 
   return (
     <div
-      className={`${className} m-2 group relative bg-white rounded-lg overflow-hidden cursor-pointer shadow-sm hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 ease-in-out h-[245px]`}
+      className={`${className} m-2 group relative bg-white dark:bg-gray-900 rounded-lg overflow-hidden cursor-pointer shadow-sm hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 ease-in-out h-[245px]`}
     >
       {template?.featured && (
         <Tag color="green" className="absolute top-2 right-0 z-10 shadow-sm">
           {t('common.featured')}
         </Tag>
       )}
-      <div className="h-40 bg-gray-100 flex items-center justify-center">
+      <div className="h-40 bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
         <img
           src={`${staticPublicEndpoint}/share-cover/${template?.shareId}.png`}
           alt={`${template?.title} cover`}
@@ -87,12 +87,12 @@ export const TemplateCard = ({
       </div>
 
       <div className="absolute left-0 bottom-0 w-full">
-        <div className="absolute left-0 -top-8 w-full h-8 bg-gradient-to-b from-transparent to-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+        <div className="absolute left-0 -top-8 w-full h-8 bg-gradient-to-b from-transparent to-white dark:to-gray-900 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
 
-        <div className="relative w-full h-16 py-2 px-4 bg-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-between gap-3">
+        <div className="relative w-full h-16 py-2 px-4 bg-white dark:bg-gray-900 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-between gap-3">
           <Button
             type="default"
-            className="flex-1 p-1 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 bg-white hover:bg-gray-100"
+            className="flex-1 p-1 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 bg-white dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800"
             onClick={handlePreview}
           >
             {t('template.preview')}
@@ -184,7 +184,7 @@ export const TemplateList = ({
   return (
     <div
       id={source === 'front-page' ? scrollableTargetId : undefined}
-      className={cn('w-full h-full overflow-y-auto bg-[#F8F9FA] p-4', className)}
+      className={cn('w-full h-full overflow-y-auto bg-[#F8F9FA] p-4 dark:bg-gray-900', className)}
     >
       <Spin className="spin" spinning={isRequesting && dataList.length === 0}>
         {dataList.length > 0 ? (

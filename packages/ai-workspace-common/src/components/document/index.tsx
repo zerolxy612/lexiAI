@@ -265,7 +265,7 @@ const StatusBar = memo(
     }, [ydoc, docId, t]);
 
     return (
-      <div className="w-full h-10 p-3 border-x-0 border-t-0 border-b border-solid border-gray-100 flex flex-row items-center justify-between">
+      <div className="w-full h-10 p-3 border-x-0 border-t-0 border-b border-solid border-gray-100 dark:border-gray-700 flex flex-row items-center justify-between">
         <div className="flex items-center gap-2">
           <div
             className={`
@@ -396,7 +396,7 @@ const DocumentEditorHeader = memo(
         <div className="mx-0 mt-4 max-w-screen-lg">
           <Input
             readOnly={readonly}
-            className="document-title !text-3xl font-bold focus:!border-transparent focus:!bg-transparent"
+            className="document-title !text-3xl font-bold bg-transparent focus:!border-transparent focus:!bg-transparent text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/10"
             placeholder={t('editor.placeholder.title')}
             value={document?.title}
             style={{ paddingLeft: 6 }}

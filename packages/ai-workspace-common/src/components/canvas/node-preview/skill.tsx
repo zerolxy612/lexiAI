@@ -1,9 +1,8 @@
 import { useState, useCallback, useEffect, memo, useRef } from 'react';
-import { Form } from '@arco-design/web-react';
 import { useDebouncedCallback } from 'use-debounce';
 import { useTranslation } from 'react-i18next';
 import { IconClose } from '@arco-design/web-react/icon';
-import { Button } from 'antd';
+import { Button, Form } from 'antd';
 import { ModelInfo, Skill, SkillRuntimeConfig, SkillTemplateConfig } from '@refly/openapi-schema';
 import { CanvasNode, CanvasNodeData, SkillNodeMeta } from '../nodes/shared/types';
 import { ChatInput } from '@refly-packages/ai-workspace-common/components/canvas/launchpad/chat-input';
@@ -44,7 +43,7 @@ const NodeHeader = memo(
           <div className="w-6 h-6 rounded bg-[#6172F3] shadow-lg flex items-center justify-center flex-shrink-0">
             {getSkillIcon(selectedSkillName, 'w-4 h-4 text-white')}
           </div>
-          <span className="text-sm font-medium leading-normal text-[rgba(0,0,0,0.8)] truncate">
+          <span className="text-sm font-medium leading-normal text-[rgba(0,0,0,0.8)] truncate dark:text-[rgba(225,225,225,0.8)]">
             {selectedSkillName
               ? t(`${selectedSkillName}.name`, { ns: 'skill' })
               : t('canvas.skill.askAI')}

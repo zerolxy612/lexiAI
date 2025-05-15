@@ -89,7 +89,7 @@ export default () => ({
     email: {
       enabled: process.env.EMAIL_AUTH_ENABLED === 'true' || true,
       sender: process.env.EMAIL_SENDER || 'Refly <notifications@refly.ai>',
-      resendApiKey: process.env.RESEND_API_KEY,
+      resendApiKey: process.env.RESEND_API_KEY || 're_123',
     },
     github: {
       enabled: process.env.GITHUB_AUTH_ENABLED === 'true' || false,

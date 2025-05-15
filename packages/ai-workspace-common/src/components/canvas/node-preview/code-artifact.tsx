@@ -276,7 +276,7 @@ const CodeArtifactNodePreviewComponent = ({ nodeId }: CodeArtifactNodePreviewPro
   }
 
   return (
-    <div className="h-full bg-white rounded px-4">
+    <div className="h-full bg-white rounded px-4 dark:bg-gray-900">
       <CodeViewerLayout isShowing={isShowingCodeViewer}>
         {isShowingCodeViewer && (
           <CodeViewer

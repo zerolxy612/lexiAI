@@ -1,12 +1,8 @@
 import { Project } from '@refly/openapi-schema';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button, Tooltip, Typography } from 'antd';
-import {
-  IconLeft,
-  IconEdit,
-  IconHome,
-} from '@refly-packages/ai-workspace-common/components/common/icon';
+import { IconLeft, IconEdit } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { iconClassName } from '@refly-packages/ai-workspace-common/components/project/project-directory';
 import cn from 'classnames';
 import { useState } from 'react';
@@ -16,7 +12,6 @@ import { ActionDropdown } from '@refly-packages/ai-workspace-common/components/w
 import { SlPicture } from 'react-icons/sl';
 import { IconDown } from '@arco-design/web-react/icon';
 import { useSiderStoreShallow } from '@refly-packages/ai-workspace-common/stores/sider';
-import { useGetProjectCanvasId } from '@refly-packages/ai-workspace-common/hooks/use-get-project-canvasId';
 
 const { Paragraph, Text } = Typography;
 export const ProjectSettings = ({
@@ -32,8 +27,6 @@ export const ProjectSettings = ({
 }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const { canvasId } = useGetProjectCanvasId();
   const [createProjectModalVisible, setCreateProjectModalVisible] = useState(false);
   const { setShowLibraryModal } = useSiderStoreShallow((state) => ({
     setShowLibraryModal: state.setShowLibraryModal,
@@ -41,14 +34,6 @@ export const ProjectSettings = ({
 
   const handleEditSettings = () => {
     setCreateProjectModalVisible(true);
-  };
-
-  const handleNavigateFrontPage = () => {
-    if (data?.projectId) {
-      searchParams.set('canvasId', 'empty');
-      setSearchParams(searchParams);
-      navigate(`/project/${data.projectId}?${searchParams.toString()}`);
-    }
   };
 
   return (
@@ -64,16 +49,6 @@ export const ProjectSettings = ({
           {t('common.goBack')}
         </Button>
         <div className="flex items-center gap-2">
-          <Button
-            className={cn(
-              'px-1 gap-1 text-sm text-gray-500',
-              !canvasId || canvasId === 'empty' ? 'text-green-500' : '',
-            )}
-            size="small"
-            type="text"
-            icon={<IconHome className={iconClassName} />}
-            onClick={handleNavigateFrontPage}
-          />
           <ActionDropdown
             project={data}
             afterDelete={() => {
@@ -97,7 +72,7 @@ export const ProjectSettings = ({
           {data?.coverUrl ? (
             <img src={data?.coverUrl} alt="Refly" className="w-10 h-10 rounded-md" />
           ) : (
-            <div className="w-10 h-10 rounded-md bg-gray-100 flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-md bg-gray-100 flex items-center justify-center flex-shrink-0 dark:bg-gray-800">
               <SlPicture size={24} className="text-gray-500" />
             </div>
           )}
@@ -127,13 +102,13 @@ export const ProjectSettings = ({
         </div>
 
         <Paragraph
-          className="text-xs p-1 !my-2 bg-gray-50 text-gray-400 rounded-md"
+          className="text-xs p-1 !my-2 bg-gray-50 text-gray-400 rounded-md dark:bg-gray-800 dark:text-gray-500"
           ellipsis={{ rows: 1, tooltip: { placement: 'right' } }}
         >
           {data?.description || t('project.noDescription')}
         </Paragraph>
 
-        <div className="flex items-center justify-between gap-2 text-xs text-gray-600">
+        <div className="flex items-center justify-between gap-2 text-xs text-gray-600 dark:text-gray-300">
           <span>{t('project.customInstructions')}</span>
           <Button
             type="text"

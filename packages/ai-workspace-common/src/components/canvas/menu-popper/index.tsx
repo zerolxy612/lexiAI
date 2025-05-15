@@ -365,9 +365,9 @@ export const MenuPopper: FC<MenuPopperProps> = memo(({ open, position, setOpen }
       <Button
         loading={getIsLoading(item.key)}
         className={cn('w-full px-2 justify-start', {
-          'bg-gray-100': activeKey === item.key,
-          'text-primary-600': item.primary,
-          'text-red-600': item.danger,
+          'bg-gray-100 dark:bg-gray-800': activeKey === item.key,
+          'text-primary-600 dark:text-primary-300': item.primary,
+          'text-red-600 dark:text-red-300': item.danger,
         })}
         type="text"
         icon={<item.icon className="text-base flex items-center" />}
@@ -399,7 +399,7 @@ export const MenuPopper: FC<MenuPopperProps> = memo(({ open, position, setOpen }
     open && (
       <div
         ref={menuRef}
-        className="fixed z-[9999] bg-white rounded-lg shadow-lg p-2 w-[200px] menu-popper"
+        className="fixed z-[9999] bg-white rounded-lg shadow-lg p-2 w-[200px] menu-popper dark:bg-gray-900"
         style={{
           left: `${menuScreenPosition.x}px`,
           top: `${menuScreenPosition.y}px`,

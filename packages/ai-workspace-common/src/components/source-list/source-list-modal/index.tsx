@@ -1,7 +1,6 @@
 import { useKnowledgeBaseStoreShallow } from '@refly-packages/ai-workspace-common/stores/knowledge-base';
 import { useEffect, useMemo, useState } from 'react';
-import { Drawer } from '@arco-design/web-react';
-import { message, Tabs } from 'antd';
+import { message, Tabs, Drawer } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { Source } from '@refly/openapi-schema';
 import { getPopupContainer } from '@refly-packages/ai-workspace-common/utils/ui';
@@ -103,19 +102,13 @@ export const SourceListModal = (props: SourceListModalProps) => {
       width={width}
       style={{
         zIndex: 66,
-        background: '#ffffff',
         height: height,
       }}
-      getPopupContainer={() => {
+      getContainer={() => {
         const container = getPopupContainer();
         return !isWeb ? (container.querySelector('.ai-copilot-container') as Element) : container;
       }}
       className="source-list-modal"
-      headerStyle={{
-        padding: '16px 24px',
-        height: 'auto',
-        borderBottom: '1px solid var(--color-border-2)',
-      }}
       mask={false}
       maskClosable={false}
       title={
@@ -138,10 +131,7 @@ export const SourceListModal = (props: SourceListModalProps) => {
       visible={knowledgeBaseStore.sourceListDrawer.visible}
       placement={isWeb ? 'right' : props.placement || 'bottom'}
       footer={null}
-      onOk={() => {
-        knowledgeBaseStore.updateSourceListDrawer({ visible: false });
-      }}
-      onCancel={() => {
+      onClose={() => {
         knowledgeBaseStore.updateSourceListDrawer({ visible: false });
         setResults([]);
         setIsSearching(false);

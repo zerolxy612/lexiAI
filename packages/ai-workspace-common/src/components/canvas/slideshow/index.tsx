@@ -42,9 +42,11 @@ export const Slideshow = memo(({ canvasId }: { canvasId: string }) => {
   const containerClassName = useMemo(
     () => `
       flex-shrink-0 
-      bg-white 
+      bg-white
+      dark:bg-gray-900 
       border 
-      border-gray-200 
+      border-gray-200
+      dark:border-gray-700 
       flex 
       flex-col
       will-change-transform
@@ -80,7 +82,7 @@ export const Slideshow = memo(({ canvasId }: { canvasId: string }) => {
 
   return (
     <div
-      className="border border-solid border-gray-100 rounded-lg bg-transparent"
+      className="border border-solid border-gray-100 rounded-lg bg-transparent dark:border-gray-800"
       style={outerContainerStyles}
     >
       <div className={containerClassName} style={containerStyles}>

@@ -108,12 +108,13 @@ const PlanItem = (props: {
       <div
         className={`
         subscribe-content-plans-item
-        ${title === 'free' && 'item-free bg-gray-50'}
-        ${title === 'plus' && 'item-plus bg-[#E8F4FC]'}
-        ${title === 'pro' && 'item-pro bg-green-50'}
-        ${title === 'max' && 'item-max bg-[#FFF5EB]'}`}
+        ${title === 'free' && 'item-free bg-gray-50 dark:bg-gray-900'}
+        ${title === 'plus' && 'item-plus bg-[#E8F4FC] dark:bg-[#1A2A3A]'}
+        ${title === 'pro' && 'item-pro bg-green-50 dark:bg-green-900'}
+        ${title === 'max' && 'item-max bg-[#FFF5EB] dark:bg-[#33241A]'}
+        `}
       >
-        <div className="subscribe-content-plans-item-title font-extrabold">
+        <div className="subscribe-content-plans-item-title font-extrabold dark:text-gray-100">
           {t(`settings.subscription.subscriptionStatus.${title}`)}
         </div>
 
@@ -123,7 +124,7 @@ const PlanItem = (props: {
 
         <div className="h-16">
           <div className="subscribe-content-plans-item-price">
-            <span className="price text-3xl">
+            <span className="price text-3xl dark:text-gray-100">
               {title !== 'free' ? (
                 <>
                   $
@@ -135,7 +136,7 @@ const PlanItem = (props: {
                 t('settings.subscription.subscribe.forFree')
               )}
             </span>
-            <span className="period !text-xs">
+            <span className="period !text-xs dark:text-gray-200">
               {' '}
               /{' '}
               {title === 'free' ? (
@@ -215,7 +216,9 @@ const PlanItem = (props: {
                 )}
               </div>
               {feature.count && (
-                <div className="ml-4 text-sm text-black font-medium">{feature.count}</div>
+                <div className="ml-4 text-sm text-black font-medium dark:text-gray-100">
+                  {feature.count}
+                </div>
               )}
               <div className="ml-4 text-xs text-gray-400">{feature.details}</div>
             </div>
@@ -223,10 +226,12 @@ const PlanItem = (props: {
 
           <Divider className="my-4" />
           {(capabilities || [])?.map((capability, index) => (
-            <div className="py-2 text-gray-600" key={index}>
+            <div className="py-2 text-gray-600 dark:text-gray-300" key={index}>
               <FaLightbulb className="text-yellow-500 mr-1" size={12} />
               <span>{capability.before}</span>
-              <span className="font-bold text-black">{capability.highlight}</span>
+              <span className="font-bold text-black dark:text-gray-100">
+                {capability.highlight}
+              </span>
               <span>{capability.after}</span>
             </div>
           ))}

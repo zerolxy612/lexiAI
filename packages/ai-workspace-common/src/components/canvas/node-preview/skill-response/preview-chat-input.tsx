@@ -30,7 +30,7 @@ const PreviewChatInputComponent = (props: PreviewChatInputProps) => {
 
   return (
     <div
-      className={cn('border border-solid border-gray-200 rounded-lg')}
+      className={cn('border border-solid border-gray-200 rounded-lg dark:border-gray-700')}
       onClick={() => {
         if (!readonly) {
           setEditMode(true);

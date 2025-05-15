@@ -45,7 +45,7 @@
   h4,
   h5,
   h6 {
-    color: #0d0d0d;
+    color: #151719;
     line-height: 1.1;
   }
 
@@ -69,6 +69,42 @@
     }
   }
 
+  // 暗色模式样式
+  @at-root .dark & {
+    // background-color: #151719;
+    // color: #e5e5e5;
+
+    h1, h2, h3, h4, h5, h6 {
+      color: inherit;
+    }
+
+    strong {
+      color: inherit;
+    }
+
+    code {
+      background-color: rgba(#9ca3af, 0.2);
+      color: #d1d5db;
+    }
+
+    pre {
+      background: #2d2d2d;
+      color: #f8f8f2;
+
+      code {
+        color: inherit;
+      }
+    }
+
+    blockquote {
+      color: #a1a1aa;
+      border-left-color: rgba(229, 229, 229, 0.1);
+    }
+
+    hr {
+      border-top-color: rgba(229, 229, 229, 0.1);
+    }
+  }
   mark {
     background-color: #faf594;
   }
@@ -112,13 +148,6 @@
         flex: 1 1 auto;
       }
     }
-  }
-}
-
-.document-title {
-  background: transparent !important;
-  &:hover {
-    background: rgb(242, 243, 245) !important;
   }
 }
 
