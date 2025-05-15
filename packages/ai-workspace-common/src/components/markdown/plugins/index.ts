@@ -1,3 +1,4 @@
+import MCPCallElement from './mcp-call';
 import ReflyArtifact from './artifact';
 import ReflyArtifactThinking from './artifact-thinking';
 import CodeElement from './code';
@@ -15,6 +16,7 @@ const markdownElements: MarkdownElementPlugin[] = [
   ReflyArtifact as MarkdownElementPlugin,
   ReflyArtifactThinking as MarkdownElementPlugin,
   CodeElement as MarkdownElementPlugin,
+  MCPCallElement as MarkdownElementPlugin,
 ];
 
 export { markdownElements };

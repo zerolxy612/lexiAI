@@ -80,6 +80,7 @@ const LogBox = memo(
                   ns: 'skillLog',
                   defaultValue: '',
                 }),
+                status: log.status === 'error' ? 'error' : 'finish',
               }))}
             />
             <Button
