@@ -325,7 +325,7 @@ export class McpServerService {
    * @param timeoutMs - Connection timeout in milliseconds
    * @returns Promise that resolves if connection is successful
    */
-  private async testMcpConnection(config: Record<string, Connection>, timeoutMs = 50000) {
+  private async testMcpConnection(config: Record<string, Connection>, timeoutMs = 15000) {
     if (Object.keys(config).length === 0) {
       throw new ParamsError('Invalid server configuration');
     }
