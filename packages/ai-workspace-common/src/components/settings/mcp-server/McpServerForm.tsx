@@ -420,7 +420,14 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
 
             <Form.Item
               name="type"
-              label={t('settings.mcpServer.type')}
+              label={
+                <>
+                  {t('settings.mcpServer.type')}
+                  <Tooltip title={t('settings.mcpServer.stdioWebDisabledTooltip')}>
+                    <InfoCircleOutlined style={{ marginLeft: 8 }} />
+                  </Tooltip>
+                </>
+              }
               rules={[{ required: true, message: t('settings.mcpServer.typeRequired') }]}
             >
               <Select onChange={handleTypeChange}>
@@ -430,11 +437,6 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
                 </Option>
                 <Option value="stdio" disabled>
                   {t('settings.mcpServer.typeStdio')} (Stdio)
-                  <Tooltip title={t('settings.mcpServer.stdioWebDisabledTooltip')}>
-                    <InfoCircleOutlined
-                      style={{ marginLeft: '4px', color: 'rgba(0, 0, 0, 0.45)' }}
-                    />
-                  </Tooltip>
                 </Option>
               </Select>
             </Form.Item>
