@@ -132,9 +132,12 @@ const ReasoningContent = memo(
     return (
       <div>
         <div
-          className={cn('p-3 bg-gray-50 rounded-lg border border-gray-200 transition-all', {
-            'cursor-pointer hover:bg-gray-100': collapsed,
-          })}
+          className={cn(
+            'p-3 bg-gray-50 rounded-lg border border-gray-200 transition-all dark:bg-gray-900 dark:border-gray-700',
+            {
+              'cursor-pointer hover:bg-gray-100 dark:hover-gray-800': collapsed,
+            },
+          )}
         >
           {collapsed ? (
             <div

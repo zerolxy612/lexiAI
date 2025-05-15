@@ -171,7 +171,7 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
         )}
       />
       <div
-        className="w-full h-full flex bg-white/90 overflow-y-auto dark:bg-gray-900/90"
+        className="w-full h-full flex bg-white/90 overflow-y-auto dark:bg-gray-900/90 dark:bg-gray-900/90"
         id="front-page-scrollable-div"
       >
         <div
