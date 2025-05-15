@@ -1,5 +1,5 @@
 import { AddSources } from '@refly-packages/ai-workspace-common/components/project/add-sources';
-
+//import './index.scss';
 import { useTranslation } from 'react-i18next';
 import { useState, useMemo, useCallback, useEffect, memo } from 'react';
 import { Document, Resource } from '@refly/openapi-schema';
@@ -492,7 +492,7 @@ export const SourcesMenu = ({
           {
             key: 'sources',
             label: (
-              <div className="flex items-center gap-2 text-sm ">
+              <div className="flex items-center gap-2 text-sm dark:text-gray-400">
                 <IconFiles size={20} className="flex items-center justify-center text-gray-500" />
                 {t('project.source')}
               </div>
@@ -546,9 +546,9 @@ export const SourcesMenu = ({
                         return (
                           <List.Item
                             className={cn(
-                              '!py-2 !pl-1 !pr-2 rounded-md hover:bg-gray-50 cursor-pointer relative group',
+                              '!py-2 !pl-1 !pr-2 rounded-md hover:bg-gray-50 cursor-pointer relative group dark:hover:bg-gray-800',
                               selectedSources.some((source) => source.entityId === item.entityId) &&
-                                'bg-gray-50',
+                                'bg-gray-50 dark:bg-gray-800',
                             )}
                             onMouseEnter={() => handleSourceHover(item.entityId)}
                             onMouseLeave={() => handleSourceHover(null)}
@@ -562,7 +562,7 @@ export const SourcesMenu = ({
                                   {getItemIcon(item)}
                                 </div>
                                 <Text
-                                  className="text-[13px] text-gray-700 truncate"
+                                  className="text-[13px] text-gray-700 truncate dark:text-gray-200"
                                   ellipsis={{
                                     tooltip: { placement: 'right' },
                                   }}
@@ -576,7 +576,7 @@ export const SourcesMenu = ({
                                   isMultiSelectMode || hoveredSourceId === item.entityId
                                     ? 'opacity-100'
                                     : 'opacity-0',
-                                  isMultiSelectMode ? '' : 'bg-gray-50',
+                                  isMultiSelectMode ? '' : 'bg-gray-50 dark:bg-gray-800',
                                 )}
                               >
                                 <Checkbox
