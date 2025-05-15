@@ -10,8 +10,7 @@ import { McpServer as McpServerModel } from '@/generated/client';
 import { McpServerNotFoundError, ParamsError } from '@refly/errors';
 import { SingleFlightCache } from '@/utils/cache';
 import { EncryptionService } from '@/modules/common/encryption.service';
-import { Connection, MultiServerMCPClient } from '@refly/skill-template/src/adapters';
-import { createMcpClientConfig } from '@refly/skill-template/src/utils/mcp-utils';
+import { Connection, MultiServerMCPClient, createMcpClientConfig } from '@refly/skill-template';
 
 /**
  * Server configuration type for encryption/decryption operations
