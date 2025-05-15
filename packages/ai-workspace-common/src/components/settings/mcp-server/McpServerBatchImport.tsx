@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, message, Typography } from 'antd';
+import { Modal, Button, message, Typography, Alert } from 'antd';
 import { ImportOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { McpServerJsonEditor } from './McpServerJsonEditor';
@@ -297,9 +297,16 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
           </Button>,
         ]}
       >
-        <Typography.Paragraph className="mb-4">
+        {/* <Typography.Paragraph className="mb-4">
           {t('settings.mcpServer.batchImportDescription')}
-        </Typography.Paragraph>
+        </Typography.Paragraph> */}
+
+        <Alert
+          message={t('settings.mcpServer.jsonModeStdioWarning')}
+          type="warning"
+          showIcon
+          className="my-4"
+        />
 
         <div className="mt-4" style={{ height: '450px' }}>
           {isLoadingServers ? (

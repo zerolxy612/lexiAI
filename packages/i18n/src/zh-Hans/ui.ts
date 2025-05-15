@@ -243,7 +243,7 @@ const translations = {
     description:
       '基于自由画布的创作平台，通过多线程对话、代码组件、知识库整合、上下文记忆和智能搜索，轻松将想法转化为优质内容。',
     anotherDescription:
-      '基于自由画布的创作平台，通过多线程对话、代码组件、知识库整合、上下文记忆和智能搜索，轻松将想法转化为优质内容。',
+      '基于自由画布的创作平台，通过多线程对话、代码组件、知识库集成、上下文记忆和智能搜索，轻松将想法转化为优质内容。',
     simplyDescription: {
       first: '由多线程对话、代码组件、知识库集成、上下文记忆和智能搜索驱动，',
       second: 'Refly 是将创意转化为优质内容的最佳方式。',
@@ -1748,6 +1748,8 @@ const translations = {
       validate: '验证',
       formMode: '表单模式',
       jsonMode: 'JSON 模式',
+      jsonModeStdioWarning:
+        "通过 JSON 配置时请注意：Web 版本不支持 'stdio' 类型，这可能会导致意外行为。",
       jsonParseError: 'JSON 格式无效',
       typeSSE: '服务器发送事件',
       typeStreamable: '流式 API',
@@ -1756,7 +1758,7 @@ const translations = {
       batchImport: '批量导入',
       batchImportTitle: '批量导入 MCP 服务器',
       batchImportDescription:
-        '通过提供 JSON 数组一次性导入多个 MCP 服务器。数组中的每个对象应代表一个服务器配置。请注意：Web 版本不支持 stdio 协议。',
+        '通过提供 JSON 数组一次性导入多个 MCP 服务器。数组中的每个对象应代表一个服务器配置。',
       importServers: '导入服务器',
       batchImportSuccess: '成功导入 {{total}} 个服务器中的 {{count}} 个',
       batchImportPartialError: '{{total}} 个服务器中的 {{count}} 个导入失败',

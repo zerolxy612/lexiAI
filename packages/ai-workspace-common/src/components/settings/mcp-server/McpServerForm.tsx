@@ -14,6 +14,7 @@ import {
   Card,
   Typography,
   Collapse,
+  Alert,
 } from 'antd';
 import {
   PlusOutlined,
@@ -747,6 +748,12 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
           }
           key="json"
         >
+          <Alert
+            message={t('settings.mcpServer.jsonModeStdioWarning')}
+            type="warning"
+            showIcon
+            style={{ marginBottom: 16 }}
+          />
           <McpServerJsonEditor
             value={convertToUniversalFormat(formData)}
             onChange={handleJsonChange}
