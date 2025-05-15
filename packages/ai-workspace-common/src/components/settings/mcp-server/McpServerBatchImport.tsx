@@ -219,7 +219,12 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
 
   return (
     <>
-      <Button icon={<ImportOutlined />} onClick={showModal} style={{ marginRight: 8 }}>
+      <Button
+        type="default"
+        icon={<ImportOutlined />}
+        onClick={showModal}
+        className="border dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-100 dark:border-gray-600"
+      >
         {t('settings.mcpServer.batchImport')}
       </Button>
 

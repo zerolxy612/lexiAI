@@ -218,7 +218,6 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
   // Custom styles
   const tableStyles = {
     header: {
-      background: '#fafafa',
       fontSize: '14px',
       fontWeight: 500,
       padding: '12px 16px',
@@ -230,17 +229,17 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
       cursor: 'default',
       transition: 'background-color 0.3s',
       ':hover': {
-        background: '#f5f5f5',
+        background: '#2A2A2A',
       },
     },
     toolCard: {
       borderRadius: '6px',
       boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
-      border: '1px solid #f0f0f0',
+      border: '1px solid #424242',
       transition: 'all 0.3s',
       ':hover': {
         boxShadow: '0 3px 6px rgba(0,0,0,0.05)',
-        borderColor: '#e6f4ff',
+        borderColor: '#5E5E5E',
       },
     },
   };
@@ -255,6 +254,8 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
       width: '20%',
       onHeaderCell: () => ({
         style: tableStyles.header,
+        className:
+          'bg-neutral-50 dark:bg-zinc-800 border-b border-neutral-300 dark:border-zinc-700 text-neutral-600 dark:text-zinc-300 border-t-0 border-x-0',
       }),
       onCell: () => ({
         style: tableStyles.cell,
@@ -267,6 +268,8 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
       width: '15%',
       onHeaderCell: () => ({
         style: tableStyles.header,
+        className:
+          'bg-neutral-50 dark:bg-zinc-800 border-b border-neutral-300 dark:border-zinc-700 text-neutral-600 dark:text-zinc-300 border-t-0 border-x-0',
       }),
       onCell: () => ({
         style: tableStyles.cell,
@@ -281,6 +284,8 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
       width: '40%',
       onHeaderCell: () => ({
         style: tableStyles.header,
+        className:
+          'bg-neutral-50 dark:bg-zinc-800 border-b border-neutral-300 dark:border-zinc-700 text-neutral-600 dark:text-zinc-300 border-t-0 border-x-0',
       }),
       onCell: () => ({
         style: tableStyles.cell,
@@ -306,6 +311,8 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
       align: 'center' as const,
       onHeaderCell: () => ({
         style: tableStyles.header,
+        className:
+          'bg-neutral-50 dark:bg-zinc-800 border-b border-neutral-300 dark:border-zinc-700 text-neutral-600 dark:text-zinc-300 border-t-0 border-x-0',
       }),
       onCell: () => ({
         style: tableStyles.cell,
@@ -326,6 +333,8 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
       align: 'center' as const,
       onHeaderCell: () => ({
         style: tableStyles.header,
+        className:
+          'bg-neutral-50 dark:bg-zinc-800 border-b border-neutral-300 dark:border-zinc-700 text-neutral-600 dark:text-zinc-300 border-t-0 border-x-0',
       }),
       onCell: () => ({
         style: tableStyles.cell,
@@ -357,7 +366,10 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
       style={{ height: '100%', display: 'flex', flexDirection: 'column', padding: '0 1px' }}
     >
       <div className="flex justify-between items-center mb-5" style={{ padding: '0 4px' }}>
-        <h2 style={{ fontSize: '18px', fontWeight: 500, margin: 0 }}>
+        <h2
+          style={{ fontSize: '18px', fontWeight: 500, margin: 0 }}
+          className="text-gray-900 dark:text-gray-100"
+        >
           {t('settings.mcpServer.title')}
         </h2>
         <Space>
@@ -389,6 +401,7 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
           dataSource={mcpServers}
           columns={columns}
           rowKey="name"
+          bordered
           pagination={false}
           className="mcp-server-table"
           style={{ borderRadius: '8px' }}
@@ -417,13 +430,17 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
               }
 
               return (
-                <div className="mcp-server-tools py-4 px-5" style={{ background: '#f9f9f9' }}>
+                <div className="mcp-server-tools py-4 px-5">
                   <div className="mb-3">
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                       <ToolOutlined
                         style={{ marginRight: '8px', color: '#1677ff', fontSize: '16px' }}
                       />
-                      <Typography.Text strong style={{ fontSize: '14px' }}>
+                      <Typography.Text
+                        strong
+                        style={{ fontSize: '14px' }}
+                        className="text-gray-800 dark:text-gray-200"
+                      >
                         {tools.length > 0
                           ? t('settings.mcpServer.availableToolsPrefix')
                           : t('settings.mcpServer.noToolsAvailable')}
