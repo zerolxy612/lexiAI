@@ -35,7 +35,7 @@ export const LinkSelector = ({ open, onOpenChange, triggerEditor }: LinkSelector
   const inputRef = useRef<InputRef>(null);
   const { editor: currentEditor } = useEditor();
   const editor = triggerEditor || currentEditor;
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState<string>(editor?.getAttributes('link').href ?? '');
 
   const handleSubmit = () => {
     const url = getUrlFromString(inputValue);
