@@ -295,15 +295,15 @@ export class Agent extends BaseSkill {
 
       // Build the graph step-by-step, using 'as typeof workflow' to maintain the broad type.
       // @ts-ignore - Suppressing persistent type error with addNode and runnable type mismatch
-      workflow = workflow.addNode('llm', llmNodeForCachedGraph) as typeof workflow;
+      workflow = workflow.addNode('llm', llmNodeForCachedGraph);
       // @ts-ignore - Suppressing persistent type error with addEdge and node name mismatch
-      workflow = workflow.addEdge(START, 'llm') as typeof workflow;
+      workflow = workflow.addEdge(START, 'llm');
 
       if (mcpSuccessfullyInitializedAndToolsAvailable && actualToolNodeInstance) {
         // @ts-ignore - Suppressing persistent type error with addNode and runnable type mismatch
-        workflow = workflow.addNode('tools', actualToolNodeInstance) as typeof workflow;
+        workflow = workflow.addNode('tools', actualToolNodeInstance);
         // @ts-ignore - Suppressing persistent type error with addEdge and node name mismatch
-        workflow = workflow.addEdge('tools', 'llm') as typeof workflow; // Output of tools goes back to LLM
+        workflow = workflow.addEdge('tools', 'llm'); // Output of tools goes back to LLM
 
         // addConditionalEdges does not return the graph instance, so no 'as typeof workflow' needed here
         // if the 'workflow' variable already has the correct comprehensive type.
@@ -324,7 +324,7 @@ export class Agent extends BaseSkill {
           'No MCP tools initialized or available. LLM output will directly go to END.',
         );
         // @ts-ignore - Suppressing persistent type error with addEdge and node name mismatch
-        workflow = workflow.addEdge('llm', END) as typeof workflow;
+        workflow = workflow.addEdge('llm', END);
       }
 
       // Compile the graph
@@ -437,7 +437,7 @@ export class Agent extends BaseSkill {
     }
   };
 
-  toRunnable(): any {
+  toRunnable() {
     const workflow = new StateGraph<GraphState>({
       channels: this.graphState,
     })
