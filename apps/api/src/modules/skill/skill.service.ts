@@ -493,9 +493,11 @@ export class SkillService {
     }
 
     param.skillName ||= 'commonQnA';
-    const skill = this.skillInventory.find((s) => s.name === param.skillName);
+    let skill = this.skillInventory.find((s) => s.name === param.skillName);
     if (!skill) {
-      throw new SkillNotFoundError(`skill ${param.skillName} not found`);
+      // throw new SkillNotFoundError(`skill ${param.skillName} not found`);
+      param.skillName = 'commonQnA';
+      skill = this.skillInventory.find((s) => s.name === param.skillName);
     }
 
     const purgeContext = (context: SkillContext) => {

@@ -46,6 +46,7 @@ interface CachedAgentComponents {
   toolNodeInstance: ToolNode<typeof MessagesAnnotation.State> | null;
   compiledLangGraphApp: any;
   mcpAvailable: boolean;
+  mcpServerNamesList: string[]; // Add mcpServerNamesList property
 }
 
 export class Agent extends BaseSkill {
@@ -198,11 +199,6 @@ export class Agent extends BaseSkill {
   private async getOrInitializeAgentComponents(user: User): Promise<CachedAgentComponents> {
     const userId = user?.uid ?? user?.email ?? JSON.stringify(user);
 
-    if (this.userAgentComponentsCache.has(userId)) {
-      this.engine.logger.log(`Using cached agent components for user ${userId}`);
-      return this.userAgentComponentsCache.get(userId)!;
-    }
-
     this.engine.logger.log(`Initializing new agent components for user ${userId}`);
 
     let mcpClientToCache: MultiServerMCPClient | null = null;
@@ -216,6 +212,28 @@ export class Agent extends BaseSkill {
         enabled: true,
       });
       const mcpServerList = mcpServersResponse?.data; // Access the 'data' property
+
+      const cachedAgentComponents = this.userAgentComponentsCache.get(userId);
+      const currentMcpServerNames = (mcpServerList?.map((server) => server.name) ?? []).sort();
+
+      if (cachedAgentComponents) {
+        const cachedMcpServerNames = cachedAgentComponents.mcpServerNamesList;
+
+        if (JSON.stringify(currentMcpServerNames) === JSON.stringify(cachedMcpServerNames)) {
+          this.engine.logger.log(
+            `Using cached agent components for user ${userId} as MCP server list is unchanged.`,
+          );
+          return cachedAgentComponents;
+        } else {
+          this.engine.logger.warn(
+            `MCP server list changed for user ${userId}. Cached: ${JSON.stringify(
+              cachedMcpServerNames ?? [],
+            )}, Current: ${JSON.stringify(currentMcpServerNames)}. Re-initializing components.`,
+          );
+        }
+      }
+
+      await this.dispose(userId);
 
       if (!mcpServerList || mcpServerList.length === 0) {
         this.engine.logger.warn(
@@ -266,6 +284,8 @@ export class Agent extends BaseSkill {
                 closeError,
               ),
             );
+          await this.dispose(userId);
+
           throw mcpError;
         }
       }
@@ -337,6 +357,7 @@ export class Agent extends BaseSkill {
         toolNodeInstance: actualToolNodeInstance,
         compiledLangGraphApp: compiledGraph, // Store the compiled graph
         mcpAvailable: mcpSuccessfullyInitializedAndToolsAvailable,
+        mcpServerNamesList: currentMcpServerNames,
       };
 
       this.userAgentComponentsCache.set(userId, components);
@@ -358,6 +379,7 @@ export class Agent extends BaseSkill {
       if (error instanceof Error && error.stack) {
         this.engine.logger.error('Error stack for new components initialization:', error.stack);
       }
+      await this.dispose(userId);
       throw new Error('Failed to initialize agent components');
     }
   }
@@ -449,11 +471,20 @@ export class Agent extends BaseSkill {
     return workflow.compile();
   }
 
-  public async dispose(): Promise<void> {
+  public async dispose(_userId: string): Promise<void> {
+    if (_userId) {
+      const components = this.userAgentComponentsCache.get(_userId);
+
+      await components?.mcpClient?.close?.();
+
+      this.userAgentComponentsCache.delete(_userId);
+      return;
+    }
+
     this.engine.logger.log(`Disposing Agent (${this.name}) and closing all cached MCP clients...`);
     for (const [userId, components] of this.userAgentComponentsCache) {
       try {
-        await components.mcpClient?.close();
+        await components.mcpClient?.close?.();
         this.engine.logger.log(`Closed MCP client for user ${userId}`);
       } catch (e) {
         this.engine.logger.error(`Error closing MCP client for user ${userId} during dispose:`, e);
