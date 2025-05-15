@@ -84,7 +84,10 @@ export const SiderLogo = (props: {
           onClick={() => navigate('/')}
         >
           <img src={Logo} alt="Refly" className="h-8 w-8" />
-          <span className="text-xl font-bold text-black dark:text-gray-100" translate="no">
+          <span
+            className="text-xl font-bold text-black dark:text-gray-100 dark:text-gray-100"
+            translate="no"
+          >
             Refly
           </span>
         </div>

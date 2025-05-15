@@ -267,8 +267,11 @@ export const CanvasMenu = ({
         {
           key: 'canvas',
           label: (
-            <div className="flex items-center gap-2 text-sm">
-              <IconCanvas size={20} className="flex items-center justify-center text-gray-500" />
+            <div className="flex items-center gap-2 text-sm dark:text-gray-400">
+              <IconCanvas
+                size={20}
+                className="flex items-center justify-center text-gray-500 dark:text-gray-400"
+              />
               {t('project.canvas')}
             </div>
           ),
@@ -288,6 +291,7 @@ export const CanvasMenu = ({
                 onRemoveSelected={removeSelectedCanvasesFromProject}
                 addButtonNode={addButtonNode}
                 itemCountText={itemCountText}
+                className="hover:bg-gray-100 dark:hover:bg-gray-800"
               />
               <div className="max-h-[20vh] overflow-y-auto px-3">
                 {isFetching ? (
@@ -321,9 +325,10 @@ export const CanvasMenu = ({
                     renderItem={(item) => (
                       <List.Item
                         className={cn(
-                          '!py-1 !px-2 rounded-md hover:bg-gray-50 cursor-pointer',
-                          canvasId === item.id ? 'bg-gray-100' : '',
-                          selectedCanvases.some((canvas) => canvas.id === item.id) && 'bg-gray-50',
+                          '!py-1 !px-2 rounded-md hover:bg-gray-50 cursor-pointer dark:hover:bg-gray-900',
+                          canvasId === item.id ? 'bg-gray-100  dark:bg-gray-800' : '',
+                          selectedCanvases.some((canvas) => canvas.id === item.id) &&
+                            'bg-gray-50 dark:bg-gray-900',
                         )}
                         onMouseEnter={() => handleCanvasHover(item.id)}
                         onMouseLeave={() => handleCanvasHover(null)}
@@ -331,9 +336,11 @@ export const CanvasMenu = ({
                       >
                         <div className="w-full relative">
                           <div className="flex items-center gap-2">
-                            <IconCanvas className={cn(iconClassName, 'text-gray-500')} />
+                            <IconCanvas
+                              className={cn(iconClassName, 'text-gray-500 dark:text-gray-400')}
+                            />
                             <Text
-                              className="text-[13px] text-gray-700"
+                              className="text-[13px] text-gray-700 dark:text-gray-200"
                               ellipsis={{
                                 tooltip: { placement: 'right' },
                               }}
@@ -347,7 +354,7 @@ export const CanvasMenu = ({
                               isMultiSelectMode || hoveredCanvasId === item.id
                                 ? 'opacity-100'
                                 : 'opacity-0',
-                              isMultiSelectMode ? '' : 'bg-gray-50',
+                              isMultiSelectMode ? '' : 'bg-gray-50 dark:bg-gray-900',
                             )}
                           >
                             <Checkbox

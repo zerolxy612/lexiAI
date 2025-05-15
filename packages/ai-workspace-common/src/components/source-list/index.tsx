@@ -83,7 +83,10 @@ const SourceItem = ({ source, index }: { source: Source; index: number }) => {
       overlayClassName="search-result-popover"
     >
       <div
-        className="flex relative flex-col text-xs rounded-lg source-list-item cursor-pointer hover:bg-gray-50 border border-solid border-black/10 transition-all p-2"
+        className="flex relative flex-col text-xs rounded-lg source-list-item cursor-pointer 
+        hover:bg-gray-50 dark:hover:bg-gray-900
+        border border-solid border-black/10 dark:border-white/10
+        transition-all p-2"
         key={index}
         onClick={handleClick}
       >
@@ -92,7 +95,7 @@ const SourceItem = ({ source, index }: { source: Source; index: number }) => {
           <div className="flex items-center gap-1 min-w-0 flex-1">
             <span className="flex-shrink-0">{index + 1} ·</span>
             <span
-              className="overflow-hidden text-ellipsis whitespace-nowrap font-medium text-zinc-950"
+              className="overflow-hidden text-ellipsis whitespace-nowrap font-medium text-zinc-950 dark:text-zinc-100"
               title={source?.title ?? ''}
             >
               {source?.title ?? ''}
@@ -139,7 +142,9 @@ const ViewMoreItem = ({
 
   return (
     <div
-      className="flex relative flex-col flex-wrap gap-2 justify-start items-start px-3 py-3 text-xs rounded-lg cursor-pointer hover:bg-gray-50 source-list-item view-more-item border border-solid border-black/10 transition-all dark:hover:bg-gray-900 dark:border-white/10"
+      className="flex relative flex-col flex-wrap gap-2 justify-start items-start px-3 py-3 text-xs rounded-lg cursor-pointer 
+      hover:bg-gray-50 source-list-item view-more-item border border-solid 
+      border-black/10 transition-all dark:hover:bg-gray-900 dark:border-white/10"
       onClick={() => {
         onClick?.();
       }}
