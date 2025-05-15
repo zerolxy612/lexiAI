@@ -42,7 +42,7 @@ const SourceItem = ({ source, index }: { source: Source; index: number }) => {
       {/* Title section */}
       <div className="flex items-center gap-2 mb-2">
         <h4
-          className="font-medium text-base m-0 break-words overflow-hidden text-ellipsis whitespace-nowrap max-w-[300px]"
+          className="font-medium text-base m-0 break-words overflow-hidden text-ellipsis whitespace-nowrap w-full dark:text-gray-200 dark:border-gray-700"
           title={source?.title ?? ''}
         >
           {source?.title ?? ''}
@@ -58,7 +58,7 @@ const SourceItem = ({ source, index }: { source: Source; index: number }) => {
             src={`https://www.google.com/s2/favicons?domain=${domain}&sz=${16}`}
           />
           <div
-            className="text-zinc-400 text-sm break-all overflow-hidden text-ellipsis whitespace-nowrap max-w-[250px]"
+            className="text-zinc-400 text-sm break-all overflow-hidden text-ellipsis whitespace-nowrap max-w-[250px] dark:text-gray-200"
             title={domain}
           >
             {domain}
@@ -68,7 +68,10 @@ const SourceItem = ({ source, index }: { source: Source; index: number }) => {
 
       {/* Content section */}
       <div className="content-body pt-0 max-h-[300px] overflow-y-auto">
-        <div className="line-clamp-6 overflow-hidden text-ellipsis" title={source.pageContent}>
+        <div
+          className="line-clamp-6 overflow-hidden text-ellipsis dark:text-gray-500"
+          title={source.pageContent}
+        >
           {source.pageContent}
         </div>
       </div>

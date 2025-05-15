@@ -21,6 +21,7 @@ import { CanvasActionDropdown } from '@refly-packages/ai-workspace-common/compon
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 import HeaderActions from '@refly-packages/ai-workspace-common/components/common/header-actions';
 import { AddSources } from '@refly-packages/ai-workspace-common/components/project/add-sources';
+import { useThemeStoreShallow } from '@refly-packages/ai-workspace-common/stores/theme';
 
 const { Text } = Typography;
 
@@ -108,6 +109,10 @@ export const CanvasMenu = ({
     projectId,
     afterCreateSuccess: onAddCanvasesSuccess,
   });
+
+  const { isDarkMode } = useThemeStoreShallow((state) => ({
+    isDarkMode: state.isDarkMode,
+  }));
 
   const [hoveredCanvasId, setHoveredCanvasId] = useState<string | null>(null);
   const [isSearchMode, setIsSearchMode] = useState(false);
@@ -262,7 +267,10 @@ export const CanvasMenu = ({
       defaultActiveKey={['canvas']}
       ghost
       expandIconPosition="end"
-      className="bg-white custom-collapse dark:bg-gray-900"
+      className={cn(
+        'bg-white custom-collapse dark:bg-gray-900',
+        isDarkMode ? 'dark-custom-collapse' : '',
+      )}
       items={[
         {
           key: 'canvas',
@@ -291,7 +299,6 @@ export const CanvasMenu = ({
                 onRemoveSelected={removeSelectedCanvasesFromProject}
                 addButtonNode={addButtonNode}
                 itemCountText={itemCountText}
-                className="hover:bg-gray-100 dark:hover:bg-gray-800"
               />
               <div className="max-h-[20vh] overflow-y-auto px-3">
                 {isFetching ? (
@@ -325,7 +332,7 @@ export const CanvasMenu = ({
                     renderItem={(item) => (
                       <List.Item
                         className={cn(
-                          '!py-1 !px-2 rounded-md hover:bg-gray-50 cursor-pointer dark:hover:bg-gray-900',
+                          '!py-1 !px-2 rounded-md hover:bg-gray-50 cursor-pointer dark:hover:bg-gray-700',
                           canvasId === item.id ? 'bg-gray-100  dark:bg-gray-800' : '',
                           selectedCanvases.some((canvas) => canvas.id === item.id) &&
                             'bg-gray-50 dark:bg-gray-900',
@@ -354,7 +361,7 @@ export const CanvasMenu = ({
                               isMultiSelectMode || hoveredCanvasId === item.id
                                 ? 'opacity-100'
                                 : 'opacity-0',
-                              isMultiSelectMode ? '' : 'bg-gray-50 dark:bg-gray-900',
+                              isMultiSelectMode ? '' : 'bg-gray-50 dark:bg-gray-700',
                             )}
                           >
                             <Checkbox
