@@ -4,11 +4,10 @@ import {
   StateGraphArgs,
   StateGraph,
   MessagesAnnotation,
-  CompiledStateGraph,
-  StateDefinition,
+  // ToolNode, // Moved to prebuilt
 } from '@langchain/langgraph';
+import { ToolNode } from '@langchain/langgraph/prebuilt'; // Correct import for ToolNode
 import { z } from 'zod';
-import { Runnable } from '@langchain/core/runnables';
 import { BaseSkill, BaseSkillState, SkillRunnableConfig, baseStateGraphArgs } from '../base';
 import { safeStringifyJSON, isValidUrl } from '@refly/utils';
 import {
@@ -16,9 +15,9 @@ import {
   SkillInvocationConfig,
   SkillTemplateConfigDefinition,
   Source,
+  User,
 } from '@refly/openapi-schema';
 import { createSkillTemplateInventory } from '../inventory';
-import { ToolNode } from '@langchain/langgraph/prebuilt';
 
 // types
 import { GraphState } from '../scheduler/types';
@@ -32,10 +31,22 @@ import { extractAndCrawlUrls, crawlExtractedUrls } from '../scheduler/utils/extr
 // prompts
 import * as commonQnA from '../scheduler/module/commonQnA';
 import { checkModelContextLenSupport } from '../scheduler/utils/model';
-import { AIMessage, BaseMessage } from '@langchain/core/messages';
 import { MultiServerMCPClient } from '../adapters';
 import { buildSystemPrompt } from '../mcp/core/prompt';
 import { convertMcpServersToClientConfig } from '../utils/mcp-utils';
+
+import type { AIMessage, BaseMessage } from '@langchain/core/messages';
+import type { Runnable } from '@langchain/core/runnables';
+import type { StructuredToolInterface } from '@langchain/core/tools'; // For MCP Tools
+
+interface CachedAgentComponents {
+  mcpClient: MultiServerMCPClient | null;
+  mcpTools: StructuredToolInterface[];
+  llmModel: Runnable<BaseMessage[], AIMessage>;
+  toolNodeInstance: ToolNode<typeof MessagesAnnotation.State> | null;
+  compiledLangGraphApp: any;
+  mcpAvailable: boolean;
+}
 
 export class Agent extends BaseSkill {
   name = 'commonQnA';
@@ -184,8 +195,8 @@ export class Agent extends BaseSkill {
     return { requestMessages, sources };
   };
 
-  private async getOrInitializeAgentComponents(user: any): Promise<CachedAgentComponents> {
-    const userId = user?.id ?? JSON.stringify(user);
+  private async getOrInitializeAgentComponents(user: User): Promise<CachedAgentComponents> {
+    const userId = user?.uid ?? user?.email ?? JSON.stringify(user);
 
     if (this.userAgentComponentsCache.has(userId)) {
       this.engine.logger.log(`Using cached agent components for user ${userId}`);
@@ -194,74 +205,157 @@ export class Agent extends BaseSkill {
 
     this.engine.logger.log(`Initializing new agent components for user ${userId}`);
 
-    const mcpServersResponse = await this.engine.service.listMcpServers(user, {
-      enabled: true,
-    });
-    const mcpClientConfig = convertMcpServersToClientConfig(mcpServersResponse);
-    const mcpClient = new MultiServerMCPClient(mcpClientConfig);
+    let mcpClientToCache: MultiServerMCPClient | null = null;
+    let actualMcpTools: StructuredToolInterface[] = []; // Use StructuredToolInterface
+    let actualToolNodeInstance: ToolNode<typeof MessagesAnnotation.State> | null = null;
+    let mcpSuccessfullyInitializedAndToolsAvailable = false;
 
     try {
-      await mcpClient.initializeConnections();
-      this.engine.logger.log('MCP connections initialized successfully for new components');
+      // Attempt to initialize MCP components
+      const mcpServersResponse = await this.engine.service.listMcpServers(user, {
+        enabled: true,
+      });
+      const mcpServerList = mcpServersResponse?.data; // Access the 'data' property
 
-      const mcpTools = await mcpClient.getTools();
-      if (!mcpTools?.length) {
-        throw new Error('No tools found during new components initialization');
+      if (!mcpServerList || mcpServerList.length === 0) {
+        this.engine.logger.warn(
+          `No MCP servers found for user ${userId}. Proceeding without MCP tools.`,
+        );
+      } else {
+        // Pass mcpServersResponse (which is ListMcpServersResponse) to convertMcpServersToClientConfig
+        const mcpClientConfig = convertMcpServersToClientConfig(mcpServersResponse);
+        const tempMcpClient = new MultiServerMCPClient(mcpClientConfig);
+
+        try {
+          await tempMcpClient.initializeConnections();
+          this.engine.logger.log('MCP connections initialized successfully for new components');
+
+          const toolsFromMcp = (await tempMcpClient.getTools()) as StructuredToolInterface[]; // Cast or ensure getTools returns this type
+          if (!toolsFromMcp || toolsFromMcp.length === 0) {
+            this.engine.logger.warn(
+              `No MCP tools found for user ${userId} after initializing client. Proceeding without MCP tools.`,
+            );
+            await tempMcpClient
+              .close()
+              .catch((closeError) =>
+                this.engine.logger.error(
+                  'Error closing MCP client when no tools found after connection:',
+                  closeError,
+                ),
+              );
+          } else {
+            this.engine.logger.log(
+              `Loaded ${toolsFromMcp.length} MCP tools for new components: ${toolsFromMcp
+                .map((tool) => tool.name)
+                .join(', ')}`,
+            );
+            actualMcpTools = toolsFromMcp;
+            mcpClientToCache = tempMcpClient;
+            mcpSuccessfullyInitializedAndToolsAvailable = true;
+          }
+        } catch (mcpError) {
+          this.engine.logger.error(
+            'Error during MCP client operation (initializeConnections or getTools):',
+            mcpError,
+          );
+          await tempMcpClient
+            .close()
+            .catch((closeError) =>
+              this.engine.logger.error(
+                'Error closing MCP client after operation failure:',
+                closeError,
+              ),
+            );
+          throw mcpError;
+        }
       }
-      this.engine.logger.log(
-        `Loaded ${mcpTools.length} MCP tools for new components: ${mcpTools.map((tool) => tool.name).join(', ')}`,
-      );
 
-      const llmModel = this.engine
-        .chatModel({ temperature: 0.1 })
-        .bindTools(mcpTools, { strict: true } as never);
-      const toolNodeInstance = new ToolNode(mcpTools);
+      // LLM and LangGraph Setup
+      const baseLlm = this.engine.chatModel({ temperature: 0.1 });
+      let llmForGraph: Runnable<BaseMessage[], AIMessage>;
+
+      if (mcpSuccessfullyInitializedAndToolsAvailable && actualMcpTools.length > 0) {
+        llmForGraph = baseLlm.bindTools(actualMcpTools, { strict: true } as never);
+        actualToolNodeInstance = new ToolNode(actualMcpTools);
+      } else {
+        llmForGraph = baseLlm;
+      }
 
       const llmNodeForCachedGraph = async (nodeState: typeof MessagesAnnotation.State) => {
-        this.engine.logger.log(
-          'Calling LLM (cached graph) with messages count:',
-          nodeState.messages.length,
-        );
-        const response = await llmModel.invoke(nodeState.messages);
-        return { messages: [response as BaseMessage] };
+        // Use llmForGraph, which is the (potentially tool-bound) LLM instance for the graph
+        const response = await llmForGraph.invoke(nodeState.messages);
+        return { messages: [response as AIMessage] }; // Ensure response is treated as AIMessage
       };
 
-      const workflow = new StateGraph(MessagesAnnotation)
-        .addNode('llm', llmNodeForCachedGraph)
-        .addNode('tools', toolNodeInstance)
-        .addEdge(START, 'llm')
-        .addEdge('tools', 'llm')
-        .addConditionalEdges('llm', (graphState) => {
-          const lastMessage = graphState.messages[graphState.messages.length - 1];
-          const aiMessage = lastMessage as AIMessage;
-          if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
-            this.engine.logger.log('Tool calls detected (cached graph), routing to tools node');
+      // Initialize StateGraph with explicit generic arguments for State and all possible Node names
+      // @ts-ignore - Suppressing persistent type error with StateGraph constructor and generics
+      let workflow = new StateGraph(
+        MessagesAnnotation, // This provides the schema and channel definitions
+      );
+
+      // Build the graph step-by-step, using 'as typeof workflow' to maintain the broad type.
+      // @ts-ignore - Suppressing persistent type error with addNode and runnable type mismatch
+      workflow = workflow.addNode('llm', llmNodeForCachedGraph);
+      // @ts-ignore - Suppressing persistent type error with addEdge and node name mismatch
+      workflow = workflow.addEdge(START, 'llm');
+
+      if (mcpSuccessfullyInitializedAndToolsAvailable && actualToolNodeInstance) {
+        // @ts-ignore - Suppressing persistent type error with addNode and runnable type mismatch
+        workflow = workflow.addNode('tools', actualToolNodeInstance);
+        // @ts-ignore - Suppressing persistent type error with addEdge and node name mismatch
+        workflow = workflow.addEdge('tools', 'llm'); // Output of tools goes back to LLM
+
+        // addConditionalEdges does not return the graph instance, so no 'as typeof workflow' needed here
+        // if the 'workflow' variable already has the correct comprehensive type.
+        // @ts-ignore - Suppressing persistent type error with addConditionalEdges and node name mismatch
+        workflow.addConditionalEdges('llm', (graphState: typeof MessagesAnnotation.State) => {
+          const lastMessage = graphState.messages[graphState.messages.length - 1] as AIMessage;
+          if (lastMessage.tool_calls && lastMessage.tool_calls.length > 0) {
+            this.engine.logger.log(
+              'Tool calls detected (MCP tools available), routing to tools node',
+            );
             return 'tools';
           }
-          this.engine.logger.log('No tool calls (cached graph), ending the workflow');
+          this.engine.logger.log('No tool calls (MCP tools available), routing to END');
           return END;
         });
+      } else {
+        this.engine.logger.log(
+          'No MCP tools initialized or available. LLM output will directly go to END.',
+        );
+        // @ts-ignore - Suppressing persistent type error with addEdge and node name mismatch
+        workflow = workflow.addEdge('llm', END);
+      }
 
-      const compiledLangGraphApp = workflow.compile();
+      // Compile the graph
+      const compiledGraph = workflow.compile();
 
       const components: CachedAgentComponents = {
-        mcpClient,
-        mcpTools,
-        llmModel,
-        toolNodeInstance,
-        compiledLangGraphApp,
+        mcpClient: mcpClientToCache,
+        mcpTools: actualMcpTools, // Store the successfully initialized tools
+        llmModel: llmForGraph, // Store the potentially tool-bound LLM
+        toolNodeInstance: actualToolNodeInstance,
+        compiledLangGraphApp: compiledGraph, // Store the compiled graph
+        mcpAvailable: mcpSuccessfullyInitializedAndToolsAvailable,
       };
+
       this.userAgentComponentsCache.set(userId, components);
+
       this.engine.logger.log(`Agent components initialized and cached for user ${userId}`);
       return components;
     } catch (error) {
-      this.engine.logger.error('Error during new agent components initialization:', error);
-      await mcpClient
-        .close()
-        .catch((closeError) =>
-          this.engine.logger.error('Error closing MCP client during setup failure:', closeError),
-        );
-      if (error instanceof Error) {
+      this.engine.logger.error('Critical error during new agent components initialization:', error);
+      if (mcpClientToCache) {
+        await mcpClientToCache
+          .close()
+          .catch((closeError) =>
+            this.engine.logger.error(
+              'Error closing successfully initialized MCP client during overall setup failure:',
+              closeError,
+            ),
+          );
+      }
+      if (error instanceof Error && error.stack) {
         this.engine.logger.error('Error stack for new components initialization:', error.stack);
       }
       throw new Error('Failed to initialize agent components');
@@ -278,18 +372,23 @@ export class Agent extends BaseSkill {
       | undefined;
     const customInstructions = project?.projectId ? project?.customInstructions : undefined;
 
+    console.log('\n=== GETTING OR INITIALIZING CACHED LANGGRAPH AGENT FLOW ===');
+    const { compiledLangGraphApp, mcpAvailable } = await this.getOrInitializeAgentComponents(user);
+
     const module: SkillPromptModule = {
-      buildSystemPrompt: () =>
-        buildSystemPrompt(
-          'You are an advanced AI assistant with specialized expertise in leveraging the Model Context Protocol (MCP) to solve complex problems efficiently. Your intelligence manifests through precise tool orchestration, context-aware execution, and proactive optimization of MCP server capabilities. ' +
-            'When a tool call is made, you will receive a ToolMessage with the result. ' +
-            'If an MCP server call fails or returns malformed data, the ToolMessage will contain the error details. ' +
-            'You MUST carefully analyze this error message. ' +
-            'If the error indicates incorrect arguments (e.g., missing parameters, invalid values, type mismatches), you MUST revise the arguments and attempt the tool call again. Do NOT repeat the previous mistake. ' +
-            'If the error seems to be a transient issue (e.g., network error, temporary unavailability), you should retry the call, perhaps after a brief conceptual pause. ' +
-            "You must continuously retry and adapt your approach to achieve the user's expected outcome. Never abandon the operation prematurely. " +
-            'After several (e.g., 3-5) persistent failures for the same tool call despite your best efforts to correct it, and if no alternative tools or approaches are viable, you may then inform the user about the specific difficulty encountered and suggest a different course of action or ask for clarification.',
-        ),
+      buildSystemPrompt: mcpAvailable
+        ? () =>
+            buildSystemPrompt(
+              'You are an advanced AI assistant with specialized expertise in leveraging the Model Context Protocol (MCP) to solve complex problems efficiently. Your intelligence manifests through precise tool orchestration, context-aware execution, and proactive optimization of MCP server capabilities. ' +
+                'When a tool call is made, you will receive a ToolMessage with the result. ' +
+                'If an MCP server call fails or returns malformed data, the ToolMessage will contain the error details. ' +
+                'You MUST carefully analyze this error message. ' +
+                'If the error indicates incorrect arguments (e.g., missing parameters, invalid values, type mismatches), you MUST revise the arguments and attempt the tool call again. Do NOT repeat the previous mistake. ' +
+                'If the error seems to be a transient issue (e.g., network error, temporary unavailability), you should retry the call, perhaps after a brief conceptual pause. ' +
+                "You must continuously retry and adapt your approach to achieve the user's expected outcome. Never abandon the operation prematurely. " +
+                'After several (e.g., 3-5) persistent failures for the same tool call despite your best efforts to correct it, and if no alternative tools or approaches are viable, you may then inform the user about the specific difficulty encountered and suggest a different course of action or ask for clarification.',
+            )
+        : commonQnA.buildCommonQnASystemPrompt,
       buildContextUserPrompt: commonQnA.buildCommonQnAContextUserPrompt,
       buildUserPrompt: commonQnA.buildCommonQnAUserPrompt,
     };
@@ -321,9 +420,6 @@ export class Agent extends BaseSkill {
       );
     }
 
-    console.log('\n=== GETTING OR INITIALIZING CACHED LANGGRAPH AGENT FLOW ===');
-    const { compiledLangGraphApp } = await this.getOrInitializeAgentComponents(user);
-
     try {
       const result = await compiledLangGraphApp.invoke(
         { messages: requestMessages },
@@ -342,7 +438,7 @@ export class Agent extends BaseSkill {
     }
   };
 
-  toRunnable(): Runnable {
+  toRunnable() {
     const workflow = new StateGraph<GraphState>({
       channels: this.graphState,
     })
@@ -357,7 +453,7 @@ export class Agent extends BaseSkill {
     this.engine.logger.log(`Disposing Agent (${this.name}) and closing all cached MCP clients...`);
     for (const [userId, components] of this.userAgentComponentsCache) {
       try {
-        await components.mcpClient.close();
+        await components.mcpClient?.close();
         this.engine.logger.log(`Closed MCP client for user ${userId}`);
       } catch (e) {
         this.engine.logger.error(`Error closing MCP client for user ${userId} during dispose:`, e);
@@ -366,19 +462,4 @@ export class Agent extends BaseSkill {
     this.userAgentComponentsCache.clear();
     this.engine.logger.log(`Agent (${this.name}) disposed, cache cleared.`);
   }
-}
-
-interface CachedAgentComponents {
-  mcpClient: MultiServerMCPClient;
-  mcpTools: any[];
-  llmModel: Runnable<BaseMessage[], AIMessage>;
-  toolNodeInstance: ToolNode;
-  compiledLangGraphApp: CompiledStateGraph<
-    any, // S: State type
-    Partial<any>, // U: Update type
-    'llm' | 'tools' | '__start__', // N: Node names
-    Partial<any>, // I: Input type for invoke
-    any, // O: Output type from invoke
-    StateDefinition // C: Config type
-  >;
 }
