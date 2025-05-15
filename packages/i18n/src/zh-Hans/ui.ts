@@ -659,7 +659,7 @@ const translations = {
     publishTemplateTooltip: '将画布发布为模板',
     linkShare: '链接分享',
     updateCanvasPermissionSuccess: '更新画布权限成功',
-    copyLinkSuccess: '分享链接已复制到剪切板！',
+    copyLinkSuccess: '分享链接已复制到剪贴板！',
     accessOptions: {
       anyone: '互联网获得链接的人',
       anyoneDescription: '获得此链接的人均可查看',
@@ -1755,7 +1755,7 @@ const translations = {
       batchImport: '批量导入',
       batchImportTitle: '批量导入 MCP 服务器',
       batchImportDescription:
-        '通过提供 JSON 数组一次性导入多个 MCP 服务器。数组中的每个对象应代表一个服务器配置。',
+        '通过提供 JSON 数组一次性导入多个 MCP 服务器。数组中的每个对象应代表一个服务器配置。请注意：Web 版本不支持 stdio 协议。',
       importServers: '导入服务器',
       batchImportSuccess: '成功导入 {{total}} 个服务器中的 {{count}} 个',
       batchImportPartialError: '{{total}} 个服务器中的 {{count}} 个导入失败',

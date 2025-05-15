@@ -1968,7 +1968,7 @@ const translations = {
       batchImport: 'Batch Import',
       batchImportTitle: 'Import Multiple MCP Servers',
       batchImportDescription:
-        'Import multiple MCP servers at once by providing a JSON array. Each object in the array should represent a server configuration.',
+        'Import multiple MCP servers at once by providing a JSON array. Each object in the array should represent a server configuration. Please note: The web version does not support the stdio protocol.',
       importServers: 'Import Servers',
       batchImportSuccess: 'Successfully imported {{count}} of {{total}} servers',
       batchImportPartialError: 'Failed to import {{count}} of {{total}} servers',
