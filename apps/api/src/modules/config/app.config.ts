@@ -33,6 +33,7 @@ export default () => ({
     password: process.env.REDIS_PASSWORD,
   },
   objectStorage: {
+    reclaimPolicy: process.env.OBJECT_STORAGE_RECLAIM_POLICY || 'retain', // 'retain' or 'delete'
     backend: process.env.OBJECT_STORAGE_BACKEND || 'minio',
     fs: {
       root: process.env.OBJECT_STORAGE_FS_ROOT || path.join(process.cwd(), 'storage'),
@@ -88,7 +89,7 @@ export default () => ({
     email: {
       enabled: process.env.EMAIL_AUTH_ENABLED === 'true' || true,
       sender: process.env.EMAIL_SENDER || 'Refly <notifications@refly.ai>',
-      resendApiKey: process.env.RESEND_API_KEY,
+      resendApiKey: process.env.RESEND_API_KEY || 're_123',
     },
     github: {
       enabled: process.env.GITHUB_AUTH_ENABLED === 'true' || false,

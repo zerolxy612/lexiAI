@@ -76,7 +76,12 @@
       "**/build/**",
       "**/generated/**",
       "packages/wxt/**",
-      "**/common/temp/**"
+      "**/common/temp/**",
+      "**/*.timestamp-*",
+      "**/*.mjs",
+      "**/.next/**",
+      "**/tmp/**",
+      "**/.swc/**"
     ]
   }
 }

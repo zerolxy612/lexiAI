@@ -6410,6 +6410,9 @@ components:
         isDefault:
           type: boolean
           description: Whether this model is the default model
+        group:
+          type: string
+          description: Model group
     ListModelsResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -6583,6 +6586,9 @@ components:
         order:
           type: number
           description: Provider item order
+        group:
+          type: string
+          description: Provider item group
     ListProvidersResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -6675,6 +6681,9 @@ components:
         order:
           type: number
           description: Provider item order
+        group:
+          type: string
+          description: Provider item group
     UpsertProviderItemResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'

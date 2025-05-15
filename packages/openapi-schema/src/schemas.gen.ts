@@ -5455,6 +5455,10 @@ export const ModelInfoSchema = {
       type: 'boolean',
       description: 'Whether this model is the default model',
     },
+    group: {
+      type: 'string',
+      description: 'Model group',
+    },
   },
 } as const;
 
@@ -5681,6 +5685,10 @@ export const ProviderItemSchema = {
       type: 'number',
       description: 'Provider item order',
     },
+    group: {
+      type: 'string',
+      description: 'Provider item group',
+    },
   },
 } as const;
 
@@ -5835,6 +5843,10 @@ export const UpsertProviderItemRequestSchema = {
     order: {
       type: 'number',
       description: 'Provider item order',
+    },
+    group: {
+      type: 'string',
+      description: 'Provider item group',
     },
   },
 } as const;

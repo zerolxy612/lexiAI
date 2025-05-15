@@ -10,8 +10,7 @@ import {
   IconRight,
   IconPlus,
 } from '@refly-packages/ai-workspace-common/components/common/icon';
-import { Form } from '@arco-design/web-react';
-import { Button } from 'antd';
+import { Form, Button } from 'antd';
 import { ConfigManager } from '@refly-packages/ai-workspace-common/components/canvas/launchpad/config-manager';
 import { Actions } from './action';
 import { useChatStoreShallow } from '@refly-packages/ai-workspace-common/stores/chat';
@@ -172,7 +171,7 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
         )}
       />
       <div
-        className="w-full h-full flex bg-white/90 overflow-y-auto dark:bg-gray-900/90"
+        className="w-full h-full flex bg-white/90 overflow-y-auto dark:bg-gray-900/90 dark:bg-gray-900/90"
         id="front-page-scrollable-div"
       >
         <div
@@ -285,7 +284,7 @@ export const FrontPage = memo(({ projectId }: { projectId: string | null }) => {
               {presetScenarios.map((scenario) => (
                 <div
                   key={scenario.id}
-                  className={`bg-white/90 backdrop-blur-sm rounded-md ring-1 dark:bg-gray-900/90 ${
+                  className={`bg-white/90 backdrop-blur-sm rounded-md ring-1 dark:bg-gray-800/90 ${
                     activeScenarioId === scenario.id
                       ? 'ring-green-500'
                       : 'ring-gray-200 dark:ring-gray-700'

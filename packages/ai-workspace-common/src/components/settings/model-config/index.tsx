@@ -15,9 +15,10 @@ import {
   Divider,
   Tag,
   Modal,
+  Collapse,
 } from 'antd';
 import { Spin } from '@refly-packages/ai-workspace-common/components/common/spin';
-import { LuPlus, LuSearch, LuGripVertical } from 'react-icons/lu';
+import { LuPlus, LuSearch } from 'react-icons/lu';
 import { cn } from '@refly-packages/ai-workspace-common/utils/cn';
 import {
   IconDelete,
@@ -26,8 +27,8 @@ import {
 } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { LLMModelConfig, ProviderCategory, ProviderItem } from '@refly/openapi-schema';
 import { ModelIcon } from '@lobehub/icons';
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { modelEmitter } from '@refly-packages/ai-workspace-common/utils/event-emitter/model';
+import { useGroupModels } from '@refly-packages/ai-workspace-common/hooks/use-group-models';
 import { ModelFormModal } from './model-form';
 import { useUserStoreShallow } from '@refly-packages/ai-workspace-common/stores/user';
 
@@ -37,6 +38,13 @@ const MODEL_TIER_TO_COLOR = {
   free: 'green',
   t1: 'blue',
   t2: 'orange',
+};
+
+const panelStyle: React.CSSProperties = {
+  marginBottom: 12,
+  borderRadius: 8,
+  border: 'none',
+  background: 'rgba(0,0,0, 0.02)',
 };
 
 const ActionDropdown = ({
@@ -105,16 +113,12 @@ const ModelItem = memo(
     onDelete,
     onToggleEnabled,
     isSubmitting,
-    index,
-    draggable = true,
   }: {
     model: ProviderItem;
     onEdit: (model: ProviderItem) => void;
     onDelete: (model: ProviderItem) => void;
     onToggleEnabled: (model: ProviderItem, enabled: boolean) => void;
     isSubmitting: boolean;
-    index: number;
-    draggable?: boolean;
   }) => {
     const { t } = useTranslation();
 
@@ -138,68 +142,49 @@ const ModelItem = memo(
     }, [model, onDelete]);
 
     return (
-      <Draggable draggableId={model.itemId} index={index}>
-        {(provided) => (
-          <div
-            ref={provided.innerRef}
-            {...provided.draggableProps}
-            className="relative mb-3 px-5 py-0.5 hover:bg-gray-50 rounded-md cursor-pointer border border-solid border-gray-100 group"
-          >
-            <div className="flex items-center justify-between flex-wrap gap-3">
-              <div className="flex-1 flex items-center gap-2">
-                {draggable && (
-                  <div
-                    {...provided.dragHandleProps}
-                    className="absolute left-0 top-0 h-full flex items-center p-1 text-gray-400 opacity-0 group-hover:opacity-100 hover:text-green-600 transition-opacity duration-200"
-                  >
-                    <LuGripVertical size={16} className="flex items-center" />
-                  </div>
-                )}
+      <div className="bg-white relative mb-3 px-5 py-0.5 rounded-md cursor-pointer border border-solid border-gray-100 group hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 dark:border-gray-700">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex-1 flex items-center gap-2">
+            <ModelIcon
+              model={(model.config as LLMModelConfig)?.modelId || model.name}
+              size={18}
+              type={'color'}
+            />
+            <div className="font-medium">{model.name}</div>
 
-                <ModelIcon
-                  model={(model.config as LLMModelConfig)?.modelId || model.name}
-                  size={18}
-                  type={'color'}
-                />
-                <div className="font-medium">{model.name}</div>
+            <Divider type="vertical" />
+            <div className="font-normal text-xs text-gray-500">{model.provider?.name}</div>
 
+            {model.tier && (
+              <>
                 <Divider type="vertical" />
-                <div className="font-normal text-xs text-gray-500">{model.provider?.name}</div>
-
-                {model.tier && (
-                  <>
-                    <Divider type="vertical" />
-                    <Tag color={MODEL_TIER_TO_COLOR[model.tier]}>
-                      {t(`settings.modelTier.${model.tier}`)}
-                    </Tag>
-                  </>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2">
-                <ActionDropdown model={model} handleEdit={handleEdit} handleDelete={handleDelete} />
-
-                <Tooltip
-                  title={
-                    model.enabled
-                      ? t('settings.modelConfig.disable')
-                      : t('settings.modelConfig.enable')
-                  }
-                >
-                  <div onClick={handleSwitchWrapperClick} className="flex items-center">
-                    <Switch
-                      size="small"
-                      checked={model.enabled ?? false}
-                      onChange={handleToggleChange}
-                      loading={isSubmitting}
-                    />
-                  </div>
-                </Tooltip>
-              </div>
-            </div>
+                <Tag color={MODEL_TIER_TO_COLOR[model.tier]}>
+                  {t(`settings.modelTier.${model.tier}`)}
+                </Tag>
+              </>
+            )}
           </div>
-        )}
-      </Draggable>
+
+          <div className="flex items-center gap-2">
+            <ActionDropdown model={model} handleEdit={handleEdit} handleDelete={handleDelete} />
+
+            <Tooltip
+              title={
+                model.enabled ? t('settings.modelConfig.disable') : t('settings.modelConfig.enable')
+              }
+            >
+              <div onClick={handleSwitchWrapperClick} className="flex items-center">
+                <Switch
+                  size="small"
+                  checked={model.enabled ?? false}
+                  onChange={handleToggleChange}
+                  loading={isSubmitting}
+                />
+              </div>
+            </Tooltip>
+          </div>
+        </div>
+      </div>
     );
   },
 );
@@ -216,6 +201,8 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingModel, setEditingModel] = useState<ProviderItem | null>(null);
+  const [activeCollapseKeys, setActiveCollapseKeys] = useState<string[]>([]);
+  const [userHasInteracted, setUserHasInteracted] = useState(false);
 
   const { userProfile, setUserProfile } = useUserStoreShallow((state) => ({
     userProfile: state.userProfile,
@@ -272,18 +259,6 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
     },
     [defaultModel, defaultPreferences, setUserProfile, userProfile, t],
   );
-
-  const batchUpdateProviderItems = async (items: ProviderItem[]) => {
-    const res = await getClient().batchUpdateProviderItems({
-      body: { items: items.map((item, index) => ({ ...item, order: index })) },
-    });
-    if (res.data.success) {
-      message.success(t('common.saveSuccess'));
-
-      // Emit event to refresh model list in other components
-      modelEmitter.emit('model:list:refetch', null);
-    }
-  };
 
   const getProviderItems = useCallback(async () => {
     setIsLoading(true);
@@ -344,6 +319,8 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
           className: 'hover:!text-green-600 hover:!border-green-600',
         },
       });
+    } else {
+      deleteProviderItem(model.itemId);
     }
   };
 
@@ -431,17 +408,36 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
     model?: ProviderItem,
   ) => {
     if (categoryType === 'llm') {
+      let updatedItems = [...modelItems];
       if (type === 'create') {
-        setModelItems([...modelItems, model]);
+        updatedItems = [...modelItems, model];
+        setModelItems(updatedItems);
       } else if (type === 'update') {
-        setModelItems([
+        updatedItems = [
           ...modelItems.map((item) => (item.itemId === model.itemId ? { ...model } : item)),
-        ]);
+        ];
+        setModelItems(updatedItems);
 
         const types = getDefaultModelTypes(model.itemId);
         if (types.length) {
           updateDefaultModel(types, model?.enabled ? model : null);
         }
+      }
+
+      if (model) {
+        setTimeout(() => {
+          const groups = handleGroupModelList(updatedItems);
+          const groupWithModel = groups.find((group) =>
+            group.models.some((m) => m.itemId === model.itemId),
+          );
+
+          if (groupWithModel) {
+            // Open the group containing the model
+            setActiveCollapseKeys((prev) =>
+              prev.includes(groupWithModel.key) ? prev : [...prev, groupWithModel.key],
+            );
+          }
+        }, 0);
       }
     } else if (categoryType === 'embedding') {
       setEmbedding(model);
@@ -455,34 +451,6 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
     modelEmitter.emit('model:list:refetch', null);
   };
 
-  const handleDragEnd = useCallback(
-    (result: DropResult) => {
-      const { destination, source } = result;
-
-      // If dropped outside the list or no movement
-      if (!destination || destination.index === source.index) {
-        return;
-      }
-
-      // Reorder the list
-      const reorderedItems = Array.from(modelItems);
-      const [removed] = reorderedItems.splice(source.index, 1);
-      reorderedItems.splice(destination.index, 0, removed);
-
-      // Update the order property for each item
-      const updatedItems = reorderedItems.map((item, index) => ({
-        ...item,
-        order: index,
-      }));
-
-      // Update the state with the new order
-      setModelItems(updatedItems);
-
-      batchUpdateProviderItems(updatedItems);
-    },
-    [modelItems, batchUpdateProviderItems],
-  );
-
   const filteredModels = useMemo(() => {
     const items = modelItems;
 
@@ -492,15 +460,43 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
     return items.filter((model) => model.name?.toLowerCase().includes(lowerQuery));
   }, [modelItems, searchQuery]);
 
-  const draggable = useMemo(() => {
-    return searchQuery.trim() === '';
-  }, [searchQuery]);
+  // Use the utility function instead of inline implementation
+  const { handleGroupModelList } = useGroupModels();
+  const sortedGroups = useMemo(() => handleGroupModelList(filteredModels), [filteredModels]);
+
+  // When search query changes, update active collapse keys to show matching groups
+  useEffect(() => {
+    if (searchQuery.trim() && userHasInteracted) {
+      const matchingGroupKeys = sortedGroups
+        .filter((group) =>
+          group.models.some((model) =>
+            model.name?.toLowerCase().includes(searchQuery.toLowerCase()),
+          ),
+        )
+        .map((group) => group.key);
+
+      setActiveCollapseKeys(matchingGroupKeys);
+    }
+  }, [searchQuery, sortedGroups, userHasInteracted]);
+
+  // Update active keys when groups change (initial load)
+  useEffect(() => {
+    if (sortedGroups.length > 0 && !userHasInteracted) {
+      setActiveCollapseKeys(sortedGroups.map((group) => group.key));
+    }
+  }, [sortedGroups, userHasInteracted]);
 
   useEffect(() => {
     if (visible) {
       getProviderItems();
     }
   }, [visible]);
+
+  // Handle collapse panel change
+  const handleCollapseChange = (keys: string | string[]) => {
+    setUserHasInteracted(true);
+    setActiveCollapseKeys(typeof keys === 'string' ? [keys] : keys);
+  };
 
   return (
     <div className="p-4 pt-0 h-full overflow-hidden flex flex-col">
@@ -533,7 +529,7 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
         className={cn(
           isLoading || filteredModels.length === 0 ? 'flex items-center justify-center' : '',
           filteredModels.length === 0 ? 'p-4 border-dashed border-gray-200 rounded-md' : '',
-          'max-h-[400px] min-h-[50px] overflow-y-auto',
+          'min-h-[50px] overflow-y-auto',
         )}
       >
         {isLoading ? (
@@ -566,31 +562,32 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
             )}
           </Empty>
         ) : (
-          <>
-            <DragDropContext onDragEnd={handleDragEnd}>
-              <Droppable droppableId="model-list">
-                {(provided) => (
-                  <div {...provided.droppableProps} ref={provided.innerRef}>
-                    {filteredModels.map((model, index) => (
-                      <ModelItem
-                        key={model.itemId}
-                        model={model}
-                        onEdit={handleEditModel}
-                        onDelete={handleDeleteModel}
-                        onToggleEnabled={handleToggleEnabled}
-                        isSubmitting={isUpdating}
-                        index={index}
-                        draggable={draggable}
-                      />
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </DragDropContext>
+          <div className="mb-4 w-full">
+            <Collapse
+              size="small"
+              activeKey={activeCollapseKeys}
+              onChange={handleCollapseChange}
+              bordered={false}
+              className="bg-transparent"
+              items={sortedGroups.map((group) => ({
+                key: group.key,
+                label: <span className="font-medium text-base">{group.name}</span>,
+                style: panelStyle,
+                children: group.models.map((model) => (
+                  <ModelItem
+                    key={model.itemId}
+                    model={model}
+                    onEdit={handleEditModel}
+                    onDelete={handleDeleteModel}
+                    onToggleEnabled={handleToggleEnabled}
+                    isSubmitting={isUpdating}
+                  />
+                )),
+              }))}
+            />
 
             <div className="text-center text-gray-400 text-sm mt-4 pb-10">{t('common.noMore')}</div>
-          </>
+          </div>
         )}
       </div>
 
@@ -600,7 +597,7 @@ export const ModelConfig = ({ visible }: { visible: boolean }) => {
         {t('settings.modelConfig.otherModels')}
       </Title>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 pb-8">
         <div className="flex items-center justify-between">
           <div>
             <div className="text-base font-medium">{t('settings.modelConfig.embedding')}</div>

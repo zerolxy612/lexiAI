@@ -1,5 +1,4 @@
-import { Form } from '@arco-design/web-react';
-import { notification, Button } from 'antd';
+import { notification, Button, Form } from 'antd';
 import { useCallback, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -56,7 +55,7 @@ const PremiumBanner = () => {
   };
 
   return (
-    <div className="flex items-center justify-between px-3 py-0.5 bg-gray-100 border-b">
+    <div className="flex items-center justify-between px-3 py-0.5 bg-gray-100 border-b dark:bg-gray-800 dark:border-gray-700">
       <div className="flex items-center justify-between gap-2 w-full">
         <span className="text-xs text-gray-600 dark:text-gray-300 flex-1 whitespace-nowrap">
           {t('copilot.premiumBanner.message')}
@@ -371,7 +370,7 @@ export const ChatPanel = ({
         <div
           className={cn(
             'ai-copilot-chat-container chat-input-container rounded-[7px] overflow-hidden',
-            embeddedMode && 'embedded-chat-panel border border-gray-100 dark:border-gray-800',
+            embeddedMode && 'embedded-chat-panel border border-gray-100 dark:border-gray-700',
           )}
         >
           <SelectedSkillHeader
