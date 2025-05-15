@@ -3,7 +3,12 @@ import { Modal, Button, message, Typography } from 'antd';
 import { ImportOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { McpServerJsonEditor } from './McpServerJsonEditor';
-import { useCreateMcpServer, useListMcpServers } from '@refly-packages/ai-workspace-common/queries';
+import {
+  useCreateMcpServer,
+  useListMcpServers,
+  useValidateMcpServer,
+  useUpdateMcpServer,
+} from '@refly-packages/ai-workspace-common/queries';
 import { McpServerBatchImportProps, McpServerFormData } from './types';
 import { mapServerType } from '@refly-packages/ai-workspace-common/components/settings/mcp-server/utils';
 
@@ -33,6 +38,12 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
       // Continue with the next server even if one fails
     },
   });
+
+  // Validate MCP server mutation
+  const validateMutation = useValidateMcpServer();
+
+  // Update MCP server mutation
+  const updateMutation = useUpdateMcpServer();
 
   // When server list data is fetched, convert to universal format
   useEffect(() => {
@@ -164,38 +175,81 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
     }
 
     setIsImporting(true);
-    let successCount = 0;
-    let errorCount = 0;
+
+    const importPromises = serversToImport.map(async (server) => {
+      // Prepare data for server creation, ensuring all necessary fields are included.
+      const serverCreateData: McpServerFormData = {
+        ...server, // Spread all properties from the input server object
+        name: server.name,
+        type: server.type,
+        url: server.url,
+        enabled: server.enabled ?? true, // Default to 'enabled: true' if not specified in jsonData
+        headers: server.headers || {},
+        reconnect: server.reconnect || { enabled: false },
+        args: server.args || [],
+        env: server.env || {},
+        config: server.config || {},
+        command: server.command, // Include command; will be undefined if not present in server object
+      };
+
+      try {
+        // Step 1: Create the server using createMutation.
+        // Assuming createMutation.mutateAsync resolves without returning the created server object,
+        // or if it does, we are proceeding with serverCreateData for subsequent steps
+        // as it should contain all necessary information.
+        await createMutation.mutateAsync({ body: serverCreateData });
+
+        // Step 2: If the server is marked as 'enabled' in the import data,
+        // proceed to validate its configuration and then update its status to enabled.
+        if (serverCreateData.enabled) {
+          // Prepare the payload for validation and update operations.
+          // This structure should align with what validateMutation and updateMutation expect.
+          const serverEnablePayload = {
+            name: serverCreateData.name,
+            type: serverCreateData.type,
+            url: serverCreateData.url,
+            command: serverCreateData.command,
+            args: serverCreateData.args,
+            env: serverCreateData.env,
+            headers: serverCreateData.headers,
+            reconnect: serverCreateData.reconnect,
+            config: serverCreateData.config,
+            enabled: true, // Explicitly setting enabled to true for this operation
+          };
+
+          // a. Validate the server configuration before enabling.
+          await validateMutation.mutateAsync({
+            body: serverEnablePayload,
+          });
+
+          // b. Update the server to set its 'enabled' status to true.
+          // Assuming an async version `updateMutation.mutateAsync` is available and preferred for chaining.
+          // If only a synchronous `updateMutation.mutate` is available, error handling might differ.
+          await updateMutation.mutateAsync({
+            // Or use `updateMutation.mutate` if appropriate
+            body: serverEnablePayload,
+          });
+        }
+        // If all operations for this server (creation and conditional enabling) are successful.
+        return { status: 'fulfilled', serverName: serverCreateData.name };
+      } catch (error) {
+        // Log the error for the specific server that failed and mark its promise as rejected.
+        console.error(`Failed to import or enable server ${serverCreateData.name}:`, error);
+        return { status: 'rejected', serverName: serverCreateData.name, errorDetail: error };
+      }
+    });
+
+    // Wait for all server processing (import and enabling) to complete.
+    const results = await Promise.allSettled(importPromises);
+
+    setIsImporting(false); // Mark import process as finished.
+
+    // Calculate success and error counts from the settled promises.
+    const successCount = results.filter((r) => r.status === 'fulfilled').length;
+    const errorCount = results.filter((r) => r.status === 'rejected').length;
     const totalCount = serversToImport.length;
 
-    // Process servers sequentially to avoid race conditions
-    for (const server of serversToImport) {
-      try {
-        // Ensure each server has a unique ID and required fields
-        const serverData: McpServerFormData = {
-          ...server,
-          name: server.name,
-          type: server.type,
-          url: server.url,
-          enabled: server.enabled ?? true,
-          headers: server.headers || {},
-          reconnect: server.reconnect || { enabled: false },
-          args: server.args || [],
-          env: server.env || {},
-          config: server.config || {},
-        };
-
-        // Create server via API
-        await createMutation.mutateAsync({ body: serverData });
-        successCount++;
-      } catch (error) {
-        console.error('Failed to import server:', error);
-        errorCount++;
-      }
-    }
-
-    setIsImporting(false);
-
+    // Display appropriate messages to the user based on the outcomes.
     if (successCount > 0) {
       message.success(
         t('settings.mcpServer.batchImportSuccess', {
@@ -203,8 +257,9 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
           total: totalCount,
         }),
       );
+      // Close the modal and refresh the server list if at least one server was successfully imported.
       setIsModalVisible(false);
-      onSuccess(); // Refresh server list
+      onSuccess(); // Callback to refresh the main server list.
     }
 
     if (errorCount > 0) {
