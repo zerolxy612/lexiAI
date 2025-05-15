@@ -36,6 +36,7 @@ import { useDownloadFile } from '@refly-packages/ai-workspace-common/hooks/use-d
 import type { MenuProps, DropdownProps } from 'antd';
 import { useMatch } from 'react-router-dom';
 import { useGetProjectCanvasId } from '@refly-packages/ai-workspace-common/hooks/use-get-project-canvasId';
+import { useThemeStoreShallow } from '@refly-packages/ai-workspace-common/stores/theme';
 
 const { Text } = Typography;
 
@@ -307,6 +308,9 @@ export const SourcesMenu = ({
   const [isSearchMode, setIsSearchMode] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const [addSourcesVisible, setAddSourcesVisible] = useState(false);
+  const { isDarkMode } = useThemeStoreShallow((state) => ({
+    isDarkMode: state.isDarkMode,
+  }));
 
   const handleSourceHover = (id: string | null) => {
     if (!isMultiSelectMode) {
@@ -468,7 +472,9 @@ export const SourcesMenu = ({
         <Button
           type="text"
           size="small"
-          icon={<IconPlus className="flex items-center justify-center text-gray-500" />}
+          icon={
+            <IconPlus className="flex items-center justify-center text-gray-500 hover:text-gray-700" />
+          }
         />
       </AddSourceDropdown>
     ),
@@ -487,7 +493,10 @@ export const SourcesMenu = ({
         defaultActiveKey={['sources']}
         ghost
         expandIconPosition="end"
-        className="bg-white sources-collapse dark:bg-gray-900"
+        className={cn(
+          'bg-white sources-collapse dark:bg-gray-900',
+          isDarkMode ? 'dark-custom-collapse' : '',
+        )}
         items={[
           {
             key: 'sources',
