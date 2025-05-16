@@ -15,14 +15,10 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
   // Remove tab state
 
   // Query existing MCP server list
-  const { data: mcpServersData, isLoading: isLoadingServers } = useListMcpServers(
-    {},
-    [isModalVisible],
-    {
-      enabled: isModalVisible, // Only query when the modal is visible
-      refetchOnWindowFocus: false,
-    },
-  );
+  const { data: mcpServersData, isLoading: isLoadingServers } = useListMcpServers({}, [], {
+    enabled: isModalVisible, // Only query when the modal is visible
+    refetchOnWindowFocus: false,
+  });
 
   // Create MCP server mutation
   const createMutation = useCreateMcpServer([], {
