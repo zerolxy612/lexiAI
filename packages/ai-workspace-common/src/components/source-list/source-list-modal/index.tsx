@@ -1,6 +1,6 @@
 import { useKnowledgeBaseStoreShallow } from '@refly-packages/ai-workspace-common/stores/knowledge-base';
 import { useEffect, useMemo, useState } from 'react';
-import { message, Tabs, Drawer } from 'antd';
+import { message, Tabs, Drawer, Button } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { Source } from '@refly/openapi-schema';
 import { getPopupContainer } from '@refly-packages/ai-workspace-common/utils/ui';
@@ -18,7 +18,7 @@ import {
   useMultilingualSearchStoreShallow,
 } from '@refly-packages/ai-workspace-common/modules/multilingual-search/stores/multilingual-search';
 import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/canvas';
-
+import { CloseOutlined } from '@ant-design/icons';
 interface SourceListModalProps {
   classNames: string;
   width?: number;
@@ -72,6 +72,12 @@ export const SourceListModal = (props: SourceListModalProps) => {
     );
   }, [knowledgeBaseStore?.sourceListDrawer?.sources]);
 
+  const handleClose = () => {
+    knowledgeBaseStore.updateSourceListDrawer({ visible: false });
+    setResults([]);
+    setIsSearching(false);
+  };
+
   // Set default active tab based on available results
   useEffect(() => {
     if (groupedSources.webSearch.length === 0 && groupedSources.library.length > 0) {
@@ -111,31 +117,31 @@ export const SourceListModal = (props: SourceListModalProps) => {
       className="source-list-modal"
       mask={false}
       maskClosable={false}
+      closeIcon={null}
       title={
-        <div className="source-list-modal-header">
-          <div className="header-content">
-            <IconLink className="header-icon" />
-            <div className="header-text">
-              <div>
-                <span style={{ fontWeight: 'bold' }}>
-                  {`${t('copilot.sourceListModal.title')} (${knowledgeBaseStore?.sourceListDrawer?.sources?.length || 0})`}
-                </span>
+        <div className="source-list-modal-header flex items-center justify-between">
+          <div>
+            <div className="header-content">
+              <IconLink className="header-icon" />
+              <div className="header-text">
+                <div>
+                  <span style={{ fontWeight: 'bold' }}>
+                    {`${t('copilot.sourceListModal.title')} (${knowledgeBaseStore?.sourceListDrawer?.sources?.length || 0})`}
+                  </span>
+                </div>
               </div>
             </div>
+            <div className="source-list-modal-header-title-message">
+              {knowledgeBaseStore?.sourceListDrawer?.query}
+            </div>
           </div>
-          <div className="source-list-modal-header-title-message">
-            {knowledgeBaseStore?.sourceListDrawer?.query}
-          </div>
+          <Button icon={<CloseOutlined />} type="text" onClick={handleClose} />
         </div>
       }
       visible={knowledgeBaseStore.sourceListDrawer.visible}
       placement={isWeb ? 'right' : props.placement || 'bottom'}
       footer={null}
-      onClose={() => {
-        knowledgeBaseStore.updateSourceListDrawer({ visible: false });
-        setResults([]);
-        setIsSearching(false);
-      }}
+      onClose={handleClose}
     >
       <div className="source-list-modal-tabs">
         <Tabs
