@@ -3,6 +3,9 @@ import { SKIP, visit } from 'unist-util-visit';
 // Define the tool use and tool result tags directly here to avoid circular dependencies
 const TOOL_USE_TAG = 'tool_use';
 
+// Define the tool use and tool result tags directly here to avoid circular dependencies
+export const TOOL_USE_TAG_RENDER = 'reflyToolUse';
+
 // Regular expressions to match tool tags and their content
 const TOOL_USE_REGEX = new RegExp(`<${TOOL_USE_TAG}[^>]*>([\\s\\S]*?)<\\/${TOOL_USE_TAG}>`, 'i');
 
@@ -134,7 +137,7 @@ function rehypePlugin() {
             // Create a new node with the extracted data for tool_use
             const toolNode = {
               type: 'element',
-              tagName: 'pre',
+              tagName: TOOL_USE_TAG_RENDER,
               properties: attributes,
               children: [],
             };
@@ -275,7 +278,7 @@ function rehypePlugin() {
             // Create a new node with the extracted data for tool_use
             const toolNode = {
               type: 'element',
-              tagName: 'pre',
+              tagName: TOOL_USE_TAG_RENDER,
               properties: attributes,
               children: [],
             };

@@ -13,10 +13,11 @@ interface MarkdownElementPlugin {
 
 // Cast the plugins to the interface to avoid TypeScript errors
 const markdownElements: MarkdownElementPlugin[] = [
+  MCPCallElement as MarkdownElementPlugin,
+
   ReflyArtifact as MarkdownElementPlugin,
   ReflyArtifactThinking as MarkdownElementPlugin,
   CodeElement as MarkdownElementPlugin,
-  MCPCallElement as MarkdownElementPlugin,
 ];
 
 export { markdownElements };

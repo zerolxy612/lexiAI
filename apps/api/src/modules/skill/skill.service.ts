@@ -1183,7 +1183,6 @@ ${event.data?.input ? JSON.stringify(event.data?.input?.input) : ''}
               writeSSEResponse(res, {
                 event: 'stream',
                 resultId,
-                reasoningContent: '',
                 content,
                 step: runMeta?.step,
                 structuredData: {
