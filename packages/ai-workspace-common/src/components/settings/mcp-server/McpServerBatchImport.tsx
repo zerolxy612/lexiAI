@@ -15,10 +15,14 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
   // Remove tab state
 
   // Query existing MCP server list
-  const { data: mcpServersData, isLoading: isLoadingServers } = useListMcpServers({}, [], {
-    enabled: isModalVisible, // Only query when the modal is visible
-    refetchOnWindowFocus: false,
-  });
+  const { data: mcpServersData, isLoading: isLoadingServers } = useListMcpServers(
+    {},
+    [isModalVisible],
+    {
+      enabled: isModalVisible, // Only query when the modal is visible
+      refetchOnWindowFocus: false,
+    },
+  );
 
   // Create MCP server mutation
   const createMutation = useCreateMcpServer([], {
@@ -56,7 +60,6 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
       mcpServers[server.name] = {
         type: server.type,
         description: server.config?.description || '',
-        enabled: server.enabled,
         url: server.url || '',
         command: server.command || '',
         args: server.args || [],
@@ -124,7 +127,6 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
         const server: McpServerFormData = {
           name: name, // Use the key as the name
           type: mapServerType(serverConfig.type, serverConfig),
-          enabled: serverConfig.enabled ?? false,
           url: serverConfig.url || '',
           command: serverConfig.command || '',
           args: serverConfig.args || [],
@@ -172,7 +174,6 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
         name: server.name,
         type: server.type,
         url: server.url,
-        enabled: false, // Default to 'enabled: false' if not specified in jsonData
         headers: server.headers || {},
         reconnect: server.reconnect || { enabled: false },
         args: server.args || [],
