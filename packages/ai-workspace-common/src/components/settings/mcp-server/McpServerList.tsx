@@ -246,8 +246,6 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
     },
   };
 
-  console.log('updateMutation', updateMutation.variables, validateMutation.variables);
-
   // Table columns
   const columns = [
     {

@@ -360,7 +360,8 @@ export class Agent extends BaseSkill {
         mcpServerNamesList: currentMcpServerNames,
       };
 
-      this.userAgentComponentsCache.set(userId, components);
+      // disable userAgentComponentsCache
+      // this.userAgentComponentsCache.set(userId, components);
 
       this.engine.logger.log(`Agent components initialized and cached for user ${userId}`);
       return components;
@@ -457,6 +458,7 @@ export class Agent extends BaseSkill {
       return { messages: result.messages };
     } finally {
       this.engine.logger.log('agentNode execution finished.');
+      this.dispose();
     }
   };
 
@@ -471,7 +473,7 @@ export class Agent extends BaseSkill {
     return workflow.compile();
   }
 
-  public async dispose(_userId: string): Promise<void> {
+  public async dispose(_userId?: string): Promise<void> {
     if (_userId) {
       const components = this.userAgentComponentsCache.get(_userId);
 
