@@ -323,7 +323,14 @@ export const McpServerList: React.FC<McpServerListProps> = ({ visible }) => {
         <Switch
           checked={enabled}
           onChange={(checked) => handleEnableSwitch(checked, record)}
-          loading={updateMutation.isPending || validateMutation.isPending}
+          loading={
+            (updateMutation.isPending &&
+              (updateMutation.variables as { body: { name?: string } })?.body?.name ===
+                record.name) ||
+            (validateMutation.isPending &&
+              (validateMutation.variables as { body: { name?: string } })?.body?.name ===
+                record.name)
+          }
           disabled={record.isGlobal}
         />
       ),

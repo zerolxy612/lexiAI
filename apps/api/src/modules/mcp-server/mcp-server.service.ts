@@ -125,6 +125,11 @@ export class McpServerService {
         type,
         deletedAt: null,
       },
+      orderBy: [
+        { enabled: 'desc' }, // true comes before false when ordered descending
+        { updatedAt: 'desc' }, // Most recent updates first
+        { name: 'asc' }, // Then by name alphabetically
+      ],
     });
 
     // Decrypt sensitive information

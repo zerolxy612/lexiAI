@@ -3,12 +3,7 @@ import { Modal, Button, message, Typography, Alert } from 'antd';
 import { ImportOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { McpServerJsonEditor } from './McpServerJsonEditor';
-import {
-  useCreateMcpServer,
-  useListMcpServers,
-  useValidateMcpServer,
-  useUpdateMcpServer,
-} from '@refly-packages/ai-workspace-common/queries';
+import { useCreateMcpServer, useListMcpServers } from '@refly-packages/ai-workspace-common/queries';
 import { McpServerBatchImportProps, McpServerFormData } from './types';
 import { mapServerType } from '@refly-packages/ai-workspace-common/components/settings/mcp-server/utils';
 
@@ -38,12 +33,6 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
       // Continue with the next server even if one fails
     },
   });
-
-  // Validate MCP server mutation
-  const validateMutation = useValidateMcpServer();
-
-  // Update MCP server mutation
-  const updateMutation = useUpdateMcpServer();
 
   // When server list data is fetched, convert to universal format
   useEffect(() => {
@@ -85,21 +74,21 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
         'Example Server 1': {
           type: 'sse',
           description: 'Example SSE server',
-          enabled: true,
+          enabled: false,
           url: 'http://localhost:3000',
           env: {},
         },
         'Example Server 2': {
           type: 'streamable',
           description: 'Example Streamable server',
-          enabled: true,
+          enabled: false,
           url: 'http://localhost:3001',
           env: {},
         },
         'Example Server 3': {
           type: 'stdio',
           description: 'Example Stdio server',
-          enabled: true,
+          enabled: false,
           command: 'npx',
           args: ['-y', '@modelcontextprotocol/server-example'],
           env: {},
@@ -135,7 +124,7 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
         const server: McpServerFormData = {
           name: name, // Use the key as the name
           type: mapServerType(serverConfig.type, serverConfig),
-          enabled: serverConfig.enabled ?? true,
+          enabled: serverConfig.enabled ?? false,
           url: serverConfig.url || '',
           command: serverConfig.command || '',
           args: serverConfig.args || [],
@@ -183,7 +172,7 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
         name: server.name,
         type: server.type,
         url: server.url,
-        enabled: server.enabled ?? true, // Default to 'enabled: true' if not specified in jsonData
+        enabled: false, // Default to 'enabled: false' if not specified in jsonData
         headers: server.headers || {},
         reconnect: server.reconnect || { enabled: false },
         args: server.args || [],
@@ -199,37 +188,6 @@ export const McpServerBatchImport: React.FC<McpServerBatchImportProps> = ({ onSu
         // as it should contain all necessary information.
         await createMutation.mutateAsync({ body: serverCreateData });
 
-        // Step 2: If the server is marked as 'enabled' in the import data,
-        // proceed to validate its configuration and then update its status to enabled.
-        if (serverCreateData.enabled) {
-          // Prepare the payload for validation and update operations.
-          // This structure should align with what validateMutation and updateMutation expect.
-          const serverEnablePayload = {
-            name: serverCreateData.name,
-            type: serverCreateData.type,
-            url: serverCreateData.url,
-            command: serverCreateData.command,
-            args: serverCreateData.args,
-            env: serverCreateData.env,
-            headers: serverCreateData.headers,
-            reconnect: serverCreateData.reconnect,
-            config: serverCreateData.config,
-            enabled: true, // Explicitly setting enabled to true for this operation
-          };
-
-          // a. Validate the server configuration before enabling.
-          await validateMutation.mutateAsync({
-            body: serverEnablePayload,
-          });
-
-          // b. Update the server to set its 'enabled' status to true.
-          // Assuming an async version `updateMutation.mutateAsync` is available and preferred for chaining.
-          // If only a synchronous `updateMutation.mutate` is available, error handling might differ.
-          await updateMutation.mutateAsync({
-            // Or use `updateMutation.mutate` if appropriate
-            body: serverEnablePayload,
-          });
-        }
         // If all operations for this server (creation and conditional enabling) are successful.
         return { status: 'fulfilled', serverName: serverCreateData.name };
       } catch (error) {
