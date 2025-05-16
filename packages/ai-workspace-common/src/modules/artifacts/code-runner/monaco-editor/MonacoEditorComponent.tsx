@@ -76,48 +76,6 @@ const MonacoEditorComponent = React.memo(
       };
     }, [isEditorReady, useFallbackEditor, isGenerating, loadingTimedOut]);
 
-    // Switch CDN when current one fails
-    // useEffect(() => {
-    //   // Skip if we're using the fallback editor already
-    //   if (useFallbackEditor) return;
-
-    //   const currentCDN = getCurrentCDN();
-
-    //   // Try another CDN if we have more attempts
-    //   if (loadAttempt > 0 && loadAttempt < MAX_LOAD_ATTEMPTS) {
-    //     console.log(`Trying alternative Monaco CDN (attempt ${loadAttempt}): ${currentCDN}`);
-
-    //     // Configure loader with new CDN
-    //     try {
-    //       const { loader } = require('@monaco-editor/react');
-    //       loader.config({
-    //         paths: {
-    //           vs: currentCDN,
-    //         },
-    //         'vs/nls': {
-    //           availableLanguages: {},
-    //         },
-    //       });
-    //     } catch (error) {
-    //       console.error('Failed to reconfigure Monaco loader:', error);
-    //       // If we can't even reconfigure, move to next attempt
-    //       if (loadAttempt < MAX_LOAD_ATTEMPTS - 1) {
-    //         setLoadAttempt(loadAttempt + 1);
-    //       } else {
-    //         // Last attempt failed, use fallback editor
-    //         setUseFallbackEditor(true);
-    //         setLoadingError('Failed to load editor after multiple attempts');
-    //       }
-    //     }
-    //   }
-
-    //   // If we've reached max attempts, use fallback editor
-    //   if (loadAttempt >= MAX_LOAD_ATTEMPTS - 1) {
-    //     setUseFallbackEditor(true);
-    //     setLoadingError('Failed to load editor after multiple attempts');
-    //   }
-    // }, [loadAttempt, useFallbackEditor, getCurrentCDN]);
-
     // Debounced onChange handler to prevent too frequent updates
     const debouncedOnChange = useMemo(
       () =>
@@ -270,79 +228,6 @@ const MonacoEditorComponent = React.memo(
       }
     }, [content, isEditorReady]);
 
-    // Use simple editor during generation to improve performance
-    // Skip complex Monaco initialization & syntax highlighting while content is changing rapidly
-    if (isGenerating || loadingTimedOut) {
-      return (
-        <div className="h-full">
-          <SimpleTextEditor
-            content={content}
-            language={language}
-            type={type}
-            readOnly={readOnly}
-            isGenerating={isGenerating}
-            canvasReadOnly={canvasReadOnly}
-            onChange={onChange}
-          />
-        </div>
-      );
-    }
-
-    // Handle fallback logic when Editor can't be loaded
-    if (loadingError) {
-      return (
-        <div className="h-full">
-          <div className="h-full flex items-center justify-center bg-gray-50 text-gray-700 p-4 rounded border border-gray-200 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-700">
-            <div className="text-center">
-              <p className="mb-2 font-medium">{t('codeArtifact.editor.loadError')}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{loadingError}</p>
-              <div className="mt-4 flex flex-col sm:flex-row gap-3 justify-center">
-                <Button
-                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors dark:bg-blue-400 dark:hover:bg-blue-300 dark:text-gray-900"
-                  onClick={() => window.location.reload()}
-                >
-                  {t('common.refresh')}
-                </Button>
-                <Button
-                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
-                  onClick={() => setUseFallbackEditor(true)}
-                >
-                  {t('codeArtifact.editor.useFallback')}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // If we've exhausted all fallbacks and need to use the textarea
-    if (useFallbackEditor) {
-      return (
-        <div className="h-full">
-          <FallbackEditor
-            content={content}
-            language={language}
-            type={type}
-            readOnly={readOnly}
-            isGenerating={isGenerating}
-            canvasReadOnly={canvasReadOnly}
-            onChange={onChange}
-          />
-        </div>
-      );
-    }
-
-    // Add generation indicator when Monaco is forced during generation
-    const generationIndicator = isGenerating && (
-      <div className="bg-blue-50 text-blue-800 px-4 py-2 text-sm flex items-center justify-between dark:bg-blue-900 dark:text-blue-200">
-        <div className="flex items-center">
-          <div className="mr-2 w-3 h-3 bg-blue-500 rounded-full animate-pulse dark:bg-blue-400" />
-          {t('codeArtifact.editor.generatingContent')}
-        </div>
-      </div>
-    );
-
     // Determine the editor theme
     const editorTheme = useMemo(() => {
       if (themeMode === 'dark') {
@@ -421,10 +306,84 @@ const MonacoEditorComponent = React.memo(
       onError: handleEditorError,
     };
 
+    // Define generation indicator before any conditional returns
+    // No need for conditional rendering here, we'll do that in the return statement
+    const generationIndicator = (
+      <div className="bg-blue-50 text-blue-800 px-4 py-2 text-sm flex items-center justify-between dark:bg-blue-900 dark:text-blue-200">
+        <div className="flex items-center">
+          <div className="mr-2 w-3 h-3 bg-blue-500 rounded-full animate-pulse dark:bg-blue-400" />
+          {t('codeArtifact.editor.generatingContent')}
+        </div>
+      </div>
+    );
+
+    // Use simple editor during generation to improve performance
+    // Skip complex Monaco initialization & syntax highlighting while content is changing rapidly
+    if (isGenerating || loadingTimedOut) {
+      return (
+        <div className="h-full">
+          <SimpleTextEditor
+            content={content}
+            language={language}
+            type={type}
+            readOnly={readOnly}
+            isGenerating={isGenerating}
+            canvasReadOnly={canvasReadOnly}
+            onChange={onChange}
+          />
+        </div>
+      );
+    }
+
+    // Handle fallback logic when Editor can't be loaded
+    if (loadingError) {
+      return (
+        <div className="h-full">
+          <div className="h-full flex items-center justify-center bg-gray-50 text-gray-700 p-4 rounded border border-gray-200 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-700">
+            <div className="text-center">
+              <p className="mb-2 font-medium">{t('codeArtifact.editor.loadError')}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{loadingError}</p>
+              <div className="mt-4 flex flex-col sm:flex-row gap-3 justify-center">
+                <Button
+                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors dark:bg-blue-400 dark:hover:bg-blue-300 dark:text-gray-900"
+                  onClick={() => window.location.reload()}
+                >
+                  {t('common.refresh')}
+                </Button>
+                <Button
+                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                  onClick={() => setUseFallbackEditor(true)}
+                >
+                  {t('codeArtifact.editor.useFallback')}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // If we've exhausted all fallbacks and need to use the textarea
+    if (useFallbackEditor) {
+      return (
+        <div className="h-full">
+          <FallbackEditor
+            content={content}
+            language={language}
+            type={type}
+            readOnly={readOnly}
+            isGenerating={isGenerating}
+            canvasReadOnly={canvasReadOnly}
+            onChange={onChange}
+          />
+        </div>
+      );
+    }
+
     // Return the editor with container styles that prevent double scrollbars
     return (
       <div className="h-full overflow-hidden">
-        {generationIndicator}
+        {isGenerating && generationIndicator}
         {/* Use type assertion to work around type issues with onError prop */}
         {React.createElement(Editor, editorProps as any)}
       </div>
