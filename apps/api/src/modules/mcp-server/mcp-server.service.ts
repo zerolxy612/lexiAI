@@ -128,6 +128,7 @@ export class McpServerService {
       orderBy: [
         { enabled: 'desc' }, // true comes before false when ordered descending
         { updatedAt: 'desc' }, // Most recent updates first
+        { name: 'asc' }, // Then by name alphabetically
       ],
     });
 
