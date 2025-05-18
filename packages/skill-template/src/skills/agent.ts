@@ -12,6 +12,7 @@ import { BaseSkill, BaseSkillState, SkillRunnableConfig, baseStateGraphArgs } fr
 import { safeStringifyJSON, isValidUrl } from '@refly/utils';
 import {
   Icon,
+  ListMcpServersResponse,
   SkillInvocationConfig,
   SkillTemplateConfigDefinition,
   Source,
@@ -208,10 +209,12 @@ export class Agent extends BaseSkill {
 
     try {
       // Attempt to initialize MCP components
-      const mcpServersResponse = await this.engine.service.listMcpServers(user, {
-        enabled: true,
-      });
-      const mcpServerList = mcpServersResponse?.data; // Access the 'data' property
+      const mcpServersResponse = await this.engine.service
+        .listMcpServers(user, {
+          enabled: true,
+        })
+        .catch(() => ({}) as ListMcpServersResponse);
+      const mcpServerList = mcpServersResponse?.data ?? []; // Access the 'data' property
 
       const cachedAgentComponents = this.userAgentComponentsCache.get(userId);
       const currentMcpServerNames = (mcpServerList?.map((server) => server.name) ?? []).sort();
@@ -240,11 +243,13 @@ export class Agent extends BaseSkill {
           `No MCP servers found for user ${userId}. Proceeding without MCP tools.`,
         );
       } else {
-        // Pass mcpServersResponse (which is ListMcpServersResponse) to convertMcpServersToClientConfig
-        const mcpClientConfig = convertMcpServersToClientConfig(mcpServersResponse);
-        const tempMcpClient = new MultiServerMCPClient(mcpClientConfig);
+        let tempMcpClient: MultiServerMCPClient;
 
         try {
+          // Pass mcpServersResponse (which is ListMcpServersResponse) to convertMcpServersToClientConfig
+          const mcpClientConfig = convertMcpServersToClientConfig(mcpServersResponse);
+          tempMcpClient = new MultiServerMCPClient(mcpClientConfig);
+
           await tempMcpClient.initializeConnections();
           this.engine.logger.log('MCP connections initialized successfully for new components');
 
@@ -285,8 +290,6 @@ export class Agent extends BaseSkill {
               ),
             );
           await this.dispose(userId);
-
-          throw mcpError;
         }
       }
 
