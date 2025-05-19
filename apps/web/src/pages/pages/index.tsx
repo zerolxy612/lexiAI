@@ -777,7 +777,7 @@ export function SlideshowEdit(props: PageEditProps) {
       <Modal
         title={
           <div className="flex items-center text-lg font-medium">
-            <PlusOutlined className="mr-2 text-blue-500 dark:text-blue-400" />{' '}
+            <PlusOutlined className="mr-2 text-gray-900 dark:text-gray-200" />{' '}
             {t('common.addContent', 'Add Content')}
           </div>
         }
