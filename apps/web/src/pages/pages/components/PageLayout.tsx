@@ -95,7 +95,7 @@ const PageLayout: React.FC<PageLayoutProps> = ({
               type="text"
               icon={<MenuUnfoldOutlined />}
               onClick={toggleSidebar}
-              className="absolute top-4 right-4 z-10 bg-white shadow-sm hover:bg-gray-100 border border-gray-200 h-8 w-8 flex items-center justify-center p-0 rounded-md"
+              className="absolute top-4 right-4 z-10 bg-white dark:bg-gray-900 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 h-8 w-8 flex items-center justify-center p-0 rounded-md"
             />
           )}
 

@@ -64,7 +64,10 @@ const EmptyContentPrompt: FC<EmptyContentPromptProps> = ({
   // Filter out already existing nodes
   const filteredAvailableNodes = useMemo(() => {
     if (!excludeNodeIds.length) return availableNodes;
-    return availableNodes.filter((node) => !excludeNodeIds.includes(node.data?.entityId));
+    return availableNodes.filter(
+      (node) =>
+        !excludeNodeIds.includes(node.data?.entityId) && !['skill', 'group'].includes(node?.type),
+    );
   }, [availableNodes, excludeNodeIds]);
 
   // Filtered nodes based on search term

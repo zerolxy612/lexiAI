@@ -877,21 +877,17 @@ export function SlideshowEdit(props: PageEditProps) {
             <div className="mt-4">
               <div className="text-gray-700 mb-2 dark:text-gray-200">{t('common.shareUrl')}</div>
               <div className="flex items-center">
-                <Input value={shareUrl} readOnly className="flex-1 bg-gray-50 dark:-g-gray-950" />
+                <Input value={shareUrl} readOnly className="flex-1 bg-gray-50 dark:bg-gray-950" />
                 <Button
-                  type="primary"
+                  type={isCopied ? 'primary' : 'default'}
                   icon={<CopyOutlined />}
                   onClick={handleCopyShareUrl}
-                  className={`ml-2 flex items-center justify-center h-[32px] ${
-                    isCopied
-                      ? 'bg-green-600 hover:bg-green-700 dark:bg-green-300 dark:hover:bg-green-200'
-                      : 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-300 dark:hover:bg-blue-200'
-                  } border-none`}
+                  className="ml-2 flex items-center justify-center h-[32px]"
                 >
                   {isCopied ? t('common.copied') : t('common.copy.title')}
                 </Button>
               </div>
-              <div className="mt-4 text-gray-500 dark:bg-gray-400 text-sm ">
+              <div className="mt-4 text-gray-500 dark:text-gray-400 text-sm">
                 {t('common.shareUrlDesc')}
               </div>
             </div>
