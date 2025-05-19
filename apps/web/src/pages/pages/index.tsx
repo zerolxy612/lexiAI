@@ -869,7 +869,7 @@ export function SlideshowEdit(props: PageEditProps) {
               icon={<ShareAltOutlined />}
               onClick={handleShareSubmit}
               loading={isSharing}
-              className="bg-green-600 hover:bg-green-700 border-none mt-2 dark:bg-green-300 dark:hover:bg-green-200"
+              className="bg-green-600 hover:bg-green-700 border-none mt-2 dark:bg-green-500"
             >
               {t('common.copyShareLink')}
             </Button>
