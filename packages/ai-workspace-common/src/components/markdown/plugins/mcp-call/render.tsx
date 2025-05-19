@@ -304,12 +304,12 @@ const MCPCall: React.FC<MCPCallProps> = (props) => {
 
       {/* Image Preview section - styled as a separate card below the main MCPCall card */}
       {imageUrl && imageName && (
-        <div className="my-3 rounded-lg border border-gray-300 dark:border-gray-700 overflow-hidden cursor-pointer bg-white dark:bg-gray-800">
-          <div className="px-4 flex flex-col items-center py-2">
+        <div className="mb-3 rounded-lg border border-gray-300 dark:border-gray-700 overflow-hidden cursor-pointer bg-white dark:bg-gray-800">
+          <div className="px-2 py-2 flex flex-col items-center">
             <img
               src={imageUrl}
               alt={imageName}
-              className="max-w-full h-auto rounded-md mb-2 shadow-md max-h-[300px]"
+              className="max-w-full h-auto rounded-md shadow-md max-h-[300px]"
               onClick={() => {
                 setPreviewImageUrl(imageUrl);
                 setIsPreviewModalVisible(true);
