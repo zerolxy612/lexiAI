@@ -336,7 +336,7 @@ const EmptyContentPrompt: FC<EmptyContentPromptProps> = ({
       </div>
 
       {/* Action bar - fixed at bottom */}
-      <div className="p-4 border-t border-solid border-1 border-x-0 border-b-0 border-gray-300 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-gray-900 sticky bottom-0 left-0 right-0 z-10">
+      <div className="p-4 border-t border-solid border-1 border-x-0 border-b-0 border-transparent dark:border-gray-700 flex justify-between items-center bg-white dark:bg-gray-900 sticky bottom-0 left-0 right-0 z-10">
         <div className="text-sm text-gray-500">
           {selectedNodeIds.length > 0
             ? t('common.selectedItems', `Selected ${selectedNodeIds.length} items`, {
