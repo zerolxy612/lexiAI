@@ -5,10 +5,9 @@ import type { Node } from 'unist';
 type Plugin = () => (tree: any) => void;
 
 /**
- * Rehype plugin to transform text nodes with ==highlight== and __underline__ syntax
- * to proper HTML elements.
+ * Rehype plugin to transform text nodes with ==highlight== syntax to proper HTML elements.
  */
-const rehypeHighlightUnderline: Plugin = () => {
+const rehypeHighlight: Plugin = () => {
   return (tree: Node) => {
     // Process text nodes for special syntax
     visit(tree, 'text', (node: any, index: number | null, parent: any) => {
@@ -17,23 +16,21 @@ const rehypeHighlightUnderline: Plugin = () => {
       const { value } = node;
       if (typeof value !== 'string') return;
 
-      // Match patterns for highlight and underline
+      // Match patterns for highlight
       const highlightRegex = /==(.*?)==/g;
-      const underlineRegex = /__(.*?)__/g;
 
       // Check if we have any matches
-      if (!highlightRegex.test(value) && !underlineRegex.test(value)) return;
+      if (!highlightRegex.test(value)) return;
 
       // Reset regex lastIndex
       highlightRegex.lastIndex = 0;
-      underlineRegex.lastIndex = 0;
 
       // Process the text to create HTML elements
       const parts = [];
       let lastIndex = 0;
       const text = value;
 
-      // First process highlights
+      // Process highlights
       let match: any = highlightRegex.exec(text);
       while (match !== null) {
         // Add text before the match
@@ -58,40 +55,6 @@ const rehypeHighlightUnderline: Plugin = () => {
         parts.push({ type: 'text', value: text.slice(lastIndex) });
       }
 
-      // If we found any highlights, replace the original node
-      if (parts.length > 0) {
-        parent.children.splice(index, 1, ...parts);
-        return;
-      }
-
-      // Otherwise, check for underlines
-      lastIndex = 0;
-      parts.length = 0;
-
-      match = underlineRegex.exec(text);
-      while (match !== null) {
-        // Add text before the match
-        if (match.index > lastIndex) {
-          parts.push({ type: 'text', value: text.slice(lastIndex, match.index) });
-        }
-
-        // Add the underline element
-        parts.push({
-          type: 'element',
-          tagName: 'u',
-          properties: {},
-          children: [{ type: 'text', value: match[1] }],
-        });
-
-        lastIndex = match.index + match[0].length;
-        match = underlineRegex.exec(text);
-      }
-
-      // Add any remaining text
-      if (lastIndex < text.length) {
-        parts.push({ type: 'text', value: text.slice(lastIndex) });
-      }
-
       // Replace the original node with our processed parts
       if (parts.length > 0) {
         parent.children.splice(index, 1, ...parts);
@@ -100,4 +63,4 @@ const rehypeHighlightUnderline: Plugin = () => {
   };
 };
 
-export default rehypeHighlightUnderline;
+export default rehypeHighlight;

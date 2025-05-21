@@ -9,7 +9,7 @@ import { cn, markdownCitationParse } from '@refly/utils';
 
 // plugins
 import LinkElement from './plugins/link';
-import rehypeHighlightUnderline from './custom-plugins/rehype-highlight-underline';
+import rehypeHighlight from './custom-plugins/rehype-highlight';
 
 // styles
 import './styles/markdown.scss';
@@ -55,10 +55,6 @@ const HighlightComponent = ({ children }: { children: React.ReactNode }) => (
   <mark className="bg-yellow-200 dark:bg-yellow-800 dark:text-gray-200 rounded-sm px-1 text-inherit">
     {children}
   </mark>
-);
-
-const UnderlineComponent = ({ children }: { children: React.ReactNode }) => (
-  <span className="underline">{children}</span>
 );
 
 const StrikethroughComponent = ({ children }: { children: React.ReactNode }) => (
@@ -147,7 +143,7 @@ export const Markdown = memo(
                   remarkPlugins={[RemarkBreaks, plugins.RemarkMath, RemarkGfm]}
                   rehypePlugins={[
                     ...rehypePlugins,
-                    rehypeHighlightUnderline,
+                    rehypeHighlight,
                     plugins.RehypeKatex,
                     [
                       plugins.RehypeHighlight,
@@ -163,7 +159,6 @@ export const Markdown = memo(
                     img: MarkdownImage,
                     mark: HighlightComponent,
                     del: StrikethroughComponent,
-                    u: UnderlineComponent,
                   }}
                   linkTarget={'_blank'}
                 >

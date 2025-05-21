@@ -231,8 +231,8 @@ export const defaultMarkdownSerializer = new MarkdownSerializer(
       expelEnclosingWhitespace: true,
     },
     underline: {
-      open: '__',
-      close: '__',
+      open: '',
+      close: '',
       mixable: true,
       expelEnclosingWhitespace: true,
     },
