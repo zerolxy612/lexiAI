@@ -137,6 +137,11 @@ export const ChatPanel = ({
     setActiveResultId: state.setActiveResultId,
   }));
 
+  // 获取选择的 MCP 服务器
+  const { selectedMcpServers } = useLaunchpadStoreShallow((state) => ({
+    selectedMcpServers: state.selectedMcpServers,
+  }));
+
   const [form] = Form.useForm();
 
   // hooks
@@ -218,6 +223,7 @@ export const ChatPanel = ({
     const query = userInput || newQAText.trim();
 
     const { contextItems, runtimeConfig } = useContextPanelStore.getState();
+
     const finalProjectId = getFinalProjectId();
 
     // Generate new message IDs using the provided function
@@ -239,10 +245,11 @@ export const ChatPanel = ({
             metadata: {
               status: 'executing' as ActionStatus,
               contextItems: contextItems.map((item) => omit(item, ['isPreview'])),
-              tplConfig,
-              modelInfo: selectedModel,
               selectedSkill,
+              selectedMcpServers,
+              modelInfo: selectedModel,
               runtimeConfig,
+              tplConfig,
               structuredData: {
                 query,
               },
@@ -262,6 +269,7 @@ export const ChatPanel = ({
       {
         query,
         resultId: newResultId,
+        selectedMcpServers,
         selectedSkill,
         modelInfo: selectedModel,
         contextItems,
@@ -288,6 +296,7 @@ export const ChatPanel = ({
           metadata: {
             status: 'executing',
             contextItems: contextItems.map((item) => omit(item, ['isPreview'])),
+            selectedMcpServers,
             selectedSkill,
             modelInfo: selectedModel,
             runtimeConfig,
