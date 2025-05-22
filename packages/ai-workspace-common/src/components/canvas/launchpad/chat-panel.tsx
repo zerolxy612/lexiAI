@@ -37,6 +37,7 @@ import { ActionStatus, SkillTemplateConfig } from '@refly/openapi-schema';
 import { ContextTarget } from '@refly-packages/ai-workspace-common/stores/context-panel';
 import { ProjectKnowledgeToggle } from '@refly-packages/ai-workspace-common/components/project/project-knowledge-toggle';
 import { useAskProject } from '@refly-packages/ai-workspace-common/hooks/canvas/use-ask-project';
+import { ToolOutlined } from '@ant-design/icons';
 
 const PremiumBanner = () => {
   const { t } = useTranslation();
@@ -308,19 +309,32 @@ export const ChatPanel = ({
     abortAction();
   };
 
-  const { setRecommendQuestionsOpen, recommendQuestionsOpen } = useLaunchpadStoreShallow(
-    (state) => ({
+  const { setRecommendQuestionsOpen, recommendQuestionsOpen, setMcpSelectorOpen, mcpSelectorOpen } =
+    useLaunchpadStoreShallow((state) => ({
       setRecommendQuestionsOpen: state.setRecommendQuestionsOpen,
       recommendQuestionsOpen: state.recommendQuestionsOpen,
-    }),
-  );
+      setMcpSelectorOpen: state.setMcpSelectorOpen,
+      mcpSelectorOpen: state.mcpSelectorOpen,
+    }));
 
   const handleRecommendQuestionsToggle = useCallback(() => {
     setRecommendQuestionsOpen(!recommendQuestionsOpen);
   }, [recommendQuestionsOpen, setRecommendQuestionsOpen]);
 
+  // Toggle MCP selector panel
+  const handleMcpSelectorToggle = useCallback(() => {
+    setMcpSelectorOpen(!mcpSelectorOpen);
+  }, [mcpSelectorOpen, setMcpSelectorOpen]);
+
   const customActions: CustomAction[] = useMemo(
     () => [
+      {
+        icon: <ToolOutlined className="flex items-center" />,
+        title: t('copilot.chatActions.chooseMcp'),
+        onClick: () => {
+          handleMcpSelectorToggle();
+        },
+      },
       {
         icon: <PiMagicWand className="flex items-center" />,
         title: t('copilot.chatActions.recommendQuestions'),
@@ -329,7 +343,7 @@ export const ChatPanel = ({
         },
       },
     ],
-    [handleRecommendQuestionsToggle, t],
+    [handleRecommendQuestionsToggle, handleMcpSelectorToggle, t],
   );
 
   const handleImageUpload = async (file: File) => {
