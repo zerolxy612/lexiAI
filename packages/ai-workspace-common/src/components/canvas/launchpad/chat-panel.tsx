@@ -1,4 +1,4 @@
-import { notification, Button, Form } from 'antd';
+import { notification, Button, Form, Badge } from 'antd';
 import { useCallback, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -338,7 +338,15 @@ export const ChatPanel = ({
   const customActions: CustomAction[] = useMemo(
     () => [
       {
-        icon: <ToolOutlined className="flex items-center" />,
+        icon: (
+          <Badge
+            count={selectedMcpServers.length > 0 ? selectedMcpServers.length : 0}
+            size="small"
+            offset={[2, -2]}
+          >
+            <ToolOutlined className="flex items-center" />
+          </Badge>
+        ),
         title: t('copilot.chatActions.chooseMcp'),
         onClick: () => {
           handleMcpSelectorToggle();
@@ -352,7 +360,7 @@ export const ChatPanel = ({
         },
       },
     ],
-    [handleRecommendQuestionsToggle, handleMcpSelectorToggle, t],
+    [handleRecommendQuestionsToggle, handleMcpSelectorToggle, t, selectedMcpServers],
   );
 
   const handleImageUpload = async (file: File) => {
