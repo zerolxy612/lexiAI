@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Empty, message, Skeleton, Tooltip } from 'antd';
+import { Button, Empty, Skeleton, Tooltip } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, CheckCircle2 } from 'lucide-react';
 import { ReloadOutlined, ToolOutlined } from '@ant-design/icons';
@@ -42,9 +42,6 @@ export const McpSelectorPanel: React.FC<McpSelectorPanelProps> = ({ isOpen, onCl
       : [...selectedMcpServers, mcpName];
 
     setSelectedMcpServers(newSelectedServers);
-
-    // Show success message
-    message.success(`${mcpName} ${t('copilot.mcpSelector.selected')}`);
   };
 
   // Refresh MCP server list
