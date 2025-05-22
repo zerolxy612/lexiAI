@@ -50,9 +50,12 @@ export const McpSelectorPanel: React.FC<McpSelectorPanelProps> = ({ isOpen, onCl
   // Refresh MCP server list
   const handleRefresh = () => {
     setLoading(true);
-    refetch().finally(() => {
-      setLoading(false);
-    });
+    // 添加延迟以确保 Loading 状态能够被显示
+    setTimeout(() => {
+      refetch().finally(() => {
+        setLoading(false);
+      });
+    }, 300);
   };
 
   // Refresh MCP server list when panel opens
@@ -69,7 +72,7 @@ export const McpSelectorPanel: React.FC<McpSelectorPanelProps> = ({ isOpen, onCl
   const renderContent = () => {
     if (loading) {
       return (
-        <div className="space-y-3 px-1">
+        <div className="space-y-3 px-1 h-[140px] flex flex-col justify-center">
           {[1, 2, 3].map((i) => (
             <div key={i} className="border border-gray-100 dark:border-gray-700 rounded-lg p-2">
               <Skeleton
@@ -135,17 +138,16 @@ export const McpSelectorPanel: React.FC<McpSelectorPanelProps> = ({ isOpen, onCl
           <span>{t('copilot.mcpSelector.title')}</span>
         </div>
         <div className="flex items-center space-x-2">
-          {!loading ? (
-            <Tooltip title={t('copilot.recommendQuestions.refresh')}>
-              <Button
-                type="text"
-                size="small"
-                icon={<ReloadOutlined className="w-4 h-4 text-gray-400 text-[12px]" />}
-                onClick={handleRefresh}
-                className="text-[12px] text-[rgba(0,0,0,0.5)] dark:text-gray-400"
-              />
-            </Tooltip>
-          ) : null}
+          <Tooltip title={t('copilot.recommendQuestions.refresh')}>
+            <Button
+              type="text"
+              size="small"
+              icon={<ReloadOutlined className="w-4 h-4 text-gray-400 text-[12px]" spin={loading} />}
+              onClick={handleRefresh}
+              disabled={loading}
+              className="text-[12px] text-[rgba(0,0,0,0.5)] dark:text-gray-400"
+            />
+          </Tooltip>
           <Button
             type="text"
             size="small"
@@ -156,7 +158,7 @@ export const McpSelectorPanel: React.FC<McpSelectorPanelProps> = ({ isOpen, onCl
         </div>
       </div>
 
-      <div className="max-h-[200px] overflow-y-auto">{renderContent()}</div>
+      <div className="h-[140px] overflow-y-auto">{renderContent()}</div>
     </div>
   );
 };
