@@ -62,7 +62,10 @@ import HelperLines from './common/helper-line/index';
 import { useListenNodeOperationEvents } from '@refly-packages/ai-workspace-common/hooks/canvas/use-listen-node-events';
 import { runtime } from '@refly-packages/ai-workspace-common/utils/env';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
-import { nodeOperationsEmitter } from '@refly-packages/ai-workspace-common/events/nodeOperations';
+import {
+  NodeContextMenuSource,
+  nodeOperationsEmitter,
+} from '@refly-packages/ai-workspace-common/events/nodeOperations';
 import { useCanvasInitialActions } from '@refly-packages/ai-workspace-common/hooks/use-canvas-initial-actions';
 
 const GRID_SIZE = 10;
@@ -86,6 +89,7 @@ interface ContextMenuState {
   nodeId?: string;
   nodeType?: CanvasNodeType;
   isSelection?: boolean;
+  source?: 'node' | 'handle';
 }
 
 // Add new memoized components
@@ -515,7 +519,7 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
   );
 
   const onNodeContextMenu = useCallback(
-    (event: React.MouseEvent, node: CanvasNode<any>) => {
+    (event: React.MouseEvent, node: CanvasNode<any>, source?: NodeContextMenuSource) => {
       event.preventDefault();
       const flowPosition = reactFlowInstance.screenToFlowPosition({
         x: event.clientX,
@@ -560,6 +564,7 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
         open: true,
         position: flowPosition,
         type: 'node',
+        source: source || 'node',
         nodeId: node.id,
         nodeType: menuNodeType,
       });
@@ -853,7 +858,7 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
         } as unknown as CanvasNode<any>;
 
         // 调用onNodeContextMenu处理上下文菜单
-        onNodeContextMenu(syntheticEvent, node);
+        onNodeContextMenu(syntheticEvent, node, event.source);
       }
     };
 
@@ -1004,6 +1009,7 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
               position={contextMenu.position}
               nodeId={contextMenu.nodeId}
               nodeType={contextMenu.nodeType}
+              source={contextMenu.source}
               setOpen={(open) => setContextMenu((prev) => ({ ...prev, open }))}
             />
           )}

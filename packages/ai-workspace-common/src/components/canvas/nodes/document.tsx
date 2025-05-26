@@ -34,6 +34,7 @@ import cn from 'classnames';
 import { useUpdateNodeTitle } from '@refly-packages/ai-workspace-common/hooks/use-update-node-title';
 import { useSelectedNodeZIndex } from '@refly-packages/ai-workspace-common/hooks/canvas/use-selected-node-zIndex';
 import { NodeActionButtons } from './shared/node-action-buttons';
+import { message } from 'antd';
 
 export const DocumentNode = memo(
   ({
@@ -153,14 +154,21 @@ export const DocumentNode = memo(
 
     const handleDuplicateDocument = useCallback(
       (event: { content?: string }) => {
+        const onDuplicationSuccess = () => {
+          closeLoading();
+        };
+
+        const closeLoading = message.loading(t('canvas.nodeStatus.isCreatingDocument'));
+
         duplicateDocument(
           data.title,
           event?.content ?? data?.contentPreview ?? '',
           data.entityId,
           data.metadata,
+          onDuplicationSuccess,
         );
       },
-      [data, duplicateDocument],
+      [data, duplicateDocument, id],
     );
 
     const updateTitle = (newTitle: string) => {

@@ -2,12 +2,15 @@ import { FC, useEffect, useRef } from 'react';
 import { useReactFlow } from '@xyflow/react';
 import { NodeActionMenu } from '../node-action-menu';
 import { CanvasNodeType } from '@refly/openapi-schema';
+import { NodeContextMenuSource } from '@refly-packages/ai-workspace-common/events/nodeOperations';
+import { CreateNodeMenu } from '@refly-packages/ai-workspace-common/components/canvas/nodes/shared/create-node-menu';
 
 interface NodeContextMenuProps {
   open: boolean;
   position: { x: number; y: number };
   nodeId: string;
   nodeType: CanvasNodeType;
+  source?: NodeContextMenuSource;
   setOpen: (open: boolean) => void;
 }
 
@@ -16,6 +19,7 @@ export const NodeContextMenu: FC<NodeContextMenuProps> = ({
   position,
   nodeId,
   nodeType,
+  source,
   setOpen,
 }) => {
   const reactFlowInstance = useReactFlow();
@@ -60,12 +64,16 @@ export const NodeContextMenu: FC<NodeContextMenuProps> = ({
         e.preventDefault();
       }}
     >
-      <NodeActionMenu
-        nodeId={nodeId}
-        nodeType={nodeType}
-        onClose={() => setOpen(false)}
-        hasFixedHeight
-      />
+      {source === 'handle' ? (
+        <CreateNodeMenu nodeId={nodeId} nodeType={nodeType} onClose={() => setOpen(false)} />
+      ) : (
+        <NodeActionMenu
+          nodeId={nodeId}
+          nodeType={nodeType}
+          onClose={() => setOpen(false)}
+          hasFixedHeight
+        />
+      )}
     </div>
   );
 };

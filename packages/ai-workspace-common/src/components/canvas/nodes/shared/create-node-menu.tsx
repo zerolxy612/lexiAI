@@ -1,0 +1,240 @@
+import { FC, memo, useCallback, useMemo, useState } from 'react';
+import { Button } from 'antd';
+import { useTranslation } from 'react-i18next';
+import { CanvasNodeType } from '@refly/openapi-schema';
+import { IconAskAI, IconMemo } from '@refly-packages/ai-workspace-common/components/common/icon';
+import { FilePlus } from 'lucide-react';
+import { GrClone } from 'react-icons/gr';
+import {
+  nodeActionEmitter,
+  createNodeEventName,
+} from '@refly-packages/ai-workspace-common/events/nodeActions';
+import { message } from 'antd';
+import { HoverCard } from '@refly-packages/ai-workspace-common/components/hover-card';
+import { useHoverCard } from '@refly-packages/ai-workspace-common/hooks/use-hover-card';
+import { useCreateMemo } from '@refly-packages/ai-workspace-common/hooks/canvas/use-create-memo';
+import { useReactFlow } from '@xyflow/react';
+import { useGetNodeContent } from '@refly-packages/ai-workspace-common/hooks/canvas/use-get-node-content';
+
+interface CreateNodeMenuProps {
+  nodeId: string;
+  nodeType: CanvasNodeType;
+  onClose?: () => void;
+}
+
+interface MenuItem {
+  key: string;
+  icon: React.ElementType;
+  label: string;
+  onClick: () => void;
+  loading?: boolean;
+  primary?: boolean;
+  hoverContent?: {
+    title: string;
+    description: string;
+    videoUrl?: string;
+  };
+}
+
+export const CreateNodeMenu: FC<CreateNodeMenuProps> = memo(({ nodeId, nodeType, onClose }) => {
+  const { t } = useTranslation();
+
+  const { getNode } = useReactFlow();
+  const node = useMemo(() => getNode(nodeId), [nodeId, getNode]);
+  const nodeData = useMemo(() => node?.data, [node]);
+  const { fetchNodeContent } = useGetNodeContent(node);
+
+  const { hoverCardEnabled } = useHoverCard();
+  const { createMemo } = useCreateMemo();
+  const [isCreatingDocument, setIsCreatingDocument] = useState(false);
+  const [beforeDuplicatingDocument, setBeforeDuplicatingDocument] = useState(false);
+
+  const handleAskAI = useCallback(() => {
+    nodeActionEmitter.emit(createNodeEventName(nodeId, 'askAI'));
+    onClose?.();
+  }, [nodeId, onClose]);
+
+  const handleCreateDocument = useCallback(() => {
+    setIsCreatingDocument(true);
+    const closeLoading = message.loading(t('canvas.nodeStatus.isCreatingDocument'));
+    nodeActionEmitter.emit(createNodeEventName(nodeId, 'createDocument'));
+    nodeActionEmitter.on(createNodeEventName(nodeId, 'createDocument.completed'), () => {
+      setIsCreatingDocument(false);
+      closeLoading();
+    });
+    onClose?.();
+  }, [nodeId, onClose, t]);
+
+  const handleCreateMemo = useCallback(() => {
+    createMemo({
+      content: '',
+      position: undefined,
+      sourceNode: {
+        type: nodeType,
+        entityId: nodeData?.entityId as string,
+      },
+    });
+    onClose?.();
+  }, [nodeType, createMemo, onClose]);
+
+  const handleDuplicateDocument = useCallback(async () => {
+    setBeforeDuplicatingDocument(true);
+    const content = (await fetchNodeContent()) as string;
+    nodeActionEmitter.emit(createNodeEventName(nodeId, 'duplicateDocument'), {
+      content,
+    });
+    setBeforeDuplicatingDocument(false);
+    onClose?.();
+  }, [nodeId, fetchNodeContent, onClose]);
+
+  const askAI = {
+    key: 'askAI',
+    icon: IconAskAI,
+    label: t('canvas.nodeActions.askAI'),
+    onClick: handleAskAI,
+    primary: true,
+    hoverContent: {
+      title: t('canvas.nodeActions.askAI'),
+      description: t('canvas.nodeActions.askAIDescription'),
+      videoUrl: 'https://static.refly.ai/onboarding/nodeAction/nodeAction-askAI.webm',
+    },
+  };
+
+  const createMemoItem = {
+    key: 'createMemo',
+    icon: IconMemo,
+    label: t('canvas.nodeActions.createMemo'),
+    onClick: handleCreateMemo,
+    hoverContent: {
+      title: t('canvas.nodeActions.createMemo'),
+      description: t('canvas.nodeActions.createMemoDescription'),
+      videoUrl: 'https://static.refly.ai/onboarding/nodeAction/nodeAction-createEmptyMemo.webm',
+    },
+  };
+
+  const createDocumentItem = {
+    key: 'createDocument',
+    icon: FilePlus,
+    label: t('canvas.nodeStatus.createDocument'),
+    onClick: handleCreateDocument,
+    loading: isCreatingDocument,
+    hoverContent: {
+      title: t('canvas.nodeStatus.createDocument'),
+      description: t('canvas.toolbar.createDocumentDescription'),
+      videoUrl: 'https://static.refly.ai/onboarding/nodeAction/nodeAction-createDocument.webm',
+    },
+  };
+
+  const duplicateDocumentItem = {
+    key: 'duplicateDocument',
+    icon: GrClone,
+    label: t('canvas.nodeActions.duplicateDocument'),
+    loading: beforeDuplicatingDocument,
+    onClick: handleDuplicateDocument,
+    hoverContent: {
+      title: t('canvas.nodeActions.duplicateDocument'),
+      description: t('canvas.nodeActions.duplicateDocumentDescription'),
+      videoUrl: 'https://static.refly.ai/onboarding/nodeAction/nodeAction-duplicateDocument.webm',
+    },
+  };
+
+  // Get menu items based on node type
+  const getMenuItems = useCallback((): MenuItem[] => {
+    switch (nodeType) {
+      case 'skillResponse':
+        return [askAI, createDocumentItem, createMemoItem];
+
+      case 'skill':
+        return [createMemoItem];
+
+      case 'document':
+        return [askAI, duplicateDocumentItem, createMemoItem];
+
+      case 'resource':
+        return [askAI, createDocumentItem, createMemoItem];
+
+      case 'codeArtifact':
+      case 'website':
+      case 'image':
+        return [askAI, createMemoItem];
+
+      case 'memo':
+        return [
+          askAI,
+          createMemoItem,
+          {
+            key: 'duplicateMemo',
+            icon: GrClone,
+            label: t('canvas.nodeActions.duplicateMemo'),
+            onClick: () => {
+              nodeActionEmitter.emit(createNodeEventName(nodeId, 'duplicate'));
+              onClose?.();
+            },
+          },
+        ];
+
+      default:
+        return [];
+    }
+  }, [
+    nodeType,
+    t,
+    handleAskAI,
+    handleCreateDocument,
+    handleCreateMemo,
+    handleDuplicateDocument,
+    isCreatingDocument,
+    beforeDuplicatingDocument,
+  ]);
+
+  const menuItems = getMenuItems();
+
+  return (
+    <div className="bg-white rounded-lg shadow-lg p-2 w-[200px] border border-[rgba(0,0,0,0.06)] relative dark:bg-gray-900 dark:border-gray-700">
+      {menuItems.map((item) => {
+        const button = (
+          <Button
+            key={item.key}
+            className={`
+              w-full
+              h-8
+              flex
+              items-center
+              gap-2
+              px-2
+              rounded
+              text-sm
+              transition-colors
+              text-gray-700 hover:bg-gray-50 hover:text-gray-700 dark:text-gray-200 dark:hover:bg-gray-900 dark:hover:text-gray-200
+              ${item.primary ? '!text-primary-600 hover:bg-primary-50' : ''}
+              ${item.loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+            `}
+            type="text"
+            icon={<item.icon className="w-4 h-4 flex items-center justify-center" />}
+            loading={item.loading}
+            onClick={item.onClick}
+          >
+            <span className="flex-1 text-left truncate">{item.label}</span>
+          </Button>
+        );
+
+        return (
+          <div key={item.key}>
+            {item.hoverContent && hoverCardEnabled ? (
+              <HoverCard
+                title={item.hoverContent.title}
+                description={item.hoverContent.description}
+                videoUrl={item.hoverContent.videoUrl}
+                placement="right"
+              >
+                {button}
+              </HoverCard>
+            ) : (
+              button
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+});

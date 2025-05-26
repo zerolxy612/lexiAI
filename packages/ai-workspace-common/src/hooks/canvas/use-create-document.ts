@@ -200,7 +200,13 @@ export const useCreateDocument = () => {
   );
 
   const duplicateDocument = useCallback(
-    async (title: string, content: string, sourceDocId: string, metadata?: any) => {
+    async (
+      title: string,
+      content: string,
+      sourceDocId: string,
+      metadata?: any,
+      onSuccess?: () => void,
+    ) => {
       if (!checkStorageUsage()) {
         return null;
       }
@@ -240,6 +246,7 @@ export const useCreateDocument = () => {
         };
 
         addNode(newNode, [{ type: 'document', entityId: sourceDocId }], false, true);
+        onSuccess?.();
       }
 
       return docId;
