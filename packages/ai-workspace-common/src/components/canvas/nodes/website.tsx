@@ -32,6 +32,7 @@ import cn from 'classnames';
 import Moveable from 'react-moveable';
 import { useUpdateNodeTitle } from '@refly-packages/ai-workspace-common/hooks/use-update-node-title';
 import { useSelectedNodeZIndex } from '@refly-packages/ai-workspace-common/hooks/canvas/use-selected-node-zIndex';
+import { NodeActionButtons } from './shared/node-action-buttons';
 
 const DEFAULT_WIDTH = 288;
 const DEFAULT_MIN_HEIGHT = 100;
@@ -584,6 +585,15 @@ export const WebsiteNode = memo(
                   nodeType="website"
                 />
               </>
+            )}
+
+            {!isPreview && !readonly && (
+              <NodeActionButtons
+                nodeId={id}
+                nodeType="website"
+                isNodeHovered={isHovered}
+                isSelected={selected}
+              />
             )}
 
             <div className={cn('flex flex-col h-full p-3 box-border', MAX_HEIGHT_CLASS)}>

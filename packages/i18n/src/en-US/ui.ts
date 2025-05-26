@@ -1365,6 +1365,7 @@ const translations = {
       downloadFile: 'Download File',
       editGroupNamePlaceholder: 'Please enter the group name',
       addToSlideshow: 'Add to Slideshow',
+      more: 'More Options',
     },
     nodeStatus: {
       isCreatingDocument: 'Creating Document...',

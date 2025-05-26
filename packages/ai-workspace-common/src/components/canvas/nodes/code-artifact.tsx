@@ -42,6 +42,7 @@ import { useSelectedNodeZIndex } from '@refly-packages/ai-workspace-common/hooks
 import { codeArtifactEmitter } from '@refly-packages/ai-workspace-common/events/codeArtifact';
 import { detectActualTypeFromType } from '@refly-packages/ai-workspace-common/modules/artifacts/code-runner/artifact-type-util';
 import { useSetNodeDataByEntity } from '@refly-packages/ai-workspace-common/hooks/canvas/use-set-node-data-by-entity';
+import { NodeActionButtons } from './shared/node-action-buttons';
 
 interface NodeContentProps {
   status: 'generating' | 'finish' | 'failed' | 'executing';
@@ -377,6 +378,15 @@ export const CodeArtifactNode = memo(
                   nodeType="codeArtifact"
                 />
               </>
+            )}
+
+            {!isPreview && !readonly && (
+              <NodeActionButtons
+                nodeId={id}
+                nodeType="codeArtifact"
+                isNodeHovered={isHovered}
+                isSelected={selected}
+              />
             )}
 
             <div className={cn('flex flex-col h-full p-3 box-border', MAX_HEIGHT_CLASS)}>

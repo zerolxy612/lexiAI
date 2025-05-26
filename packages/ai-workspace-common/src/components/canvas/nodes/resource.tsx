@@ -41,6 +41,7 @@ import { NODE_COLORS } from '@refly-packages/ai-workspace-common/components/canv
 import { useUpdateNodeTitle } from '@refly-packages/ai-workspace-common/hooks/use-update-node-title';
 import { useSelectedNodeZIndex } from '@refly-packages/ai-workspace-common/hooks/canvas/use-selected-node-zIndex';
 import cn from 'classnames';
+import { NodeActionButtons } from './shared/node-action-buttons';
 
 const NodeContent = memo(
   ({
@@ -325,11 +326,20 @@ export const ResourceNode = memo(
           })}
         >
           <div
-            className={`            h-full
+            className={`h-full
             flex flex-col
             ${getNodeCommonStyles({ selected: !isPreview && selected, isHovered })}
           `}
           >
+            {!isPreview && !readonly && (
+              <NodeActionButtons
+                nodeId={id}
+                nodeType="resource"
+                isNodeHovered={isHovered}
+                isSelected={selected}
+              />
+            )}
+
             <div className={cn('flex flex-col h-full relative p-3 box-border', MAX_HEIGHT_CLASS)}>
               <NodeHeader
                 title={data?.title}

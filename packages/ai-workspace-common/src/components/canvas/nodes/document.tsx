@@ -33,6 +33,8 @@ import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/ca
 import cn from 'classnames';
 import { useUpdateNodeTitle } from '@refly-packages/ai-workspace-common/hooks/use-update-node-title';
 import { useSelectedNodeZIndex } from '@refly-packages/ai-workspace-common/hooks/canvas/use-selected-node-zIndex';
+import { NodeActionButtons } from './shared/node-action-buttons';
+
 export const DocumentNode = memo(
   ({
     data = { title: '', entityId: '' },
@@ -251,6 +253,16 @@ export const DocumentNode = memo(
                 />
               </>
             )}
+
+            {!isPreview && !readonly && (
+              <NodeActionButtons
+                nodeId={id}
+                nodeType="document"
+                isNodeHovered={isHovered}
+                isSelected={selected}
+              />
+            )}
+
             <div className={cn('flex flex-col h-full p-3 box-border', MAX_HEIGHT_CLASS)}>
               <NodeHeader
                 title={data.title || t('common.untitled')}

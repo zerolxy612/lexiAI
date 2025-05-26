@@ -53,6 +53,7 @@ import { useNodeData } from '@refly-packages/ai-workspace-common/hooks/canvas';
 import { useSkillError } from '@refly-packages/ai-workspace-common/hooks/use-skill-error';
 import { ModelIcon } from '@lobehub/icons';
 import { useSelectedNodeZIndex } from '@refly-packages/ai-workspace-common/hooks/canvas/use-selected-node-zIndex';
+import { NodeActionButtons } from './shared/node-action-buttons';
 
 const POLLING_WAIT_TIME = 15000;
 
@@ -633,6 +634,15 @@ export const SkillResponseNode = memo(
           <div
             className={`h-full flex flex-col dark:bg-gray-900 ${getNodeCommonStyles({ selected, isHovered })}`}
           >
+            {!isPreview && !readonly && (
+              <NodeActionButtons
+                nodeId={id}
+                nodeType="skillResponse"
+                isNodeHovered={isHovered}
+                isSelected={selected}
+              />
+            )}
+
             {!isPreview && !hideHandles && (
               <>
                 <CustomHandle

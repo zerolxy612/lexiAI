@@ -29,6 +29,7 @@ import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/ca
 import cn from 'classnames';
 import { ImagePreview } from '@refly-packages/ai-workspace-common/components/common/image-preview';
 import { useSelectedNodeZIndex } from '@refly-packages/ai-workspace-common/hooks/canvas/use-selected-node-zIndex';
+import { NodeActionButtons } from './shared/node-action-buttons';
 
 export const ImageNode = memo(
   ({ id, data, isPreview, selected, hideHandles, onNodeClick }: ImageNodeProps) => {
@@ -239,6 +240,15 @@ export const ImageNode = memo(
             )}
 
             <div className={cn('flex flex-col h-full relative box-border', MAX_HEIGHT_CLASS)}>
+              {!isPreview && !readonly && (
+                <NodeActionButtons
+                  nodeId={id}
+                  nodeType="image"
+                  isNodeHovered={isHovered}
+                  isSelected={selected}
+                />
+              )}
+
               <div className="relative w-full h-full rounded-lg overflow-hidden">
                 {showTitle && (
                   <div
