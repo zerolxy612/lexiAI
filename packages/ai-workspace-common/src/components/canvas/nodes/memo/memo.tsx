@@ -41,6 +41,7 @@ import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/ca
 import { useNodeSize } from '@refly-packages/ai-workspace-common/hooks/canvas/use-node-size';
 import { NodeResizer as NodeResizerComponent } from '../shared/node-resizer';
 import { useSelectedNodeZIndex } from '@refly-packages/ai-workspace-common/hooks/canvas/use-selected-node-zIndex';
+import { NodeActionButtons } from '../shared/node-action-buttons';
 
 export const MemoNode = ({
   data,
@@ -399,6 +400,15 @@ export const MemoNode = ({
                 nodeType="memo"
               />
             </>
+          )}
+
+          {!isPreview && !readonly && (
+            <NodeActionButtons
+              nodeId={id}
+              nodeType="memo"
+              isNodeHovered={isHovered}
+              isSelected={selected}
+            />
           )}
           <div className="flex flex-col h-full p-3 box-border">
             <div className="relative flex-grow overflow-y-auto pr-2 -mr-2">

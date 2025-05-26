@@ -129,11 +129,7 @@ export const NodeActionButtons: FC<NodeActionButtonsProps> = memo(
       const buttons: ActionButtonType[] = [];
 
       // Add askAI button for most node types
-      if (
-        ['skillResponse', 'document', 'resource', 'codeArtifact', 'website', 'image'].includes(
-          nodeType,
-        )
-      ) {
+      if (!['skill'].includes(nodeType)) {
         buttons.push({
           key: 'askAI',
           icon: IconAskAI,
@@ -181,7 +177,7 @@ export const NodeActionButtons: FC<NodeActionButtonsProps> = memo(
       }
 
       // Add copy button for content nodes
-      if (['skillResponse', 'document', 'resource', 'codeArtifact'].includes(nodeType)) {
+      if (['skillResponse', 'document', 'resource', 'codeArtifact', 'memo'].includes(nodeType)) {
         buttons.push({
           key: 'copy',
           icon: IconCopy,
@@ -221,11 +217,12 @@ export const NodeActionButtons: FC<NodeActionButtonsProps> = memo(
     return (
       <div
         className={cn(
-          'absolute -top-8 right-0 flex gap-1 bg-white dark:bg-gray-800 rounded-md shadow-md p-1 z-50 transition-opacity duration-200',
+          'absolute right-0 flex gap-1 bg-white dark:bg-gray-800 rounded-md shadow-md p-1 z-50 transition-opacity duration-200',
           {
             'opacity-100': shouldShowButtons,
             'opacity-0 pointer-events-none': !shouldShowButtons,
           },
+          nodeType === 'memo' ? 'top-0' : '-top-8',
         )}
         ref={buttonContainerRef}
       >
@@ -250,14 +247,16 @@ export const NodeActionButtons: FC<NodeActionButtonsProps> = memo(
           </Tooltip>
         ))}
 
-        <Tooltip title={t('canvas.nodeActions.more')} placement="top">
-          <Button
-            type="text"
-            size="small"
-            icon={<IconMoreHorizontal className="w-4 h-4 flex items-center justify-center" />}
-            onClick={handleOpenContextMenu}
-          />
-        </Tooltip>
+        {nodeType !== 'skill' && (
+          <Tooltip title={t('canvas.nodeActions.more')} placement="top">
+            <Button
+              type="text"
+              size="small"
+              icon={<IconMoreHorizontal className="w-4 h-4 flex items-center justify-center" />}
+              onClick={handleOpenContextMenu}
+            />
+          </Tooltip>
+        )}
       </div>
     );
   },

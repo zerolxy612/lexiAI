@@ -138,6 +138,16 @@ export const CreateNodeMenu: FC<CreateNodeMenuProps> = memo(({ nodeId, nodeType,
     },
   };
 
+  const duplicateMemoItem = {
+    key: 'duplicateMemo',
+    icon: GrClone,
+    label: t('canvas.nodeActions.duplicateMemo'),
+    onClick: () => {
+      nodeActionEmitter.emit(createNodeEventName(nodeId, 'duplicate'));
+      onClose?.();
+    },
+  };
+
   // Get menu items based on node type
   const getMenuItems = useCallback((): MenuItem[] => {
     switch (nodeType) {
@@ -159,19 +169,10 @@ export const CreateNodeMenu: FC<CreateNodeMenuProps> = memo(({ nodeId, nodeType,
         return [askAI, createMemoItem];
 
       case 'memo':
-        return [
-          askAI,
-          createMemoItem,
-          {
-            key: 'duplicateMemo',
-            icon: GrClone,
-            label: t('canvas.nodeActions.duplicateMemo'),
-            onClick: () => {
-              nodeActionEmitter.emit(createNodeEventName(nodeId, 'duplicate'));
-              onClose?.();
-            },
-          },
-        ];
+        return [askAI, createMemoItem, duplicateMemoItem];
+
+      case 'group':
+        return [askAI, createMemoItem];
 
       default:
         return [];
