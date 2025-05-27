@@ -1,13 +1,14 @@
 import { useCallback, useRef } from 'react';
-import { useReactFlow } from '@xyflow/react';
+import { useReactFlow, addEdge, Edge } from '@xyflow/react';
 import { nodeOperationsEmitter } from '@refly-packages/ai-workspace-common/events/nodeOperations';
+import { genUniqueId } from '@refly/utils/id';
 
 /**
  * Hook to manage temporary edge connections in the canvas
  * Used when a user drags an edge from a node but doesn't connect it to another node yet
  */
 export function useDragToCreateNode() {
-  const { screenToFlowPosition } = useReactFlow();
+  const { screenToFlowPosition, setNodes, setEdges } = useReactFlow();
 
   // Track if we're actually dragging or just clicking
   const isDraggingRef = useRef(false);
@@ -80,6 +81,34 @@ export function useDragToCreateNode() {
       // Get the position where the user dropped the connection
       const { clientX, clientY } = 'changedTouches' in event ? event.changedTouches[0] : event;
 
+      // Create ghost node at drop position
+      const ghostNodeId = `ghost-${genUniqueId()}`;
+      const flowPosition = screenToFlowPosition({
+        x: clientX,
+        y: clientY,
+      });
+
+      const ghostNode = {
+        id: ghostNodeId,
+        type: 'ghost',
+        position: flowPosition,
+        data: {},
+        draggable: false,
+        selectable: false,
+      };
+
+      // Create temporary edge
+      const tempEdge: Edge = {
+        id: `temp-edge-${genUniqueId()}`,
+        source: handleType === 'source' ? sourceNodeId : ghostNodeId,
+        target: handleType === 'source' ? ghostNodeId : targetNodeId,
+        style: { stroke: '#94a3b8', strokeDasharray: '5,5' },
+      };
+
+      // Add ghost node and temporary edge
+      setNodes((nodes) => nodes.concat(ghostNode));
+      setEdges((edges) => addEdge(tempEdge, edges));
+
       // Use the source node's type as the context for the menu
       // This will determine what options are available in the CreateNodeMenu
       const contextNodeType = fromNode?.type || 'document';
@@ -98,7 +127,7 @@ export function useDragToCreateNode() {
         },
       });
     },
-    [screenToFlowPosition],
+    [screenToFlowPosition, setNodes, setEdges],
   );
 
   return {

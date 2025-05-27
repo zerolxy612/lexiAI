@@ -586,6 +586,11 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
 
   const handleNodeClick = useCallback(
     (event: React.MouseEvent, node: CanvasNode<any>) => {
+      if (node.id.startsWith('ghost-')) {
+        setContextMenu((prev) => ({ ...prev, open: false }));
+        return;
+      }
+
       const { operatingNodeId } = useCanvasStore.getState();
       setContextMenu((prev) => ({ ...prev, open: false }));
 

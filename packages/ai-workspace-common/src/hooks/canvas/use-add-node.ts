@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useStoreApi, XYPosition } from '@xyflow/react';
+import { useReactFlow, useStoreApi, XYPosition } from '@xyflow/react';
 import { CanvasNodeType } from '@refly/openapi-schema';
 import { message } from 'antd';
 import { useTranslation } from 'react-i18next';
@@ -50,6 +50,13 @@ export const useAddNode = () => {
   const { canvasId } = useCanvasContext();
   const { calculatePosition, layoutBranchAndUpdatePositions } = useNodePosition();
   const { previewNode } = useNodePreviewControl({ canvasId });
+  const { setNodes, setEdges } = useReactFlow();
+
+  // Clean up ghost nodes when menu closes
+  const handleCleanGhost = () => {
+    setNodes((nodes) => nodes.filter((node) => !node.id.startsWith('ghost-')));
+    setEdges((edges) => edges.filter((edge) => !edge.id.startsWith('temp-edge-')));
+  };
 
   const addNode = useCallback(
     (
@@ -63,6 +70,7 @@ export const useAddNode = () => {
 
       if (!node?.type || !node?.data) {
         console.warn('Invalid node data provided');
+        handleCleanGhost();
         return undefined;
       }
 
@@ -224,13 +232,13 @@ export const useAddNode = () => {
       adoptUserNodes(updatedNodes, nodeLookup, parentLookup, {
         elevateNodesOnSelect: false,
       });
-      setState({ nodes: updatedNodes });
+      setState({ nodes: updatedNodes.filter((node) => !node.id.startsWith('ghost-')) });
 
       // Then update edges with a slight delay to ensure nodes are registered first
       // This helps prevent the race condition where edges are created but nodes aren't ready
       setTimeout(() => {
         // Update edges separately
-        setState({ edges: updatedEdges });
+        setState({ edges: updatedEdges.filter((edge) => !edge.id.startsWith('temp-edge-')) });
 
         // Apply branch layout if we're connecting to existing nodes
         if (sourceNodes?.length > 0 || targetNodes?.length > 0) {

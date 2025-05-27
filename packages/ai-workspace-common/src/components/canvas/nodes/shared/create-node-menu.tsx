@@ -122,6 +122,11 @@ export const CreateNodeMenu: FC<CreateNodeMenuProps> = memo(
       onClose?.();
     }, [nodeId, fetchNodeContent, onClose, dragCreateInfo]);
 
+    const handleDuplicateMemo = useCallback(() => {
+      nodeActionEmitter.emit(createNodeEventName(nodeId, 'duplicate'), { dragCreateInfo });
+      onClose?.();
+    }, [nodeId, dragCreateInfo, onClose]);
+
     const askAI = {
       key: 'askAI',
       icon: IconAskAI,
@@ -177,10 +182,7 @@ export const CreateNodeMenu: FC<CreateNodeMenuProps> = memo(
       key: 'duplicateMemo',
       icon: GrClone,
       label: t('canvas.nodeActions.duplicateMemo'),
-      onClick: () => {
-        nodeActionEmitter.emit(createNodeEventName(nodeId, 'duplicate'), { dragCreateInfo });
-        onClose?.();
-      },
+      onClick: handleDuplicateMemo,
     };
 
     // Get menu items based on node type
@@ -214,13 +216,11 @@ export const CreateNodeMenu: FC<CreateNodeMenuProps> = memo(
       }
     }, [
       nodeType,
-      t,
-      handleAskAI,
-      handleCreateDocument,
-      handleCreateMemo,
-      handleDuplicateDocument,
-      isCreatingDocument,
-      beforeDuplicatingDocument,
+      askAI,
+      createDocumentItem,
+      createMemoItem,
+      duplicateDocumentItem,
+      duplicateMemoItem,
     ]);
 
     const menuItems = getMenuItems();

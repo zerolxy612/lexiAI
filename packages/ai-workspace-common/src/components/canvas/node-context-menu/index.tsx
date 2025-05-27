@@ -28,18 +28,26 @@ export const NodeContextMenu: FC<NodeContextMenuProps> = ({
   setOpen,
 }) => {
   const reactFlowInstance = useReactFlow();
+  const { setNodes, setEdges } = useReactFlow();
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Clean up ghost nodes when menu closes
+  const handleClose = () => {
+    setNodes((nodes) => nodes.filter((node) => !node.id.startsWith('ghost-')));
+    setEdges((edges) => edges.filter((edge) => !edge.id.startsWith('temp-edge-')));
+    setOpen(false);
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setOpen(false);
+        handleClose();
       }
     };
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setOpen(false);
+        handleClose();
       }
     };
 
@@ -52,7 +60,7 @@ export const NodeContextMenu: FC<NodeContextMenuProps> = ({
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscape);
     };
-  }, [open, setOpen]);
+  }, [open, dragCreateInfo, setNodes, setEdges]);
 
   if (!open) return null;
 
@@ -73,16 +81,11 @@ export const NodeContextMenu: FC<NodeContextMenuProps> = ({
         <CreateNodeMenu
           nodeId={nodeId}
           nodeType={nodeType}
-          onClose={() => setOpen(false)}
+          onClose={handleClose}
           dragCreateInfo={dragCreateInfo}
         />
       ) : (
-        <NodeActionMenu
-          nodeId={nodeId}
-          nodeType={nodeType}
-          onClose={() => setOpen(false)}
-          hasFixedHeight
-        />
+        <NodeActionMenu nodeId={nodeId} nodeType={nodeType} onClose={handleClose} hasFixedHeight />
       )}
     </div>
   );
