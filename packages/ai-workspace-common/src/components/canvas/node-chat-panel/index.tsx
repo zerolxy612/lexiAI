@@ -1,11 +1,14 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Button, Tooltip, Select, Form } from 'antd';
-import { SwapOutlined } from '@ant-design/icons';
+import { Button, Tooltip, Select, Form, Badge } from 'antd';
+import { SwapOutlined, ToolOutlined } from '@ant-design/icons';
 
 import { ChatInput } from '@refly-packages/ai-workspace-common/components/canvas/launchpad/chat-input';
 import { getSkillIcon } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { ModelInfo, Skill, SkillRuntimeConfig, SkillTemplateConfig } from '@refly/openapi-schema';
-import { ChatActions } from '@refly-packages/ai-workspace-common/components/canvas/launchpad/chat-actions';
+import {
+  ChatActions,
+  CustomAction,
+} from '@refly-packages/ai-workspace-common/components/canvas/launchpad/chat-actions';
 import { ContextManager } from '@refly-packages/ai-workspace-common/components/canvas/launchpad/context-manager';
 import { ConfigManager } from '@refly-packages/ai-workspace-common/components/canvas/launchpad/config-manager';
 import {
@@ -28,6 +31,8 @@ import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/ca
 import { useListSkills } from '@refly-packages/ai-workspace-common/hooks/use-find-skill';
 
 import './index.scss';
+import { McpSelectorPanel } from '@refly-packages/ai-workspace-common/components/canvas/launchpad/mcp-selector-panel';
+import { t } from 'i18next';
 
 // Memoized Premium Banner Component
 export const PremiumBanner = memo(() => {
@@ -375,6 +380,39 @@ export const ChatPanel = memo(
       handleSendMessage();
     }, [handleSendMessage, resultId, setActiveResultId]);
 
+    const [mcpSelectorOpen, setMcpSelectorOpen] = useState<boolean>(false);
+
+    // Toggle MCP selector panel
+    const handleMcpSelectorToggle = useCallback(() => {
+      setMcpSelectorOpen(!mcpSelectorOpen);
+    }, [mcpSelectorOpen, setMcpSelectorOpen]);
+
+    // 获取选择的 MCP 服务器
+    const { selectedMcpServers } = useLaunchpadStoreShallow((state) => ({
+      selectedMcpServers: state.selectedMcpServers,
+    }));
+
+    const customActions: CustomAction[] = useMemo(
+      () => [
+        {
+          icon: (
+            <Badge
+              count={selectedMcpServers.length > 0 ? selectedMcpServers.length : 0}
+              size="small"
+              offset={[2, -2]}
+            >
+              <ToolOutlined className="flex items-center" />
+            </Badge>
+          ),
+          title: t('copilot.chatActions.chooseMcp'),
+          onClick: () => {
+            handleMcpSelectorToggle();
+          },
+        },
+      ],
+      [handleMcpSelectorToggle, t, selectedMcpServers],
+    );
+
     const renderContent = () => (
       <>
         <ContextManager
@@ -442,6 +480,7 @@ export const ChatPanel = memo(
         ) : null}
 
         <ChatActions
+          customActions={customActions}
           className={classNames({
             'py-2': isList,
           })}
@@ -467,6 +506,8 @@ export const ChatPanel = memo(
               'border border-gray-100 border-solid dark:border-gray-700',
             )}
           >
+            <McpSelectorPanel isOpen={mcpSelectorOpen} onClose={() => setMcpSelectorOpen(false)} />
+
             <SelectedSkillHeader
               skill={selectedSkill}
               setSelectedSkill={setSelectedSkill}
@@ -488,6 +529,8 @@ export const ChatPanel = memo(
       <div
         className={`flex flex-col gap-3 h-full p-3 box-border ${className} max-w-[1024px] mx-auto`}
       >
+        <McpSelectorPanel isOpen={mcpSelectorOpen} onClose={() => setMcpSelectorOpen(false)} />
+
         <NodeHeader
           readonly={readonly}
           selectedSkillName={selectedSkill?.name}
