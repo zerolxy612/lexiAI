@@ -42,6 +42,8 @@ import { useNodeSize } from '@refly-packages/ai-workspace-common/hooks/canvas/us
 import { NodeResizer as NodeResizerComponent } from '../shared/node-resizer';
 import { useSelectedNodeZIndex } from '@refly-packages/ai-workspace-common/hooks/canvas/use-selected-node-zIndex';
 import { NodeActionButtons } from '../shared/node-action-buttons';
+import { useGetNodeConnectFromDragCreateInfo } from '@refly-packages/ai-workspace-common/hooks/canvas/use-get-node-connect';
+import { NodeDragCreateInfo } from '@refly-packages/ai-workspace-common/events/nodeOperations';
 
 export const MemoNode = ({
   data,
@@ -61,6 +63,7 @@ export const MemoNode = ({
   const { getNode, getEdges } = useReactFlow();
   const node = getNode(id);
   const targetRef = useRef<HTMLDivElement>(null);
+  const { getConnectionInfo } = useGetNodeConnectFromDragCreateInfo();
 
   const [isFocused, setIsFocused] = useState(false);
   const { operatingNodeId } = useCanvasStoreShallow((state) => ({
@@ -132,32 +135,43 @@ export const MemoNode = ({
     await insertToDoc('insertBelow', data?.contentPreview);
   }, [insertToDoc, data]);
 
-  const handleAskAI = useCallback(() => {
-    addNode(
-      {
-        type: 'skill',
-        data: {
-          title: 'Skill',
-          entityId: genSkillID(),
-          metadata: {
-            contextItems: [
-              {
-                type: 'memo',
-                title: data?.contentPreview
-                  ? `${data.title} - ${data.contentPreview?.slice(0, 10)}`
-                  : data.title,
-                entityId: data.entityId,
-                metadata: data.metadata,
-              },
-            ] as IContextItem[],
+  const handleAskAI = useCallback(
+    (event?: {
+      dragCreateInfo?: NodeDragCreateInfo;
+    }) => {
+      const { position, connectTo } = getConnectionInfo(
+        { entityId: data.entityId, type: 'memo' },
+        event?.dragCreateInfo,
+      );
+
+      addNode(
+        {
+          type: 'skill',
+          data: {
+            title: 'Skill',
+            entityId: genSkillID(),
+            metadata: {
+              contextItems: [
+                {
+                  type: 'memo',
+                  title: data?.contentPreview
+                    ? `${data.title} - ${data.contentPreview?.slice(0, 10)}`
+                    : data.title,
+                  entityId: data.entityId,
+                  metadata: data.metadata,
+                },
+              ] as IContextItem[],
+            },
           },
+          position,
         },
-      },
-      [{ type: 'memo', entityId: data.entityId }],
-      false,
-      true,
-    );
-  }, [data, addNode]);
+        connectTo,
+        false,
+        true,
+      );
+    },
+    [data, addNode, getConnectionInfo],
+  );
 
   const editor = useEditor({
     extensions: [
@@ -289,29 +303,40 @@ export const MemoNode = ({
     [data?.entityId, data?.metadata, setNodeDataByEntity],
   );
 
-  const handleDuplicate = useCallback(() => {
-    const memoId = genMemoID();
-    const jsonContent = editor?.getJSON();
-    const content = editor?.storage?.markdown?.getMarkdown() || data?.contentPreview || '';
+  const handleDuplicate = useCallback(
+    (event?: {
+      dragCreateInfo?: NodeDragCreateInfo;
+    }) => {
+      const memoId = genMemoID();
+      const jsonContent = editor?.getJSON();
+      const content = editor?.storage?.markdown?.getMarkdown() || data?.contentPreview || '';
 
-    addNode(
-      {
-        type: 'memo',
-        data: {
-          title: t('canvas.nodeTypes.memo'),
-          contentPreview: content,
-          entityId: memoId,
-          metadata: {
-            bgColor: data?.metadata?.bgColor || '#FFFEE7',
-            jsonContent,
+      const { position, connectTo } = getConnectionInfo(
+        { entityId: data.entityId, type: 'memo' },
+        event?.dragCreateInfo,
+      );
+
+      addNode(
+        {
+          type: 'memo',
+          data: {
+            title: t('canvas.nodeTypes.memo'),
+            contentPreview: content,
+            entityId: memoId,
+            metadata: {
+              bgColor: data?.metadata?.bgColor || '#FFFEE7',
+              jsonContent,
+            },
           },
+          position,
         },
-      },
-      [{ type: 'memo', entityId: data.entityId }],
-      false,
-      true,
-    );
-  }, [data, addNode, editor, t]);
+        connectTo,
+        false,
+        true,
+      );
+    },
+    [data, addNode, editor, t, getConnectionInfo],
+  );
 
   // Add event handling
   useEffect(() => {
@@ -319,8 +344,12 @@ export const MemoNode = ({
     const handleNodeAddToContext = () => handleAddToContext();
     const handleNodeDelete = () => handleDelete();
     const handleNodeInsertToDoc = () => handleInsertToDoc();
-    const handleNodeAskAI = () => handleAskAI();
-    const handleNodeDuplicate = () => handleDuplicate();
+    const handleNodeAskAI = (event?: {
+      dragCreateInfo?: NodeDragCreateInfo;
+    }) => handleAskAI(event);
+    const handleNodeDuplicate = (event?: {
+      dragCreateInfo?: NodeDragCreateInfo;
+    }) => handleDuplicate(event);
 
     // Register events with node ID
     nodeActionEmitter.on(createNodeEventName(id, 'addToContext'), handleNodeAddToContext);

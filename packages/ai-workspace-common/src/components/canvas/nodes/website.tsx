@@ -33,6 +33,8 @@ import Moveable from 'react-moveable';
 import { useUpdateNodeTitle } from '@refly-packages/ai-workspace-common/hooks/use-update-node-title';
 import { useSelectedNodeZIndex } from '@refly-packages/ai-workspace-common/hooks/canvas/use-selected-node-zIndex';
 import { NodeActionButtons } from './shared/node-action-buttons';
+import { useGetNodeConnectFromDragCreateInfo } from '@refly-packages/ai-workspace-common/hooks/canvas/use-get-node-connect';
+import { NodeDragCreateInfo } from '@refly-packages/ai-workspace-common/events/nodeOperations';
 
 const DEFAULT_WIDTH = 288;
 const DEFAULT_MIN_HEIGHT = 100;
@@ -408,6 +410,7 @@ export const WebsiteNode = memo(
     const { getNode, getEdges } = useReactFlow();
     const { addNode } = useAddNode();
     const updateNodeTitle = useUpdateNodeTitle();
+    const { getConnectionInfo } = useGetNodeConnectFromDragCreateInfo();
 
     // Hover effect
     const { handleMouseEnter: onHoverStart, handleMouseLeave: onHoverEnd } = useNodeHoverEffect(id);
@@ -480,33 +483,44 @@ export const WebsiteNode = memo(
     }, [id, data, deleteNode]);
 
     // Add Ask AI functionality
-    const handleAskAI = useCallback(() => {
-      const url = data?.metadata?.url;
-      if (!url) return;
+    const handleAskAI = useCallback(
+      (event?: {
+        dragCreateInfo?: NodeDragCreateInfo;
+      }) => {
+        const url = data?.metadata?.url;
+        if (!url) return;
 
-      addNode(
-        {
-          type: 'skill',
-          data: {
-            title: 'Skill',
-            entityId: genSkillID(),
-            metadata: {
-              contextItems: [
-                {
-                  type: 'website',
-                  title: data?.title || t('canvas.nodes.website.defaultTitle', 'Website'),
-                  entityId: data.entityId,
-                  metadata: data.metadata,
-                },
-              ] as IContextItem[],
+        const { position, connectTo } = getConnectionInfo(
+          { entityId: data.entityId, type: 'website' },
+          event?.dragCreateInfo,
+        );
+
+        addNode(
+          {
+            type: 'skill',
+            data: {
+              title: 'Skill',
+              entityId: genSkillID(),
+              metadata: {
+                contextItems: [
+                  {
+                    type: 'website',
+                    title: data?.title || t('canvas.nodes.website.defaultTitle', 'Website'),
+                    entityId: data.entityId,
+                    metadata: data.metadata,
+                  },
+                ] as IContextItem[],
+              },
             },
+            position,
           },
-        },
-        [{ type: 'website', entityId: data.entityId }],
-        false,
-        true,
-      );
-    }, [data, addNode, t]);
+          connectTo,
+          false,
+          true,
+        );
+      },
+      [data, addNode, t, getConnectionInfo],
+    );
 
     // Enhanced resize handler
     const handleEnhancedResize = useCallback(
@@ -530,7 +544,9 @@ export const WebsiteNode = memo(
       // Create node-specific event handlers
       const handleNodeAddToContext = () => handleAddToContext();
       const handleNodeDelete = () => handleDelete();
-      const handleNodeAskAI = () => handleAskAI();
+      const handleNodeAskAI = (event?: {
+        dragCreateInfo?: NodeDragCreateInfo;
+      }) => handleAskAI(event);
 
       // Register events with node ID
       nodeActionEmitter.on(createNodeEventName(id, 'addToContext'), handleNodeAddToContext);
