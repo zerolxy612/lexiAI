@@ -35,6 +35,8 @@ import { useUpdateNodeTitle } from '@refly-packages/ai-workspace-common/hooks/us
 import { useSelectedNodeZIndex } from '@refly-packages/ai-workspace-common/hooks/canvas/use-selected-node-zIndex';
 import { NodeActionButtons } from './shared/node-action-buttons';
 import { message } from 'antd';
+import { useGetNodeConnectFromDragCreateInfo } from '@refly-packages/ai-workspace-common/hooks/canvas/use-get-node-connect';
+import { NodeDragCreateInfo } from '@refly-packages/ai-workspace-common/events/nodeOperations';
 
 export const DocumentNode = memo(
   ({
@@ -53,7 +55,7 @@ export const DocumentNode = memo(
     const updateNodeTitle = useUpdateNodeTitle();
 
     const targetRef = useRef<HTMLDivElement>(null);
-    const { getNode } = useReactFlow();
+    const { getNode, screenToFlowPosition } = useReactFlow();
     useSelectedNodeZIndex(id, selected);
 
     const { operatingNodeId } = useCanvasStoreShallow((state) => ({
@@ -124,51 +126,70 @@ export const DocumentNode = memo(
     }, [data.entityId, deleteDocument, handleDelete]);
 
     const { addNode } = useAddNode();
+    const { getConnectionInfo } = useGetNodeConnectFromDragCreateInfo();
 
-    const handleAskAI = useCallback(() => {
-      addNode(
-        {
-          type: 'skill',
-          data: {
-            title: 'Skill',
-            entityId: genSkillID(),
-            metadata: {
-              contextItems: [
-                {
-                  type: 'document',
-                  title: data.title,
-                  entityId: data.entityId,
-                  metadata: data.metadata,
-                },
-              ],
+    const handleAskAI = useCallback(
+      (event?: {
+        dragCreateInfo?: NodeDragCreateInfo;
+      }) => {
+        const { position, connectTo } = getConnectionInfo(
+          { entityId: data.entityId, type: 'document' },
+          event?.dragCreateInfo,
+        );
+
+        addNode(
+          {
+            type: 'skill',
+            data: {
+              title: 'Skill',
+              entityId: genSkillID(),
+              metadata: {
+                contextItems: [
+                  {
+                    type: 'document',
+                    title: data.title,
+                    entityId: data.entityId,
+                    metadata: data.metadata,
+                  },
+                ],
+              },
             },
+            position,
           },
-        },
-        [{ type: 'document', entityId: data.entityId }],
-        false,
-        true,
-      );
-    }, [data, addNode]);
+          connectTo,
+          false,
+          true,
+        );
+      },
+      [data, addNode, screenToFlowPosition],
+    );
 
     const { duplicateDocument } = useCreateDocument();
 
     const handleDuplicateDocument = useCallback(
-      (event: { content?: string }) => {
+      (event: {
+        content?: string;
+        dragCreateInfo?: NodeDragCreateInfo;
+      }) => {
         const onDuplicationSuccess = () => {
           closeLoading();
         };
 
         const closeLoading = message.loading(t('canvas.nodeStatus.isCreatingDocument'));
+        const { position, connectTo } = getConnectionInfo(
+          { entityId: data.entityId, type: 'document' },
+          event?.dragCreateInfo,
+        );
 
         duplicateDocument(
           data.title,
           event?.content ?? data?.contentPreview ?? '',
-          data.entityId,
           data.metadata,
+          { position, connectTo },
           onDuplicationSuccess,
         );
       },
-      [data, duplicateDocument, id],
+      [data, duplicateDocument, id, t],
     );
 
     const updateTitle = (newTitle: string) => {
@@ -184,9 +205,13 @@ export const DocumentNode = memo(
       const handleNodeAddToContext = () => handleAddToContext();
       const handleNodeDelete = () => handleDelete();
       const handleNodeDeleteFile = () => handleDeleteFile();
-      const handleNodeAskAI = () => handleAskAI();
-      const handleNodeDuplicateDocument = (event: { content?: string }) =>
-        handleDuplicateDocument(event);
+      const handleNodeAskAI = (event?: {
+        dragCreateInfo?: NodeDragCreateInfo;
+      }) => handleAskAI(event);
+      const handleNodeDuplicateDocument = (event: {
+        content?: string;
+        dragCreateInfo?: NodeDragCreateInfo;
+      }) => handleDuplicateDocument(event);
 
       // Register events with node ID
       nodeActionEmitter.on(createNodeEventName(id, 'addToContext'), handleNodeAddToContext);

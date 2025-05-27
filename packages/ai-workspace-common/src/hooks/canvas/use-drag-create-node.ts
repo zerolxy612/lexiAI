@@ -1,16 +1,13 @@
 import { useCallback, useRef } from 'react';
-import { addEdge, useReactFlow } from '@xyflow/react';
-import { genUniqueId } from '@refly/utils/id';
-import { genSkillID } from '@refly/utils/id';
-import { useTranslation } from 'react-i18next';
+import { useReactFlow } from '@xyflow/react';
+import { nodeOperationsEmitter } from '@refly-packages/ai-workspace-common/events/nodeOperations';
 
 /**
  * Hook to manage temporary edge connections in the canvas
  * Used when a user drags an edge from a node but doesn't connect it to another node yet
  */
 export function useDragToCreateNode() {
-  const { setNodes, setEdges, screenToFlowPosition } = useReactFlow();
-  const { t } = useTranslation();
+  const { screenToFlowPosition } = useReactFlow();
 
   // Track if we're actually dragging or just clicking
   const isDraggingRef = useRef(false);
@@ -82,87 +79,26 @@ export function useDragToCreateNode() {
 
       // Get the position where the user dropped the connection
       const { clientX, clientY } = 'changedTouches' in event ? event.changedTouches[0] : event;
-      const position = screenToFlowPosition({
+
+      // Use the source node's type as the context for the menu
+      // This will determine what options are available in the CreateNodeMenu
+      const contextNodeType = fromNode?.type || 'document';
+
+      // Emit event to show CreateNodeMenu at the drop position
+      nodeOperationsEmitter.emit('openNodeContextMenu', {
+        nodeId: fromNode?.id || 'temp-drag-create',
+        nodeType: contextNodeType,
         x: clientX,
         y: clientY,
-      });
-
-      // Generate a unique ID for the skill node
-      const skillId = genSkillID();
-      const skillNodeId = `node-${genUniqueId()}`;
-
-      // Create a skill node at the drop position
-      const skillNode = {
-        id: skillNodeId,
-        type: 'skill',
-        position: position,
-        data: {
-          title: t('canvas.skill.askAI', 'Ask AI'),
-          entityId: skillId,
-          metadata: {
-            query: '',
-            // Define basic skill metadata directly
-            sizeMode: 'adaptive',
-            selectedSkill: null,
-            modelInfo: null,
-            contextItems: [],
-          },
+        source: 'handle',
+        dragCreateInfo: {
+          nodeId: handleType === 'source' ? sourceNodeId : targetNodeId,
+          handleType,
+          position: { x: clientX, y: clientY },
         },
-        selectable: true,
-      };
-
-      // Create an edge connecting to our skill node (direction depends on handle type)
-      const newEdge = {
-        id:
-          handleType === 'source'
-            ? `${sourceNodeId}->${skillNodeId}`
-            : `${skillNodeId}->${targetNodeId}`,
-        source: handleType === 'source' ? sourceNodeId : skillNodeId,
-        target: handleType === 'source' ? skillNodeId : targetNodeId,
-      };
-
-      // Add the skill node and edge to the canvas
-      setNodes((nodes) => nodes.concat(skillNode));
-      setEdges((edges) => addEdge(newEdge, edges));
-
-      // If the source node has contextItems, add the source node to the skill's context
-      if (sourceNodeId && handleType === 'source') {
-        setNodes((nodes) => {
-          const sourceNode = nodes.find((node) => node.id === sourceNodeId);
-          if (sourceNode?.data && sourceNode.type !== 'skill' && sourceNode.type !== 'group') {
-            // Update the skill node to include the source node in its contextItems
-            return nodes.map((node) => {
-              if (node.id === skillNodeId) {
-                const contextItem = {
-                  entityId: sourceNode.data.entityId,
-                  type: sourceNode.type,
-                  title: sourceNode.data.title || '',
-                };
-
-                // Create a new node object without using spread on potentially undefined properties
-                const newNode = Object.assign({}, node);
-                const newData = Object.assign({}, node.data);
-                newNode.data = newData;
-
-                if (!newData.metadata) {
-                  newData.metadata = {};
-                }
-
-                // Assign the context items
-                newData.metadata = Object.assign({}, newData.metadata, {
-                  contextItems: [contextItem],
-                });
-
-                return newNode;
-              }
-              return node;
-            });
-          }
-          return nodes;
-        });
-      }
+      });
     },
-    [setNodes, setEdges, screenToFlowPosition, t],
+    [screenToFlowPosition],
   );
 
   return {

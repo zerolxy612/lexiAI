@@ -2,7 +2,10 @@ import { FC, useEffect, useRef } from 'react';
 import { useReactFlow } from '@xyflow/react';
 import { NodeActionMenu } from '../node-action-menu';
 import { CanvasNodeType } from '@refly/openapi-schema';
-import { NodeContextMenuSource } from '@refly-packages/ai-workspace-common/events/nodeOperations';
+import {
+  NodeContextMenuSource,
+  NodeDragCreateInfo,
+} from '@refly-packages/ai-workspace-common/events/nodeOperations';
 import { CreateNodeMenu } from '@refly-packages/ai-workspace-common/components/canvas/nodes/shared/create-node-menu';
 
 interface NodeContextMenuProps {
@@ -11,6 +14,7 @@ interface NodeContextMenuProps {
   nodeId: string;
   nodeType: CanvasNodeType;
   source?: NodeContextMenuSource;
+  dragCreateInfo?: NodeDragCreateInfo;
   setOpen: (open: boolean) => void;
 }
 
@@ -20,6 +24,7 @@ export const NodeContextMenu: FC<NodeContextMenuProps> = ({
   nodeId,
   nodeType,
   source,
+  dragCreateInfo,
   setOpen,
 }) => {
   const reactFlowInstance = useReactFlow();
@@ -65,7 +70,12 @@ export const NodeContextMenu: FC<NodeContextMenuProps> = ({
       }}
     >
       {source === 'handle' ? (
-        <CreateNodeMenu nodeId={nodeId} nodeType={nodeType} onClose={() => setOpen(false)} />
+        <CreateNodeMenu
+          nodeId={nodeId}
+          nodeType={nodeType}
+          onClose={() => setOpen(false)}
+          dragCreateInfo={dragCreateInfo}
+        />
       ) : (
         <NodeActionMenu
           nodeId={nodeId}

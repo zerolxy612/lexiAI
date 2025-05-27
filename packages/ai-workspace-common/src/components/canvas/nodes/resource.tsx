@@ -24,7 +24,6 @@ import { useCanvasData } from '@refly-packages/ai-workspace-common/hooks/canvas/
 import { useAddNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-node';
 import { useDeleteResource } from '@refly-packages/ai-workspace-common/hooks/canvas/use-delete-resource';
 import { genSkillID } from '@refly/utils/id';
-import { IContextItem } from '@refly-packages/ai-workspace-common/stores/context-panel';
 import { NodeResizer as NodeResizerComponent } from './shared/node-resizer';
 import {
   useNodeSize,
@@ -42,6 +41,8 @@ import { useUpdateNodeTitle } from '@refly-packages/ai-workspace-common/hooks/us
 import { useSelectedNodeZIndex } from '@refly-packages/ai-workspace-common/hooks/canvas/use-selected-node-zIndex';
 import cn from 'classnames';
 import { NodeActionButtons } from './shared/node-action-buttons';
+import { useGetNodeConnectFromDragCreateInfo } from '@refly-packages/ai-workspace-common/hooks/canvas/use-get-node-connect';
+import { NodeDragCreateInfo } from '@refly-packages/ai-workspace-common/events/nodeOperations';
 
 const NodeContent = memo(
   ({
@@ -91,6 +92,7 @@ export const ResourceNode = memo(
     const { getNode } = useReactFlow();
     useSelectedNodeZIndex(id, selected);
     const updateNodeTitle = useUpdateNodeTitle();
+    const { getConnectionInfo } = useGetNodeConnectFromDragCreateInfo();
 
     const { resourceType, indexStatus, sizeMode = 'adaptive' } = data?.metadata ?? {};
     const ResourceIcon =
@@ -175,30 +177,41 @@ export const ResourceNode = memo(
 
     const { addNode } = useAddNode();
 
-    const handleAskAI = useCallback(() => {
-      addNode(
-        {
-          type: 'skill',
-          data: {
-            title: 'Skill',
-            entityId: genSkillID(),
-            metadata: {
-              contextItems: [
-                {
-                  type: 'resource',
-                  title: data.title,
-                  entityId: data.entityId,
-                  metadata: data.metadata,
-                },
-              ] as IContextItem[],
+    const handleAskAI = useCallback(
+      (event?: {
+        dragCreateInfo?: NodeDragCreateInfo;
+      }) => {
+        const { connectTo, position } = getConnectionInfo(
+          { entityId: data.entityId, type: 'resource' },
+          event?.dragCreateInfo,
+        );
+
+        addNode(
+          {
+            type: 'skill',
+            data: {
+              title: 'Skill',
+              entityId: genSkillID(),
+              metadata: {
+                contextItems: [
+                  {
+                    type: 'resource',
+                    title: data.title,
+                    entityId: data.entityId,
+                    metadata: data.metadata,
+                  },
+                ],
+              },
             },
+            position,
           },
-        },
-        [{ type: 'resource', entityId: data.entityId }],
-        false,
-        true,
-      );
-    }, [data, addNode]);
+          connectTo,
+          false,
+          true,
+        );
+      },
+      [data, addNode, getConnectionInfo],
+    );
 
     const { debouncedCreateDocument } = useCreateDocument();
     const { data: result } = useGetResourceDetail(
@@ -218,30 +231,42 @@ export const ResourceNode = memo(
     );
     const remoteResult = result?.data;
 
-    const handleCreateDocument = useCallback(async () => {
-      try {
-        const { data: remoteResult } = await getClient().getResourceDetail({
-          query: { resourceId: data.entityId },
-        });
-        const remoteData = remoteResult?.data;
+    const handleCreateDocument = useCallback(
+      async (event?: {
+        dragCreateInfo?: NodeDragCreateInfo;
+      }) => {
+        try {
+          const { data: remoteResult } = await getClient().getResourceDetail({
+            query: { resourceId: data.entityId },
+          });
+          const remoteData = remoteResult?.data;
 
-        if (!remoteData?.content) {
-          message.warning(t('knowledgeBase.context.noContent'));
-          return;
+          if (!remoteData?.content) {
+            message.warning(t('knowledgeBase.context.noContent'));
+            return;
+          }
+
+          const { connectTo, position } = getConnectionInfo(
+            { entityId: data.entityId, type: 'resource' },
+            event?.dragCreateInfo,
+          );
+
+          await debouncedCreateDocument(remoteData.title ?? '', remoteData.content, {
+            sourceNodeId: connectTo.find((c) => c.handleType === 'source')?.entityId,
+            targetNodeId: connectTo.find((c) => c.handleType === 'target')?.entityId,
+            addToCanvas: true,
+            sourceType: 'resource',
+            position,
+          });
+        } catch (error) {
+          console.error(error);
+          message.error(t('knowledgeBase.context.noContent'));
+        } finally {
+          nodeActionEmitter.emit(createNodeEventName(id, 'createDocument.completed'));
         }
-
-        await debouncedCreateDocument(remoteData.title ?? '', remoteData.content, {
-          sourceNodeId: data.entityId,
-          addToCanvas: true,
-          sourceType: 'resource',
-        });
-      } catch (error) {
-        console.error(error);
-        message.error(t('knowledgeBase.context.noContent'));
-      } finally {
-        nodeActionEmitter.emit(createNodeEventName(id, 'createDocument.completed'));
-      }
-    }, [data.title, data.entityId, remoteResult?.content, debouncedCreateDocument, t]);
+      },
+      [data.title, data.entityId, remoteResult?.content, debouncedCreateDocument, t, id],
+    );
 
     const updateTitle = (newTitle: string) => {
       if (newTitle === node.data?.title) {
@@ -290,8 +315,12 @@ export const ResourceNode = memo(
       const handleNodeAddToContext = () => handleAddToContext();
       const handleNodeDelete = () => handleDelete();
       const handleNodeDeleteFile = () => handleDeleteFile();
-      const handleNodeAskAI = () => handleAskAI();
-      const handleNodeCreateDocument = () => handleCreateDocument();
+      const handleNodeAskAI = (event?: {
+        dragCreateInfo?: NodeDragCreateInfo;
+      }) => handleAskAI(event);
+      const handleNodeCreateDocument = (event?: {
+        dragCreateInfo?: NodeDragCreateInfo;
+      }) => handleCreateDocument(event);
 
       // Register events with node ID
       nodeActionEmitter.on(createNodeEventName(id, 'addToContext'), handleNodeAddToContext);

@@ -64,6 +64,7 @@ import { runtime } from '@refly-packages/ai-workspace-common/utils/env';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 import {
   NodeContextMenuSource,
+  NodeDragCreateInfo,
   nodeOperationsEmitter,
 } from '@refly-packages/ai-workspace-common/events/nodeOperations';
 import { useCanvasInitialActions } from '@refly-packages/ai-workspace-common/hooks/use-canvas-initial-actions';
@@ -90,6 +91,7 @@ interface ContextMenuState {
   nodeType?: CanvasNodeType;
   isSelection?: boolean;
   source?: 'node' | 'handle';
+  dragCreateInfo?: NodeDragCreateInfo;
 }
 
 // Add new memoized components
@@ -519,7 +521,14 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
   );
 
   const onNodeContextMenu = useCallback(
-    (event: React.MouseEvent, node: CanvasNode<any>, source?: NodeContextMenuSource) => {
+    (
+      event: React.MouseEvent,
+      node: CanvasNode<any>,
+      metaInfo?: {
+        source?: NodeContextMenuSource;
+        dragCreateInfo?: NodeDragCreateInfo;
+      },
+    ) => {
       event.preventDefault();
       const flowPosition = reactFlowInstance.screenToFlowPosition({
         x: event.clientX,
@@ -560,11 +569,14 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
           return; // Don't show context menu for unknown node types
       }
 
+      const { source, dragCreateInfo } = metaInfo || {};
+
       setContextMenu({
         open: true,
         position: flowPosition,
         type: 'node',
         source: source || 'node',
+        dragCreateInfo,
         nodeId: node.id,
         nodeType: menuNodeType,
       });
@@ -858,7 +870,10 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
         } as unknown as CanvasNode<any>;
 
         // 调用onNodeContextMenu处理上下文菜单
-        onNodeContextMenu(syntheticEvent, node, event.source);
+        onNodeContextMenu(syntheticEvent, node, {
+          source: event.source,
+          dragCreateInfo: event.dragCreateInfo,
+        });
       }
     };
 
@@ -1010,6 +1025,7 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
               nodeId={contextMenu.nodeId}
               nodeType={contextMenu.nodeType}
               source={contextMenu.source}
+              dragCreateInfo={contextMenu.dragCreateInfo}
               setOpen={(open) => setContextMenu((prev) => ({ ...prev, open }))}
             />
           )}
