@@ -75,7 +75,7 @@ export const GroupName: FC<GroupNameProps> = ({
     >
       <div className="flex gap-3">
         <Input
-          className="!bg-transparent !border-none !shadow-none !pl-0 !text-base !text-black dark:!text-gray-100"
+          className="!bg-transparent !border-none !shadow-none !pl-0 !text-base !text-gray-600 dark:!text-gray-100"
           disabled={readonly}
           placeholder={t('canvas.nodeActions.editGroupNamePlaceholder')}
           value={name}

@@ -474,8 +474,9 @@ export const NodeActionMenu: FC<NodeActionMenuProps> = ({
               'https://static.refly.ai/onboarding/nodeAction/nodeAction-selectOrLayout.webm',
           },
         },
-        { key: 'divider-cluster', type: 'divider' as const } as MenuItem,
-        {
+        nodeType === 'group' &&
+          ({ key: 'divider-cluster-2', type: 'divider' as const } as MenuItem),
+        nodeType === 'group' && {
           key: 'delete',
           icon: IconDelete,
           label: t('canvas.nodeActions.delete'),

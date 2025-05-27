@@ -41,7 +41,6 @@ interface MenuItem {
 export const CreateNodeMenu: FC<CreateNodeMenuProps> = memo(
   ({ nodeId, nodeType, onClose, dragCreateInfo }) => {
     const { t } = useTranslation();
-    console.log('dragCreateInfo', dragCreateInfo);
 
     const { getNode, screenToFlowPosition } = useReactFlow();
     const node = useMemo(() => getNode(nodeId), [nodeId, getNode]);
@@ -226,17 +225,16 @@ export const CreateNodeMenu: FC<CreateNodeMenuProps> = memo(
     const menuItems = getMenuItems();
 
     return (
-      <div className="bg-white rounded-lg shadow-lg p-2 w-[200px] border border-[rgba(0,0,0,0.06)] relative dark:bg-gray-900 dark:border-gray-700">
+      <div className="bg-white rounded-lg shadow-lg p-2 border border-[rgba(0,0,0,0.06)] relative dark:bg-gray-900 dark:border-gray-700">
         {menuItems.map((item) => {
           const button = (
             <Button
               key={item.key}
               className={`
               w-full
-              h-8
+              h-7
               flex
               items-center
-              gap-2
               px-2
               rounded
               text-sm

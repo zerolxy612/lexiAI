@@ -44,6 +44,7 @@ import { useSelectedNodeZIndex } from '@refly-packages/ai-workspace-common/hooks
 import { NodeActionButtons } from '../shared/node-action-buttons';
 import { useGetNodeConnectFromDragCreateInfo } from '@refly-packages/ai-workspace-common/hooks/canvas/use-get-node-connect';
 import { NodeDragCreateInfo } from '@refly-packages/ai-workspace-common/events/nodeOperations';
+import { Divider } from 'antd';
 
 export const MemoNode = ({
   data,
@@ -395,7 +396,16 @@ export const MemoNode = ({
         }
       >
         {!isPreview && selected && !readonly && (
-          <MemoEditor editor={editor} bgColor={bgColor} onChangeBackground={onUpdateBgColor} />
+          <div className="absolute flex items-center left-[50%] -translate-x-1/2 -top-8 z-50 px-2 bg-white rounded-lg shadow-lg dark:bg-gray-900">
+            <MemoEditor editor={editor} bgColor={bgColor} onChangeBackground={onUpdateBgColor} />
+            <Divider className="mx-0 h-8" type="vertical" />
+            <NodeActionButtons
+              nodeId={id}
+              nodeType="memo"
+              isNodeHovered={isHovered}
+              isSelected={selected}
+            />
+          </div>
         )}
 
         <div
@@ -431,14 +441,14 @@ export const MemoNode = ({
             </>
           )}
 
-          {!isPreview && !readonly && (
+          {/* {!isPreview && !readonly && (
             <NodeActionButtons
               nodeId={id}
               nodeType="memo"
               isNodeHovered={isHovered}
               isSelected={selected}
             />
-          )}
+          )} */}
           <div className="flex flex-col h-full p-3 box-border">
             <div className="relative flex-grow overflow-y-auto pr-2 -mr-2">
               <div

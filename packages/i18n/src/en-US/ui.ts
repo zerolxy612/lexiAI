@@ -1101,6 +1101,7 @@ const translations = {
       codeArtifact: 'Code Artifact',
       website: 'Website',
       mindMap: 'Mind Map',
+      group: 'Group',
     },
     presetScenarios: {
       title: 'Preset Scenarios',

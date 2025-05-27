@@ -220,8 +220,6 @@ export const useAddNode = () => {
           newEdges.push(...targetEdges);
         }
 
-        console.log('dragCreateInfo newEdges', newEdges);
-
         // Only add new edges if there are any
         if (newEdges.length > 0) {
           updatedEdges = deduplicateEdges([...edges, ...newEdges]);

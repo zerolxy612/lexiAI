@@ -85,7 +85,7 @@ export const NodeContextMenu: FC<NodeContextMenuProps> = ({
           dragCreateInfo={dragCreateInfo}
         />
       ) : (
-        <NodeActionMenu nodeId={nodeId} nodeType={nodeType} onClose={handleClose} hasFixedHeight />
+        <NodeActionMenu nodeId={nodeId} nodeType={nodeType} onClose={handleClose} />
       )}
     </div>
   );

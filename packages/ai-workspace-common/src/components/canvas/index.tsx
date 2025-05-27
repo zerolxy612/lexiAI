@@ -217,6 +217,7 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
     setCanvasPage,
     showSlideshow,
     setShowSlideshow,
+    setContextMenuOpenedCanvasId,
   } = useCanvasStoreShallow((state) => ({
     config: state.config[canvasId],
     operatingNodeId: state.operatingNodeId,
@@ -226,6 +227,7 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
     setCanvasPage: state.setCanvasPage,
     showSlideshow: state.showSlideshow,
     setShowSlideshow: state.setShowSlideshow,
+    setContextMenuOpenedCanvasId: state.setContextMenuOpenedCanvasId,
   }));
   const hasCanvasSynced = config?.localSyncedAt > 0 && config?.remoteSyncedAt > 0;
 
@@ -502,6 +504,12 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
     position: { x: 0, y: 0 },
     type: 'canvas',
   });
+
+  useEffect(() => {
+    if (contextMenu.type === 'node') {
+      setContextMenuOpenedCanvasId(contextMenu.open ? contextMenu.nodeId : null);
+    }
+  }, [contextMenu, setContextMenuOpenedCanvasId]);
 
   const onPaneContextMenu = useCallback(
     (event: React.MouseEvent) => {
