@@ -295,7 +295,6 @@ export const GroupNode = memo(
     );
 
     const handleChangeBgColor = useCallback((color: string) => {
-      console.log('change bg color', color);
       setNodeDataByEntity(
         {
           entityId: data.entityId,
@@ -374,6 +373,7 @@ export const GroupNode = memo(
             )}
 
             <GroupName
+              nodeId={id}
               title={data.title}
               onUpdateName={handleUpdateName}
               selected={selected}

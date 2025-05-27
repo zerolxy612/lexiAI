@@ -26,7 +26,7 @@ export type Events = {
     nodeType: CanvasNodeType;
     x: number;
     y: number;
-    source: 'node' | 'handle';
+    source?: 'node' | 'handle';
   };
 };
 

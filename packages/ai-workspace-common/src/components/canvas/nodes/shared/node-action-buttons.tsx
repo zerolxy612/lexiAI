@@ -217,7 +217,7 @@ export const NodeActionButtons: FC<NodeActionButtonsProps> = memo(
     return (
       <div
         className={cn(
-          'absolute right-0 flex gap-1 bg-white dark:bg-gray-800 rounded-md shadow-md p-1 z-50 transition-opacity duration-200',
+          'absolute right-0 flex gap-1 bg-white dark:bg-gray-800 rounded-md shadow-md dark:shadow-gray-900 p-1 z-50 transition-opacity duration-200',
           {
             'opacity-100': shouldShowButtons,
             'opacity-0 pointer-events-none': !shouldShowButtons,
