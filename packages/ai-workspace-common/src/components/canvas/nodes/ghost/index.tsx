@@ -9,6 +9,12 @@ export const GhostNode = React.memo(() => (
       isConnectable={false}
       className="!bg-transparent !border-gray-300 !w-3 !h-3"
     />
+    <Handle
+      type="source"
+      position={Position.Bottom}
+      isConnectable={false}
+      className="!bg-transparent !border-transparent !w-3 !h-3"
+    />
   </div>
 ));
 

@@ -74,12 +74,14 @@ export const NodeActionButtons: FC<NodeActionButtonsProps> = memo(
 
     const handleCloneAskAI = useCallback(() => {
       setCloneAskAIRunning(true);
-      nodeActionEmitter.emit(createNodeEventName(nodeId, 'cloneAskAI'));
+
       nodeActionEmitter.on(createNodeEventName(nodeId, 'cloneAskAI.completed'), () => {
-        console.log('cloneAskAI.completed');
         setCloneAskAIRunning(false);
+        nodeActionEmitter.off(createNodeEventName(nodeId, 'cloneAskAI.completed'));
       });
-    }, [nodeId]);
+
+      nodeActionEmitter.emit(createNodeEventName(nodeId, 'cloneAskAI'));
+    }, [nodeId, t, nodeActionEmitter]);
 
     const handleCopy = useCallback(async () => {
       setCopyRunning(true);
