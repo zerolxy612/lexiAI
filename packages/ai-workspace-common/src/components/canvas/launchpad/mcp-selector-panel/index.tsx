@@ -101,7 +101,17 @@ export const McpSelectorPanel: React.FC<McpSelectorPanelProps> = ({ isOpen, onCl
       );
     }
 
-    return mcpServers.map((server) => {
+    // 对 mcpServers 进行排序，将已选择的服务器排在前面
+    const sortedMcpServers = [...mcpServers].sort((a, b) => {
+      const aSelected = selectedMcpServers.includes(a.name);
+      const bSelected = selectedMcpServers.includes(b.name);
+
+      if (aSelected && !bSelected) return -1;
+      if (!aSelected && bSelected) return 1;
+      return 0;
+    });
+
+    return sortedMcpServers.map((server) => {
       const displayDescription = server.description || '';
       return (
         <div

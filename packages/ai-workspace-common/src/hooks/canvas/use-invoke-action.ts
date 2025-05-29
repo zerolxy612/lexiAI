@@ -31,6 +31,7 @@ import { codeArtifactEmitter } from '@refly-packages/ai-workspace-common/events/
 import { useReactFlow } from '@xyflow/react';
 import { detectActualTypeFromType } from '@refly-packages/ai-workspace-common/modules/artifacts/code-runner/artifact-type-util';
 import { deletedNodesEmitter } from '@refly-packages/ai-workspace-common/events/deleted-nodes';
+import { useLaunchpadStoreShallow } from '@refly-packages/ai-workspace-common/stores/launchpad';
 
 export const useInvokeAction = () => {
   const { addNode } = useAddNode();
@@ -555,6 +556,10 @@ export const useInvokeAction = () => {
   const findWebsite = useFindWebsite();
   const findImages = useFindImages();
 
+  const { selectedMcpServers } = useLaunchpadStoreShallow((state) => ({
+    selectedMcpServers: state.selectedMcpServers,
+  }));
+
   const invokeAction = useCallback(
     (payload: SkillNodeMeta, target: Entity) => {
       deletedNodeIdsRef.current = new Set();
@@ -567,7 +572,6 @@ export const useInvokeAction = () => {
         modelInfo,
         contextItems,
         selectedSkill,
-        selectedMcpServers,
         resultId,
         version = 0,
         tplConfig = {},
@@ -676,7 +680,7 @@ export const useInvokeAction = () => {
 
       return cleanup;
     },
-    [addNode, setNodeDataByEntity, onUpdateResult, createTimeoutHandler],
+    [addNode, setNodeDataByEntity, onUpdateResult, createTimeoutHandler, selectedMcpServers],
   );
 
   return { invokeAction, abortAction };
