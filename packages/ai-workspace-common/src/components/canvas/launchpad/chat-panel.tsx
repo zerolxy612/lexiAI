@@ -270,7 +270,6 @@ export const ChatPanel = ({
       {
         query,
         resultId: newResultId,
-        selectedMcpServers,
         selectedSkill,
         modelInfo: selectedModel,
         contextItems,
