@@ -1,4 +1,5 @@
 import { Embeddings } from '@langchain/core/embeddings';
+import { OllamaEmbeddings as LangChainOllamaEmbeddings } from '@langchain/ollama';
 
 export interface OllamaEmbeddingsConfig {
   model: string;
@@ -10,69 +11,58 @@ export interface OllamaEmbeddingsConfig {
 }
 
 export class OllamaEmbeddings extends Embeddings {
-  private config: OllamaEmbeddingsConfig;
+  private client: LangChainOllamaEmbeddings;
 
   constructor(config: OllamaEmbeddingsConfig) {
     super(config);
-    this.config = {
-      ...config,
-      baseUrl: config.baseUrl.endsWith('/') ? config.baseUrl : `${config.baseUrl}/`,
-      batchSize: config.batchSize || 16,
-      maxRetries: config.maxRetries || 3,
-    };
-  }
 
-  private async fetch(input: string[]) {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-
-    if (this.config.apiKey) {
-      headers.Authorization = `Bearer ${this.config.apiKey}`;
+    // Validate required configuration
+    if (!config.model) {
+      throw new Error('Ollama embeddings model must be specified');
     }
 
-    const results = [];
-
-    // Process in batches to avoid overwhelming the API
-    for (let i = 0; i < input.length; i += this.config.batchSize) {
-      const batch = input.slice(i, i + this.config.batchSize);
-      const embeddings = await Promise.all(
-        batch.map(async (text) => {
-          const response = await fetch(`${this.config.baseUrl}embeddings`, {
-            method: 'post',
-            headers,
-            body: JSON.stringify({
-              model: this.config.model,
-              prompt: text,
-            }),
-          });
-
-          if (!response.ok) {
-            throw new Error(
-              `Ollama embeddings API call failed: ${response.status} ${response.statusText}`,
-            );
-          }
-
-          const data = await response.json();
-          return data.embedding;
-        }),
-      );
-
-      results.push(...embeddings);
+    if (!config.baseUrl) {
+      throw new Error('Ollama baseUrl must be specified');
     }
 
-    return results;
+    try {
+      // Create the LangChain OllamaEmbeddings client
+      this.client = new LangChainOllamaEmbeddings({
+        model: config.model,
+        baseUrl: config.baseUrl,
+        requestOptions: {
+          useMmap: true,
+          numThread: 6,
+        },
+      });
+    } catch (error) {
+      throw new Error(`Failed to initialize Ollama embeddings client: ${error.message}`);
+    }
   }
 
   async embedDocuments(documents: string[]): Promise<number[][]> {
-    return await this.fetch(documents);
+    if (!documents || documents.length === 0) {
+      return [];
+    }
+
+    try {
+      return await this.client.embedDocuments(documents);
+    } catch (error) {
+      console.error(`Ollama embeddings error: ${error.message}`);
+      throw new Error(`Failed to generate embeddings for documents: ${error.message}`);
+    }
   }
 
   async embedQuery(query: string): Promise<number[]> {
-    const embeddings = await this.fetch([query]);
-    if (embeddings.length === 0) {
-      throw new Error('No embedding returned from Ollama API');
+    if (!query || query.trim() === '') {
+      throw new Error('Query text cannot be empty');
     }
-    return embeddings[0];
+
+    try {
+      return await this.client.embedQuery(query);
+    } catch (error) {
+      console.error(`Ollama query embedding error: ${error.message}`);
+      throw new Error(`Failed to generate embedding for query: ${error.message}`);
+    }
   }
 }
