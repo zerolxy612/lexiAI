@@ -1,85 +1,186 @@
-# Refly.AI Documentation
+# LexiHK 法律AI项目开发文档
 
-This repository contains the official documentation for [Refly.AI](https://refly.ai), an AI-native content creation platform built on the concept of "Free Canvas". The documentation site is built using [VitePress](https://vitepress.dev/), a static site generator powered by Vue.
+## 📚 文档概览
 
-## About Refly
+本文档集为基于 Refly.ai 开发 LexiHK 法律AI项目提供完整的开发指导，涵盖从需求分析到代码实现的全流程指南。
 
-Refly is a platform that enables users to:
+## 📋 文档目录
 
-- Engage in multi-topic & multi-threaded conversations on a free canvas
-- Integrate writing materials and AI knowledge base for a powerful second brain system
-- Utilize context memory functionality for precise modifications
-- Access built-in AI web search and knowledge base retrieval
-- Seamlessly create content with an integrated Notion-style AI editor
+### 1️⃣ [项目需求分析](./01-项目需求分析.md)
+- **目标**: 明确项目目标和功能需求
+- **内容**: 
+  - 项目概述与核心价值主张
+  - 功能模块详细分析 (聊天机器人、画布节点、技能引擎)
+  - 用户画像与使用场景
+  - 竞品分析与成功指标
+  - 风险评估与应对策略
+- **受众**: 产品经理、项目负责人、开发团队
 
-## Local Development
+### 2️⃣ [技术架构设计](./02-技术架构设计.md)  
+- **目标**: 设计完整的技术架构方案
+- **内容**:
+  - 基于Refly的扩展架构设计
+  - 前端组件层次与目录结构规划
+  - 后端模块设计与API接口规范
+  - 数据库设计与AI集成架构
+  - 安全架构与性能优化方案
+  - 部署架构与CI/CD流程
+- **受众**: 技术负责人、架构师、全栈开发者
 
-### Prerequisites
+### 3️⃣ [代码组织原则](./03-代码组织原则.md)
+- **目标**: 建立统一的代码开发标准
+- **内容**:
+  - 渐进式改造与模块化扩展原则
+  - 前后端代码分层与文件结构
+  - 组件设计模式与状态管理策略
+  - 技能系统扩展与数据访问层设计
+  - 错误处理、日志记录与测试策略
+  - 性能优化与代码质量保证
+- **受众**: 全栈开发者、代码审查者
 
-- [Node.js](https://nodejs.org/) (v16 or higher)
-- [pnpm](https://pnpm.io/) (v8.15.8 or higher)
+### 4️⃣ [开发计划与里程碑](./04-开发计划与里程碑.md)
+- **目标**: 制定详细的开发时间计划
+- **内容**:
+  - 3个月12周开发周期规划
+  - Phase 1: 基础架构搭建 (4周)
+  - Phase 2: 核心功能开发 (4周)  
+  - Phase 3: 高级功能与优化 (4周)
+  - 每个Sprint的具体任务与验收标准
+  - 风险管理与交付物清单
+- **受众**: 项目经理、开发团队、客户
 
-### Setup and Run
+### 5️⃣ [UI设计指南](./05-UI设计指南.md)
+- **目标**: 建立专业的法律AI界面设计规范
+- **内容**:
+  - 法律行业专业化设计理念
+  - 品牌标识与视觉系统 (LexiHK品牌化)
+  - 三栏布局系统设计 (聊天+画布+文件)
+  - 组件设计规范 (按钮、卡片、表单)
+  - 聊天界面与画布节点设计
+  - 响应式设计与无障碍设计
+- **受众**: UI/UX设计师、前端开发者
 
-1. Clone this repository
-   ```bash
-   git clone https://github.com/refly-ai/refly-docs.git
-   cd refly-docs
-   ```
+## 🎯 使用指南
 
-> 💡 If you want to contribute to the documentation, please **fork** this repository and clone your forked repo instead.
+### 开发前准备
+1. **首先阅读**: [01-项目需求分析.md](./01-项目需求分析.md) - 理解项目目标
+2. **架构理解**: [02-技术架构设计.md](./02-技术架构设计.md) - 掌握技术方案
+3. **规范学习**: [03-代码组织原则.md](./03-代码组织原则.md) - 遵循开发标准
 
-2. Install dependencies
-   ```bash
-   pnpm install
-   ```
+### 开发过程中
+1. **任务规划**: 参考 [04-开发计划与里程碑.md](./04-开发计划与里程碑.md)
+2. **界面开发**: 遵循 [05-UI设计指南.md](./05-UI设计指南.md)
+3. **代码实现**: 按照 [03-代码组织原则.md](./03-代码组织原则.md) 执行
 
-3. Start the development server
-   ```bash
-   pnpm dev
-   ```
+### 关键决策参考
+- **技术选型**: 查看技术架构设计文档
+- **界面设计**: 参考UI设计指南
+- **进度安排**: 依据开发计划与里程碑
+- **代码规范**: 遵循代码组织原则
 
-4. Build the documentation site
-   ```bash
-   pnpm build
-   ```
+## 🔧 技术栈概览
 
-5. Preview the production build
-   ```bash
-   pnpm preview
-   ```
+### 前端技术栈
+- **框架**: React 18 + TypeScript
+- **状态管理**: Zustand  
+- **样式方案**: Tailwind CSS + Ant Design
+- **画布引擎**: ReactFlow
+- **构建工具**: Vite + Turborepo
 
-### Additional Scripts
+### 后端技术栈
+- **框架**: NestJS + TypeScript
+- **数据库**: MySQL 8.0
+- **缓存**: Redis 7
+- **AI集成**: 多模型支持 (GPT-4, Claude, DeepSeek等)
 
-- Convert all images to WebP format:
-  ```bash
-  pnpm convert-images
-  ```
+### 开发工具
+- **代码管理**: Git + GitHub
+- **CI/CD**: GitHub Actions
+- **容器化**: Docker + Docker Compose
+- **代码规范**: ESLint + Prettier + Biome
 
-## Documentation Structure
+## 📁 项目结构概览
 
-This documentation site is organized into the following sections:
+```
+LexiHK/
+├── apps/
+│   ├── web/                 # 前端应用
+│   ├── api/                 # 后端API
+│   └── extension/           # 浏览器扩展
+├── packages/
+│   ├── legal-components/    # 法律专用组件
+│   ├── legal-skills/        # 法律技能引擎
+│   ├── legal-types/         # 法律类型定义
+│   ├── legal-knowledge/     # 法律知识库
+│   └── ai-workspace-common/ # 共享组件 (扩展)
+└── docs/                    # 项目文档
+    ├── 01-项目需求分析.md
+    ├── 02-技术架构设计.md
+    ├── 03-代码组织原则.md
+    ├── 04-开发计划与里程碑.md
+    └── 05-UI设计指南.md
+```
 
-- **Getting Started**: Introduction to Refly and its core features
-- **Guide**: Detailed usage instructions, configuration options, and tutorials
-  - Crash Course for new users
-  - Self-Deploy instructions
-  - Configuration options
-  - Chrome Extension usage
-  - Video Tutorials
-- **Roadmap**: Future plans and development roadmap
-- **Community**: Contact information and community resources
-- **About**: Privacy policy and terms of service
-- **Changelog**: Detailed version history and release notes
+## 🎨 核心功能特性
 
-## Multilingual Support
+### 💬 智能法律聊天机器人
+- 专业法律意图识别
+- 多轮对话上下文理解
+- 合同分析、法律研究、风险评估
+- 聊天结果转画布节点
 
-The documentation is available in:
-- English (default), where all the documents are in the root directory
-- Chinese (zh), where all the documents are in the `zh` directory
+### 🎯 可视化法律画布
+- 案件信息节点
+- 合同分析节点  
+- 证据管理节点
+- 时间线可视化
+- 风险评估展示
 
-Contributions to other language translations are welcome!
+### 📂 智能文件管理
+- 法律文档上传与解析
+- AI自动文档分析
+- 案件时间线管理
+- 文档与案件关联
 
-## Contributing
+### 🧠 法律知识引擎
+- 中国法律法规库
+- 典型判例检索
+- 法律模板库
+- 智能推荐系统
 
-We welcome contributions to the Refly documentation! Please feel free to submit pull requests with improvements, corrections, or translations.
+## 🔄 开发流程
+
+### Phase 1: 基础搭建 (第1-4周)
+- ✅ 项目架构搭建
+- ✅ UI界面品牌化改造  
+- ✅ 基础数据模型设计
+- ✅ 核心API接口开发
+
+### Phase 2: 核心功能 (第5-8周)  
+- 🔄 法律聊天机器人开发
+- 🔄 AI技能系统集成
+- 🔄 法律画布节点实现
+- 🔄 文件管理系统开发
+
+### Phase 3: 优化完善 (第9-12周)
+- ⏳ 法律知识库构建
+- ⏳ 高级AI分析功能
+- ⏳ 性能优化与测试
+- ⏳ 部署与运维准备
+
+## 📞 联系与支持
+
+### 项目信息
+- **项目名称**: LexiHK 法律AI创作引擎
+- **基础项目**: Refly.ai 开源项目
+- **开发周期**: 3个月 (12周)
+- **团队规模**: 1-2名全栈开发者
+
+### 技术支持
+- **文档更新**: 本文档集将在开发过程中持续更新
+- **问题反馈**: 通过GitHub Issues进行技术讨论
+- **代码审查**: 严格遵循代码组织原则进行peer review
+
+---
+
+**注意**: 本文档集是一个活跃的指导文档，会随着项目进展不断完善和更新。建议开发团队定期同步最新版本，确保开发工作与文档保持一致。
