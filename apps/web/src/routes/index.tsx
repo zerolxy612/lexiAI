@@ -19,6 +19,7 @@ import { useForcedLightMode } from '@refly-packages/ai-workspace-common/hooks/us
 
 // Lazy load components
 const Home = lazy(() => import('@/pages/home'));
+const AuthPage = lazy(() => import('@/pages/auth'));
 const Canvas = lazy(() => import('@/pages/canvas'));
 const Pricing = lazy(() => import('@/pages/pricing'));
 const ShareCanvasPage = lazy(() => import('@/pages/share'));
@@ -36,6 +37,7 @@ const prefetchRoutes = () => {
   import('@refly-packages/ai-workspace-common/components/request-access');
   import('@/pages/artifact-gallery');
   import('@/pages/use-cases-gallery');
+  import('@/pages/auth');
 };
 
 export const AppRouter = (props: { layout?: any }) => {
@@ -99,7 +101,12 @@ export const AppRouter = (props: { layout?: any }) => {
     <Suspense fallback={<SuspenseLoading />}>
       <Layout>
         <Routes>
-          <Route path="/" element={<HomeRedirect defaultNode={<Home />} />} />
+          <Route
+            path="/"
+            element={<HomeRedirect defaultNode={<Home />} authNode={<AuthPage />} />}
+          />
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/landing" element={<Home />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/share/canvas/:canvasId" element={<ShareCanvasPage />} />
           <Route path="/share/code/:shareId" element={<ShareCodePage />} />
