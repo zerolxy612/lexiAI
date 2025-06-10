@@ -11,6 +11,7 @@ import {
   HiOutlineHome,
 } from 'react-icons/hi2';
 import { IoIosMore } from 'react-icons/io';
+import { BsThreeDotsVertical } from 'react-icons/bs';
 import { IoLanguage } from 'react-icons/io5';
 import { HiOutlineReply } from 'react-icons/hi';
 import { FiCode } from 'react-icons/fi';
@@ -129,6 +130,7 @@ export const IconRun = LuPlay;
 export const IconRerun = LuRotateCw;
 export const IconReply = HiOutlineReply;
 export const IconMoreHorizontal = IoIosMore;
+export const IconMoreVertical = BsThreeDotsVertical;
 export const IconPin = LuPin;
 export const IconUnpin = LuPinOff;
 export const IconEdit = LuPencilLine;
