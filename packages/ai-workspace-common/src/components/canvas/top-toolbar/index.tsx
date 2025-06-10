@@ -93,7 +93,7 @@ export const TopToolbar: FC<TopToolbarProps> = memo(({ canvasId }) => {
         {shareData?.minimapUrl && <meta property="og:image" content={shareData.minimapUrl} />}
       </Helmet>
       <div
-        className={`absolute h-16 top-0 left-0 right-0  box-border flex justify-between items-center py-2 px-4 pr-4 bg-transparent ${
+        className={`absolute h-16 top-0 left-0 right-0  box-border flex justify-between items-center py-2 px-4 pr-8 bg-transparent ${
           collapse ? 'w-[calc(100vw-12px)]' : 'w-[calc(100vw-232px)]'
         }`}
       >
@@ -130,7 +130,7 @@ export const TopToolbar: FC<TopToolbarProps> = memo(({ canvasId }) => {
           )}
         </div>
 
-        <div className="flex items-center gap-2 relative z-10 mr-4">
+        <div className="flex items-center gap-2 relative z-10 mr-16">
           {/* ToolbarButtons moved to hidden section below for normal canvas */}
           {(isPreviewCanvas || isShareCanvas) && (
             <ToolbarButtons
@@ -189,25 +189,18 @@ export const TopToolbar: FC<TopToolbarProps> = memo(({ canvasId }) => {
                   </Button>
                 </UILocaleList>
 
-                {/* User account menu */}
+                {/* User account menu - only icon */}
                 <SiderMenuSettingList>
                   <Button
                     type="text"
                     size="middle"
-                    className="px-2 py-1 h-8 flex items-center gap-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 border border-gray-200 rounded-md"
+                    className="px-2 py-1 h-8 flex items-center justify-center text-gray-600 hover:text-gray-800 hover:bg-gray-50 border border-gray-200 rounded-md w-8"
                   >
                     <img
                       src={userProfile?.avatar || userIcon}
                       alt="User Avatar"
                       className="w-5 h-5 rounded-full object-cover"
                     />
-                    <span className="text-sm font-medium">
-                      {userProfile?.name ||
-                        userProfile?.nickname ||
-                        userProfile?.email?.split('@')[0] ||
-                        '用户'}
-                    </span>
-                    <IconDown className="w-3 h-3" />
                   </Button>
                 </SiderMenuSettingList>
               </div>

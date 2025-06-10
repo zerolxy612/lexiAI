@@ -4,6 +4,94 @@
 
 本文档记录 Refly 项目的二次开发需求、技术分析思路以及代码质量原则，确保开发过程的规范性和可追溯性。
 
+## 🚀 项目启动步骤
+
+### 第一步：启动 Docker 服务
+**在项目根目录** `/Users/longxiangyu/LexiHk/lexiAI` **执行：**
+
+```bash
+# 进入 docker 配置目录
+cd deploy/docker
+
+# 启动数据库和中间件服务
+docker-compose -f docker-compose.yml -f docker-compose.middleware.yml up -d
+```
+
+### 第二步：安装依赖（如果还没安装过）
+**回到项目根目录** `/Users/longxiangyu/LexiHk/lexiAI` **执行：**
+
+```bash
+# 回到根目录
+cd ../..
+
+# 安装所有依赖
+pnpm install
+```
+
+### 第三步：启动后端 API
+**在项目根目录** `/Users/longxiangyu/LexiHk/lexiAI` **执行：**
+
+```bash
+# 启动后端 API
+pnpm run dev --filter=@refly/api
+```
+
+或者进入API目录启动：
+```bash
+# 进入 API 目录
+cd apps/api
+
+# 启动开发服务器
+pnpm dev
+```
+
+### 第四步：启动前端
+**新开一个终端窗口，在项目根目录** `/Users/longxiangyu/LexiHk/lexiAI` **执行：**
+
+```bash
+# 启动前端开发服务器
+pnpm run dev --filter=@refly/web
+```
+
+或者进入web目录启动：
+```bash
+# 进入 web 目录
+cd apps/web
+
+# 启动开发服务器
+pnpm dev
+```
+
+### 验证启动是否成功
+
+1. **检查 Docker 容器**：
+```bash
+docker ps
+```
+应该看到数据库等服务在运行
+
+2. **检查后端 API**：
+浏览器访问 `http://localhost:3000` 或查看终端输出的端口
+
+3. **检查前端应用**：
+浏览器访问 `http://localhost:5173` 或查看终端输出的端口
+
+### 启动顺序总结
+
+```
+项目根目录 /Users/longxiangyu/LexiHk/lexiAI
+├── 1. cd deploy/docker && docker-compose up -d
+├── 2. cd ../../ && pnpm install
+├── 3. pnpm run dev --filter=@refly/api
+└── 4. pnpm run dev --filter=@refly/web（新终端窗口）
+```
+
+**注意事项**：
+- 必须按顺序启动：Docker → 后端 API → 前端
+- 后端 API 需要连接数据库，数据库在 Docker 容器中运行
+- 前端需要调用后端 API 获取用户信息、进行认证等
+- 启动成功后，修改的功能（如语言切换、账户按钮）才能正常工作
+
 ## 🎯 开发原则
 
 ### 代码质量原则

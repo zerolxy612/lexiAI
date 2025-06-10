@@ -51,8 +51,9 @@ export const BottomChatInput = memo(
     return (
       <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
         {/* Main input container - adjust for sidebar */}
-        <div className="flex justify-center items-end px-4 pb-6" style={{ marginLeft: '300px' }}>
-          <div className="w-full max-w-3xl mx-auto pointer-events-auto">
+        <div className="flex justify-center items-end px-4 pb-10" style={{ marginLeft: '300px' }}>
+          {/* Increased max-width for wider input box */}
+          <div className="w-full max-w-5xl mx-auto pointer-events-auto">
             {/* Action icons above input box */}
             <div className="flex items-center gap-2 mb-3 px-2">
               <button
@@ -91,8 +92,9 @@ export const BottomChatInput = memo(
                   '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.05)',
               }}
             >
-              <div className="flex items-end p-4 gap-3">
-                {/* Text area */}
+              {/* Slightly increased padding for better height */}
+              <div className="flex items-center px-4 py-3 gap-3">
+                {/* Text area - adjusted height for better appearance */}
                 <textarea
                   value={inputValue}
                   onChange={handleInputChange}
@@ -102,24 +104,26 @@ export const BottomChatInput = memo(
                   rows={1}
                   className="flex-1 resize-none border-none outline-none text-base placeholder-gray-500 bg-transparent min-h-[24px] max-h-32 overflow-y-auto"
                   style={{
-                    lineHeight: '1.5',
+                    lineHeight: '1.2',
                     scrollbarWidth: 'thin',
                   }}
                   onInput={(e) => {
                     const target = e.target as HTMLTextAreaElement;
                     target.style.height = 'auto';
-                    target.style.height = Math.min(target.scrollHeight, 128) + 'px';
+                    // Ensure minimum height is respected while allowing growth
+                    const newHeight = Math.max(24, Math.min(target.scrollHeight, 128));
+                    target.style.height = newHeight + 'px';
                   }}
                 />
 
-                {/* Send button */}
+                {/* Smaller send button */}
                 <Button
                   type="primary"
                   shape="circle"
                   icon={<SendOutlined />}
                   onClick={handleSend}
                   disabled={disabled || !inputValue.trim()}
-                  className="flex-shrink-0 w-8 h-8 flex items-center justify-center"
+                  className="flex-shrink-0 w-6 h-6 flex items-center justify-center text-xs"
                   style={{
                     backgroundColor: disabled || !inputValue.trim() ? '#f0f0f0' : '#00968F',
                     borderColor: disabled || !inputValue.trim() ? '#f0f0f0' : '#00968F',
@@ -128,11 +132,11 @@ export const BottomChatInput = memo(
               </div>
             </div>
 
-            {/* Disclaimer text */}
-            <div className="text-center mt-3 px-4">
-              <p className="text-xs text-gray-500 leading-relaxed">
-                LexiHK may present inaccurate information, including details about individuals. It
-                is advisable to verify its responses with other reliable sources to ensure accuracy.
+            {/* Disclaimer text - single line and centered relative to input box */}
+            <div className="flex justify-center mt-4">
+              <p className="text-xs text-gray-500 whitespace-nowrap">
+                LexiHK may present inaccurate information. Please verify responses with reliable
+                sources.
               </p>
             </div>
           </div>
