@@ -368,4 +368,33 @@
 - 对于UI问题，主动要求查看实际效果
 - 学会识别自己的知识边界
 
-**适用范围**: 所有涉及CSS布局、用户界面调整的开发任务 
+**适用范围**: 所有涉及CSS布局、用户界面调整的开发任务
+
+### 修改记录 #004: 调整搜索框与Logo间距 (2024-12-19)
+
+**修改描述**: 
+增加搜索输入框与LexiHK logo行之间的距离，让搜索框向下移动一些
+
+**修改范围**:
+- `packages/ai-workspace-common/src/components/search-quick-open-btn/index.tsx`
+
+**具体修改**:
+- 搜索框外层容器添加上边距：`mb-3` → `mb-3 mt-4`
+- 上边距 `mt-4` = 16px，增加了搜索框与上方logo区域的间距
+
+**修改原因**:
+- 用户觉得搜索框与logo贴得太近，影响视觉效果
+- 增加间距可以让整体布局更加美观和易读
+
+**技术细节**:
+```diff
+- <div {...divProps} className={classNames('mb-3', divProps.className)}>
++ <div {...divProps} className={classNames('mb-3 mt-4', divProps.className)}>
+```
+
+**测试要点**:
+- 确认搜索框与logo之间有合适的间距
+- 确认整体侧边栏布局仍然协调
+- 确认深色模式下效果正常
+
+**状态**: ✅ 已完成 

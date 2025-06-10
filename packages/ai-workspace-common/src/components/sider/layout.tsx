@@ -54,7 +54,7 @@ export const SiderLogo = (props: {
           className="flex cursor-pointer flex-row items-center gap-1.5"
           onClick={() => navigate('/')}
         >
-          <img src={LexiHKLogo} alt="LexiHK" className="h-8 w-auto" />
+          <img src={LexiHKLogo} alt="LexiHK" className="h-6 w-auto" />
         </div>
       </div>
     </div>
