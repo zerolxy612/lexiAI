@@ -1,59 +1,34 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Avatar, Button, Layout, Skeleton, Divider, Tag, Menu } from 'antd';
-import {
-  useLocation,
-  useMatch,
-  useNavigate,
-  useSearchParams,
-} from '@refly-packages/ai-workspace-common/utils/router';
+import { useState } from 'react';
+import { Button, Layout } from 'antd';
+import { useMatch, useNavigate } from '@refly-packages/ai-workspace-common/utils/router';
 
-import {
-  IconCanvas,
-  IconHome,
-  IconPlus,
-} from '@refly-packages/ai-workspace-common/components/common/icon';
+import { IconPlus } from '@refly-packages/ai-workspace-common/components/common/icon';
 import cn from 'classnames';
-
-import Logo from '@/assets/logo.svg';
+import LexiHKLogo from '@/assets/Lexihk-dark.png';
+import VectorIcon from '@/assets/Vector.png';
 import { useUserStoreShallow } from '@refly-packages/ai-workspace-common/stores/user';
 // components
 import { SearchQuickOpenBtn } from '@refly-packages/ai-workspace-common/components/search-quick-open-btn';
 import { useTranslation } from 'react-i18next';
-import { SiderMenuSettingList } from '@refly-packages/ai-workspace-common/components/sider-menu-setting-list';
 import { SettingModal } from '@refly-packages/ai-workspace-common/components/settings';
 import { TourModal } from '@refly-packages/ai-workspace-common/components/tour-modal';
 import { SettingsGuideModal } from '@refly-packages/ai-workspace-common/components/settings-guide';
 import { StorageExceededModal } from '@refly-packages/ai-workspace-common/components/subscription/storage-exceeded-modal';
 // hooks
 import { useHandleSiderData } from '@refly-packages/ai-workspace-common/hooks/use-handle-sider-data';
-import {
-  SiderData,
-  useSiderStoreShallow,
-  type SettingsModalActiveTab,
-} from '@refly-packages/ai-workspace-common/stores/sider';
+import { SiderData, useSiderStoreShallow } from '@refly-packages/ai-workspace-common/stores/sider';
 import { useCreateCanvas } from '@refly-packages/ai-workspace-common/hooks/canvas/use-create-canvas';
 // icons
-import {
-  IconLibrary,
-  IconProject,
-  IconRight,
-} from '@refly-packages/ai-workspace-common/components/common/icon';
-import { CanvasActionDropdown } from '@refly-packages/ai-workspace-common/components/workspace/canvas-list-modal/canvasActionDropdown';
-import { AiOutlineMenuFold, AiOutlineUser } from 'react-icons/ai';
-import { SubscriptionHint } from '@refly-packages/ai-workspace-common/components/subscription/hint';
-import { FaGithub } from 'react-icons/fa6';
-import { useKnowledgeBaseStoreShallow } from '@refly-packages/ai-workspace-common/stores/knowledge-base';
-import { subscriptionEnabled } from '@refly-packages/ai-workspace-common/utils/env';
+import { IconProject } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { CanvasTemplateModal } from '@refly-packages/ai-workspace-common/components/canvas-template';
 import { SiderLoggedOut } from './sider-logged-out';
 import { CreateProjectModal } from '@refly-packages/ai-workspace-common/components/project/project-create';
-import { LuList } from 'react-icons/lu';
 
 import './layout.scss';
 import { ProjectDirectory } from '../project/project-directory';
 
 const Sider = Layout.Sider;
-const SubMenu = Menu.SubMenu;
+// const SubMenu = Menu.SubMenu; // Temporarily unused
 
 export const SiderLogo = (props: {
   source: 'sider' | 'popover';
@@ -61,61 +36,33 @@ export const SiderLogo = (props: {
   setCollapse: (collapse: boolean) => void;
 }) => {
   const { navigate, setCollapse, source } = props;
-  const [starCount, setStarCount] = useState('');
-
-  useEffect(() => {
-    // Fetch GitHub star count
-    fetch('https://api.github.com/repos/refly-ai/refly')
-      .then((res) => res.json())
-      .then((data) => {
-        const stars = data.stargazers_count;
-        setStarCount(stars >= 1000 ? `${(stars / 1000).toFixed(1)}k` : stars.toString());
-      })
-      .catch(() => {
-        // Keep default value if fetch fails
-      });
-  }, []);
 
   return (
     <div className="flex items-center justify-between p-3">
       <div className="flex items-center gap-2">
+        {/* Book icon on the left */}
+        {source === 'sider' && (
+          <Button
+            type="text"
+            icon={<img src={VectorIcon} alt="Toggle sidebar" className="h-4 w-4" />}
+            onClick={() => setCollapse(true)}
+            className="hover:bg-gray-100 dark:hover:bg-gray-800"
+          />
+        )}
+        {/* LexiHK logo on the right */}
         <div
           className="flex cursor-pointer flex-row items-center gap-1.5"
           onClick={() => navigate('/')}
         >
-          <img src={Logo} alt="Refly" className="h-8 w-8" />
-          <span
-            className="text-xl font-bold text-black dark:text-gray-100 dark:text-gray-100"
-            translate="no"
-          >
-            Refly
-          </span>
+          <img src={LexiHKLogo} alt="LexiHK" className="h-8 w-auto" />
         </div>
-
-        {starCount && (
-          <Button
-            type="default"
-            icon={<FaGithub className="h-3.5 w-3.5" />}
-            onClick={() => window.open('https://github.com/refly-ai/refly', '_blank')}
-            className="flex h-6 items-center gap-0.5 bg-white px-1.5 text-xs font-bold dark:bg-gray-900"
-          >
-            {starCount}
-          </Button>
-        )}
       </div>
-      {source === 'sider' && (
-        <div>
-          <Button
-            type="text"
-            icon={<AiOutlineMenuFold size={16} className="text-gray-500 dark:text-gray-400" />}
-            onClick={() => setCollapse(true)}
-          />
-        </div>
-      )}
     </div>
   );
 };
 
+// Temporarily unused component
+/*
 const SettingItem = () => {
   const { userProfile } = useUserStoreShallow((state) => ({
     userProfile: state.userProfile,
@@ -152,6 +99,7 @@ const SettingItem = () => {
     </div>
   );
 };
+*/
 
 export const NewCanvasItem = () => {
   const { t } = useTranslation();
@@ -203,6 +151,8 @@ export const NewProjectItem = () => {
   );
 };
 
+// Temporarily commented out for simplified sidebar
+/*
 export const CanvasListItem = ({ canvas }: { canvas: SiderData }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -256,6 +206,7 @@ export const CanvasListItem = ({ canvas }: { canvas: SiderData }) => {
     </div>
   );
 };
+*/
 
 export const ProjectListItem = ({ project }: { project: SiderData }) => {
   const { t } = useTranslation();
@@ -282,6 +233,8 @@ export const ProjectListItem = ({ project }: { project: SiderData }) => {
   );
 };
 
+// Temporarily unused components
+/*
 const ViewAllButton = ({ onClick }: { onClick: () => void }) => {
   const { t } = useTranslation();
   return (
@@ -307,55 +260,43 @@ const getSelectedKey = (pathname: string) => {
   }
   return '';
 };
+*/
 
 const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
   const { source = 'sider' } = props;
-  const [searchParams] = useSearchParams();
+  // const [searchParams] = useSearchParams(); // Temporarily unused
   const navigate = useNavigate();
-  const { updateLibraryModalActiveKey } = useKnowledgeBaseStoreShallow((state) => ({
-    updateLibraryModalActiveKey: state.updateLibraryModalActiveKey,
-  }));
+  // const { updateLibraryModalActiveKey } = useKnowledgeBaseStoreShallow((state) => ({
+  //   updateLibraryModalActiveKey: state.updateLibraryModalActiveKey,
+  // })); // Temporarily unused
 
+  // Simplified state for basic sidebar functionality
+  const { collapse, setCollapse, showSettingModal, setShowSettingModal } = useSiderStoreShallow(
+    (state) => ({
+      showSettingModal: state.showSettingModal,
+      collapse: state.collapse,
+      setCollapse: state.setCollapse,
+      setShowSettingModal: state.setShowSettingModal,
+    }),
+  );
+
+  // Temporarily removed for simplified sidebar - will be restored when needed
+  /*
   const { userProfile } = useUserStoreShallow((state) => ({
     userProfile: state.userProfile,
   }));
   const planType = userProfile?.subscription?.planType || 'free';
-
-  const {
-    collapse,
-    canvasList,
-    projectsList,
-    setCollapse,
-    showSettingModal,
-    setShowSettingModal,
-    setShowLibraryModal,
-    setShowCanvasListModal,
-    setSettingsModalActiveTab,
-  } = useSiderStoreShallow((state) => ({
-    showSettingModal: state.showSettingModal,
-    collapse: state.collapse,
-    canvasList: state.canvasList,
-    projectsList: state.projectsList,
-    setCollapse: state.setCollapse,
-    setShowSettingModal: state.setShowSettingModal,
-    setShowLibraryModal: state.setShowLibraryModal,
-    showLibraryModal: state.showLibraryModal,
-    setShowCanvasListModal: state.setShowCanvasListModal,
-    setSettingsModalActiveTab: state.setSettingsModalActiveTab,
-  }));
-
+  const { canvasList, projectsList, setShowLibraryModal, setShowCanvasListModal, setSettingsModalActiveTab } = ...
   const { isLoadingCanvas, isLoadingProjects } = useHandleSiderData(true);
-
   const { t } = useTranslation();
-
   const location = useLocation();
-
   const selectedKey = useMemo(() => getSelectedKey(location.pathname), [location.pathname]);
-
   const defaultOpenKeys = useMemo(() => ['Canvas', 'Library'], []);
-
   const canvasId = location.pathname.split('/').pop();
   const isHome = useMatch('/canvas/:canvasId') && canvasId === 'empty';
+  */
+  // Temporarily commented out for simplified sidebar
+  /*
   const { debouncedCreateCanvas } = useCreateCanvas({
     projectId: null,
     afterCreateSuccess: () => {
@@ -445,10 +386,11 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
     canvasId,
     updateLibraryModalActiveKey,
   ]);
+  */
 
   return (
     <Sider
-      width={source === 'sider' ? (collapse ? 0 : 220) : 220}
+      width={source === 'sider' ? (collapse ? 0 : 300) : 300}
       className={cn(
         'border border-solid border-gray-100 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900',
         source === 'sider' ? 'h-[calc(100vh)]' : 'h-[calc(100vh-100px)] rounded-r-lg',
@@ -459,6 +401,18 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
 
         <SearchQuickOpenBtn />
 
+        {/* Reserved space for future conversation history - similar to ChatGPT sidebar */}
+        <div className="flex-1 flex flex-col p-3">
+          <div className="text-center text-gray-400 dark:text-gray-500 text-sm py-8">
+            {/* Placeholder for conversation history */}
+            <div className="mb-2">💬</div>
+            <div>Conversation history</div>
+            <div>will appear here</div>
+          </div>
+        </div>
+
+        {/* Temporarily hidden - will be moved to other locations later */}
+        {/* 
         <div
           className={cn(
             'flex-shrink-0 h-10 my-1 mx-2 flex items-center justify-between pl-6 pr-3 text-gray-600 hover:bg-gray-100 cursor-pointer rounded-lg dark:text-gray-400 dark:bg-gray-900 dark:hover:bg-gray-700',
@@ -476,7 +430,6 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
           </div>
         </div>
 
-        {/* Main menu section with flexible layout */}
         <div className="flex-1 overflow-hidden flex flex-col min-h-[250px]">
           <Menu
             className="flex-1 !border-none bg-transparent overflow-hidden flex flex-col"
@@ -606,6 +559,7 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
             </div>
           )}
         </div>
+        */}
 
         <SettingModal visible={showSettingModal} setVisible={setShowSettingModal} />
       </div>

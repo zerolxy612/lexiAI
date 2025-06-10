@@ -3,8 +3,8 @@ import { Canvas } from '@refly-packages/ai-workspace-common/components/canvas';
 import { Button } from 'antd';
 import { useSiderStoreShallow } from '@refly-packages/ai-workspace-common/stores/sider';
 import { SiderPopover } from '@refly-packages/ai-workspace-common/components/sider/popover';
-import { AiOutlineMenuUnfold } from 'react-icons/ai';
 import { FrontPage } from '@refly-packages/ai-workspace-common/components/canvas/front-page';
+import VectorIcon from '@/assets/Vector.png';
 
 const CanvasPage = () => {
   const { canvasId = '' } = useParams();
@@ -22,10 +22,11 @@ const CanvasPage = () => {
           <SiderPopover>
             <Button
               type="text"
-              icon={<AiOutlineMenuUnfold size={16} className="text-gray-500 dark:text-gray-400" />}
+              icon={<img src={VectorIcon} alt="Expand sidebar" className="h-4 w-4" />}
               onClick={() => {
                 setCollapse(!collapse);
               }}
+              className="hover:bg-gray-100 dark:hover:bg-gray-800"
             />
           </SiderPopover>
         )}
