@@ -27,11 +27,14 @@ export const McpSelectorPanel: React.FC<McpSelectorPanelProps> = ({ isOpen, onCl
     setSelectedMcpServers: state.setSelectedMcpServers,
   }));
 
-  // Fetch MCP servers from API
-  const { data, refetch } = useListMcpServersSuspense({ query: { enabled: true } }, [], {
-    enabled: isOpen,
-    refetchOnWindowFocus: false,
-  });
+  // TEMPORARY FIX: Disable MCP servers to prevent crash
+  // TODO: Fix the useListMcpServersSuspense hook issue
+  // const { data, refetch } = useListMcpServersSuspense({ query: { enabled: true } }, [], {
+  //   enabled: isOpen,
+  //   refetchOnWindowFocus: false,
+  // });
+  const data = { data: [] };
+  const refetch = () => Promise.resolve();
 
   const mcpServers = data?.data || [];
 

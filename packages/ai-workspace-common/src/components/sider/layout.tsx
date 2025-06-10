@@ -1,12 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button, Layout } from 'antd';
-import { useMatch, useNavigate } from '@refly-packages/ai-workspace-common/utils/router';
+import {
+  useLocation,
+  useMatch,
+  useNavigate,
+  useSearchParams,
+} from '@refly-packages/ai-workspace-common/utils/router';
 
 import { IconPlus } from '@refly-packages/ai-workspace-common/components/common/icon';
 import cn from 'classnames';
 import LexiHKLogo from '@/assets/Lexihk-dark.png';
 import VectorIcon from '@/assets/Vector.png';
 import { useUserStoreShallow } from '@refly-packages/ai-workspace-common/stores/user';
+import { useKnowledgeBaseStoreShallow } from '@refly-packages/ai-workspace-common/stores/knowledge-base';
 // components
 import { SearchQuickOpenBtn } from '@refly-packages/ai-workspace-common/components/search-quick-open-btn';
 import { useTranslation } from 'react-i18next';
@@ -21,6 +27,8 @@ import { useCreateCanvas } from '@refly-packages/ai-workspace-common/hooks/canva
 // icons
 import { IconProject } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { CanvasTemplateModal } from '@refly-packages/ai-workspace-common/components/canvas-template';
+import { CanvasListModal } from '@refly-packages/ai-workspace-common/components/workspace/canvas-list-modal';
+import { LibraryModal } from '@refly-packages/ai-workspace-common/components/workspace/library-modal';
 import { SiderLoggedOut } from './sider-logged-out';
 import { CreateProjectModal } from '@refly-packages/ai-workspace-common/components/project/project-create';
 
@@ -264,13 +272,13 @@ const getSelectedKey = (pathname: string) => {
 
 const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
   const { source = 'sider' } = props;
-  // const [searchParams] = useSearchParams(); // Temporarily unused
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  // const { updateLibraryModalActiveKey } = useKnowledgeBaseStoreShallow((state) => ({
-  //   updateLibraryModalActiveKey: state.updateLibraryModalActiveKey,
-  // })); // Temporarily unused
+  const { updateLibraryModalActiveKey } = useKnowledgeBaseStoreShallow((state) => ({
+    updateLibraryModalActiveKey: state.updateLibraryModalActiveKey,
+  }));
 
-  // Simplified state for basic sidebar functionality
+  // Essential state for core functionality
   const { collapse, setCollapse, showSettingModal, setShowSettingModal } = useSiderStoreShallow(
     (state) => ({
       showSettingModal: state.showSettingModal,
@@ -279,6 +287,32 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
       setShowSettingModal: state.setShowSettingModal,
     }),
   );
+
+  // Essential user profile data for core functionality
+  const { userProfile } = useUserStoreShallow((state) => ({
+    userProfile: state.userProfile,
+  }));
+
+  // Essential modals state
+  const {
+    canvasList,
+    projectsList,
+    setShowLibraryModal,
+    setShowCanvasListModal,
+    setSettingsModalActiveTab,
+  } = useSiderStoreShallow((state) => ({
+    canvasList: state.canvasList,
+    projectsList: state.projectsList,
+    setShowLibraryModal: state.setShowLibraryModal,
+    setShowCanvasListModal: state.setShowCanvasListModal,
+    setSettingsModalActiveTab: state.setSettingsModalActiveTab,
+  }));
+
+  // Essential data loading
+  const { isLoadingCanvas, isLoadingProjects } = useHandleSiderData(true);
+  const { t } = useTranslation();
+  const location = useLocation();
+  const canvasId = location.pathname.split('/').pop();
 
   // Temporarily removed for simplified sidebar - will be restored when needed
   /*
@@ -295,8 +329,7 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
   const canvasId = location.pathname.split('/').pop();
   const isHome = useMatch('/canvas/:canvasId') && canvasId === 'empty';
   */
-  // Temporarily commented out for simplified sidebar
-  /*
+  // Essential canvas creation functionality
   const { debouncedCreateCanvas } = useCreateCanvas({
     projectId: null,
     afterCreateSuccess: () => {
@@ -304,44 +337,7 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
     },
   });
 
-  interface SiderCenterProps {
-    key: string;
-    name: string;
-    icon: React.ReactNode;
-    actionIcon?: React.ReactNode;
-    actionHandler?: () => void;
-    showDivider?: boolean;
-    onClick?: () => void;
-  }
-
-  const siderSections: SiderCenterProps[] = [
-    {
-      key: 'Canvas',
-      name: 'canvas',
-      icon: <IconCanvas key="canvas" style={{ fontSize: 20 }} />,
-      actionIcon: (
-        <LuList
-          size={16}
-          className="flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:!text-gray-200"
-        />
-      ),
-      actionHandler: () => setShowCanvasListModal(true),
-    },
-    {
-      key: 'Library',
-      name: 'library',
-      icon: <IconLibrary key="library" style={{ fontSize: 20 }} />,
-      actionIcon: (
-        <LuList
-          size={16}
-          className="flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:!text-gray-200"
-        />
-      ),
-      actionHandler: () => setShowLibraryModal(true),
-    },
-  ];
-
-  // Handle library modal opening from URL parameter
+  // Handle library modal opening from URL parameter - essential for functionality
   useEffect(() => {
     const shouldOpenLibrary = searchParams.get('openLibrary');
     const shouldOpenSettings = searchParams.get('openSettings');
@@ -373,7 +369,7 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
       window.history.replaceState({}, '', newUrl);
 
       if (settingsTab) {
-        setSettingsModalActiveTab(settingsTab as SettingsModalActiveTab);
+        setSettingsModalActiveTab(settingsTab as any);
       }
     }
   }, [
@@ -386,7 +382,6 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
     canvasId,
     updateLibraryModalActiveKey,
   ]);
-  */
 
   return (
     <Sider

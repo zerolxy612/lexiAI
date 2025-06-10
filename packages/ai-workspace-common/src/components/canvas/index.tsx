@@ -58,6 +58,7 @@ import { useUpdateSettings } from '@refly-packages/ai-workspace-common/queries';
 import { useCanvasSync } from '@refly-packages/ai-workspace-common/hooks/canvas/use-canvas-sync';
 import { EmptyGuide } from './empty-guide';
 import { useReflyPilotReset } from '@refly-packages/ai-workspace-common/hooks/canvas/use-refly-pilot-reset';
+import { BottomChatInput } from './bottom-chat-input';
 import HelperLines from './common/helper-line/index';
 import { useListenNodeOperationEvents } from '@refly-packages/ai-workspace-common/hooks/canvas/use-listen-node-events';
 import { runtime } from '@refly-packages/ai-workspace-common/utils/env';
@@ -372,6 +373,28 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
     // Handle tool selection
     console.log('Selected tool:', tool);
   };
+
+  const handleBottomChatSend = useCallback((message: string) => {
+    // Handle sending message from bottom chat input
+    console.log('Sending message:', message);
+    // TODO: Implement actual message sending logic
+    // This could integrate with the existing ReflyPilot or create a new AI conversation node
+  }, []);
+
+  const handleCopyAction = useCallback(() => {
+    console.log('Copy action triggered');
+    // TODO: Implement copy functionality
+  }, []);
+
+  const handleRestartAction = useCallback(() => {
+    console.log('Restart action triggered');
+    // TODO: Implement restart functionality
+  }, []);
+
+  const handleDeleteAction = useCallback(() => {
+    console.log('Delete action triggered');
+    // TODO: Implement delete functionality
+  }, []);
 
   // Add scroll position state and handler
   const [showLeftIndicator, setShowLeftIndicator] = useState(false);
@@ -1052,6 +1075,18 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
         )}
 
         {selectedNodes.length > 0 && <MultiSelectionMenus />}
+
+        {/* Bottom chat input - only show for non-readonly canvases */}
+        {!readonly && (
+          <BottomChatInput
+            onSend={handleBottomChatSend}
+            disabled={false}
+            placeholder="Send a message to LexiHK"
+            onCopy={handleCopyAction}
+            onRestart={handleRestartAction}
+            onDelete={handleDeleteAction}
+          />
+        )}
       </div>
     </Spin>
   );
