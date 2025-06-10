@@ -1,13 +1,10 @@
 import { Button, Divider, Input, Form } from 'antd';
-import { Link } from '@refly-packages/ai-workspace-common/utils/router';
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-
-import Logo from '@/assets/logo.svg';
 import Google from '@/assets/google.svg';
 import GitHub from '@/assets/github-mark.svg';
-
+import MyLogo from '@/assets/Lexihk-dark.png';
 import { useTranslation } from 'react-i18next';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 import { useAuthStoreShallow } from '@refly-packages/ai-workspace-common/stores/auth';
@@ -137,228 +134,179 @@ const AuthPage = () => {
     [form],
   );
 
-  // Navigate to landing page
-  const handleGoToLanding = useCallback(() => {
-    navigate('/landing');
-  }, [navigate]);
-
   return (
-    <div className="min-h-screen bg-white flex flex-col justify-center items-center px-4">
-      <div className="w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center items-center mb-4">
-            <img src={Logo} alt="Refly" className="w-8 h-8" />
-            <span className="ml-2 text-2xl font-bold text-gray-900">Refly</span>
+    <div className="min-h-screen flex bg-[#EDF2F8]">
+      {/* Left Brand Area */}
+      <div className="hidden lg:flex lg:w-[65%] items-center justify-center relative">
+        <div className="absolute left-[20%] top-[30%] text-left">
+          <div className="w-[320px] h-[55px]">
+            <img src={MyLogo} alt="LexiHK" className="w-full h-full object-contain" />
           </div>
-          <h1 className="text-xl font-semibold text-gray-900 mb-2">
-            {isSignUpMode
-              ? t('landingPage.loginModal.signupTitle')
-              : t('landingPage.loginModal.signinTitle')}
-          </h1>
-          <p className="text-sm text-gray-600">
-            {isSignUpMode
-              ? t('landingPage.loginModal.signupSubtitle')
-              : t('landingPage.loginModal.signinSubtitle')}
+          <p className="mt-4 ml-[44px] text-[#1B2559] font-['PingFang_SC'] text-[48px] font-medium leading-none">
+            Hello
           </p>
         </div>
+      </div>
 
-        {/* Auth Form */}
-        <div className="bg-white">
-          {/* OAuth Buttons */}
-          {(isGithubEnabled || isGoogleEnabled) && (
-            <div className="flex flex-col gap-3 mb-6">
-              {isGithubEnabled && (
-                <Button
-                  onClick={() => handleLogin('github')}
-                  className="h-10 w-full flex items-center justify-center"
-                  data-cy="github-login-button"
-                  loading={authStore.loginInProgress && authStore.loginProvider === 'github'}
-                  disabled={authStore.loginInProgress && authStore.loginProvider !== 'github'}
-                >
-                  <img src={GitHub} alt="github" className="mr-2 h-4 w-4" />
-                  {authStore.loginInProgress && authStore.loginProvider === 'github'
-                    ? t('landingPage.loginModal.loggingStatus')
-                    : t('landingPage.loginModal.oauthBtn.github')}
-                </Button>
-              )}
-              {isGoogleEnabled && (
-                <Button
-                  onClick={() => handleLogin('google')}
-                  className="h-10 w-full flex items-center justify-center"
-                  data-cy="google-login-button"
-                  loading={authStore.loginInProgress && authStore.loginProvider === 'google'}
-                  disabled={authStore.loginInProgress && authStore.loginProvider !== 'google'}
-                >
-                  <img src={Google} alt="google" className="mr-2 h-4 w-4" />
-                  {authStore.loginInProgress && authStore.loginProvider === 'google'
-                    ? t('landingPage.loginModal.loggingStatus')
-                    : t('landingPage.loginModal.oauthBtn.google')}
-                </Button>
-              )}
+      {/* Right Login Area */}
+      <div className="w-full lg:w-[35%] flex flex-col justify-center px-4 sm:px-6 lg:px-8 xl:px-12 bg-white shadow-[4px_0_40px_rgba(0,0,0,0.04)]">
+        <div className="max-w-[360px] mx-auto w-full">
+          {/* Logo for mobile */}
+          <div className="mb-[18px] lg:hidden text-center">
+            <div className="h-8 mx-auto w-[138px]">
+              <img src={MyLogo} alt="LexiHK" className="w-full h-full object-contain" />
             </div>
-          )}
-
-          {/* Divider */}
-          {(isGithubEnabled || isGoogleEnabled) && isEmailEnabled && (
-            <Divider className="my-6">
-              <span className="text-gray-500 text-sm">or</span>
-            </Divider>
-          )}
-
-          {/* Email Form */}
-          {isEmailEnabled && (
-            <>
-              <Form
-                form={form}
-                layout="vertical"
-                className="w-full"
-                requiredMark={false}
-                onFinish={handleEmailAuth}
-              >
-                <Form.Item
-                  name="email"
-                  label={
-                    <span className="font-medium text-gray-700">
-                      {t('landingPage.loginModal.emailLabel')}
-                    </span>
-                  }
-                  validateTrigger={['onBlur']}
-                  hasFeedback
-                  rules={[
-                    {
-                      required: true,
-                      message: t('verifyRules.emailRequired'),
-                    },
-                    {
-                      type: 'email',
-                      message: t('verifyRules.emailInvalid'),
-                    },
-                  ]}
-                >
-                  <Input
-                    type="email"
-                    placeholder={t('landingPage.loginModal.emailPlaceholder')}
-                    className="h-10"
-                    data-cy="email-input"
-                  />
-                </Form.Item>
-
-                <Form.Item
-                  name="password"
-                  label={
-                    <div className="flex w-full flex-row items-center justify-between">
-                      <span className="font-medium text-gray-700">
-                        {t('landingPage.loginModal.passwordLabel')}
-                      </span>
-                      {!isSignUpMode && (
-                        <Button
-                          type="link"
-                          className="p-0 text-blue-600 hover:text-blue-800"
-                          onClick={handleResetPassword}
-                        >
-                          {t('landingPage.loginModal.passwordForget')}
-                        </Button>
-                      )}
-                    </div>
-                  }
-                  validateTrigger={['onBlur']}
-                  hasFeedback
-                  rules={[
-                    {
-                      required: true,
-                      message: t('verifyRules.passwordRequired'),
-                    },
-                    ...(isSignUpMode
-                      ? [
-                          {
-                            min: 8,
-                            message: t('verifyRules.passwordMin'),
-                          },
-                        ]
-                      : []),
-                  ]}
-                >
-                  <Input.Password
-                    placeholder={t('landingPage.loginModal.passwordPlaceholder')}
-                    className="h-10"
-                    data-cy="password-input"
-                  />
-                </Form.Item>
-
-                <Form.Item className="mb-6">
-                  <Button
-                    type="primary"
-                    htmlType="submit"
-                    loading={authStore.loginInProgress && authStore.loginProvider === 'email'}
-                    className="h-12 w-full text-base font-medium"
-                    data-cy="continue-button"
-                  >
-                    {t('landingPage.loginModal.continue')}
-                  </Button>
-                </Form.Item>
-              </Form>
-
-              {/* Mode Switch */}
-              <div className="text-center text-sm text-gray-600 mb-6">
-                {isSignUpMode ? (
-                  <span>
-                    {`${t('landingPage.loginModal.signinHint')} `}
-                    <Button
-                      type="link"
-                      className="p-0 text-blue-600 hover:text-blue-800"
-                      data-cy="switch-to-signin-button"
-                      onClick={() => handleModeSwitch(false)}
-                    >
-                      {t('landingPage.loginModal.signin')}
-                    </Button>
-                  </span>
-                ) : (
-                  <span>
-                    {`${t('landingPage.loginModal.signupHint')} `}
-                    <Button
-                      type="link"
-                      className="p-0 text-blue-600 hover:text-blue-800"
-                      data-cy="switch-to-signup-button"
-                      onClick={() => handleModeSwitch(true)}
-                    >
-                      {t('landingPage.loginModal.signup')}
-                    </Button>
-                  </span>
-                )}
-              </div>
-            </>
-          )}
-
-          {/* Terms and Privacy */}
-          <div className="text-center text-xs text-gray-500 mb-6">
-            {t('landingPage.loginModal.utilText')}
-            <Link
-              to="https://docs.refly.ai/about/terms-of-service"
-              target="_blank"
-              className="mx-1 text-xs text-blue-600 underline hover:text-blue-800"
-            >
-              {t('landingPage.loginModal.terms')}
-            </Link>
-            {t('landingPage.loginModal.and')}
-            <Link
-              to="https://docs.refly.ai/about/privacy-policy"
-              target="_blank"
-              className="mx-1 text-xs text-blue-600 underline hover:text-blue-800"
-            >
-              {t('landingPage.loginModal.privacyPolicy')}
-            </Link>
           </div>
 
-          {/* Back to Landing */}
           <div className="text-center">
-            <Button
-              type="link"
-              onClick={handleGoToLanding}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              ← {t('common.backToHome', { defaultValue: 'Back to Home' })}
-            </Button>
+            {/* Logo for desktop */}
+            <div className="h-8 mx-auto hidden lg:block mb-[18px]">
+              <img src={MyLogo} alt="LexiHK" className="w-full h-full object-contain" />
+            </div>
+
+            {/* Mode indicator */}
+            <div className="text-center mb-6">
+              <span className="text-lg text-gray-600">{isSignUpMode ? '注册' : '登录'}</span>
+            </div>
+
+            {/* OAuth Buttons */}
+            {(isGithubEnabled || isGoogleEnabled) && (
+              <div className="flex flex-col gap-3 mb-6">
+                {isGithubEnabled && (
+                  <Button
+                    onClick={() => handleLogin('github')}
+                    className="h-12 w-full flex items-center justify-center text-base"
+                    data-cy="github-login-button"
+                    loading={authStore.loginInProgress && authStore.loginProvider === 'github'}
+                    disabled={authStore.loginInProgress && authStore.loginProvider !== 'github'}
+                  >
+                    <img src={GitHub} alt="github" className="mr-2 h-5 w-5" />
+                    {authStore.loginInProgress && authStore.loginProvider === 'github'
+                      ? t('landingPage.loginModal.loggingStatus')
+                      : t('landingPage.loginModal.oauthBtn.github')}
+                  </Button>
+                )}
+                {isGoogleEnabled && (
+                  <Button
+                    onClick={() => handleLogin('google')}
+                    className="h-12 w-full flex items-center justify-center text-base"
+                    data-cy="google-login-button"
+                    loading={authStore.loginInProgress && authStore.loginProvider === 'google'}
+                    disabled={authStore.loginInProgress && authStore.loginProvider !== 'google'}
+                  >
+                    <img src={Google} alt="google" className="mr-2 h-5 w-5" />
+                    {authStore.loginInProgress && authStore.loginProvider === 'google'
+                      ? t('landingPage.loginModal.loggingStatus')
+                      : t('landingPage.loginModal.oauthBtn.google')}
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {/* Divider */}
+            {(isGithubEnabled || isGoogleEnabled) && isEmailEnabled && (
+              <Divider className="my-8">
+                <span className="text-gray-400 text-sm">或</span>
+              </Divider>
+            )}
+
+            {/* Email Form */}
+            {isEmailEnabled && (
+              <>
+                <Form
+                  form={form}
+                  layout="vertical"
+                  className="w-full"
+                  requiredMark={false}
+                  onFinish={handleEmailAuth}
+                >
+                  <Form.Item
+                    name="email"
+                    rules={[
+                      {
+                        required: true,
+                        message: t('verifyRules.emailRequired'),
+                      },
+                      {
+                        type: 'email',
+                        message: t('verifyRules.emailInvalid'),
+                      },
+                    ]}
+                    className="mb-6"
+                  >
+                    <Input
+                      type="email"
+                      placeholder="邮箱"
+                      className="h-12 text-base"
+                      data-cy="email-input"
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    name="password"
+                    rules={[
+                      {
+                        required: true,
+                        message: t('verifyRules.passwordRequired'),
+                      },
+                      ...(isSignUpMode
+                        ? [
+                            {
+                              min: 8,
+                              message: t('verifyRules.passwordMin'),
+                            },
+                          ]
+                        : []),
+                    ]}
+                    className="mb-8"
+                  >
+                    <Input.Password
+                      placeholder="密码"
+                      className="h-12 text-base"
+                      data-cy="password-input"
+                    />
+                  </Form.Item>
+
+                  <Form.Item className="mb-8">
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      loading={authStore.loginInProgress && authStore.loginProvider === 'email'}
+                      className="h-12 w-full text-base font-medium bg-teal-600 hover:bg-teal-700 border-teal-600 hover:border-teal-700"
+                      data-cy="continue-button"
+                    >
+                      {isSignUpMode ? '注册' : '登录'}
+                    </Button>
+                  </Form.Item>
+                </Form>
+
+                {/* Bottom Links */}
+                <div className="text-center space-y-2">
+                  <div>
+                    <Button
+                      type="link"
+                      className="p-0 text-gray-800 hover:text-gray-600 text-sm"
+                      data-cy="switch-mode-button"
+                      onClick={() => handleModeSwitch(!isSignUpMode)}
+                    >
+                      {isSignUpMode ? '已有账户？登录' : '还没有账户？注册'}
+                    </Button>
+                  </div>
+
+                  {!isSignUpMode && (
+                    <div>
+                      <Button
+                        type="link"
+                        className="p-0 text-blue-600 hover:text-blue-800 text-sm"
+                        onClick={handleResetPassword}
+                      >
+                        忘记密码？
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
