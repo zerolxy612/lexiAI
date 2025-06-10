@@ -16,10 +16,18 @@ import { CanvasActionDropdown } from '@refly-packages/ai-workspace-common/compon
 import ShareSettings from './share-settings';
 import { useUserStoreShallow } from '@refly-packages/ai-workspace-common/stores/user';
 import './index.scss';
-import { IconLink } from '@refly-packages/ai-workspace-common/components/common/icon';
+import {
+  IconLink,
+  IconLanguage,
+  IconDown,
+} from '@refly-packages/ai-workspace-common/components/common/icon';
 import { LuBookCopy } from 'react-icons/lu';
 import { useDuplicateCanvas } from '@refly-packages/ai-workspace-common/hooks/use-duplicate-canvas';
 import { useAuthStoreShallow } from '@refly-packages/ai-workspace-common/stores/auth';
+import { UILocaleList } from '@refly-packages/ai-workspace-common/components/ui-locale-list';
+import { SiderMenuSettingList } from '@refly-packages/ai-workspace-common/components/sider-menu-setting-list';
+import { Avatar } from 'antd';
+import userIcon from '../../../assets/user.png';
 
 interface TopToolbarProps {
   canvasId: string;
@@ -32,8 +40,9 @@ export const TopToolbar: FC<TopToolbarProps> = memo(({ canvasId }) => {
     collapse: state.collapse,
     setCollapse: state.setCollapse,
   }));
-  const { isLogin } = useUserStoreShallow((state) => ({
+  const { isLogin, userProfile } = useUserStoreShallow((state) => ({
     isLogin: state.isLogin,
+    userProfile: state.userProfile,
   }));
   const { setLoginModalOpen } = useAuthStoreShallow((state) => ({
     setLoginModalOpen: state.setLoginModalOpen,
@@ -84,7 +93,7 @@ export const TopToolbar: FC<TopToolbarProps> = memo(({ canvasId }) => {
         {shareData?.minimapUrl && <meta property="og:image" content={shareData.minimapUrl} />}
       </Helmet>
       <div
-        className={`absolute h-16 top-0 left-0 right-0  box-border flex justify-between items-center py-2 px-4 pr-0 bg-transparent ${
+        className={`absolute h-16 top-0 left-0 right-0  box-border flex justify-between items-center py-2 px-4 pr-4 bg-transparent ${
           collapse ? 'w-[calc(100vw-12px)]' : 'w-[calc(100vw-232px)]'
         }`}
       >
@@ -121,14 +130,17 @@ export const TopToolbar: FC<TopToolbarProps> = memo(({ canvasId }) => {
           )}
         </div>
 
-        <div className="flex items-center gap-2 relative z-10">
-          <ToolbarButtons
-            canvasTitle={canvasTitle}
-            showPreview={showPreview}
-            showMaxRatio={showMaxRatio}
-            setShowPreview={setShowPreview}
-            setShowMaxRatio={setShowMaxRatio}
-          />
+        <div className="flex items-center gap-2 relative z-10 mr-4">
+          {/* ToolbarButtons moved to hidden section below for normal canvas */}
+          {(isPreviewCanvas || isShareCanvas) && (
+            <ToolbarButtons
+              canvasTitle={canvasTitle}
+              showPreview={showPreview}
+              showMaxRatio={showMaxRatio}
+              setShowPreview={setShowPreview}
+              setShowMaxRatio={setShowMaxRatio}
+            />
+          )}
 
           {isPreviewCanvas ? (
             <Button
@@ -161,8 +173,61 @@ export const TopToolbar: FC<TopToolbarProps> = memo(({ canvasId }) => {
             </>
           ) : (
             <>
-              <ShareSettings canvasId={canvasId} canvasTitle={canvasTitle} />
-              <CanvasActionDropdown canvasId={canvasId} canvasName={canvasTitle} btnSize="large" />
+              {/* New language switcher and user menu with white background */}
+              <div className="flex items-center gap-3 bg-white px-3 py-2 rounded-lg shadow-sm border border-gray-200">
+                {/* Language switcher */}
+                <UILocaleList>
+                  <Button
+                    type="text"
+                    size="middle"
+                    className="px-3 py-1 h-8 flex items-center gap-1 text-gray-600 hover:text-gray-800 hover:bg-gray-50 border border-gray-200 rounded-md"
+                  >
+                    <span className="text-sm font-medium">
+                      {i18n.language === 'zh-CN' ? '中文' : 'EN'}
+                    </span>
+                    <IconDown className="w-3 h-3" />
+                  </Button>
+                </UILocaleList>
+
+                {/* User account menu */}
+                <SiderMenuSettingList>
+                  <Button
+                    type="text"
+                    size="middle"
+                    className="px-2 py-1 h-8 flex items-center gap-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 border border-gray-200 rounded-md"
+                  >
+                    <img
+                      src={userProfile?.avatar || userIcon}
+                      alt="User Avatar"
+                      className="w-5 h-5 rounded-full object-cover"
+                    />
+                    <span className="text-sm font-medium">
+                      {userProfile?.name ||
+                        userProfile?.nickname ||
+                        userProfile?.email?.split('@')[0] ||
+                        '用户'}
+                    </span>
+                    <IconDown className="w-3 h-3" />
+                  </Button>
+                </SiderMenuSettingList>
+              </div>
+
+              {/* Temporarily hidden - will be moved to different location later */}
+              <div className="hidden">
+                <ToolbarButtons
+                  canvasTitle={canvasTitle}
+                  showPreview={showPreview}
+                  showMaxRatio={showMaxRatio}
+                  setShowPreview={setShowPreview}
+                  setShowMaxRatio={setShowMaxRatio}
+                />
+                <ShareSettings canvasId={canvasId} canvasTitle={canvasTitle} />
+                <CanvasActionDropdown
+                  canvasId={canvasId}
+                  canvasName={canvasTitle}
+                  btnSize="large"
+                />
+              </div>
             </>
           )}
         </div>
