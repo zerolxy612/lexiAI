@@ -173,14 +173,14 @@ export const TopToolbar: FC<TopToolbarProps> = memo(({ canvasId }) => {
             </>
           ) : (
             <>
-              {/* New language switcher and user menu with white background */}
-              <div className="flex items-center gap-3 bg-white px-3 py-2 rounded-lg shadow-sm border border-gray-200">
+              {/* Language switcher and user menu with white background */}
+              <div className="flex items-center gap-3 bg-white px-3 py-2 rounded-lg">
                 {/* Language switcher */}
                 <UILocaleList>
                   <Button
                     type="text"
                     size="middle"
-                    className="px-3 py-1 h-8 flex items-center gap-1 text-gray-600 hover:text-gray-800 hover:bg-gray-50 border border-gray-200 rounded-md"
+                    className="px-3 py-1 h-8 flex items-center gap-1 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-md"
                   >
                     <span className="text-sm font-medium">
                       {i18n.language === 'zh-CN' ? '中文' : 'EN'}
@@ -194,7 +194,7 @@ export const TopToolbar: FC<TopToolbarProps> = memo(({ canvasId }) => {
                   <Button
                     type="text"
                     size="middle"
-                    className="px-2 py-1 h-8 flex items-center justify-center text-gray-600 hover:text-gray-800 hover:bg-gray-50 border border-gray-200 rounded-md w-8"
+                    className="px-2 py-1 h-8 flex items-center justify-center text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-md w-8"
                   >
                     <img
                       src={userProfile?.avatar || userIcon}
