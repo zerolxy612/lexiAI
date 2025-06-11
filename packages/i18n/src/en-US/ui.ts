@@ -1,13 +1,27 @@
 const translations = {
+  // ==============================================
+  // 1. 全局基础设置和通用内容
+  // ==============================================
+
   language: 'English',
   productName: 'Refly',
   welcomeMessage: 'What Can I Help You Write?',
+
+  // ==============================================
+  // 2. 页面元数据和基础页面
+  // ==============================================
+
   privacyPage: {
     title: 'Privacy Policy',
   },
   termsPage: {
     title: 'Terms of Service',
   },
+
+  // ==============================================
+  // 3. 通用组件和公共功能
+  // ==============================================
+
   common: {
     poweredBy: 'Powered by',
     confirm: 'Confirm',
@@ -132,6 +146,11 @@ const translations = {
     update: 'Update',
     validate: 'Validate',
   },
+
+  // ==============================================
+  // 4. 页面组件和页面功能
+  // ==============================================
+
   pages: {
     share: {
       sharedAt: 'Shared at',
@@ -842,6 +861,11 @@ const translations = {
       offDescription: 'Only you can access',
     },
   },
+
+  // ==============================================
+  // 5. 工作区和画布功能
+  // ==============================================
+
   workspace: {
     addToCanvas: 'Add to Canvas',
     noCanvasSelected: 'Please create or select a canvas',
@@ -2669,6 +2693,16 @@ const translations = {
           question: 'Summarize the Web Page',
           actionPrompt: 'Summarize the content of the web page and extract key points',
         },
+      },
+    },
+  },
+  search: {
+    placeholder: 'Search everything...',
+  },
+  sider: {
+    history: {
+      empty: {
+        title: 'No conversations yet',
       },
     },
   },

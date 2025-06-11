@@ -1,7 +1,16 @@
 const translations = {
+  // ==============================================
+  // 1. 全局基础设置和通用内容
+  // ==============================================
+
   language: '简体中文',
   productName: 'Refly',
   welcomeMessage: '今天准备写点什么?',
+
+  // ==============================================
+  // 2. 订阅和付费相关
+  // ==============================================
+
   subscription: {
     storageExceeded: {
       title: '存储空间已满',
@@ -10,12 +19,22 @@ const translations = {
       upgrade: '立即升级',
     },
   },
+
+  // ==============================================
+  // 3. 页面元数据和基础页面
+  // ==============================================
+
   privacyPage: {
     title: '隐私政策',
   },
   termsPage: {
     title: '服务条款',
   },
+
+  // ==============================================
+  // 4. 通用组件和公共功能
+  // ==============================================
+
   common: {
     poweredBy: 'Powered by',
     confirm: '确认',
@@ -2645,6 +2664,16 @@ const translations = {
       sourceCount: '{{resourceCount}} 个资源 · {{documentCount}} 个文档',
     },
     canvasCount: '{{canvasCount}} 个画布',
+  },
+  search: {
+    placeholder: '搜索任何内容...',
+  },
+  sider: {
+    history: {
+      empty: {
+        title: '暂无对话记录',
+      },
+    },
   },
   pages: {
     share: {

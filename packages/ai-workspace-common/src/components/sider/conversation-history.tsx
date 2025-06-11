@@ -93,7 +93,7 @@ export const ConversationHistory = memo(() => {
     return (
       <div className="flex-1 flex flex-col p-3 min-h-0">
         <div className="text-center text-gray-400 dark:text-gray-500 text-sm py-8">
-          <div>{t('sider.history.empty.title', 'No conversations yet')}</div>
+          <div>{t('sider.history.empty.title')}</div>
         </div>
       </div>
     );

@@ -1,6 +1,7 @@
 import { bigSearchQuickOpenEmitter } from '@refly-packages/ai-workspace-common/utils/event-emitter/big-search-quick-open';
 import classNames from 'classnames';
 import { IconMoreVertical } from '@refly-packages/ai-workspace-common/components/common/icon';
+import { useTranslation } from 'react-i18next';
 
 interface SearchQuickOpenBtnProps extends React.ComponentProps<'div'> {
   placeholder?: string;
@@ -8,6 +9,7 @@ interface SearchQuickOpenBtnProps extends React.ComponentProps<'div'> {
 
 export const SearchQuickOpenBtn = (props: SearchQuickOpenBtnProps) => {
   const { placeholder, ...divProps } = props;
+  const { t } = useTranslation();
 
   return (
     <div {...divProps} className={classNames('mb-3 mt-4', divProps.className)}>
@@ -19,7 +21,7 @@ export const SearchQuickOpenBtn = (props: SearchQuickOpenBtnProps) => {
         }}
       >
         <div className="flex items-center text-xs font-normal text-gray-500 dark:text-gray-400">
-          <span>The landlord does not return the deposit</span>
+          <span>{placeholder || t('search.placeholder')}</span>
         </div>
         <div className="flex items-center">
           <IconMoreVertical className="h-4 w-4 text-gray-400 dark:text-gray-500" />

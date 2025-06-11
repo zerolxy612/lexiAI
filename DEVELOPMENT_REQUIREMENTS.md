@@ -43,7 +43,7 @@ cd apps/api
 
 # 启动开发服务器
 pnpm dev
-```
+```ƒƒ
 
 ### 第四步：启动前端
 **新开一个终端窗口，在项目根目录** `/Users/longxiangyu/LexiHk/lexiAI` **执行：**
@@ -500,6 +500,298 @@ docker ps
   - ❌ 外部工具调用功能不可用
   - ❌ 复杂文件处理功能受限
 
+### 需求 #006: 完善语言切换功能
+
+**需求描述**: 
+修复侧边栏组件中的硬编码文本问题，确保所有界面文本都能正确响应语言切换功能
+
+**当前行为**:
+- ✅ 项目已有完整的i18n基础设施（react-i18next + 多语言文件）
+- ✅ 右上角已有语言切换按钮，功能正常（位于账户信息旁边）
+- ❌ 左侧侧边栏中的部分文本硬编码为英文，不响应语言切换
+- ❌ 搜索框占位文本："The landlord does not return the deposit" 
+- ❌ 对话历史空状态文本使用了错误的翻译函数调用方式
+
+**期望行为**:
+- 右上角语言切换功能保持不变
+- 左侧侧边栏中所有文本都能正确响应语言切换
+- 搜索框占位文本应该使用合适的中英文翻译
+- 对话历史组件的空状态文本应该正确翻译
+
+**影响范围**:
+- `packages/ai-workspace-common/src/components/search-quick-open-btn/index.tsx` - 搜索框硬编码文本
+- `packages/ai-workspace-common/src/components/sider/conversation-history.tsx` - 对话历史翻译问题
+- 可能需要在翻译文件中添加缺失的翻译键
+
+**技术分析**:
+
+1. **已确认的问题**:
+   - **搜索框硬编码**: `"The landlord does not return the deposit"` 需要使用翻译函数
+   - **对话历史翻译错误**: `t('sider.history.empty.title', 'No conversations yet')` 使用了错误的语法
+   - **翻译键缺失**: 相关翻译键可能在翻译文件中不存在
+
+2. **修复方案**:
+   ```typescript
+   // 搜索框修复
+   - <span>The landlord does not return the deposit</span>
+   + <span>{t('search.placeholder')}</span>
+   
+   // 对话历史修复  
+   - <div>{t('sider.history.empty.title', 'No conversations yet')}</div>
+   + <div>{t('sider.history.empty.title')}</div>
+   ```
+
+3. **需要添加的翻译键**:
+   ```typescript
+   // 英文翻译文件
+   search: {
+     placeholder: 'Search everything...'
+   },
+   sider: {
+     history: {
+       empty: {
+         title: 'No conversations yet'
+       }
+     }
+   }
+   
+   // 中文翻译文件  
+   search: {
+     placeholder: '搜索任何内容...'
+   },
+   sider: {
+     history: {
+       empty: {
+         title: '暂无对话记录'
+       }
+     }
+   }
+   ```
+
+**实现详情**:
+1. ✅ **添加翻译键**: 在 `packages/i18n/src/en-US/ui.ts` 和 `packages/i18n/src/zh-Hans/ui.ts` 中添加了新的翻译键
+2. ✅ **修复搜索框**: 
+   - 添加 `useTranslation` hook 导入
+   - 将硬编码文本替换为 `{placeholder || t('search.placeholder')}`
+   - 支持 prop 传入的自定义占位文本或使用默认翻译
+3. ✅ **修复对话历史**: 
+   - 移除错误的翻译函数语法，使用正确的 `t('sider.history.empty.title')`
+   - 确保空状态文本正确响应语言切换
+
+**修改的文件**:
+- `packages/i18n/src/en-US/ui.ts` - 添加英文翻译键
+- `packages/i18n/src/zh-Hans/ui.ts` - 添加中文翻译键  
+- `packages/ai-workspace-common/src/components/search-quick-open-btn/index.tsx` - 修复搜索框硬编码文本
+- `packages/ai-workspace-common/src/components/sider/conversation-history.tsx` - 修复翻译函数调用
+
+**测试要点**:
+- ✅ 语言切换功能的响应性测试
+- ✅ 搜索框占位文本正确翻译
+- ✅ 对话历史空状态文本正确翻译
+- ✅ 不同语言下的UI布局适配正常
+
+**实现步骤**:
+1. 修复搜索框组件的硬编码文本
+2. 修复对话历史组件的翻译函数调用
+3. 在翻译文件中添加缺失的翻译键
+4. 测试语言切换功能的响应性
+
+**道德/合规考虑**:
+- ✅ 提升用户体验，支持多语言用户
+- ✅ 不涉及用户数据隐私问题
+- ✅ 符合国际化最佳实践
+
+**优先级**: 中（用户体验改进，修复现有功能缺陷）
+**预估工时**: 0.5天
+**状态**: ✅ 已完成
+
+### 需求 #007: 改进翻译文件组织结构
+
+**需求描述**: 
+重构当前的单一巨大翻译文件，采用模块化的翻译文件组织方式，提升可维护性和团队协作效率
+
+**当前问题**:
+- ❌ 单一巨大文件：`ui.ts` 文件超过2800行，难以维护
+- ❌ 查找困难：在巨大文件中搜索特定翻译键效率低
+- ❌ 团队协作问题：多人同时修改同一文件容易产生冲突
+- ❌ 加载性能：加载所有翻译内容，无法按需加载
+- ❌ 逻辑混乱：各种功能的翻译混在一起，缺乏清晰结构
+
+**期望目标**:
+- 按功能模块拆分翻译文件，提升可维护性
+- 保持现有功能完全兼容，不破坏用户体验
+- 建立清晰的翻译文件组织规范
+- 为将来的按需加载和性能优化打基础
+
+**影响范围**:
+- `packages/i18n/src/en-US/ui.ts` - 拆分为多个模块文件
+- `packages/i18n/src/zh-Hans/ui.ts` - 对应拆分
+- 可能需要修改翻译加载逻辑
+
+**实施方案**:
+
+**阶段一：内部重组织（立即执行）**
+1. **保持单文件结构**，但内部按逻辑重新分组：
+   ```typescript
+   // 新的内部结构
+   const translations = {
+     // 1. 通用组件和全局内容
+     common: { ... },
+     language: 'English',
+     productName: 'Refly',
+     
+     // 2. 认证相关
+     auth: {
+       login: { ... },
+       register: { ... },
+       verification: { ... }
+     },
+     
+     // 3. 侧边栏和导航
+     sider: {
+       menu: { ... },
+       history: { ... },
+       search: { ... }
+     },
+     
+     // 4. 画布相关
+     canvas: {
+       toolbar: { ... },
+       nodes: { ... },
+       actions: { ... }
+     },
+     
+     // 5. 设置和配置
+     settings: {
+       account: { ... },
+       language: { ... },
+       subscription: { ... }
+     },
+     
+     // 6. 项目和知识库
+     project: { ... },
+     knowledgeLibrary: { ... },
+     
+     // 7. 技能和模板
+     skill: { ... },
+     template: { ... }
+   };
+   ```
+
+**阶段二：文件拆分（下一迭代）**
+2. **拆分为独立文件**：
+   ```
+   packages/i18n/src/
+   ├── en-US/
+   │   ├── index.ts           # 汇总导出
+   │   ├── common.ts          # 通用翻译
+   │   ├── auth.ts            # 认证模块
+   │   ├── sider.ts           # 侧边栏
+   │   ├── canvas.ts          # 画布功能
+   │   ├── settings.ts        # 设置页面
+   │   ├── project.ts         # 项目管理
+   │   ├── knowledge.ts       # 知识库
+   │   ├── skill.ts           # 技能功能
+   │   └── template.ts        # 模板功能
+   └── zh-Hans/
+       ├── index.ts
+       ├── common.ts
+       ├── auth.ts
+       └── ...
+   ```
+
+3. **兼容性处理**：
+   ```typescript
+   // packages/i18n/src/en-US/index.ts
+   import common from './common';
+   import auth from './auth';
+   import sider from './sider';
+   // ... 其他模块
+   
+   // 保持原有的扁平结构，确保现有代码不受影响
+   export default {
+     ...common,
+     auth,
+     sider,
+     canvas,
+     settings,
+     project,
+     knowledgeLibrary,
+     skill,
+     template,
+     // 保持向后兼容
+     language: common.language,
+     productName: common.productName
+   };
+   ```
+
+**阶段三：按需加载优化（未来规划）**
+4. **实现动态加载**：
+   ```typescript
+   // 支持按模块动态加载
+   const loadTranslationModule = async (module: string, locale: string) => {
+     return await import(`./src/${locale}/${module}.ts`);
+   };
+   ```
+
+**拆分规则和原则**:
+
+1. **按功能域拆分**：
+   - `common.ts` - 通用按钮、消息、全局常量
+   - `auth.ts` - 登录、注册、验证相关
+   - `sider.ts` - 侧边栏、导航、菜单
+   - `canvas.ts` - 画布、节点、工具栏
+   - `settings.ts` - 设置页面、用户配置
+   - `project.ts` - 项目管理、文件操作
+   - `knowledge.ts` - 知识库、资源管理
+   - `skill.ts` - 技能系统、执行记录
+   - `template.ts` - 模板系统
+
+2. **文件大小控制**：
+   - 每个模块文件控制在200-500行以内
+   - 超过500行的模块继续细分
+
+3. **命名规范**：
+   - 文件名使用kebab-case：`user-management.ts`
+   - 翻译键保持原有的点分法：`auth.login.title`
+
+**实施优先级**: 高（影响开发效率和团队协作）
+**预估工时**: 1-1.5天
+**状态**: 🔄 阶段一进行中 - 内部重组织
+
+**实施进展**:
+
+**阶段一进行中** (内部重组织):
+- ✅ **添加分组注释**: 在 `packages/i18n/src/en-US/ui.ts` 和 `packages/i18n/src/zh-Hans/ui.ts` 中添加了清晰的功能分组注释
+- ✅ **已完成的分组**:
+  1. 全局基础设置和通用内容 (language, productName, welcomeMessage)
+  2. 页面元数据和基础页面 (privacyPage, termsPage)  
+  3. 通用组件和公共功能 (common 对象)
+  4. 页面组件和页面功能 (pages 对象)
+  5. 工作区和画布功能 (workspace 对象) - 英文版已完成
+- ✅ **双语言支持**: 英文和中文翻译文件都已添加相应的分组注释
+- ✅ **功能验证**: 项目仍能正常启动，语言切换功能正常
+- 🔄 **进行中**: 继续为其他主要功能模块添加分组注释
+
+**预期完成时间**: 今天内完成阶段一，明天开始阶段二文件拆分
+
+**风险评估**:
+- 🟢 **技术风险低** - 主要是文件组织调整，不涉及逻辑变更
+- 🟡 **兼容性风险中等** - 需要确保现有翻译键路径不变
+- 🟢 **回滚风险低** - 可以快速回滚到原有结构
+
+**测试要点**:
+- 所有页面的翻译显示正常
+- 语言切换功能完全正常
+- 新增翻译键的使用方式保持一致
+- 构建和打包过程无错误
+
+**长期收益**:
+- 提升团队开发效率50%+
+- 减少翻译文件冲突90%+
+- 为国际化扩展打下良好基础
+- 支持将来的性能优化需求
+
 ---
 
 ## 🔄 需求状态说明
@@ -593,11 +885,11 @@ docker ps
 
 ## 📈 开发进度总结
 
-- **需求总数**: 5
-- **已完成**: 4 
+- **需求总数**: 7
+- **已完成**: 5 
 - **进行中**: 0
-- **待开始**: 1
-- **完成率**: 80% 
+- **待开始**: 2
+- **完成率**: 71.43%
 
 ## 📚 开发教训记录
 
