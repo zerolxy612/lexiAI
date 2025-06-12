@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Button, message, Upload, UploadProps } from 'antd';
-import { TbFile } from 'react-icons/tb';
+import { TbMusic } from 'react-icons/tb';
 import { RiInboxArchiveLine } from 'react-icons/ri';
 import { useImportResourceStoreShallow } from '@refly-packages/ai-workspace-common/stores/import-resource';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
@@ -22,7 +22,7 @@ import { nodeOperationsEmitter } from '@refly-packages/ai-workspace-common/event
 
 const { Dragger } = Upload;
 
-interface FileItem {
+interface AudioItem {
   title: string;
   url: string;
   storageKey: string;
@@ -30,36 +30,16 @@ interface FileItem {
   status?: 'uploading' | 'done' | 'error';
 }
 
-const ALLOWED_FILE_EXTENSIONS = [
-  '.pdf',
-  '.docx',
-  '.rtf',
-  '.txt',
-  '.md',
-  '.html',
-  '.epub',
-  // Audio formats
-  '.mp3',
-  '.wav',
-  '.m4a',
-  '.ogg',
-  '.flac',
-  '.aac',
-];
+const ALLOWED_AUDIO_EXTENSIONS = ['.mp3', '.wav', '.m4a', '.ogg', '.flac', '.aac'];
 
-export const ImportFromFile = () => {
+export const ImportFromAudio = () => {
   const { t } = useTranslation();
-  const {
-    setImportResourceModalVisible,
-    insertNodePosition,
-    fileList: storageFileList,
-    setFileList: setStorageFileList,
-  } = useImportResourceStoreShallow((state) => ({
-    setImportResourceModalVisible: state.setImportResourceModalVisible,
-    insertNodePosition: state.insertNodePosition,
-    setFileList: state.setFileList,
-    fileList: state.fileList,
-  }));
+  const { setImportResourceModalVisible, insertNodePosition } = useImportResourceStoreShallow(
+    (state) => ({
+      setImportResourceModalVisible: state.setImportResourceModalVisible,
+      insertNodePosition: state.insertNodePosition,
+    }),
+  );
   const { setSubscribeModalVisible } = useSubscriptionStoreShallow((state) => ({
     setSubscribeModalVisible: state.setSubscribeModalVisible,
   }));
@@ -71,7 +51,7 @@ export const ImportFromFile = () => {
   const { refetchUsage, storageUsage, fileParsingUsage } = useSubscriptionUsage();
 
   const [saveLoading, setSaveLoading] = useState(false);
-  const [fileList, setFileList] = useState<FileItem[]>(storageFileList);
+  const [audioList, setAudioList] = useState<AudioItem[]>([]);
 
   const { userProfile } = useUserStoreShallow((state) => ({
     userProfile: state.userProfile,
@@ -82,7 +62,7 @@ export const ImportFromFile = () => {
   const maxFileSize = `${uploadLimit}MB`;
   const maxFileSizeBytes = uploadLimit * 1024 * 1024;
 
-  const uploadFile = async (file: File, uid: string) => {
+  const uploadAudio = async (file: File, uid: string) => {
     const { data } = await getClient().upload({
       body: {
         file,
@@ -97,8 +77,8 @@ export const ImportFromFile = () => {
   const props: UploadProps = {
     name: 'file',
     multiple: true,
-    accept: ALLOWED_FILE_EXTENSIONS.join(','),
-    fileList: fileList.map((item) => ({
+    accept: ALLOWED_AUDIO_EXTENSIONS.join(','),
+    fileList: audioList.map((item) => ({
       uid: item.uid,
       name: item.title,
       status: item?.status,
@@ -111,7 +91,7 @@ export const ImportFromFile = () => {
       }
 
       const tempUid = genResourceID();
-      setFileList((prev) => [
+      setAudioList((prev) => [
         ...prev,
         {
           title: file.name,
@@ -122,9 +102,9 @@ export const ImportFromFile = () => {
         },
       ]);
 
-      const data = await uploadFile(file, tempUid);
+      const data = await uploadAudio(file, tempUid);
       if (data?.url && data?.storageKey) {
-        setFileList((prev) =>
+        setAudioList((prev) =>
           prev.map((item) =>
             item.uid === tempUid
               ? {
@@ -138,31 +118,31 @@ export const ImportFromFile = () => {
           ),
         );
       } else {
-        setFileList((prev) => prev.filter((item) => item.uid !== tempUid));
+        setAudioList((prev) => prev.filter((item) => item.uid !== tempUid));
         message.error(`${t('common.uploadFailed')}: ${file.name}`);
       }
 
       return false;
     },
     onRemove: (file: RcFile) => {
-      setFileList((prev) => prev.filter((item) => item.uid !== file.uid));
+      setAudioList((prev) => prev.filter((item) => item.uid !== file.uid));
     },
   };
 
   const handleSave = async () => {
-    if (fileList.length === 0) {
-      message.warning(t('resource.import.emptyFile'));
+    if (audioList.length === 0) {
+      message.warning(t('resource.import.emptyAudio'));
       return;
     }
 
     setSaveLoading(true);
 
     const { data } = await getClient().batchCreateResource({
-      body: fileList.map((file) => ({
+      body: audioList.map((audio) => ({
         projectId: currentProjectId,
-        resourceType: 'file',
-        title: file.title,
-        storageKey: file.storageKey,
+        resourceType: 'file', // Currently using 'file' type for audio
+        title: audio.title,
+        storageKey: audio.storageKey,
       })),
     });
 
@@ -172,7 +152,7 @@ export const ImportFromFile = () => {
       return;
     }
 
-    setFileList([]);
+    setAudioList([]);
     refetchUsage();
     message.success(t('common.putSuccess'));
     setImportResourceModalVisible(false);
@@ -203,7 +183,7 @@ export const ImportFromFile = () => {
               entityId: resource.id,
               contentPreview: resource.contentPreview,
               metadata: {
-                resourceType: 'file',
+                resourceType: 'audio',
               },
             },
             position: nodePosition,
@@ -216,11 +196,11 @@ export const ImportFromFile = () => {
   };
 
   const canImportCount = getAvailableFileCount(storageUsage);
-  const disableSave = fileList.length === 0 || fileList.length > canImportCount;
+  const disableSave = audioList.length === 0 || audioList.length > canImportCount;
 
   const genUploadHint = () => {
-    let hint = t('resource.import.supportedFiles', {
-      formats: ALLOWED_FILE_EXTENSIONS.map((ext) => ext.slice(1).toUpperCase()).join(', '),
+    let hint = t('resource.import.supportedAudio', {
+      formats: ALLOWED_AUDIO_EXTENSIONS.map((ext) => ext.slice(1).toUpperCase()).join(', '),
     });
     if (uploadLimit > 0) {
       hint += `. ${t('resource.import.fileUploadLimit', { size: maxFileSize })}`;
@@ -228,18 +208,14 @@ export const ImportFromFile = () => {
     return hint;
   };
 
-  useEffect(() => {
-    setStorageFileList(fileList);
-  }, [fileList, setStorageFileList]);
-
   return (
     <div className="h-full flex flex-col min-w-[500px] box-border intergation-import-from-weblink">
       {/* header */}
       <div className="flex items-center gap-x-[8px] pt-6 px-6">
         <span className="flex items-center justify-center">
-          <TbFile className="text-lg" />
+          <TbMusic className="text-lg" />
         </span>
-        <div className="text-base font-bold">{t('resource.import.fromFile')}</div>
+        <div className="text-base font-bold">{t('resource.import.fromAudio')}</div>
         {subscriptionEnabled && planType === 'free' && (
           <Button
             type="text"
@@ -278,10 +254,10 @@ export const ImportFromFile = () => {
       <div className="w-full flex justify-between items-center border-t border-solid border-[#e5e5e5] dark:border-[#2f2f2f] border-x-0 border-b-0 p-[16px] rounded-none">
         <div className="flex items-center gap-x-[8px]">
           <p className="font-bold whitespace-nowrap text-md text-[#00968f]">
-            {t('resource.import.fileCount', { count: fileList?.length || 0 })}
+            {t('resource.import.audioCount', { count: audioList?.length || 0 })}
           </p>
           <StorageLimit
-            resourceCount={fileList?.length || 0}
+            resourceCount={audioList?.length || 0}
             projectId={currentProjectId}
             onSelectProject={setCurrentProjectId}
           />

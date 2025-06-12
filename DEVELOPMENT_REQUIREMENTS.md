@@ -242,6 +242,7 @@ docker ps
 - ✅ 已获取设计效果图对比
 - ✅ 找到LexiHK logo文件 (`apps/web/src/assets/Lexihk-dark.png`)
 - ✅ 找到书本图标文件 (`apps/web/src/assets/Vector.png`)
+- ✅ 找到add.png图标文件 (`apps/web/src/assets/add.png`)
 
 **实现详情**:
 1. ✅ 修改 `SiderLogo` 组件，替换为 LexiHK logo
@@ -251,6 +252,41 @@ docker ps
 5. ✅ 修改收缩状态下的展开按钮也使用书本图标
 6. ✅ 确保侧边栏收缩后用户仍能通过书本图标重新展开
 7. ✅ 修改搜索框样式：背景色改为#f1f5f8，移除所有图标，文字改为"The landlord does not return the deposit"
+8. ✅ **新增创建画布快捷按钮**：在侧边栏右上角添加add.png图标，与LexiHK logo处于同一水平线，点击后创建新画布
+
+**阶段二：功能增强 - 创建画布快捷按钮**:
+
+**技术实现要点**:
+- **位置布局**: 使用`justify-between`将logo区域和add按钮分别放在左右两侧
+- **图标样式**: add.png图标尺寸4x4，与书本图标保持一致
+- **功能复用**: 集成现有的`useCreateCanvas` hook，支持防抖和状态管理
+- **用户体验**: 
+  - 支持loading状态显示
+  - 事件冒泡阻止，避免触发logo点击导航
+  - 与其他按钮保持一致的hover效果
+  - 创建成功后自动导航到新画布
+
+**代码结构**:
+```typescript
+// SiderLogo组件增强
+const { debouncedCreateCanvas, isCreating: createCanvasLoading } = useCreateCanvas();
+
+// 布局结构
+<div className="flex items-center justify-between p-3">
+  <div className="flex items-center gap-2">
+    {/* 书本图标 + LexiHK logo */}
+  </div>
+  {/* 新增：创建画布按钮 */}
+  <Button
+    icon={<img src={AddIcon} alt="Create new canvas" className="h-4 w-4" />}
+    onClick={(e) => {
+      e.stopPropagation();
+      debouncedCreateCanvas();
+    }}
+    loading={createCanvasLoading}
+  />
+</div>
+```
 
 **修改的文件**:
 - `packages/ai-workspace-common/src/components/sider/layout.tsx` - 主要侧边栏组件
@@ -1021,3 +1057,114 @@ docker ps
 ---
 
 *文档更新时间: 2024-12-19*
+
+## 问题记录和解决方案
+
+### 图片上传显示问题（2025-06-11）
+
+**问题描述**：
+上传图片后，画布中只能看到图片文件名（如 xxx.jpg），无法看到图片本身。
+
+**问题分析**：
+1. **响应数据结构处理错误**：在 `packages/ai-workspace-common/src/hooks/use-upload-image.ts` 中，错误地解构了上传响应数据
+2. **图片URL路径错误**：生成的图片URL包含错误的 `/api` 前缀，导致404错误
+
+**解决方案**：
+
+#### 1. 修复响应数据解构（已修复）
+```typescript
+// 错误的处理方式
+const { data, success } = result ?? {};
+
+// 正确的处理方式  
+if (result?.success && result?.data) {
+  const nodeData = {
+    // ...
+    metadata: {
+      imageUrl: result.data.url,
+      storageKey: result.data.storageKey,
+    },
+  };
+}
+```
+
+#### 2. 修复图片URL路径（已修复）
+在 `packages/ai-workspace-common/src/components/canvas/nodes/image.tsx` 中：
+```typescript
+// 修复URL路径，移除错误的/api前缀
+const imageUrl = useMemo(() => {
+  if (!rawImageUrl) return '';
+  
+  // 移除错误的/api前缀
+  if (rawImageUrl.startsWith('/api/v1/misc/static/')) {
+    const cleanPath = rawImageUrl.replace('/api', '');
+    return `${serverOrigin}${cleanPath}`;
+  }
+  
+  // 其他路径处理...
+}, [rawImageUrl]);
+```
+
+**根本原因**：
+- API响应数据结构为嵌套结构：`{ data: { success: boolean, data: { url, storageKey } } }`
+- 正确的静态文件路径应该是 `/v1/misc/static/:objectKey` 而不是 `/api/v1/misc/static/...`
+
+**验证方法**：
+1. 查看浏览器控制台，确认图片URL格式正确
+2. 确认图片可以正常加载，没有404或CORS错误
+3. 画布中能正常显示图片内容
+
+---
+
+### 文档上传中图片显示问题（2025-06-11）
+
+**问题描述**：
+上传包含图片的文件（如Word文档）后，文档内容能正常显示，但其中的图片无法显示。
+
+**问题分析**：
+1. **文档解析正常**：Pandoc解析器能够正确提取文档中的图片，并将其转换为Markdown格式
+2. **图片上传正常**：从文档中提取的图片被正确上传到MinIO存储
+3. **URL生成问题**：生成的图片URL路径可能不正确，导致前端无法正确访问
+
+**解决方案**：
+
+#### 修复Markdown组件中的图片URL处理（已修复）
+在 `packages/ai-workspace-common/src/components/markdown/index.tsx` 中的 `MarkdownImage` 组件：
+
+```typescript
+// 添加图片URL修复逻辑
+const fixedSrc = useMemo(() => {
+  if (!src) return src;
+  
+  // If it's already a full URL, return as is
+  if (src.startsWith('http://') || src.startsWith('https://')) {
+    return src;
+  }
+  
+  // If it's a relative URL starting with /v1, prepend server origin
+  if (src.startsWith('/v1/')) {
+    return `${serverOrigin}${src}`;
+  }
+  
+  // If it's starting with /api/v1, remove the /api prefix and prepend server origin
+  if (src.startsWith('/api/v1/')) {
+    const cleanPath = src.replace('/api', '');
+    return `${serverOrigin}${cleanPath}`;
+  }
+  
+  // Return original src for other cases (like base64 data URLs)
+  return src;
+}, [src]);
+```
+
+**技术背景**：
+- 文档解析流程：文件上传 → Pandoc解析 → 图片提取 → 图片上传到MinIO → 生成Markdown内容
+- 图片URL生成：使用 `MiscService.generateFileURL()` 方法生成访问URL
+- 前端渲染：通过 `MarkdownImage` 组件渲染文档中的图片
+
+**验证方法**：
+1. 上传包含图片的Word文档
+2. 查看文档预览中的图片是否正常显示
+3. 检查浏览器控制台，确认图片URL格式正确且能正常加载
+
+---

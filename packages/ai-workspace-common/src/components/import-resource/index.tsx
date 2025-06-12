@@ -14,11 +14,11 @@ import './index.scss';
 import { useEffect, memo } from 'react';
 import { getRuntime } from '@refly/utils/env';
 import MultilingualSearch from '@refly-packages/ai-workspace-common/modules/multilingual-search';
-import { TbClipboard, TbWorldSearch, TbBrowserPlus, TbFile } from 'react-icons/tb';
+import { TbClipboard, TbWorldSearch, TbBrowserPlus, TbFile, TbMusic } from 'react-icons/tb';
 import { PiImagesSquare } from 'react-icons/pi';
-import { IconImportResource } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { ImportFromFile } from '@refly-packages/ai-workspace-common/components/import-resource/intergrations/import-from-file';
 import { ImportFromImage } from './intergrations/import-from-image';
+import { ImportFromAudio } from './intergrations/import-from-audio';
 
 const MenuItem = Menu.Item;
 
@@ -72,7 +72,6 @@ export const ImportResourceModal = memo(() => {
               <div className="import-resource-left-panel">
                 <div className="left-panel-header">
                   <div className="left-panel-header-title">
-                    <IconImportResource className="text-2xl" />
                     <span className="left-panel-header-title-text">
                       {t('resource.import.title')}
                     </span>
@@ -120,6 +119,12 @@ export const ImportResourceModal = memo(() => {
                       </span>
                       {t('resource.import.fromExtension')}
                     </MenuItem>
+                    <MenuItem key="import-from-audio">
+                      <span className="flex items-center justify-center mr-2">
+                        <TbMusic className="text-base" />
+                      </span>
+                      {t('resource.import.fromAudio')}
+                    </MenuItem>
                   </Menu>
                 </div>
               </div>
@@ -133,6 +138,7 @@ export const ImportResourceModal = memo(() => {
               {selectedMenuItem === 'import-from-extension' ? <ImportFromExtension /> : null}
               {selectedMenuItem === 'import-from-file' ? <ImportFromFile /> : null}
               {selectedMenuItem === 'import-from-image' ? <ImportFromImage /> : null}
+              {selectedMenuItem === 'import-from-audio' ? <ImportFromAudio /> : null}
             </div>
           </Splitter.Panel>
         </Splitter>

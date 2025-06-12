@@ -65,7 +65,7 @@ export const useExportCanvasAsImage = () => {
 
         // use html2canvas to create an image
         const canvas = await html2canvas(reactFlowContainer as HTMLElement, {
-          backgroundColor: '#EEF4F7',
+          backgroundColor: '#EDF2F8',
           scale: 4, // improve the quality of the image
           useCORS: true, // allow cross-origin images
           allowTaint: true, // allow the canvas to be tainted

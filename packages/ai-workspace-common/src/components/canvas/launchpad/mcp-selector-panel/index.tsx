@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { ChevronDown, CheckCircle2 } from 'lucide-react';
 import { ReloadOutlined, ToolOutlined } from '@ant-design/icons';
 import { cn } from '@refly-packages/ai-workspace-common/utils/cn';
-import { useListMcpServersSuspense } from '@refly-packages/ai-workspace-common/queries/suspense';
 import { useLaunchpadStoreShallow } from '@refly-packages/ai-workspace-common/stores/launchpad';
 // McpServerDTO is used implicitly through the API response
 

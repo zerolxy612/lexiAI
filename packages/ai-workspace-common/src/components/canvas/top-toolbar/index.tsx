@@ -16,17 +16,12 @@ import { CanvasActionDropdown } from '@refly-packages/ai-workspace-common/compon
 import ShareSettings from './share-settings';
 import { useUserStoreShallow } from '@refly-packages/ai-workspace-common/stores/user';
 import './index.scss';
-import {
-  IconLink,
-  IconLanguage,
-  IconDown,
-} from '@refly-packages/ai-workspace-common/components/common/icon';
+import { IconLink, IconDown } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { LuBookCopy } from 'react-icons/lu';
 import { useDuplicateCanvas } from '@refly-packages/ai-workspace-common/hooks/use-duplicate-canvas';
 import { useAuthStoreShallow } from '@refly-packages/ai-workspace-common/stores/auth';
 import { UILocaleList } from '@refly-packages/ai-workspace-common/components/ui-locale-list';
 import { SiderMenuSettingList } from '@refly-packages/ai-workspace-common/components/sider-menu-setting-list';
-import { Avatar } from 'antd';
 import userIcon from '../../../assets/user.png';
 
 interface TopToolbarProps {

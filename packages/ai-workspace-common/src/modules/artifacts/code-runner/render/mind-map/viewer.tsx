@@ -266,7 +266,7 @@ const MindMap = React.memo(
             gap={24}
             size={1.5}
             className="bg-green-50 dark:bg-green-900"
-            bgColor="#eef4f7"
+            bgColor="#edf2f8"
           />
         </ReactFlow>
       </div>

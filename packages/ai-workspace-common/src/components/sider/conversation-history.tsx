@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { useNavigate, useLocation } from '@refly-packages/ai-workspace-common/utils/router';
 import { useTranslation } from 'react-i18next';
 import cn from 'classnames';
@@ -34,7 +34,7 @@ const extractTitleFromContent = (item: any): string => {
 };
 
 // Truncate text with ellipsis
-const truncateText = (text: string, maxLength: number = 40): string => {
+const truncateText = (text: string, maxLength = 40): string => {
   if (text.length <= maxLength) return text;
   return text.slice(0, maxLength) + '...';
 };

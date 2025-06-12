@@ -21,6 +21,7 @@ import { markdownElements } from './plugins';
 import { processWithArtifact } from '@refly/utils/artifact';
 import { ImagePreview } from '@refly-packages/ai-workspace-common/components/common/image-preview';
 import { MarkdownMode } from './types';
+import { serverOrigin } from '@refly-packages/ai-workspace-common/utils/env';
 
 const rehypePlugins = markdownElements.map((element) => element.rehypePlugin);
 
@@ -28,10 +29,34 @@ const rehypePlugins = markdownElements.map((element) => element.rehypePlugin);
 const MarkdownImage = memo(({ src, alt, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) => {
   const [isPreviewVisible, setIsPreviewVisible] = useState(false);
 
+  // Fix image URL to ensure it points to the correct server
+  const fixedSrc = useMemo(() => {
+    if (!src) return src;
+
+    // If it's already a full URL, return as is
+    if (src.startsWith('http://') || src.startsWith('https://')) {
+      return src;
+    }
+
+    // If it's a relative URL starting with /v1, prepend server origin
+    if (src.startsWith('/v1/')) {
+      return `${serverOrigin}${src}`;
+    }
+
+    // If it's starting with /api/v1, remove the /api prefix and prepend server origin
+    if (src.startsWith('/api/v1/')) {
+      const cleanPath = src.replace('/api', '');
+      return `${serverOrigin}${cleanPath}`;
+    }
+
+    // Return original src for other cases (like base64 data URLs)
+    return src;
+  }, [src]);
+
   return (
     <>
       <img
-        src={src}
+        src={fixedSrc}
         alt={alt}
         className="max-w-full h-auto cursor-zoom-in rounded-lg hover:opacity-90 transition-opacity"
         onClick={(e) => {
@@ -43,7 +68,7 @@ const MarkdownImage = memo(({ src, alt, ...props }: React.ImgHTMLAttributes<HTML
       <ImagePreview
         isPreviewModalVisible={isPreviewVisible}
         setIsPreviewModalVisible={setIsPreviewVisible}
-        imageUrl={src ?? ''}
+        imageUrl={fixedSrc ?? ''}
         imageTitle={alt}
       />
     </>

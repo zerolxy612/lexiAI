@@ -30,13 +30,22 @@ export interface ImageItem {
   status?: 'uploading' | 'done' | 'error';
 }
 
+export interface AudioItem {
+  title: string;
+  url: string;
+  storageKey: string;
+  uid?: string;
+  status?: 'uploading' | 'done' | 'error';
+}
+
 export type ImportResourceMenuItem =
   | 'import-from-file'
   | 'import-from-weblink'
   | 'import-from-paste-text'
   | 'import-from-web-search'
   | 'import-from-extension'
-  | 'import-from-image';
+  | 'import-from-image'
+  | 'import-from-audio';
 
 interface ImportResourceState {
   importResourceModalVisible: boolean;
@@ -46,6 +55,7 @@ interface ImportResourceState {
   scrapeLinks: LinkMeta[];
   fileList: FileItem[];
   imageList: ImageItem[];
+  audioList: AudioItem[];
   copiedTextPayload: { content: string; title: string; url?: string };
   insertNodePosition: XYPosition | null;
 
@@ -53,6 +63,7 @@ interface ImportResourceState {
   setScrapeLinks: (links: LinkMeta[]) => void;
   setFileList: (fileList: FileItem[]) => void;
   setImageList: (imageList: ImageItem[]) => void;
+  setAudioList: (audioList: AudioItem[]) => void;
   setCopiedTextPayload: (
     payload: Partial<{ content: string; title: string; url?: string }>,
   ) => void;
@@ -66,6 +77,7 @@ export const defaultState = {
   scrapeLinks: [],
   fileList: [],
   imageList: [],
+  audioList: [],
   importResourceModalVisible: false,
   selectedMenuItem: 'import-from-web-search' as ImportResourceMenuItem,
   insertNodePosition: null,
@@ -83,6 +95,7 @@ export const useImportResourceStore = create<ImportResourceState>()(
     resetState: () => set((state) => ({ ...state, ...defaultState })),
     setFileList: (fileList: FileItem[]) => set((state) => ({ ...state, fileList })),
     setImageList: (imageList: ImageItem[]) => set((state) => ({ ...state, imageList })),
+    setAudioList: (audioList: AudioItem[]) => set((state) => ({ ...state, audioList })),
     setSelectedMenuItem: (menuItem: ImportResourceMenuItem) =>
       set((state) => ({ ...state, selectedMenuItem: menuItem })),
     setInsertNodePosition: (position: XYPosition) =>

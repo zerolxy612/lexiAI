@@ -32,13 +32,40 @@ import { useSelectedNodeZIndex } from '@refly-packages/ai-workspace-common/hooks
 import { NodeActionButtons } from './shared/node-action-buttons';
 import { useGetNodeConnectFromDragCreateInfo } from '@refly-packages/ai-workspace-common/hooks/canvas/use-get-node-connect';
 import { NodeDragCreateInfo } from '@refly-packages/ai-workspace-common/events/nodeOperations';
+import { serverOrigin } from '@refly-packages/ai-workspace-common/utils/env';
 
 export const ImageNode = memo(
   ({ id, data, isPreview, selected, hideHandles, onNodeClick }: ImageNodeProps) => {
     const { metadata } = data ?? {};
-    const imageUrl = metadata?.imageUrl ?? '';
+    const rawImageUrl = metadata?.imageUrl ?? '';
+
+    // Fix: Convert relative URL to absolute URL if needed
+    const imageUrl = useMemo(() => {
+      if (!rawImageUrl) return '';
+
+      // If it's already a full URL (starts with http/https), return as is
+      if (rawImageUrl.startsWith('http://') || rawImageUrl.startsWith('https://')) {
+        return rawImageUrl;
+      }
+
+      // If it's a relative URL starting with /api, remove the /api prefix and prepend server origin
+      if (rawImageUrl.startsWith('/api/v1/misc/static/')) {
+        const cleanPath = rawImageUrl.replace('/api', '');
+        return `${serverOrigin}${cleanPath}`;
+      }
+
+      // If it's already the correct format, prepend server origin
+      if (rawImageUrl.startsWith('/v1/misc/static/')) {
+        return `${serverOrigin}${rawImageUrl}`;
+      }
+
+      // If it's just a filename, construct the full URL
+      return `${serverOrigin}/v1/misc/static/${rawImageUrl}`;
+    }, [rawImageUrl]);
+
     const showBorder = metadata?.showBorder ?? false;
     const showTitle = metadata?.showTitle ?? true;
+
     const [isHovered, setIsHovered] = useState(false);
     const [isPreviewModalVisible, setIsPreviewModalVisible] = useState(false);
     const { handleMouseEnter: onHoverStart, handleMouseLeave: onHoverEnd } = useNodeHoverEffect(id);

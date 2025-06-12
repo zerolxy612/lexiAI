@@ -11,6 +11,7 @@ import { IconPlus } from '@refly-packages/ai-workspace-common/components/common/
 import cn from 'classnames';
 import LexiHKLogo from '@/assets/Lexihk-dark.png';
 import VectorIcon from '@/assets/Vector.png';
+import AddIcon from '@/assets/add.png';
 import { useUserStoreShallow } from '@refly-packages/ai-workspace-common/stores/user';
 import { useKnowledgeBaseStoreShallow } from '@refly-packages/ai-workspace-common/stores/knowledge-base';
 // components
@@ -27,8 +28,6 @@ import { useCreateCanvas } from '@refly-packages/ai-workspace-common/hooks/canva
 // icons
 import { IconProject } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { CanvasTemplateModal } from '@refly-packages/ai-workspace-common/components/canvas-template';
-import { CanvasListModal } from '@refly-packages/ai-workspace-common/components/workspace/canvas-list-modal';
-import { LibraryModal } from '@refly-packages/ai-workspace-common/components/workspace/library-modal';
 import { SiderLoggedOut } from './sider-logged-out';
 import { CreateProjectModal } from '@refly-packages/ai-workspace-common/components/project/project-create';
 
@@ -45,6 +44,7 @@ export const SiderLogo = (props: {
   setCollapse: (collapse: boolean) => void;
 }) => {
   const { navigate, setCollapse, source } = props;
+  const { debouncedCreateCanvas, isCreating: createCanvasLoading } = useCreateCanvas();
 
   return (
     <div className="flex items-center justify-between p-3">
@@ -66,6 +66,19 @@ export const SiderLogo = (props: {
           <img src={LexiHKLogo} alt="LexiHK" className="h-6 w-auto" />
         </div>
       </div>
+
+      {/* Add new canvas icon */}
+      <Button
+        type="text"
+        icon={<img src={AddIcon} alt="Create new canvas" className="h-4 w-4" />}
+        onClick={(e) => {
+          e.stopPropagation();
+          debouncedCreateCanvas();
+        }}
+        loading={createCanvasLoading}
+        className="hover:bg-gray-100 dark:hover:bg-gray-800"
+        disabled={createCanvasLoading}
+      />
     </div>
   );
 };
@@ -299,7 +312,7 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
     setShowLibraryModal: state.setShowLibraryModal,
     setSettingsModalActiveTab: state.setSettingsModalActiveTab,
   }));
-  const { t } = useTranslation();
+  // const { t } = useTranslation(); // Temporarily commented out
   const location = useLocation();
   const canvasId = location.pathname.split('/').pop();
 

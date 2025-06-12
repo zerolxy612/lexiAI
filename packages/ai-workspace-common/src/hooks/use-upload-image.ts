@@ -20,16 +20,17 @@ export const useUploadImage = () => {
 
   const handleUploadImage = async (imageFile: File, canvasId: string) => {
     const result = await uploadImage(imageFile, canvasId);
-    const { data, success } = result ?? {};
-    if (success && data) {
+
+    if (result?.success && result?.data) {
       const nodeData = {
         title: imageFile.name,
         entityId: genImageID(),
         metadata: {
-          imageUrl: data.url,
-          storageKey: data.storageKey,
+          imageUrl: result.data.url,
+          storageKey: result.data.storageKey,
         },
       };
+
       addNode({
         type: 'image',
         data: { ...nodeData },
@@ -47,15 +48,14 @@ export const useUploadImage = () => {
     for (let i = 0; i < imageFiles.length; i++) {
       const imageFile = imageFiles[i];
       const result = await uploadImage(imageFile, canvasId);
-      const { data, success } = result ?? {};
 
-      if (success && data) {
+      if (result?.success && result?.data) {
         const nodeData = {
           title: imageFile.name,
           entityId: genImageID(),
           metadata: {
-            imageUrl: data.url,
-            storageKey: data.storageKey,
+            imageUrl: result.data.url,
+            storageKey: result.data.storageKey,
           },
         };
 
