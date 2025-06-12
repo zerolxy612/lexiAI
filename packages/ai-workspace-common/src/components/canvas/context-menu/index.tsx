@@ -32,6 +32,8 @@ import { cn } from '@refly/utils/cn';
 import { HoverCard, HoverContent } from '@refly-packages/ai-workspace-common/components/hover-card';
 import { useHoverCard } from '@refly-packages/ai-workspace-common/hooks/use-hover-card';
 import { useCreateCodeArtifact } from '@refly-packages/ai-workspace-common/hooks/use-create-code-artifact';
+import { useUserStoreShallow } from '@refly-packages/ai-workspace-common/stores/user';
+import { useChatStoreShallow } from '@refly-packages/ai-workspace-common/stores/chat';
 
 interface ContextMenuProps {
   open: boolean;
@@ -67,6 +69,15 @@ export const ContextMenu: FC<ContextMenuProps> = ({ open, position, setOpen }) =
 
   const [showSearchResourceList, setShowSearchResourceList] = useState(false);
   const [showSearchDocumentList, setShowSearchDocumentList] = useState(false);
+
+  // Get user preferences for default model
+  const { userProfile } = useUserStoreShallow((state) => ({
+    userProfile: state.userProfile,
+  }));
+
+  const { setSkillSelectedModel } = useChatStoreShallow((state) => ({
+    setSkillSelectedModel: state.setSkillSelectedModel,
+  }));
 
   const { setImportResourceModalVisible, setInsertNodePosition } = useImportResourceStoreShallow(
     (state) => ({
@@ -105,10 +116,58 @@ export const ContextMenu: FC<ContextMenuProps> = ({ open, position, setOpen }) =
 
   // Creation utility functions
   const createSkillNode = (position: { x: number; y: number }) => {
+    // Get default model from user preferences
+    const defaultModel = userProfile?.preferences?.defaultModel;
+    const chatModel = defaultModel?.chat;
+
+    // Convert ProviderItem to ModelInfo format only if we have a default model
+    const modelInfo = chatModel
+      ? {
+          name:
+            typeof chatModel.config === 'string'
+              ? JSON.parse(chatModel.config)?.modelId || chatModel.name
+              : chatModel.name,
+          label: chatModel.name,
+          provider: chatModel.providerId || 'hkgai',
+          providerItemId: chatModel.itemId,
+          tier: chatModel.tier || 't2',
+          contextLimit:
+            typeof chatModel.config === 'string'
+              ? JSON.parse(chatModel.config)?.contextLimit || 8000
+              : 8000,
+          maxOutput:
+            typeof chatModel.config === 'string'
+              ? JSON.parse(chatModel.config)?.maxOutput || 4000
+              : 4000,
+          capabilities:
+            typeof chatModel.config === 'string'
+              ? JSON.parse(chatModel.config)?.capabilities || {}
+              : {},
+          isDefault: true,
+        }
+      : {
+          // Fallback to hkgai-searchentry if no default model configured
+          name: 'hkgai-searchentry', // Use model ID for proper HKGAI adapter matching
+          label: 'HKGAI Search Entry',
+          provider: 'hkgai',
+          providerItemId: 'hkgai-searchentry-item', // Match exact itemId from database
+          tier: 't2',
+          contextLimit: 8000,
+          maxOutput: 4000,
+          capabilities: {},
+          isDefault: true,
+        };
+
     addNode(
       {
         type: 'skill',
-        data: { title: 'Skill', entityId: genSkillID() },
+        data: {
+          title: 'Skill',
+          entityId: genSkillID(),
+          metadata: {
+            modelInfo, // Pre-set the model info
+          },
+        },
         position: position,
       },
       [],

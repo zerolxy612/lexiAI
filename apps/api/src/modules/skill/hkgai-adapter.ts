@@ -31,7 +31,14 @@ export class HKGAIAdapter {
   public static getHKGAIModelType(modelName: string): string {
     const lowerModelName = (modelName || '').toLowerCase();
 
-    if (lowerModelName.includes('gpt-4')) {
+    // 优先检查HKGAI特定模型类型
+    if (lowerModelName.includes('missinginfo')) {
+      return 'missinginfo';
+    } else if (lowerModelName.includes('searchentry')) {
+      return 'searchentry';
+    } else if (lowerModelName.includes('timeline')) {
+      return 'timeline';
+    } else if (lowerModelName.includes('gpt-4')) {
       return 'gpt-4';
     } else if (lowerModelName.includes('claude')) {
       return 'claude';

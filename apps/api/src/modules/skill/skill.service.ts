@@ -108,6 +108,7 @@ import { providerPO2DTO } from '@/modules/provider/provider.dto';
 import { codeArtifactPO2DTO } from '@/modules/code-artifact/code-artifact.dto';
 import { McpServerService } from '@/modules/mcp-server/mcp-server.service';
 import { mcpServerPO2DTO } from '@/modules/mcp-server/mcp-server.dto';
+import { HKGAIAdapter } from './hkgai-adapter';
 
 function validateSkillTriggerCreateParam(param: SkillTriggerCreateParam) {
   if (param.triggerType === 'simpleEvent') {
@@ -472,6 +473,13 @@ export class SkillService {
       titleGeneration: JSON.parse(modelProviderMap.titleGeneration.config) as LLMModelConfig,
       queryAnalysis: JSON.parse(modelProviderMap.queryAnalysis.config) as LLMModelConfig,
     };
+
+    // 检查是否是HKGAI模型
+    const isHKGAIModel = HKGAIAdapter.isHKGAIModel(modelConfigMap.chat.modelId || param.modelName);
+    if (isHKGAIModel) {
+      this.logger.log(`Using HKGAI model: ${modelConfigMap.chat.modelId || param.modelName}`);
+      // HKGAI模型的特殊处理逻辑可以在这里添加
+    }
 
     if (param.context) {
       param.context = await this.populateSkillContext(user, param.context);

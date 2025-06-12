@@ -257,16 +257,37 @@ export const ModelSelector = memo(
     // 1. No model is selected
     // 2. Current model is disabled
     // 3. Current model is not present in the model list
+    // BUT only after data is fully loaded
     useEffect(() => {
+      // Don't auto-select while data is still loading
+      if (isModelListLoading || isUsageLoading) {
+        return;
+      }
+
+      // Don't auto-select if modelList is empty (no models available)
+      if (!modelList || modelList.length === 0) {
+        return;
+      }
+
       if (
         !model ||
         isModelDisabled(tokenUsage, model) ||
         !modelList?.find((m) => m.name === model.name)
       ) {
         const availableModel = modelList?.find((m) => !isModelDisabled(tokenUsage, m));
-        setModel(availableModel);
+        if (availableModel) {
+          setModel(availableModel);
+        }
       }
-    }, [model, tokenUsage, modelList, isModelDisabled, setModel]);
+    }, [
+      model,
+      tokenUsage,
+      modelList,
+      isModelDisabled,
+      setModel,
+      isModelListLoading,
+      isUsageLoading,
+    ]);
 
     const handleMenuClick = useCallback(
       ({ key }: { key: string }) => {

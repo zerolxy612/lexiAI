@@ -3,6 +3,7 @@ import { useMatch } from 'react-router-dom';
 import { SiderLayout } from '@refly-packages/ai-workspace-common/components/sider/layout';
 import { useBindCommands } from '@refly-packages/ai-workspace-common/hooks/use-bind-commands';
 import { useUserStoreShallow } from '@refly-packages/ai-workspace-common/stores/user';
+import { useInitializeDefaultModel } from '@refly-packages/ai-workspace-common/hooks/use-initialize-default-model';
 
 import { LoginModal } from '@/components/login-modal';
 import { SubscribeModal } from '@refly-packages/ai-workspace-common/components/settings/subscribe-modal';
@@ -23,8 +24,13 @@ interface AppLayoutProps {
   children?: any;
 }
 
-export const AppLayout = (props: AppLayoutProps) => {
-  // stores
+export const AppLayout = ({ children }: AppLayoutProps) => {
+  const isKnowledgeBase = useMatch('/kb/*');
+  const isCommunity = useMatch('/community/*');
+  const isCanvas = useMatch('/canvas/*');
+  const isShare = useMatch('/share/*');
+  const isPublicAccessPage = usePublicAccessPage();
+
   const userStore = useUserStoreShallow((state) => ({
     userProfile: state.userProfile,
     isLogin: state.isLogin,
@@ -38,11 +44,13 @@ export const AppLayout = (props: AppLayoutProps) => {
       setShowLibraryModal: state.setShowLibraryModal,
     }));
 
-  const isPublicAccessPage = usePublicAccessPage();
   const matchPricing = useMatch('/pricing');
   const matchLogin = useMatch('/login');
 
   useBindCommands();
+
+  // Initialize default model when user logs in (as fallback for global chat store)
+  useInitializeDefaultModel();
 
   const showSider = isPublicAccessPage || (!!userStore.userProfile && !matchPricing && !matchLogin);
 
@@ -59,7 +67,7 @@ export const AppLayout = (props: AppLayoutProps) => {
             width: showSider ? 'calc(100% - 300px - 16px)' : 'calc(100% - 16px)',
           }}
         >
-          <Content>{props.children}</Content>
+          <Content>{children}</Content>
         </Layout>
         <BigSearchModal />
         <LoginModal />

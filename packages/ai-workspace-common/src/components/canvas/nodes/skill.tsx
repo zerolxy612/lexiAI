@@ -9,7 +9,7 @@ import { getNodeCommonStyles } from './index';
 import { ModelInfo, Skill, SkillRuntimeConfig, SkillTemplateConfig } from '@refly/openapi-schema';
 import { useInvokeAction } from '@refly-packages/ai-workspace-common/hooks/canvas/use-invoke-action';
 import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/canvas';
-import { useChatStoreShallow } from '@refly-packages/ai-workspace-common/stores/chat';
+import { useChatStore } from '@refly-packages/ai-workspace-common/stores/chat';
 import { useCanvasData } from '@refly-packages/ai-workspace-common/hooks/canvas/use-canvas-data';
 import { useNodeHoverEffect } from '@refly-packages/ai-workspace-common/hooks/canvas/use-node-hover';
 import { cleanupNodeEvents } from '@refly-packages/ai-workspace-common/events/nodeActions';
@@ -22,7 +22,7 @@ import { genActionResultID, genUniqueId } from '@refly/utils/id';
 import { useAddNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-node';
 import { convertContextItemsToNodeFilters } from '@refly-packages/ai-workspace-common/utils/map-context-items';
 import { useNodeSize } from '@refly-packages/ai-workspace-common/hooks/canvas/use-node-size';
-import { useCanvasStoreShallow } from '@refly-packages/ai-workspace-common/stores/canvas';
+import { useCanvasStore } from '@refly-packages/ai-workspace-common/stores/canvas';
 import { NodeResizer as NodeResizerComponent } from './shared/node-resizer';
 import classNames from 'classnames';
 import Moveable from 'react-moveable';
@@ -37,24 +37,39 @@ import { useContextPanelStore } from '@refly-packages/ai-workspace-common/stores
 import { edgeEventsEmitter } from '@refly-packages/ai-workspace-common/events/edge';
 import { useSelectedNodeZIndex } from '@refly-packages/ai-workspace-common/hooks/canvas/use-selected-node-zIndex';
 import { NodeActionButtons } from './shared/node-action-buttons';
+import { useUserStore } from '@refly-packages/ai-workspace-common/stores/user';
 
 type SkillNode = Node<CanvasNodeData<SkillNodeMeta>, 'skill'>;
 
-export const SkillNode = memo(
+export const SkillNode = memo<NodeProps<SkillNode>>(
   ({ data, selected, id }: NodeProps<SkillNode>) => {
+    const { metadata = {}, entityId } = data;
+    const {
+      query,
+      selectedSkill,
+      modelInfo,
+      contextItems = [],
+      tplConfig,
+      runtimeConfig,
+    } = metadata;
+    const skill = useFindSkill(selectedSkill?.name);
+
     const [isHovered, setIsHovered] = useState(false);
+    const [localQuery, setLocalQuery] = useState(query);
+    const [form] = Form.useForm();
+    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+    const targetRef = useRef<HTMLDivElement>(null);
+    const moveableRef = useRef<Moveable>(null);
+
     const { edges } = useCanvasData();
     const { setNodeData } = useNodeData();
     const edgeStyles = useEdgeStyles();
     const { getNode, getNodes, getEdges, addEdges, deleteElements } = useReactFlow();
     const { addNode } = useAddNode();
     const { deleteNode } = useDeleteNode();
-    const [form] = Form.useForm();
     useSelectedNodeZIndex(id, selected);
 
-    const moveableRef = useRef<Moveable>(null);
-    const targetRef = useRef<HTMLDivElement>(null);
-    const { operatingNodeId } = useCanvasStoreShallow((state) => ({
+    const { operatingNodeId } = useCanvasStore((state) => ({
       operatingNodeId: state.operatingNodeId,
     }));
     const isOperating = operatingNodeId === id;
@@ -85,19 +100,6 @@ export const SkillNode = memo(
       return style;
     }, [containerStyle]);
 
-    const { entityId, metadata = {} } = data;
-    const {
-      query,
-      selectedSkill,
-      modelInfo,
-      contextItems = [],
-      tplConfig,
-      runtimeConfig,
-    } = metadata;
-    const skill = useFindSkill(selectedSkill?.name);
-
-    const [localQuery, setLocalQuery] = useState(query);
-
     // Check if node has any connections
     const isTargetConnected = useMemo(() => edges?.some((edge) => edge.target === id), [edges, id]);
     const isSourceConnected = useMemo(() => edges?.some((edge) => edge.source === id), [edges, id]);
@@ -106,12 +108,22 @@ export const SkillNode = memo(
       setNodeData(id, data);
     }, 50);
 
-    const { skillSelectedModel, setSkillSelectedModel } = useChatStoreShallow((state) => ({
-      skillSelectedModel: state.skillSelectedModel,
-      setSkillSelectedModel: state.setSkillSelectedModel,
+    const { skillSelectedModel, setSkillSelectedModel } = useChatStore((state) => ({
+      skillSelectedModel: state.selectedModel,
+      setSkillSelectedModel: state.setSelectedModel,
     }));
 
     const { invokeAction, abortAction } = useInvokeAction();
+
+    const userProfile = useUserStore((state) => state.userProfile);
+    const isInitializedRef = useRef(false); // Track if model has been initialized
+
+    // Update local state when query changes from external sources
+    useEffect(() => {
+      if (query !== localQuery) {
+        setLocalQuery(query);
+      }
+    }, [query]);
 
     const setQuery = useCallback(
       (query: string) => {
@@ -124,10 +136,66 @@ export const SkillNode = memo(
     const setModelInfo = useCallback(
       (modelInfo: ModelInfo | null) => {
         setNodeData(id, { metadata: { modelInfo } });
-        setSkillSelectedModel(modelInfo);
+        // Only update global state if this is the currently focused node
+        if (selected) {
+          setSkillSelectedModel(modelInfo);
+        }
       },
-      [id, setNodeData, setSkillSelectedModel],
+      [id, setNodeData, setSkillSelectedModel, selected],
     );
+
+    // Initialize model only once when node is created without modelInfo
+    useEffect(() => {
+      // Only initialize if not already done and no existing model info
+      if (isInitializedRef.current || modelInfo) {
+        return;
+      }
+
+      // Mark as initialized to prevent future runs
+      isInitializedRef.current = true;
+
+      // Check if there's a model from skill selected model
+      if (skillSelectedModel) {
+        setModelInfo(skillSelectedModel);
+        return;
+      }
+
+      // Get default model from user preferences
+      const defaultModel = userProfile?.preferences?.defaultModel;
+      const chatModel = defaultModel?.chat;
+
+      if (chatModel) {
+        // Convert ProviderItem to ModelInfo format
+        const config =
+          typeof chatModel.config === 'string' ? JSON.parse(chatModel.config) : chatModel.config;
+        const autoModelInfo: ModelInfo = {
+          name: config?.modelId || chatModel.name,
+          label: chatModel.name,
+          provider: chatModel.providerId || 'hkgai',
+          providerItemId: chatModel.itemId,
+          tier: chatModel.tier || 't2',
+          contextLimit: config?.contextLimit || 8000,
+          maxOutput: config?.maxOutput || 4000,
+          capabilities: config?.capabilities || {},
+          isDefault: true,
+        };
+        setModelInfo(autoModelInfo);
+      } else {
+        // Fallback to hkgai-searchentry if no default model configured
+        const fallbackModelInfo: ModelInfo = {
+          name: 'hkgai-searchentry', // Use model ID for proper HKGAI adapter matching
+          label: 'HKGAI Search Entry',
+          provider: 'hkgai',
+          providerItemId: 'hkgai-searchentry-item', // Match exact itemId from database
+          tier: 't2',
+          contextLimit: 8000,
+          maxOutput: 4000,
+          capabilities: {},
+          isDefault: true,
+        };
+        setModelInfo(fallbackModelInfo);
+      }
+    }, []); // Empty dependency array - only run once on mount
 
     const setContextItems = useCallback(
       (items: IContextItem[]) => {
@@ -199,12 +267,6 @@ export const SkillNode = memo(
         resizeMoveable(offsetWidth, offsetHeight);
       }
     }, [resizeMoveable, targetRef.current?.offsetHeight]);
-
-    useEffect(() => {
-      if (skillSelectedModel && !modelInfo) {
-        setModelInfo(skillSelectedModel);
-      }
-    }, [skillSelectedModel, modelInfo, setModelInfo]);
 
     const setSelectedSkill = useCallback(
       (newSelectedSkill: Skill | null) => {

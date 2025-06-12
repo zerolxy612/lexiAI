@@ -366,18 +366,34 @@ export class HKGAIClientFactory {
     this.baseUrl = process.env.HKGAI_BASE_URL || 'https://dify.hkgai.net';
 
     // Define models and their respective API keys from environment variables
+    // Use single API key for all models as fallback
+    const globalApiKey = process.env.HKGAI_API_KEY || 'app-cWHko7usG7aP8ZsAnSeglYc3';
+
     this.models = {
-      'hkgai/searchentry': {
+      'hkgai-searchentry': {
         modelName: 'gpt-3.5-turbo', // Dify使用标准模型名称
-        apiKey: process.env.HKGAI_SEARCHENTRY_API_KEY || '',
+        apiKey: process.env.HKGAI_SEARCHENTRY_API_KEY || globalApiKey,
+      },
+      'hkgai-missinginfo': {
+        modelName: 'gpt-3.5-turbo', // Dify使用标准模型名称
+        apiKey: process.env.HKGAI_MISSINGINFO_API_KEY || globalApiKey,
+      },
+      'hkgai-timeline': {
+        modelName: 'gpt-3.5-turbo', // Dify使用标准模型名称
+        apiKey: process.env.HKGAI_TIMELINE_API_KEY || globalApiKey,
+      },
+      // Add models with database format for compatibility
+      'hkgai/searchentry': {
+        modelName: 'gpt-3.5-turbo',
+        apiKey: process.env.HKGAI_SEARCHENTRY_API_KEY || globalApiKey,
       },
       'hkgai/missinginfo': {
-        modelName: 'gpt-3.5-turbo', // Dify使用标准模型名称
-        apiKey: process.env.HKGAI_MISSINGINFO_API_KEY || '',
+        modelName: 'gpt-3.5-turbo',
+        apiKey: process.env.HKGAI_MISSINGINFO_API_KEY || globalApiKey,
       },
       'hkgai/timeline': {
-        modelName: 'gpt-3.5-turbo', // Dify使用标准模型名称
-        apiKey: process.env.HKGAI_TIMELINE_API_KEY || '',
+        modelName: 'gpt-3.5-turbo',
+        apiKey: process.env.HKGAI_TIMELINE_API_KEY || globalApiKey,
       },
     };
 
@@ -433,7 +449,12 @@ export class HKGAIClientFactory {
    * @returns Boolean indicating if this is a HKGAI model
    */
   public isHKGAIModel(modelName: string): boolean {
-    return modelName?.startsWith('hkgai/') ?? false;
+    const lowerModelName = (modelName || '').toLowerCase();
+    return (
+      lowerModelName.includes('hkgai') ||
+      lowerModelName.startsWith('hkgai/') ||
+      lowerModelName.startsWith('hkgai-')
+    );
   }
 
   /**

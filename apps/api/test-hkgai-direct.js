@@ -3,7 +3,7 @@ require('dotenv').config();
 const axios = require('axios');
 
 // API 配置
-const apiKey = process.env.HKGAI_MISSINGINFO_API_KEY || 'app-cWHko7usG7aP8ZsAnSeglYc3';
+const apiKey = process.env.HKGAI_API_KEY || 'app-cWHko7usG7aP8ZsAnSeglYc3';
 const baseUrl = process.env.HKGAI_BASE_URL || 'https://dify.hkgai.net';
 
 // 测试查询

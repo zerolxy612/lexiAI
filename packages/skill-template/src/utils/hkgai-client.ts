@@ -683,7 +683,12 @@ export class HKGAIClientFactory {
    * @returns Boolean indicating if this is a HKGAI model
    */
   public isHKGAIModel(modelName: string): boolean {
-    return modelName?.startsWith('hkgai/') ?? false;
+    const lowerModelName = (modelName || '').toLowerCase();
+    return (
+      lowerModelName.includes('hkgai') ||
+      lowerModelName.startsWith('hkgai/') ||
+      lowerModelName.startsWith('hkgai-')
+    );
   }
 
   /**
