@@ -5,6 +5,11 @@ import { ChatOllama } from '@langchain/ollama';
 import { ChatFireworks } from '@langchain/community/chat_models/fireworks';
 import { BaseProvider } from '../types';
 import { OpenAIBaseInput } from '@langchain/openai';
+import { simpleHKGAIClient } from './simple-hkgai-client';
+import { AIMessage } from '@langchain/core/messages';
+import type { BaseMessage } from '@langchain/core/messages';
+import type { ChatResult, ChatGeneration } from '@langchain/core/outputs';
+import type { CallbackManagerForLLMRun } from '@langchain/core/callbacks/manager';
 
 // Import HKGAI DifyChatModel
 export class DifyChatModel extends BaseChatModel {
@@ -29,79 +34,106 @@ export class DifyChatModel extends BaseChatModel {
     this.tier = options.tier ?? 't2';
   }
 
-  _llmType(): string {
-    return 'dify';
+  _llmType() {
+    return 'dify-chat';
   }
 
   _identifyingParams() {
     return {
       model_name: this.modelName,
+      model: this.modelName,
       provider: 'hkgai',
       tier: this.tier,
+      apiKey: this.apiKey,
+      baseUrl: this.baseUrl,
     };
   }
 
-  /** @ignore */
-  async _generate(messages: any[], _options?: any): Promise<any> {
+  async _generate(
+    messages: BaseMessage[],
+    options?: any,
+    runManager?: CallbackManagerForLLMRun,
+  ): Promise<ChatResult> {
     try {
+      console.log(`[DifyChatModel] 开始生成回答，模型: ${this.modelName}`);
+
+      // 提取查询内容
       const query = this._extractQueryFromMessages(messages);
 
-      const response = await fetch(`${this.baseUrl}/v1/chat-messages`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.apiKey}`,
-          'HTTP-Referer': 'https://lexihk.com',
-          'X-Title': 'LexiHK',
-        },
-        body: JSON.stringify({
-          inputs: {},
-          query,
-          response_mode: 'blocking',
-          conversation_id: '',
-          user: 'user-0',
-        }),
+      // 使用简化的HKGAI客户端
+      const content = await simpleHKGAIClient.call(this.modelName, query);
+
+      console.log(`[DifyChatModel] 成功生成回答: ${content.substring(0, 100)}...`);
+
+      // 模拟流式输出
+      const chunks = this._splitIntoChunks(content);
+      console.log(`[DifyChatModel] 获取到完整回答，开始模拟流式输出`);
+
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        const isLast = i === chunks.length - 1;
+
+        // 触发流式事件
+        if (runManager?.handleLLMNewToken) {
+          await runManager.handleLLMNewToken(chunk, {
+            prompt: 0,
+            completion: i,
+          });
+        }
+
+        // 添加小延迟模拟真实流式响应
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+
+      console.log(`[DifyChatModel] 流式输出完成，共发送 ${chunks.length} 个块`);
+
+      // 创建正确的AIMessage实例
+      const message = new AIMessage({
+        content: content,
+        additional_kwargs: {},
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP error! status: ${response.status}, details: ${errorText}`);
-      }
-
-      const data = await response.json();
-      let content = data?.answer || '';
-
-      if (!content) {
-        content = `我收到了您的问题: "${query}"，但我暂时无法提供具体回答。请稍后再试。`;
-      }
-
-      const { AIMessage } = await import('@langchain/core/messages');
-      const generation = {
+      // 返回符合ChatResult接口的结果
+      const generation: ChatGeneration = {
         text: content,
-        message: new AIMessage(content),
+        message: message,
+        generationInfo: {
+          model: this.modelName,
+          provider: 'hkgai',
+          finishReason: 'stop',
+        },
       };
 
-      return { generations: [generation] };
+      return {
+        generations: [generation],
+        llmOutput: {
+          model: this.modelName,
+          provider: 'hkgai',
+        },
+      };
     } catch (error) {
-      console.error('[DifyChatModel] Error:', error.message);
+      console.error(`[DifyChatModel] 生成回答失败:`, error);
       throw error;
     }
   }
 
-  private _extractQueryFromMessages(messages: any[]): string {
-    // Import HumanMessage at the top level
+  private _extractQueryFromMessages(messages: BaseMessage[]): string {
+    // 从消息中提取最后一个用户消息
     for (let i = messages.length - 1; i >= 0; i--) {
       const message = messages[i];
-      // Check message type using duck typing since we can't import HumanMessage synchronously
-      if (message && message.constructor && message.constructor.name === 'HumanMessage') {
+      if (message._getType() === 'human') {
         return message.content as string;
-      }
-      // Also check for content directly if it's a human message object
-      if (message && typeof message.content === 'string' && message.role !== 'assistant') {
-        return message.content;
       }
     }
     return '';
+  }
+
+  _splitIntoChunks(text: string, chunkSize = 50): string[] {
+    const chunks = [];
+    for (let i = 0; i < text.length; i += chunkSize) {
+      chunks.push(text.slice(i, i + chunkSize));
+    }
+    return chunks;
   }
 }
 

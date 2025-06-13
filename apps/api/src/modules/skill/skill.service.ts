@@ -439,19 +439,68 @@ export class SkillService {
     param.modelItemId ||= defaultModel?.itemId;
 
     const modelItemId = param.modelItemId;
-    const providerItem = await this.providerService.findProviderItemById(user, modelItemId);
 
-    if (!providerItem || providerItem.category !== 'llm' || !providerItem.enabled) {
-      throw new ProviderItemNotFoundError(`provider item ${modelItemId} not valid`);
+    // 检查是否是HKGAI模型，如果是则使用简化流程
+    const isHKGAIModelItem = modelItemId && modelItemId.includes('hkgai');
+
+    let providerItem: any;
+    let modelProviderMap: any;
+
+    if (isHKGAIModelItem) {
+      this.logger.log(`[SkillService] 检测到HKGAI模型，使用简化流程: ${modelItemId}`);
+
+      // 为HKGAI模型创建虚拟的provider item和config
+      const hkgaiModelName = modelItemId.replace('-item', '').replace('hkgai-', 'hkgai/');
+
+      providerItem = {
+        itemId: modelItemId,
+        name: 'HKGAI Model',
+        category: 'llm' as const,
+        enabled: true,
+        tier: 't2' as const,
+        providerId: 'hkgai-global',
+        provider: {
+          providerId: 'hkgai-global',
+          providerKey: 'hkgai',
+          name: 'HKGAI',
+          apiKey: '', // 将使用环境变量
+          baseUrl: 'https://dify.hkgai.net',
+        },
+      };
+
+      const hkgaiConfig = {
+        modelId: hkgaiModelName,
+        contextLimit: 16384,
+        maxOutput: 4096,
+        capabilities: {},
+      };
+
+      const hkgaiProviderItem = {
+        ...providerItem,
+        config: JSON.stringify(hkgaiConfig),
+      };
+
+      modelProviderMap = {
+        chat: hkgaiProviderItem,
+        titleGeneration: hkgaiProviderItem,
+        queryAnalysis: hkgaiProviderItem,
+      };
+    } else {
+      // 原有的provider查询逻辑
+      providerItem = await this.providerService.findProviderItemById(user, modelItemId);
+
+      if (!providerItem || providerItem.category !== 'llm' || !providerItem.enabled) {
+        throw new ProviderItemNotFoundError(`provider item ${modelItemId} not valid`);
+      }
+
+      modelProviderMap = await this.providerService.prepareModelProviderMap(user, modelItemId);
     }
-
-    const modelProviderMap = await this.providerService.prepareModelProviderMap(user, modelItemId);
     param.modelItemId = modelProviderMap.chat.itemId;
 
     const tiers = [];
     for (const providerItem of Object.values(modelProviderMap)) {
-      if (providerItem.tier) {
-        tiers.push(providerItem.tier);
+      if ((providerItem as any)?.tier) {
+        tiers.push((providerItem as any).tier);
       }
     }
 
@@ -1267,37 +1316,90 @@ ${event.data?.input ? JSON.stringify(event.data?.input?.input) : ''}
           }
           case 'on_chat_model_end':
             if (runMeta && chunk) {
-              const providerItem = await this.providerService.findLLMProviderItemByModelID(
+              // 获取模型名称，优先使用runMeta中的信息
+              const modelName = String(runMeta.ls_model_name || runMeta.model_name || 'unknown');
+
+              let providerItem = await this.providerService.findLLMProviderItemByModelID(
                 user,
-                String(runMeta.ls_model_name),
+                modelName,
               );
-              if (!providerItem) {
-                this.logger.error(`model not found: ${String(runMeta.ls_model_name)}`);
-              }
-              const usage: TokenUsageItem = {
-                tier: providerItem?.tier,
-                modelProvider: providerItem?.provider?.name,
-                modelName: String(runMeta.ls_model_name),
-                inputTokens: chunk.usage_metadata?.input_tokens ?? 0,
-                outputTokens: chunk.usage_metadata?.output_tokens ?? 0,
-              };
-              resultAggregator.addUsageItem(runMeta, usage);
 
-              if (res) {
-                writeSSEResponse(res, {
-                  event: 'token_usage',
-                  resultId,
-                  tokenUsage: usage,
-                  step: runMeta?.step,
-                });
+              // 如果找不到provider item，检查是否是HKGAI模型
+              if (!providerItem && HKGAIAdapter.isHKGAIModel(modelName)) {
+                this.logger.log(`Creating virtual provider item for HKGAI model: ${modelName}`);
+                // 为HKGAI模型创建虚拟的provider item
+                providerItem = {
+                  itemId: `${modelName}-item`,
+                  name: 'HKGAI Model',
+                  category: 'llm' as const,
+                  enabled: true,
+                  tier: 't2' as const,
+                  provider: {
+                    providerId: 'hkgai-provider',
+                    name: 'HKGAI',
+                    category: 'llm' as const,
+                    enabled: true,
+                  },
+                  modelInfo: {
+                    name: modelName,
+                    label: `HKGAI ${modelName}`,
+                    provider: 'hkgai',
+                    tier: 't2' as const,
+                    enabled: true,
+                    isDefault: false,
+                    contextLimit: 16384,
+                    maxOutput: 4096,
+                    capabilities: {},
+                  },
+                } as any;
               }
 
-              const tokenUsage: SyncTokenUsageJobData = {
-                ...basicUsageData,
-                usage,
-                timestamp: new Date(),
-              };
-              await this.usageReportQueue.add(`usage_report:${resultId}`, tokenUsage);
+              if (providerItem) {
+                // 从chunk中提取token使用信息，chunk可能是不同类型的对象
+                const chunkData = chunk as any;
+                const usage =
+                  chunkData.usage || chunkData.llmOutput?.usage || chunkData.usage_metadata || {};
+                const inputTokens =
+                  usage.prompt_tokens || usage.promptTokens || usage.input_tokens || 0;
+                const outputTokens =
+                  usage.completion_tokens || usage.completionTokens || usage.output_tokens || 0;
+
+                this.logger.log(
+                  `Token usage for model ${modelName}: Input ${inputTokens}, Output ${outputTokens}`,
+                );
+
+                // 创建符合TokenUsageItem接口的使用数据
+                const tokenUsageItem: TokenUsageItem = {
+                  tier: providerItem.tier || 't2',
+                  modelProvider: providerItem.provider?.name || 'hkgai',
+                  modelName: modelName,
+                  inputTokens: inputTokens,
+                  outputTokens: outputTokens,
+                };
+
+                // 添加到结果聚合器
+                resultAggregator.addUsageItem(runMeta, tokenUsageItem);
+
+                // 发送SSE响应
+                if (res) {
+                  writeSSEResponse(res, {
+                    event: 'token_usage',
+                    resultId,
+                    tokenUsage: tokenUsageItem,
+                    step: runMeta?.step,
+                  });
+                }
+
+                // 创建token使用同步任务
+                const tokenUsage: SyncTokenUsageJobData = {
+                  ...basicUsageData,
+                  usage: tokenUsageItem,
+                  timestamp: new Date(),
+                };
+                await this.usageReportQueue.add(`usage_report:${resultId}`, tokenUsage);
+              } else {
+                this.logger.warn(`Provider item not found for model: ${modelName}`);
+              }
             }
             break;
         }
