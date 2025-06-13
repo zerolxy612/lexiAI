@@ -1014,6 +1014,8 @@ const translations = {
       createDocumentDescription: '创建一篇文档以用于写作。',
       createCodeArtifact: '创建代码组件',
       createCodeArtifactDescription: '创建一个空白代码组件用于编写您的代码',
+      search: '搜索',
+      searchDescription: '创建一个搜索节点，用于搜索和查找内容',
       addDocument: '添加文档',
       addDocumentDescription:
         '用户在 Refly 中创建的内容，通过 AI 写作创建，或手动创建新文档，可以通过 AI 知识库搜索问答。',

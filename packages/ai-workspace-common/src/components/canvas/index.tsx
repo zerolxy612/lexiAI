@@ -561,6 +561,11 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
     }
   }, [contextMenu, setContextMenuOpenedCanvasId]);
 
+  // Debug context menu state changes
+  useEffect(() => {
+    console.log('🎨 Context menu state changed:', contextMenu);
+  }, [contextMenu]);
+
   const onPaneContextMenu = useCallback(
     (event: React.MouseEvent) => {
       event.preventDefault();
@@ -587,6 +592,15 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
         dragCreateInfo?: NodeDragCreateInfo;
       },
     ) => {
+      console.log('🎯 Node context menu triggered:', {
+        nodeId: node.id,
+        nodeType: node.type,
+        readonly,
+        event: event.type,
+        clientX: event.clientX,
+        clientY: event.clientY,
+      });
+
       event.preventDefault();
       const flowPosition = reactFlowInstance.screenToFlowPosition({
         x: event.clientX,
@@ -624,10 +638,18 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
           menuNodeType = 'image';
           break;
         default:
+          console.warn('❌ Unknown node type for context menu:', node.type);
           return; // Don't show context menu for unknown node types
       }
 
       const { source, dragCreateInfo } = metaInfo || {};
+
+      console.log('✅ Setting context menu state:', {
+        type: 'node',
+        nodeId: node.id,
+        nodeType: menuNodeType,
+        source: source || 'node',
+      });
 
       setContextMenu({
         open: true,
@@ -639,7 +661,7 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
         nodeType: menuNodeType,
       });
     },
-    [reactFlowInstance],
+    [reactFlowInstance, readonly],
   );
 
   const handleNodeClick = useCallback(
@@ -999,11 +1021,9 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
             snapGrid={[GRID_SIZE, GRID_SIZE]}
             edgeTypes={edgeTypes}
             panOnScroll={interactionMode === 'touchpad'}
-            // TODO: Fix drag logic - currently forcing panOnDrag=true to resolve drag issue
-            // Original: panOnDrag={interactionMode === 'mouse'}
-            // The issue might be that when interactionMode !== 'mouse', panOnDrag becomes false
-            // Consider: panOnDrag={true} or panOnDrag={!readonly}
-            panOnDrag={true}
+            // Fix: Use conditional panOnDrag to preserve node events
+            // Allow panning but ensure node events still work
+            panOnDrag={!readonly && !operatingNodeId}
             zoomOnScroll={interactionMode === 'mouse'}
             zoomOnPinch={interactionMode === 'touchpad'}
             zoomOnDoubleClick={false}

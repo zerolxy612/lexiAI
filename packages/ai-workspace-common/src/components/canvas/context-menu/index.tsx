@@ -22,6 +22,7 @@ import {
   IconMemo,
   IconResource,
   IconWebsite,
+  IconSearch,
 } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { IoAnalyticsOutline } from 'react-icons/io5';
 import { useEdgeVisible } from '@refly-packages/ai-workspace-common/hooks/canvas/use-edge-visible';
@@ -211,6 +212,26 @@ export const ContextMenu: FC<ContextMenuProps> = ({ open, position, setOpen }) =
     );
   };
 
+  const createSearchNode = (position: { x: number; y: number }) => {
+    addNode(
+      {
+        type: 'skill',
+        data: {
+          title: t('canvas.toolbar.search'),
+          entityId: genSkillID(),
+          metadata: {
+            searchNode: true, // Mark this as a search node
+            viewMode: 'search', // Set view mode to search
+          },
+        },
+        position,
+      },
+      [],
+      true,
+      true,
+    );
+  };
+
   // Combined menu items
   const menuItems: MenuItem[] = [
     // Creation menu items
@@ -237,6 +258,16 @@ export const ContextMenu: FC<ContextMenuProps> = ({ open, position, setOpen }) =
         description: t('canvas.toolbar.createCodeArtifactDescription'),
         videoUrl:
           'https://static.refly.ai/onboarding/canvas-toolbar/canvas-toolbar-import-resource.webm',
+      },
+    },
+    {
+      key: 'search',
+      icon: IconSearch,
+      type: 'button',
+      title: t('canvas.toolbar.search'),
+      hoverContent: {
+        title: t('canvas.toolbar.search'),
+        description: t('canvas.toolbar.searchDescription'),
       },
     },
     {
@@ -446,6 +477,10 @@ export const ContextMenu: FC<ContextMenuProps> = ({ open, position, setOpen }) =
         break;
       case 'createWebsite':
         createWebsiteNode(position);
+        setOpen(false);
+        break;
+      case 'search':
+        createSearchNode(position);
         setOpen(false);
         break;
       case 'importResource':

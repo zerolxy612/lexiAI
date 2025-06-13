@@ -38,8 +38,55 @@ import { edgeEventsEmitter } from '@refly-packages/ai-workspace-common/events/ed
 import { useSelectedNodeZIndex } from '@refly-packages/ai-workspace-common/hooks/canvas/use-selected-node-zIndex';
 import { NodeActionButtons } from './shared/node-action-buttons';
 import { useUserStore } from '@refly-packages/ai-workspace-common/stores/user';
+import { useTranslation } from 'react-i18next';
+import { IconSearch } from '@refly-packages/ai-workspace-common/components/common/icon';
+import { ChatInput } from '@refly-packages/ai-workspace-common/components/canvas/launchpad/chat-input';
 
 type SkillNode = Node<CanvasNodeData<SkillNodeMeta>, 'skill'>;
+
+// Simple Search Component for search nodes
+const SimpleSearchComponent = memo(
+  ({
+    query,
+    setQuery,
+    onSearch,
+    readonly,
+  }: {
+    query: string;
+    setQuery: (query: string) => void;
+    onSearch: () => void;
+    readonly: boolean;
+  }) => {
+    const { t } = useTranslation();
+
+    return (
+      <div className="flex flex-col gap-3 h-full p-3 box-border">
+        {/* Header with search icon and title */}
+        <div className="flex items-center gap-2 pb-2 border-b border-gray-200 dark:border-gray-700">
+          <IconSearch className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+            {t('canvas.toolbar.search')}
+          </span>
+        </div>
+
+        {/* Simple search input */}
+        <div className="flex-1">
+          <ChatInput
+            readonly={readonly}
+            query={query}
+            setQuery={setQuery}
+            selectedSkillName={null}
+            inputClassName="px-3 py-2"
+            maxRows={3}
+            handleSendMessage={onSearch}
+          />
+        </div>
+      </div>
+    );
+  },
+);
+
+SimpleSearchComponent.displayName = 'SimpleSearchComponent';
 
 export const SkillNode = memo<NodeProps<SkillNode>>(
   ({ data, selected, id }: NodeProps<SkillNode>) => {
@@ -460,30 +507,39 @@ export const SkillNode = memo<NodeProps<SkillNode>>(
               />
             )}
 
-            <ChatPanel
-              mode="node"
-              readonly={readonly}
-              query={localQuery}
-              setQuery={setQuery}
-              selectedSkill={skill}
-              setSelectedSkill={setSelectedSkill}
-              contextItems={contextItems}
-              setContextItems={setContextItems}
-              modelInfo={modelInfo}
-              setModelInfo={setModelInfo}
-              runtimeConfig={runtimeConfig || {}}
-              setRuntimeConfig={setRuntimeConfig}
-              tplConfig={tplConfig}
-              setTplConfig={setTplConfig}
-              handleSendMessage={handleSendMessage}
-              handleAbortAction={abortAction}
-              onInputHeightChange={() => updateSize({ height: 'auto' })}
-              projectId={projectId}
-              handleProjectChange={(projectId) => {
-                handleProjectChange(projectId);
-                updateNodeData({ metadata: { projectId } });
-              }}
-            />
+            {metadata.searchNode ? (
+              <SimpleSearchComponent
+                query={localQuery}
+                setQuery={setQuery}
+                onSearch={handleSendMessage}
+                readonly={readonly}
+              />
+            ) : (
+              <ChatPanel
+                mode="node"
+                readonly={readonly}
+                query={localQuery}
+                setQuery={setQuery}
+                selectedSkill={skill}
+                setSelectedSkill={setSelectedSkill}
+                contextItems={contextItems}
+                setContextItems={setContextItems}
+                modelInfo={modelInfo}
+                setModelInfo={setModelInfo}
+                runtimeConfig={runtimeConfig || {}}
+                setRuntimeConfig={setRuntimeConfig}
+                tplConfig={tplConfig}
+                setTplConfig={setTplConfig}
+                handleSendMessage={handleSendMessage}
+                handleAbortAction={abortAction}
+                onInputHeightChange={() => updateSize({ height: 'auto' })}
+                projectId={projectId}
+                handleProjectChange={(projectId) => {
+                  handleProjectChange(projectId);
+                  updateNodeData({ metadata: { projectId } });
+                }}
+              />
+            )}
           </div>
         </div>
 

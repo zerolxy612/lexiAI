@@ -81,6 +81,8 @@ export type SkillNodeMeta = {
   style?: React.CSSProperties;
   originalWidth?: number;
   projectId?: string;
+  searchNode?: boolean;
+  viewMode?: string;
 };
 
 export type ToolNodeMeta = {

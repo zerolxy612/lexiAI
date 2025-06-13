@@ -1189,7 +1189,7 @@ const translations = {
       addTool: 'Add Tool',
       autoLayout: 'Auto Layout',
       autoName: 'Auto Name',
-      askAI: 'Ask AI',
+      askAI: 'Asking the AI',
       askAIDescription:
         'Ask AI, select context or switch skill, input requirements, get help with writing, reading comprehension, or question answering',
       createMemo: 'Create Memo',
@@ -1199,6 +1199,8 @@ const translations = {
       createDocumentDescription: 'Create a document for writing.',
       createCodeArtifact: 'Create Code Artifact',
       createCodeArtifactDescription: 'Create an empty code artifact to write your code',
+      search: 'Search',
+      searchDescription: 'Create a search node to search and find content',
       addDocument: 'Add Document',
       addDocumentDescription:
         'User-created content in Refly, created through AI writing or manually creating a new document, which can be searched and answered through the AI knowledge base.',
