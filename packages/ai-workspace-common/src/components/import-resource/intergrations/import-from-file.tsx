@@ -256,11 +256,16 @@ export const ImportFromFile = () => {
       <div className="flex-grow overflow-y-auto px-10 py-6 box-border flex flex-col justify-center">
         <div className="w-full file-upload-container">
           <Dragger {...props}>
-            <RiInboxArchiveLine className="text-3xl text-[#00968f]" />
-            <p className="ant-upload-text mt-4 text-gray-600 dark:text-gray-300">
-              {t('resource.import.dragOrClick')}
+            {/* <RiInboxArchiveLine className="text-3xl text-[#00968f]" /> */}
+            <p className="ant-upload-text mt-1 text-gray-600 dark:text-gray-300">
+              Drag and drop files here
             </p>
-            <p className="ant-upload-hint text-gray-400 mt-2">{genUploadHint()}</p>
+            <p className="ant-upload-hint text-gray-400 mt-2">
+              Supported files: PDF, DOCX, RTF, TXT, MD, HTML, EPUB.
+            </p>
+            <p className="ant-upload-hint text-gray-400 -mt-1 text-center">
+              100 MB per file up to 5 GB
+            </p>
             {fileParsingUsage?.pagesLimit >= 0 && (
               <div className="text-green-500 mt-2 text-xs font-medium flex items-center justify-center gap-1">
                 <LuInfo />

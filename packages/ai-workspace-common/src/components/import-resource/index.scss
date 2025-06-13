@@ -235,7 +235,8 @@
 .file-upload-container {
   overflow: hidden;
   .ant-upload-drag {
-    height: 160px;
+    height: 500px;
+    padding: 60px 24px;
   }
   .ant-upload-list {
     max-height: 180px;
