@@ -118,7 +118,12 @@ export class HKGAIModelAdapter implements ModelAdapter {
  * HKGAI模型适配器工厂
  */
 export class HKGAIAdapterFactory implements ModelAdapterFactory {
-  private supportedModels = ['hkgai/searchentry', 'hkgai/missinginfo', 'hkgai/timeline'];
+  private supportedModels = [
+    'hkgai/searchentry',
+    'hkgai/missinginfo',
+    'hkgai/timeline',
+    'hkgai/general',
+  ];
 
   createAdapter(config: ModelConfig): ModelAdapter {
     if (!this.supports(config.modelName)) {

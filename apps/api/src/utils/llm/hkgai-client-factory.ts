@@ -9,6 +9,7 @@ export enum HKGAIModelName {
   SEARCH_ENTRY = 'SearchEntry',
   MISSING_INFO = 'MissingInfo',
   TIMELINE = 'Timeline',
+  GENERAL = 'General',
 }
 
 /**
@@ -29,6 +30,8 @@ export class HKGAIClientFactory {
       [HKGAIModelName.SEARCH_ENTRY]: this.configService.get('credentials.hkgai.searchEntryKey'),
       [HKGAIModelName.MISSING_INFO]: this.configService.get('credentials.hkgai.missingInfoKey'),
       [HKGAIModelName.TIMELINE]: this.configService.get('credentials.hkgai.timelineKey'),
+      [HKGAIModelName.GENERAL]:
+        this.configService.get('credentials.hkgai.generalKey') || 'app-5PTDowg5Dn2MSEhG5n3FBWXs',
     };
 
     this.logger.log(`HKGAI Client Factory initialized with base URL: ${this.baseUrl}`);

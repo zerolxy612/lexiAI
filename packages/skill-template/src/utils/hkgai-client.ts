@@ -624,6 +624,10 @@ export class HKGAIClientFactory {
         modelName: 'gpt-3.5-turbo', // Dify使用标准模型名称
         apiKey: process.env.HKGAI_TIMELINE_API_KEY || 'app-R9k11qz64Cd86NCsw2ojZVLC',
       },
+      'hkgai/general': {
+        modelName: 'gpt-3.5-turbo', // Dify使用标准模型名称
+        apiKey: process.env.HKGAI_GENERAL_API_KEY || 'app-5PTDowg5Dn2MSEhG5n3FBWXs',
+      },
     };
 
     // 验证API基础URL是否可用

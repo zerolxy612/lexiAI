@@ -12,6 +12,7 @@ export class SimpleHKGAIClient {
       'hkgai-searchentry': process.env.HKGAI_SEARCHENTRY_API_KEY || 'app-mYHumURK2S010ZonuvzeX1Ad',
       'hkgai-missinginfo': process.env.HKGAI_MISSINGINFO_API_KEY || 'app-cWHko7usG7aP8ZsAnSeglYc3',
       'hkgai-timeline': process.env.HKGAI_TIMELINE_API_KEY || 'app-R9k11qz64Cd86NCsw2ojZVLC',
+      'hkgai-general': process.env.HKGAI_GENERAL_API_KEY || 'app-5PTDowg5Dn2MSEhG5n3FBWXs',
     };
   }
 
@@ -27,6 +28,8 @@ export class SimpleHKGAIClient {
       return this.apiKeys['hkgai-missinginfo'];
     } else if (lowerModelName.includes('timeline')) {
       return this.apiKeys['hkgai-timeline'];
+    } else if (lowerModelName.includes('general')) {
+      return this.apiKeys['hkgai-general'];
     } else {
       // 默认使用missinginfo的API Key
       return this.apiKeys['hkgai-missinginfo'];

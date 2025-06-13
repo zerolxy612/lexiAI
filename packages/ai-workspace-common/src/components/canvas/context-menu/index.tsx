@@ -147,11 +147,11 @@ export const ContextMenu: FC<ContextMenuProps> = ({ open, position, setOpen }) =
           isDefault: true,
         }
       : {
-          // Fallback to hkgai-searchentry if no default model configured
-          name: 'hkgai-searchentry', // Use model ID for proper HKGAI adapter matching
-          label: 'HKGAI Search Entry',
+          // Fallback to hkgai-general for AskAI (general purpose model)
+          name: 'hkgai-general', // Use general model for AskAI functionality
+          label: 'HKGAI General',
           provider: 'hkgai',
-          providerItemId: 'hkgai-searchentry-item', // Match exact itemId from database
+          providerItemId: 'hkgai-general-item', // Match exact itemId from database
           tier: 't2',
           contextLimit: 8000,
           maxOutput: 4000,
@@ -213,6 +213,19 @@ export const ContextMenu: FC<ContextMenuProps> = ({ open, position, setOpen }) =
   };
 
   const createSearchNode = (position: { x: number; y: number }) => {
+    // Search node should specifically use hkgai-searchentry model
+    const searchModelInfo = {
+      name: 'hkgai-searchentry', // Dedicated search entry model
+      label: 'HKGAI Search Entry',
+      provider: 'hkgai',
+      providerItemId: 'hkgai-searchentry-item', // Match exact itemId from database
+      tier: 't2',
+      contextLimit: 8000,
+      maxOutput: 4000,
+      capabilities: {},
+      isDefault: true,
+    };
+
     addNode(
       {
         type: 'skill',
@@ -222,6 +235,7 @@ export const ContextMenu: FC<ContextMenuProps> = ({ open, position, setOpen }) =
           metadata: {
             searchNode: true, // Mark this as a search node
             viewMode: 'search', // Set view mode to search
+            modelInfo: searchModelInfo, // Pre-set search-specific model
           },
         },
         position,
