@@ -241,6 +241,33 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
   }));
   const { mutate: updateSettings } = useUpdateSettings();
 
+  // Debug logging for canvas drag issue
+  useEffect(() => {
+    console.log('Canvas drag configuration:', {
+      interactionMode,
+      operatingNodeId,
+      readonly,
+      panOnDrag: interactionMode === 'mouse',
+      selectNodesOnDrag: !operatingNodeId && interactionMode === 'mouse' && !readonly,
+      selectionOnDrag: !operatingNodeId && interactionMode === 'touchpad' && !readonly,
+    });
+  }, [interactionMode, operatingNodeId, readonly]);
+
+  // Add canvas drag test function
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).testCanvasDrag = () => {
+        console.log('Current canvas drag state:', {
+          interactionMode,
+          operatingNodeId,
+          readonly,
+          hasCanvasSynced,
+          userSettings: useUserStore.getState().localSettings,
+        });
+      };
+    }
+  }, [interactionMode, operatingNodeId, readonly, hasCanvasSynced]);
+
   const toggleInteractionMode = useCallback(
     (mode: 'mouse' | 'touchpad') => {
       const { localSettings } = useUserStore.getState();
@@ -972,7 +999,11 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
             snapGrid={[GRID_SIZE, GRID_SIZE]}
             edgeTypes={edgeTypes}
             panOnScroll={interactionMode === 'touchpad'}
-            panOnDrag={interactionMode === 'mouse'}
+            // TODO: Fix drag logic - currently forcing panOnDrag=true to resolve drag issue
+            // Original: panOnDrag={interactionMode === 'mouse'}
+            // The issue might be that when interactionMode !== 'mouse', panOnDrag becomes false
+            // Consider: panOnDrag={true} or panOnDrag={!readonly}
+            panOnDrag={true}
             zoomOnScroll={interactionMode === 'mouse'}
             zoomOnPinch={interactionMode === 'touchpad'}
             zoomOnDoubleClick={false}
