@@ -9,7 +9,7 @@ export const SuspenseLoading = () => {
     <div className="h-screen w-screen flex flex-col justify-center items-center">
       <div className="flex justify-center items-center mb-5">
         <img src={Logo} alt="Refly" className="w-12 h-12 mr-3" />
-        <span className="text-3xl font-bold">Refly </span>
+        <span className="text-3xl font-bold">Lexihk </span>
       </div>
       <div className="text-gray-600 dark:text-gray-300">
         <LoadingOutlined className="mr-2" />

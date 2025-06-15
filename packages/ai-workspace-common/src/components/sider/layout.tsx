@@ -293,6 +293,9 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
     updateLibraryModalActiveKey: state.updateLibraryModalActiveKey,
   }));
 
+  // Essential data loading for conversation history
+  useHandleSiderData(true);
+
   // Essential state for core functionality
   const { collapse, setCollapse, showSettingModal, setShowSettingModal } = useSiderStoreShallow(
     (state) => ({

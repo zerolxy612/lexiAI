@@ -5,6 +5,7 @@ import { useSiderStoreShallow } from '@refly-packages/ai-workspace-common/stores
 import { SiderPopover } from '@refly-packages/ai-workspace-common/components/sider/popover';
 import { FrontPage } from '@refly-packages/ai-workspace-common/components/canvas/front-page';
 import VectorIcon from '@/assets/Vector.png';
+import LexiHKIcon from '@/assets/Lexihk-dark.png';
 import { useCreateCanvas } from '@refly-packages/ai-workspace-common/hooks/canvas/use-create-canvas';
 import { useEffect, useState } from 'react';
 import { Spin } from '@refly-packages/ai-workspace-common/components/common/spin';
@@ -75,7 +76,7 @@ const CanvasPage = () => {
             </SiderPopover>
           )}
         </div>
-        <Spin size="large" />
+        <img src={LexiHKIcon} alt="LexiHK" className="h-16 w-auto mb-4 animate-pulse" />
         <div className="mt-4 text-gray-500 dark:text-gray-400">Creating your canvas...</div>
       </div>
     );

@@ -155,6 +155,50 @@ docker ps
 **预估工时**: 0.5 天
 **状态**: 已完成
 
+### 需求 #013: 搜索组件历史记录显示问题修复
+
+**需求描述**: 
+修复侧边栏搜索框点击弹出搜索组件时，第一次能显示历史记录，但第二次及之后显示历史为空的问题
+
+**问题现象**:
+- 第一次打开搜索模态框：能正常显示历史记录
+- 关闭搜索模态框后再次打开：历史记录显示为空
+- 需要刷新页面才能重新看到历史记录
+
+**根本原因**:
+`BigSearchModal`组件中每次关闭搜索模态框时都会调用`resetState()`，清空所有搜索结果数据，包括历史记录缓存
+
+**解决方案**:
+采用方案一（优化resetState逻辑）- 区分UI状态重置和完全重置：
+- 在search store中新增`resetUIState()`方法，只重置UI相关状态
+- 创建`defaultUIState`常量，定义需要重置的UI状态范围
+- 修改`BigSearchModal`使用`resetUIState()`替代`resetState()`
+- 保留搜索结果缓存，提升用户体验
+
+**技术实现**:
+1. **新增resetUIState方法**: 只重置`pages`和`noCategoryBigSearchRes`等UI状态
+2. **保留搜索结果数据**: `canvases`、`resources`、`documents`、`searchedCanvases`等
+3. **向后兼容**: 保留`resetState()`方法用于需要完全重置的场景
+4. **添加详细注释**: 说明修复原因和实现方式
+
+**修改文件**:
+- `packages/ai-workspace-common/src/stores/search.ts` - 新增resetUIState方法
+- `packages/ai-workspace-common/src/components/search/modal.tsx` - 使用新的重置方法
+
+**测试验证**: 
+- ✅ 通过biome代码检查，确保代码质量
+- ✅ 最小化修改范围，降低引入新问题的风险
+- ✅ 保持向后兼容性
+
+**维护性考虑**:
+- 清晰的方法命名和注释，便于后续维护
+- 避免重复API调用，提升性能
+- 最小化修改，只解决核心问题
+
+**优先级**: 中
+**预估工时**: 0.3 天
+**状态**: 已完成
+
 **实现详情**:
 1. ✅ 创建独立的登录页面组件 (`apps/web/src/pages/auth/index.tsx`)
 2. ✅ 修改 `HomeRedirect` 组件支持配置驱动行为
@@ -921,12 +965,12 @@ const { debouncedCreateCanvas, isCreating: createCanvasLoading } = useCreateCanv
 
 ## 📈 开发进度总结
 
-- **需求总数**: 11
-- **已完成**: 7 
+- **需求总数**: 12
+- **已完成**: 8 
 - **部分完成**: 1 (需求#010第一、二阶段已完成)
 - **进行中**: 1 (需求#009调试中)
 - **待开始**: 2
-- **完成率**: 72.7%
+- **完成率**: 75%
 
 ## 📚 开发教训记录
 
@@ -1414,6 +1458,92 @@ const fixedSrc = useMemo(() => {
 - 避免了硬编码的尺寸值分散在多个文件中
 - 为未来的布局调整提供了标准化的修改入口
 - 通过详细注释确保后续维护者能快速理解设计意图
+
+---
+
+### 需求 #012: 修复侧边栏历史对话显示问题（优先级：高）
+
+**问题描述**: 
+左侧侧边栏的搜索框下方没有展示预期的历史对话（画布），用户无法看到之前创建的画布列表。
+
+**问题分析**:
+1. **根本原因**: 在需求#003简化侧边栏时，过度简化导致数据加载逻辑被注释掉
+   - `useHandleSiderData(true)` 调用被注释，导致 `canvasList` 始终为空
+   - ConversationHistory 组件显示空状态，但翻译键存在
+
+2. **影响组件**:
+   - `packages/ai-workspace-common/src/components/sider/layout.tsx` - SiderLoggedIn组件
+   - `packages/ai-workspace-common/src/components/sider/conversation-history.tsx` - ConversationHistory组件
+   - `packages/i18n/src/zh-Hans/ui.ts` - 中文翻译
+   - `packages/i18n/src/en-US/ui.ts` - 英文翻译
+
+**解决方案**:
+采用渐进式修复方案，只恢复必要的数据加载功能，保持其他简化状态。
+
+**✅ 实施完成**:
+
+1. **第一步：完善翻译键**:
+   - ✅ 确认中文翻译：`sider.history.empty.title: '暂无对话记录'`
+   - ✅ 确认英文翻译：`sider.history.empty.title: 'No conversations yet'`
+   - ✅ 翻译键已存在，无需添加
+
+2. **第二步：恢复数据加载逻辑**:
+   ```typescript
+   // 在 SiderLoggedIn 组件中添加
+   // Essential data loading for conversation history
+   useHandleSiderData(true);
+   ```
+   - ✅ 恢复 `useHandleSiderData(true)` 调用，确保画布数据加载
+   - ✅ 保持其他简化功能不变（菜单项仍隐藏）
+   - ✅ 避免影响全局功能
+
+3. **第三步：代码质量保证**:
+   - ✅ 通过 biome 代码检查，无语法错误
+   - ✅ 修复未使用变量的 linting 警告
+   - ✅ 保持代码可维护性
+
+**技术实现细节**:
+
+1. **数据流恢复**:
+   ```
+   useHandleSiderData(true) → 加载画布列表 → 更新 canvasList → ConversationHistory 显示数据
+   ```
+
+2. **组件状态**:
+   - **ConversationHistory**: 从 `canvasList` 获取数据，显示历史画布
+   - **SiderLoggedIn**: 恢复数据加载，保持UI简化
+   - **其他组件**: 保持注释状态，不影响简化效果
+
+3. **错误处理**:
+   - 空状态显示：`t('sider.history.empty.title')`
+   - 数据加载失败：由 `useHandleSiderData` 内部处理
+   - 翻译缺失：已确认翻译键存在
+
+**修改文件清单**:
+- ✅ `packages/ai-workspace-common/src/components/sider/layout.tsx` - 恢复数据加载调用
+
+**测试验证**:
+用户可以通过以下方式验证修复效果：
+1. 刷新页面，确保侧边栏正常显示
+2. 创建新的画布，观察是否出现在历史对话列表中
+3. 点击历史对话项，确认能正确跳转到对应画布
+4. 验证空状态显示（如果没有历史画布）
+
+**优先级**: 高（核心用户体验功能）
+**预估工时**: 0.5天
+**状态**: ✅ 已完成
+
+**维护性考虑**:
+- **渐进式修复**: 只恢复必要功能，避免影响其他简化
+- **最小化修改**: 仅添加一行代码，降低引入新问题的风险
+- **保持一致性**: 与现有代码风格和架构保持一致
+- **清晰注释**: 说明修改目的，便于后续维护
+
+**全局功能影响评估**:
+- ✅ **无负面影响**: 只恢复数据加载，不改变UI结构
+- ✅ **保持简化状态**: 菜单项、设置等仍保持隐藏
+- ✅ **性能影响最小**: 数据加载是必要功能，无额外开销
+- ✅ **向后兼容**: 不影响现有功能和用户习惯
 
 ### 需求 #010: 在右键菜单中添加Search选项并创建Search节点
 

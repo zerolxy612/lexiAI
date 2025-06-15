@@ -5,10 +5,10 @@ import { useEffect } from 'react';
 import { bigSearchQuickOpenEmitter } from '@refly-packages/ai-workspace-common/utils/event-emitter/big-search-quick-open';
 
 export const BigSearchModal = () => {
-  const { isSearchOpen, setIsSearchOpen, resetState } = useSearchStoreShallow((state) => ({
+  const { isSearchOpen, setIsSearchOpen, resetUIState } = useSearchStoreShallow((state) => ({
     isSearchOpen: state.isSearchOpen,
     setIsSearchOpen: state.setIsSearchOpen,
-    resetState: state.resetState,
+    resetUIState: state.resetUIState,
   }));
 
   useEffect(() => {
@@ -23,9 +23,10 @@ export const BigSearchModal = () => {
 
   useEffect(() => {
     if (!isSearchOpen) {
-      resetState();
+      // Only reset UI state when closing modal, preserve search results for better UX
+      resetUIState();
     }
-  }, [isSearchOpen, resetState]);
+  }, [isSearchOpen, resetUIState]);
 
   return (
     <Modal

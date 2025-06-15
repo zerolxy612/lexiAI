@@ -43,6 +43,7 @@ export interface SearchState {
   setNoCategoryBigSearchRes: (noCategoryBigSearchRes: Mark[]) => void;
   setPages: (pages: string[]) => void;
   resetState: () => void;
+  resetUIState: () => void; // New method for UI-only reset
 }
 
 export const defaultState = {
@@ -57,6 +58,12 @@ export const defaultState = {
   searchedCanvases: [],
   searchedResources: [],
   searchedDocuments: [],
+};
+
+// UI state that should be reset when closing modal (preserving search results)
+export const defaultUIState = {
+  pages: ['home'],
+  noCategoryBigSearchRes: [],
 };
 
 export const useSearchStore = create<SearchState>()(
@@ -78,6 +85,7 @@ export const useSearchStore = create<SearchState>()(
       set((state) => ({ ...state, noCategoryBigSearchRes })),
     setPages: (pages: SearchPage[]) => set((state) => ({ ...state, pages })),
     resetState: () => set((state) => ({ ...state, ...defaultState })),
+    resetUIState: () => set((state) => ({ ...state, ...defaultUIState })),
   })),
 );
 
