@@ -59,6 +59,8 @@ import { useCanvasSync } from '@refly-packages/ai-workspace-common/hooks/canvas/
 import { EmptyGuide } from './empty-guide';
 import { useReflyPilotReset } from '@refly-packages/ai-workspace-common/hooks/canvas/use-refly-pilot-reset';
 import { BottomChatInput } from './bottom-chat-input';
+import { useInvokeAction } from '@refly-packages/ai-workspace-common/hooks/canvas/use-invoke-action';
+import { genActionResultID } from '@refly/utils/id';
 import HelperLines from './common/helper-line/index';
 import { useListenNodeOperationEvents } from '@refly-packages/ai-workspace-common/hooks/canvas/use-listen-node-events';
 import { runtime } from '@refly-packages/ai-workspace-common/utils/env';
@@ -163,6 +165,9 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
 
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const { addNode } = useAddNode();
+
+  // AI Chat functionality using invokeAction (same as skill nodes)
+  const { invokeAction } = useInvokeAction();
   const { nodes, edges } = useStore(
     useShallow((state) => ({
       nodes: state.nodes,
@@ -401,26 +406,86 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
     console.log('Selected tool:', tool);
   };
 
-  const handleBottomChatSend = useCallback((message: string) => {
-    // Handle sending message from bottom chat input
-    console.log('Sending message:', message);
-    // TODO: Implement actual message sending logic
-    // This could integrate with the existing ReflyPilot or create a new AI conversation node
-  }, []);
+  const handleBottomChatSend = useCallback(
+    async (messageText: string) => {
+      console.log('Sending message to AI:', messageText);
+
+      // Check if user is logged in
+      if (!isLogin) {
+        message.error('请先登录后再使用AI聊天功能');
+        return;
+      }
+
+      // Create AI response node using the same method as skill nodes
+      const resultId = genActionResultID();
+
+      // Use hkgai-general model for bottom chat
+      const modelInfo = {
+        name: 'hkgai-general',
+        label: 'HKGAI General',
+        provider: 'hkgai',
+        providerItemId: 'hkgai-general-item',
+        tier: 't2' as const,
+        contextLimit: 8000,
+        maxOutput: 4000,
+        capabilities: {},
+        isDefault: true,
+      };
+
+      // Invoke action with the message
+      invokeAction(
+        {
+          resultId,
+          query: messageText,
+          selectedSkill: { name: 'commonQnA' },
+          modelInfo,
+          contextItems: [],
+          tplConfig: {},
+          runtimeConfig: {},
+        },
+        {
+          entityId: canvasId,
+          entityType: 'canvas',
+        },
+      );
+
+      // Add skill response node to canvas
+      addNode(
+        {
+          type: 'skillResponse',
+          data: {
+            title: messageText,
+            entityId: resultId,
+            metadata: {
+              status: 'executing',
+              contextItems: [],
+              tplConfig: {},
+              selectedSkill: { name: 'commonQnA' },
+              modelInfo,
+              runtimeConfig: {},
+              structuredData: {
+                query: messageText,
+              },
+            },
+          },
+          position: { x: 100, y: 100 },
+        },
+        [],
+      );
+    },
+    [invokeAction, canvasId, addNode, isLogin],
+  );
 
   const handleCopyAction = useCallback(() => {
-    console.log('Copy action triggered');
-    // TODO: Implement copy functionality
+    message.info('复制功能已集成到AI回答节点中');
   }, []);
 
   const handleRestartAction = useCallback(() => {
-    console.log('Restart action triggered');
-    // TODO: Implement restart functionality
+    message.info('请使用画布上的AI节点进行对话');
   }, []);
 
   const handleDeleteAction = useCallback(() => {
-    console.log('Delete action triggered');
-    // TODO: Implement delete functionality
+    message.info('请直接删除画布上的AI节点');
   }, []);
 
   // Add scroll position state and handler
@@ -1127,12 +1192,12 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
 
         {selectedNodes.length > 0 && <MultiSelectionMenus />}
 
-        {/* Bottom chat input - only show for non-readonly canvases */}
+        {/* Bottom Chat Input - only show for non-readonly canvases */}
         {!readonly && (
           <BottomChatInput
             onSend={handleBottomChatSend}
-            disabled={false}
-            placeholder="Send a message to LexiHK"
+            disabled={!isLogin}
+            placeholder={isLogin ? 'Send a message to LexiHK' : '请先登录后使用AI聊天功能'}
             onCopy={handleCopyAction}
             onRestart={handleRestartAction}
             onDelete={handleDeleteAction}

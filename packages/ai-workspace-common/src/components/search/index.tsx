@@ -5,6 +5,7 @@ import {
   useSearchStore,
   useSearchStoreShallow,
 } from '@refly-packages/ai-workspace-common/stores/search';
+
 import { useDebouncedCallback } from 'use-debounce';
 
 import './index.scss';
@@ -26,6 +27,7 @@ import {
 } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { nodeOperationsEmitter } from '@refly-packages/ai-workspace-common/events/nodeOperations';
 import { useGetProjectCanvasId } from '@refly-packages/ai-workspace-common/hooks/use-get-project-canvasId';
+
 import { message } from 'antd';
 
 export interface SearchProps extends React.ComponentProps<'div'> {
@@ -53,6 +55,7 @@ export const Search = React.memo((props: SearchProps) => {
     searchedDocuments: state.searchedDocuments,
     searchedResources: state.searchedResources,
   }));
+
   const [displayMode, setDisplayMode] = useState<'search' | 'list'>('list');
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const [isComposing, setIsComposing] = useState(false);
@@ -294,7 +297,7 @@ export const Search = React.memo((props: SearchProps) => {
           return 1; // we can safely rely on the server filter
         }}
         className={classNames(showList ? 'search-active' : '', 'transition-all duration-200')}
-        onKeyDownCapture={(e: React.KeyboardEvent) => {
+        onKeyDownCapture={async (e: React.KeyboardEvent) => {
           if (e.key === 'Enter' && !isComposing) {
             bounce();
           }

@@ -28,7 +28,7 @@ export function DataList({
   data: SearchResult[];
   icon: React.ReactNode;
   activeValue: string;
-  displayMode: 'list' | 'search';
+  displayMode: 'list' | 'search' | 'ai';
   setValue: (val: string) => void;
   onItemClick?: (item: SearchResult) => void;
   onCreateClick?: () => void;

@@ -19,7 +19,7 @@ export function Home({
   data: RenderItem[];
   pages: string[];
   setPages: (pages: string[]) => void;
-  displayMode: 'list' | 'search';
+  displayMode: 'list' | 'search' | 'ai';
   activeValue: string;
   setValue: (val: string) => void;
 }) {
