@@ -10,6 +10,7 @@ import { useDeleteNode } from '@refly-packages/ai-workspace-common/hooks/canvas/
 import { HiOutlineSquare3Stack3D } from 'react-icons/hi2';
 import { time } from '@refly-packages/ai-workspace-common/utils/time';
 import { LOCALE } from '@refly/common-types';
+import FileIcon from '@/assets/file.png';
 import { useCanvasStoreShallow } from '@refly-packages/ai-workspace-common/stores/canvas';
 import { useGetResourceDetail } from '@refly-packages/ai-workspace-common/queries';
 import classNames from 'classnames';
@@ -95,8 +96,16 @@ export const ResourceNode = memo(
     const { getConnectionInfo } = useGetNodeConnectFromDragCreateInfo();
 
     const { resourceType, indexStatus, sizeMode = 'adaptive' } = data?.metadata ?? {};
-    const ResourceIcon =
-      resourceType === 'weblink' ? HiOutlineSquare3Stack3D : HiOutlineSquare3Stack3D;
+
+    // Custom icon component for file resources to support image assets
+    // Using larger size (w-6 h-6 = 24px) to match the container and remove background dependency
+    const FileIconComponent = () => <img src={FileIcon} alt="File" className="w-5 h-5" />;
+
+    // Choose icon based on resource type - using custom file icon for file uploads
+    const ResourceIcon = resourceType === 'weblink' ? HiOutlineSquare3Stack3D : FileIconComponent;
+
+    // Use transparent background for file icons to remove the green square background
+    const iconBackgroundColor = resourceType === 'weblink' ? NODE_COLORS.resource : 'transparent';
 
     const { i18n, t } = useTranslation();
     const language = i18n.languages?.[0];
@@ -374,7 +383,7 @@ export const ResourceNode = memo(
                 title={data?.title}
                 fixedTitle={t('canvas.nodeTypes.resource')}
                 Icon={ResourceIcon}
-                iconBgColor={NODE_COLORS.resource}
+                iconBgColor={iconBackgroundColor}
                 canEdit={!readonly}
                 updateTitle={updateTitle}
               />
@@ -382,8 +391,8 @@ export const ResourceNode = memo(
               <div className="relative flex-grow min-h-0 overflow-y-auto pr-2 -mr-2">
                 <NodeContent data={data} isOperating={isOperating} isPreview={isPreview} />
               </div>
-              {/* Timestamp container */}
-              <div className="flex justify-end items-center text-[10px] text-gray-400 mt-1 px-1">
+              {/* Timestamp container - moved to left for better UX */}
+              <div className="flex justify-start items-center text-[10px] text-gray-400 mt-1 px-1">
                 {time(data.createdAt, language as LOCALE)
                   ?.utc()
                   ?.fromNow()}

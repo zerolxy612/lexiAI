@@ -8,7 +8,6 @@ import VectorIcon from '@/assets/Vector.png';
 import LexiHKIcon from '@/assets/Lexihk-dark.png';
 import { useCreateCanvas } from '@refly-packages/ai-workspace-common/hooks/canvas/use-create-canvas';
 import { useEffect, useState } from 'react';
-import { Spin } from '@refly-packages/ai-workspace-common/components/common/spin';
 
 const CanvasPage = () => {
   const { canvasId = '' } = useParams();
