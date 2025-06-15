@@ -22,6 +22,7 @@ import { useDuplicateCanvas } from '@refly-packages/ai-workspace-common/hooks/us
 import { useAuthStoreShallow } from '@refly-packages/ai-workspace-common/stores/auth';
 import { UILocaleList } from '@refly-packages/ai-workspace-common/components/ui-locale-list';
 import { SiderMenuSettingList } from '@refly-packages/ai-workspace-common/components/sider-menu-setting-list';
+import { LAYOUT_WIDTHS } from '@refly-packages/ai-workspace-common/constants/layout';
 import userIcon from '../../../assets/user.png';
 
 interface TopToolbarProps {
@@ -124,8 +125,10 @@ export const TopToolbar: FC<TopToolbarProps> = memo(({ canvasId }) => {
 
       {/* Main toolbar container */}
       <div
-        className={`absolute h-16 top-0 left-0 right-0  box-border flex justify-between items-center py-2 px-4 pr-8 bg-transparent ${
-          collapse ? 'w-[calc(100vw-12px)]' : 'w-[calc(100vw-232px)]'
+        className={`absolute h-16 top-0 left-0 right-0 box-border flex justify-between items-center py-2 px-4 pr-8 bg-transparent ${
+          collapse
+            ? `w-[${LAYOUT_WIDTHS.ABSOLUTE_COLLAPSED}]`
+            : `w-[${LAYOUT_WIDTHS.ABSOLUTE_EXPANDED}]`
         }`}
       >
         <div className="flex items-center relative z-10">

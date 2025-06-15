@@ -34,6 +34,7 @@ import { CreateProjectModal } from '@refly-packages/ai-workspace-common/componen
 import './layout.scss';
 import { ProjectDirectory } from '../project/project-directory';
 import { ConversationHistory } from './conversation-history';
+import { SIDEBAR_WIDTH } from '@refly-packages/ai-workspace-common/constants/layout';
 
 const Sider = Layout.Sider;
 // const SubMenu = Menu.SubMenu; // Temporarily unused
@@ -387,7 +388,7 @@ const SiderLoggedIn = (props: { source: 'sider' | 'popover' }) => {
 
   return (
     <Sider
-      width={source === 'sider' ? (collapse ? 0 : 300) : 300}
+      width={source === 'sider' ? (collapse ? 0 : SIDEBAR_WIDTH) : SIDEBAR_WIDTH}
       className={cn(
         'border border-solid border-gray-100 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900',
         source === 'sider' ? 'h-[calc(100vh)]' : 'h-[calc(100vh-100px)] rounded-r-lg',

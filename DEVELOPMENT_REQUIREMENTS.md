@@ -921,12 +921,12 @@ const { debouncedCreateCanvas, isCreating: createCanvasLoading } = useCreateCanv
 
 ## 📈 开发进度总结
 
-- **需求总数**: 10
-- **已完成**: 6 
+- **需求总数**: 11
+- **已完成**: 7 
 - **部分完成**: 1 (需求#010第一、二阶段已完成)
-- **进行中**: 0
-- **待开始**: 3
-- **完成率**: 70%
+- **进行中**: 1 (需求#009调试中)
+- **待开始**: 2
+- **完成率**: 72.7%
 
 ## 📚 开发教训记录
 
@@ -1327,69 +1327,93 @@ const fixedSrc = useMemo(() => {
    - 已添加 `contextMenu` 状态变化监控
    - 可通过浏览器控制台查看相关日志
 
-**排查步骤**:
-
-1. **第一步**: 测试节点右键是否触发事件
-   - 在画布中创建任意节点
-   - 右键点击节点
-   - 查看浏览器控制台是否有 "🎯 Node context menu triggered" 日志
-
-2. **第二步**: 检查事件处理配置
-   - 确认 `onNodeContextMenu={readonly ? undefined : onNodeContextMenu}` 配置正确
-   - 确认 `readonly` 状态是否影响事件处理
-
-3. **第三步**: 验证菜单状态设置
-   - 查看 "✅ Setting context menu state" 日志
-   - 确认 `contextMenu` 状态是否正确更新
-
-4. **第四步**: 检查菜单渲染
-   - 确认 `NodeContextMenu` 组件是否正确渲染
-   - 检查菜单位置计算是否正确
-
-**技术修复方向**:
-
-1. **ReactFlow配置调整**:
-   ```typescript
-   // 可能需要调整的配置
-   panOnDrag={!readonly && interactionMode === 'mouse'}  // 恢复原始逻辑
-   nodesFocusable={!readonly}  // 确保节点可获得焦点
-   elementsSelectable={!readonly}  // 确保节点可选择
-   ```
-
-2. **事件处理优化**:
-   ```typescript
-   // 在onNodeContextMenu中确保事件正确处理
-   event.preventDefault();
-   event.stopPropagation();  // 可能需要添加
-   ```
-
-3. **状态管理检查**:
-   - 确认 `contextMenu` 状态管理没有被其他地方重置
-   - 检查是否有竞态条件导致状态被覆盖
-
-**临时解决方案**:
-如果问题严重影响使用，可以：
-1. 临时恢复原始的 `panOnDrag` 配置
-2. 通过工具栏或键盘快捷键操作节点
-3. 使用 `MultiSelectionMenus` 进行批量操作
-
 **优先级**: 高（核心功能缺失）
 **预估工时**: 0.5-1天
 **状态**: 🔍 调试中
 
-**调试进度**:
-- ✅ 添加了详细的调试日志
-- 🔄 等待用户测试并提供控制台日志反馈
-- ⏳ 根据日志分析具体问题原因
-- ⏳ 实施针对性修复方案
+---
 
-**测试指令**:
-用户可以按以下步骤测试：
+### 需求 #011: 修复侧边栏遮挡TopToolbar问题（优先级：高）
+
+**问题描述**: 
+侧边栏紧靠着的右侧区域（包含画布名称和操作图标）有时会被侧边栏遮挡，需要重新伸缩侧边栏才能正常显示。
+
+**问题分析**:
+1. **根本原因**: TopToolbar 和主布局使用了不一致的宽度计算
+   - TopToolbar 展开时使用：`calc(100vw - 232px)`（基于旧的220px + 12px）
+   - 主布局展开时使用：`calc(100% - 300px - 16px)`（基于新的300px + 16px）
+   - 差值：316px - 232px = 84px，导致遮挡
+
+2. **影响组件**:
+   - `packages/ai-workspace-common/src/components/canvas/top-toolbar/index.tsx` - TopToolbar组件
+   - `apps/web/src/components/layout/index.tsx` - 主布局组件
+   - `packages/ai-workspace-common/src/components/sider/layout.tsx` - 侧边栏组件
+
+**解决方案**:
+采用统一的布局常量管理，确保所有组件使用一致的宽度计算。
+
+**✅ 实施完成**:
+
+1. **创建布局常量文件**:
+   - 新建 `packages/ai-workspace-common/src/constants/layout.ts`
+   - 定义统一的侧边栏尺寸常量：`SIDEBAR_WIDTH = 300px`, `SIDEBAR_MARGIN = 16px`
+   - 提供标准化的宽度计算：`LAYOUT_WIDTHS.ABSOLUTE_EXPANDED = calc(100vw - 316px)`
+
+2. **修复TopToolbar宽度计算**:
+   ```typescript
+   // 修改前
+   className={collapse ? 'w-[calc(100vw-12px)]' : 'w-[calc(100vw-232px)]'}
+   
+   // 修改后
+   className={collapse ? `w-[${LAYOUT_WIDTHS.ABSOLUTE_COLLAPSED}]` : `w-[${LAYOUT_WIDTHS.ABSOLUTE_EXPANDED}]`}
+   ```
+
+3. **统一主布局宽度计算**:
+   ```typescript
+   // 修改前
+   width: showSider ? 'calc(100% - 300px - 16px)' : 'calc(100% - 16px)'
+   
+   // 修改后
+   width: showSider ? LAYOUT_WIDTHS.MAIN_CONTENT_EXPANDED : `calc(100% - ${COLLAPSED_SIDEBAR_WIDTH}px)`
+   ```
+
+4. **更新侧边栏组件**:
+   ```typescript
+   // 修改前
+   width={source === 'sider' ? (collapse ? 0 : 300) : 300}
+   
+   // 修改后
+   width={source === 'sider' ? (collapse ? 0 : SIDEBAR_WIDTH) : SIDEBAR_WIDTH}
+   ```
+
+**修改文件清单**:
+- ✅ `packages/ai-workspace-common/src/constants/layout.ts` - 新建布局常量文件
+- ✅ `packages/ai-workspace-common/src/components/canvas/top-toolbar/index.tsx` - 修复宽度计算
+- ✅ `apps/web/src/components/layout/index.tsx` - 统一主布局宽度
+- ✅ `packages/ai-workspace-common/src/components/sider/layout.tsx` - 使用统一常量
+
+**代码质量改进**:
+- ✅ 添加详细的中英文注释说明问题和解决方案
+- ✅ 提供使用示例和最佳实践
+- ✅ 通过 biome 代码检查，无语法错误
+- ✅ 修复未使用变量的 linting 警告
+
+**测试验证**:
+用户可以通过以下方式验证修复效果：
 1. 刷新画布页面
-2. 创建任意节点（Ask AI、Create Document等）
-3. 右键点击创建的节点
-4. 打开浏览器开发者工具（F12）查看控制台
-5. 提供控制台中的相关日志信息
+2. 测试侧边栏的展开和收缩
+3. 确认画布名称和操作图标区域不再被遮挡
+4. 验证在不同屏幕尺寸下的表现
+
+**优先级**: 高（影响核心用户体验）
+**预估工时**: 0.5天
+**状态**: ✅ 已完成
+
+**维护性提升**:
+- 建立了统一的布局常量管理机制
+- 避免了硬编码的尺寸值分散在多个文件中
+- 为未来的布局调整提供了标准化的修改入口
+- 通过详细注释确保后续维护者能快速理解设计意图
 
 ### 需求 #010: 在右键菜单中添加Search选项并创建Search节点
 

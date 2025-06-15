@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button, message, Upload, UploadProps } from 'antd';
 import { TbFile } from 'react-icons/tb';
-import { RiInboxArchiveLine } from 'react-icons/ri';
 import { useImportResourceStoreShallow } from '@refly-packages/ai-workspace-common/stores/import-resource';
 import getClient from '@refly-packages/ai-workspace-common/requests/proxiedRequest';
 import type { Resource } from '@refly/openapi-schema';

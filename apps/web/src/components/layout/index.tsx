@@ -17,6 +17,10 @@ import { ImportResourceModal } from '@refly-packages/ai-workspace-common/compone
 import './index.scss';
 import { useSiderStoreShallow } from '@refly-packages/ai-workspace-common/stores/sider';
 import { BigSearchModal } from '@refly-packages/ai-workspace-common/components/search/modal';
+import {
+  LAYOUT_WIDTHS,
+  COLLAPSED_SIDEBAR_WIDTH,
+} from '@refly-packages/ai-workspace-common/constants/layout';
 
 const Content = Layout.Content;
 
@@ -25,10 +29,10 @@ interface AppLayoutProps {
 }
 
 export const AppLayout = ({ children }: AppLayoutProps) => {
-  const isKnowledgeBase = useMatch('/kb/*');
-  const isCommunity = useMatch('/community/*');
-  const isCanvas = useMatch('/canvas/*');
-  const isShare = useMatch('/share/*');
+  const _isKnowledgeBase = useMatch('/kb/*');
+  const _isCommunity = useMatch('/community/*');
+  const _isCanvas = useMatch('/canvas/*');
+  const _isShare = useMatch('/share/*');
   const isPublicAccessPage = usePublicAccessPage();
 
   const userStore = useUserStoreShallow((state) => ({
@@ -64,7 +68,9 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
             height: 'calc(100vh)',
             flexGrow: 1,
             overflowY: 'auto',
-            width: showSider ? 'calc(100% - 300px - 16px)' : 'calc(100% - 16px)',
+            width: showSider
+              ? LAYOUT_WIDTHS.MAIN_CONTENT_EXPANDED
+              : `calc(100% - ${COLLAPSED_SIDEBAR_WIDTH}px)`,
           }}
         >
           <Content>{children}</Content>

@@ -10,7 +10,7 @@ export class ModelClientFactory {
   private hkgaiClientFactory: HKGAIClientFactory;
   private baseHeaders: Record<string, string>;
 
-  constructor(referrer: string = 'https://lexihk.com', title: string = 'LexiHK') {
+  constructor(referrer = 'https://lexihk.com', title = 'LexiHK') {
     this.hkgaiClientFactory = new HKGAIClientFactory();
     this.baseHeaders = {
       'HTTP-Referer': referrer,
