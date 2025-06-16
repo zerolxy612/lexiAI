@@ -2,7 +2,6 @@ import React, { useState, useCallback, memo } from 'react';
 import { Button } from 'antd';
 import { SendOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { Z_INDEX_CLASSES } from '@refly-packages/ai-workspace-common/constants/layout';
 import CopyIcon from '@/assets/copy.png';
 import RestartIcon from '@/assets/restart.png';
 import DeleteIcon from '@/assets/delete.png';

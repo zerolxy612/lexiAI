@@ -1393,6 +1393,8 @@ const translations = {
       editGroupNamePlaceholder: 'Please enter the group name',
       addToSlideshow: 'Add to Slideshow',
       more: 'More Options',
+      missingInformation: 'Missing Information',
+      missingInformationDescription: 'Create a node to mark missing information',
     },
     nodeStatus: {
       isCreatingDocument: 'Creating Document...',

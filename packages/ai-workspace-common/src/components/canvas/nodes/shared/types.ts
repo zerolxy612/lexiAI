@@ -82,6 +82,7 @@ export type SkillNodeMeta = {
   originalWidth?: number;
   projectId?: string;
   searchNode?: boolean;
+  missingInfoNode?: boolean;
   viewMode?: string;
 };
 

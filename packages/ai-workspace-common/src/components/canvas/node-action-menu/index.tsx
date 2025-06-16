@@ -22,6 +22,7 @@ import {
   Layout,
   ChevronDown,
   Edit,
+  AlertCircle,
 } from 'lucide-react';
 import { locateToNodePreviewEmitter } from '@refly-packages/ai-workspace-common/events/locateToNodePreview';
 import {
@@ -39,6 +40,8 @@ import { useHoverCard } from '@refly-packages/ai-workspace-common/hooks/use-hove
 import { useNodePreviewControl } from '@refly-packages/ai-workspace-common/hooks/canvas';
 import { useGetNodeContent } from '@refly-packages/ai-workspace-common/hooks/canvas/use-get-node-content';
 import { useAddNodeToSlide } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-node-to-slide';
+import { genSkillID } from '@refly/utils/id';
+import { useAddNode } from '@refly-packages/ai-workspace-common/hooks/canvas/use-add-node';
 
 import './index.scss';
 
@@ -92,6 +95,7 @@ export const NodeActionMenu: FC<NodeActionMenuProps> = ({
     setShowPreview: state.setShowPreview,
   }));
   const { previewNode } = useNodePreviewControl({ canvasId });
+  const { addNode } = useAddNode();
 
   const { activeDocumentId } = useDocumentStoreShallow((state) => ({
     activeDocumentId: state.activeDocumentId,
@@ -237,6 +241,57 @@ export const NodeActionMenu: FC<NodeActionMenuProps> = ({
     onClose?.();
   }, [nodeData?.entityId, canvasId, addNodesToSlide, onClose, nodeType]);
 
+  // Create Missing Information node function
+  const createMissingInfoNode = useCallback(
+    (position: { x: number; y: number }) => {
+      // Missing information node should specifically use hkgai-missinginfo model
+      const missingInfoModelInfo = {
+        name: 'hkgai-missinginfo', // Dedicated missing info model
+        label: 'HKGAI Missing Info',
+        provider: 'hkgai',
+        providerItemId: 'hkgai-missinginfo-item', // Match exact itemId from database
+        tier: 't2',
+        contextLimit: 8000,
+        maxOutput: 4000,
+        capabilities: {},
+        isDefault: true,
+      };
+
+      addNode(
+        {
+          type: 'skill',
+          data: {
+            title: t('canvas.nodeActions.missingInformation'),
+            entityId: genSkillID(),
+            metadata: {
+              missingInfoNode: true, // Mark this as a missing info node
+              viewMode: 'missingInfo', // Set view mode to missing info
+              modelInfo: missingInfoModelInfo, // Pre-set missing info specific model
+            },
+          },
+          position,
+        },
+        [],
+        true,
+        true,
+      );
+    },
+    [addNode, t],
+  );
+
+  const handleCreateMissingInfo = useCallback(() => {
+    // Create the missing info node near the current node
+    const currentNode = getNode(nodeId);
+    if (currentNode) {
+      const newPosition = {
+        x: currentNode.position.x + 200, // Offset to the right
+        y: currentNode.position.y,
+      };
+      createMissingInfoNode(newPosition);
+    }
+    onClose?.();
+  }, [nodeId, getNode, createMissingInfoNode, onClose]);
+
   const getMenuItems = useCallback(
     (activeDocumentId: string): MenuItem[] => {
       if (isMultiSelection) {
@@ -266,6 +321,17 @@ export const NodeActionMenu: FC<NodeActionMenuProps> = ({
               description: t('canvas.nodeActions.addToContextDescription'),
               videoUrl:
                 'https://static.refly.ai/onboarding/nodeAction/nodeAction-addToContext.webm',
+            },
+          },
+          {
+            key: 'createMissingInfo',
+            icon: AlertCircle,
+            label: t('canvas.nodeActions.missingInformation'),
+            onClick: handleCreateMissingInfo,
+            type: 'button' as const,
+            hoverContent: {
+              title: t('canvas.nodeActions.missingInformation'),
+              description: t('canvas.nodeActions.missingInformationDescription'),
             },
           },
           { key: 'divider-2', type: 'divider' } as MenuItem,
@@ -308,6 +374,17 @@ export const NodeActionMenu: FC<NodeActionMenuProps> = ({
             title: t('canvas.nodeActions.addToContext'),
             description: t('canvas.nodeActions.addToContextDescription'),
             videoUrl: 'https://static.refly.ai/onboarding/nodeAction/nodeAction-addToContext.webm',
+          },
+        },
+        {
+          key: 'createMissingInfo',
+          icon: AlertCircle,
+          label: t('canvas.nodeActions.missingInformation'),
+          onClick: handleCreateMissingInfo,
+          type: 'button' as const,
+          hoverContent: {
+            title: t('canvas.nodeActions.missingInformation'),
+            description: t('canvas.nodeActions.missingInformationDescription'),
           },
         },
         !['group', 'skill'].includes(nodeType) && {
@@ -503,6 +580,7 @@ export const NodeActionMenu: FC<NodeActionMenuProps> = ({
       nodeData?.contentPreview,
       handleDelete,
       handleAddToContext,
+      handleCreateMissingInfo,
       handlePreview,
       t,
       localSizeMode,

@@ -41,6 +41,7 @@ import { useUserStore } from '@refly-packages/ai-workspace-common/stores/user';
 import { useTranslation } from 'react-i18next';
 import { IconSearch } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { ChatInput } from '@refly-packages/ai-workspace-common/components/canvas/launchpad/chat-input';
+import { AlertCircle } from 'lucide-react';
 
 type SkillNode = Node<CanvasNodeData<SkillNodeMeta>, 'skill'>;
 
@@ -51,25 +52,41 @@ const SimpleSearchComponent = memo(
     setQuery,
     onSearch,
     readonly,
+    nodeType = 'search',
   }: {
     query: string;
     setQuery: (query: string) => void;
     onSearch: () => void;
     readonly: boolean;
+    nodeType?: 'search' | 'missingInfo';
   }) => {
     const { t } = useTranslation();
 
+    // Determine icon and title based on node type
+    const getIconAndTitle = () => {
+      if (nodeType === 'missingInfo') {
+        return {
+          icon: AlertCircle,
+          title: t('canvas.nodeActions.missingInformation'),
+        };
+      }
+      return {
+        icon: IconSearch,
+        title: t('canvas.toolbar.search'),
+      };
+    };
+
+    const { icon: IconComponent, title } = getIconAndTitle();
+
     return (
       <div className="flex flex-col gap-3 h-full p-3 box-border">
-        {/* Header with search icon and title */}
+        {/* Header with icon and title */}
         <div className="flex items-center gap-2 pb-2 border-b border-gray-200 dark:border-gray-700">
-          <IconSearch className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-            {t('canvas.toolbar.search')}
-          </span>
+          <IconComponent className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{title}</span>
         </div>
 
-        {/* Simple search input */}
+        {/* Simple input */}
         <div className="flex-1">
           <ChatInput
             readonly={readonly}
@@ -228,18 +245,37 @@ export const SkillNode = memo<NodeProps<SkillNode>>(
         };
         setModelInfo(autoModelInfo);
       } else {
-        // Fallback to hkgai-searchentry if no default model configured
-        const fallbackModelInfo: ModelInfo = {
-          name: 'hkgai-searchentry', // Use model ID for proper HKGAI adapter matching
-          label: 'HKGAI Search Entry',
-          provider: 'hkgai',
-          providerItemId: 'hkgai-searchentry-item', // Match exact itemId from database
-          tier: 't2',
-          contextLimit: 8000,
-          maxOutput: 4000,
-          capabilities: {},
-          isDefault: true,
-        };
+        // Fallback model based on node type
+        let fallbackModelInfo: ModelInfo;
+
+        if (metadata.missingInfoNode) {
+          // Missing information nodes use hkgai-missinginfo model
+          fallbackModelInfo = {
+            name: 'hkgai-missinginfo',
+            label: 'HKGAI Missing Info',
+            provider: 'hkgai',
+            providerItemId: 'hkgai-missinginfo-item',
+            tier: 't2',
+            contextLimit: 8000,
+            maxOutput: 4000,
+            capabilities: {},
+            isDefault: true,
+          };
+        } else {
+          // Default fallback to hkgai-searchentry for other nodes
+          fallbackModelInfo = {
+            name: 'hkgai-searchentry', // Use model ID for proper HKGAI adapter matching
+            label: 'HKGAI Search Entry',
+            provider: 'hkgai',
+            providerItemId: 'hkgai-searchentry-item', // Match exact itemId from database
+            tier: 't2',
+            contextLimit: 8000,
+            maxOutput: 4000,
+            capabilities: {},
+            isDefault: true,
+          };
+        }
+
         setModelInfo(fallbackModelInfo);
       }
     }, []); // Empty dependency array - only run once on mount
@@ -507,12 +543,13 @@ export const SkillNode = memo<NodeProps<SkillNode>>(
               />
             )}
 
-            {metadata.searchNode ? (
+            {metadata.searchNode || metadata.missingInfoNode ? (
               <SimpleSearchComponent
                 query={localQuery}
                 setQuery={setQuery}
                 onSearch={handleSendMessage}
                 readonly={readonly}
+                nodeType={metadata.missingInfoNode ? 'missingInfo' : 'search'}
               />
             ) : (
               <ChatPanel

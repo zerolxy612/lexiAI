@@ -1193,8 +1193,10 @@ const translations = {
         '确认要删除文档 {{title}} 吗？该操作将从知识库以及所有画布中移除此文档。',
       downloadFile: '下载文件',
       editGroupNamePlaceholder: '请输入分组名称',
-      addToSlideshow: '插入幻灯片',
+      addToSlideshow: '添加到幻灯片',
       more: '更多选项',
+      missingInformation: '缺失信息',
+      missingInformationDescription: '创建一个节点来标记缺失的信息',
     },
     nodeStatus: {
       isCreatingDocument: '创建中...',
