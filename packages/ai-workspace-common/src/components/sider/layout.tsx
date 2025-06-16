@@ -77,7 +77,7 @@ export const SiderLogo = (props: {
           debouncedCreateCanvas();
         }}
         loading={createCanvasLoading}
-        className="hover:bg-gray-100 dark:hover:bg-gray-800"
+        className="hover:bg-gray-100 dark:hover:bg-gray-800 mt-1"
         disabled={createCanvasLoading}
       />
     </div>
