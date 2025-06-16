@@ -46,6 +46,41 @@ export const LAYOUT_CLASSES = {
   ABSOLUTE_COLLAPSED: `w-[${LAYOUT_WIDTHS.ABSOLUTE_COLLAPSED}]`,
 } as const;
 
+// Z-Index layer management for consistent stacking order
+export const Z_INDEX_LAYERS = {
+  // Base content layers
+  BASE: 0, // Default layer for regular content
+  CONTENT: 10, // General content overlays
+  TOOLBAR: 20, // Toolbars and navigation elements
+
+  // Interactive layers
+  BOTTOM_CHAT: 30, // Bottom chat input (below node actions)
+  FLOATING_ELEMENTS: 40, // Floating UI elements
+
+  // High priority layers
+  NODE_ACTIONS: 50, // Node action buttons and important modals
+  POPOVER: 50, // Popovers and dropdowns
+  MODAL: 50, // Modal dialogs
+
+  // System layers
+  TOOLTIP: 60, // Tooltips (highest priority)
+  NOTIFICATION: 70, // System notifications
+} as const;
+
+// Tailwind CSS classes for z-index values
+export const Z_INDEX_CLASSES = {
+  BASE: 'z-0',
+  CONTENT: 'z-10',
+  TOOLBAR: 'z-20',
+  BOTTOM_CHAT: 'z-30',
+  FLOATING_ELEMENTS: 'z-40',
+  NODE_ACTIONS: 'z-50',
+  POPOVER: 'z-50',
+  MODAL: 'z-50',
+  TOOLTIP: 'z-60',
+  NOTIFICATION: 'z-70',
+} as const;
+
 /**
  * Usage examples:
  *
@@ -57,4 +92,8 @@ export const LAYOUT_CLASSES = {
  *
  * For sidebar components:
  * width={collapse ? 0 : SIDEBAR_WIDTH}
+ *
+ * For z-index management:
+ * className={`fixed ${Z_INDEX_CLASSES.BOTTOM_CHAT}`}
+ * style={{ zIndex: Z_INDEX_LAYERS.NODE_ACTIONS }}
  */

@@ -2,6 +2,7 @@ import React, { useState, useCallback, memo } from 'react';
 import { Button } from 'antd';
 import { SendOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
+import { Z_INDEX_CLASSES } from '@refly-packages/ai-workspace-common/constants/layout';
 import CopyIcon from '@/assets/copy.png';
 import RestartIcon from '@/assets/restart.png';
 import DeleteIcon from '@/assets/delete.png';
@@ -49,7 +50,15 @@ export const BottomChatInput = memo(
     }, []);
 
     return (
-      <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
+      <div className={`fixed bottom-0 left-0 right-0 pointer-events-none`} style={{ zIndex: 10 }}>
+        {/* 
+          Z-Index Layer Strategy:
+          Using inline style with z-index: 10 to ensure it's below all interactive elements.
+          This prevents the chat input from blocking AI dialog nodes, floating elements,
+          and node action buttons while maintaining basic visibility above background content.
+          
+          The low z-index ensures it won't interfere with any canvas interactions.
+        */}
         {/* Main input container - adjust for sidebar */}
         <div className="flex justify-center items-end px-4 pb-10" style={{ marginLeft: '300px' }}>
           {/* Increased max-width for wider input box */}
