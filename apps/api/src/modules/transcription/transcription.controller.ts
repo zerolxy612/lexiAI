@@ -11,9 +11,10 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiConsumes, ApiResponse } from '@nestjs/swagger';
 import { TranscriptionService } from './transcription.service';
+import { buildSuccessResponse } from '../../utils/response';
 
 @ApiTags('transcription')
-@Controller('transcription')
+@Controller('v1/transcription')
 export class TranscriptionController {
   private readonly logger = new Logger(TranscriptionController.name);
 
@@ -36,7 +37,7 @@ export class TranscriptionController {
     };
 
     this.logger.log('Health check result:', health);
-    return health;
+    return buildSuccessResponse(health);
   }
 
   @Post('audio')
@@ -49,12 +50,19 @@ export class TranscriptionController {
     schema: {
       type: 'object',
       properties: {
-        text: { type: 'string' },
-        duration: { type: 'number' },
-        language: { type: 'string' },
-        filename: { type: 'string' },
-        fileSize: { type: 'number' },
-        processingTimeMs: { type: 'number' },
+        success: { type: 'boolean' },
+        data: {
+          type: 'object',
+          properties: {
+            text: { type: 'string' },
+            duration: { type: 'number' },
+            language: { type: 'string' },
+            filename: { type: 'string' },
+            fileSize: { type: 'number' },
+            processingTimeMs: { type: 'number' },
+            requestId: { type: 'string' },
+          },
+        },
       },
     },
   })
@@ -130,7 +138,7 @@ export class TranscriptionController {
         processingTimeMs: processingTime,
       });
 
-      return response;
+      return buildSuccessResponse(response);
     } catch (error) {
       const processingTime = Date.now() - startTime;
 
@@ -165,6 +173,6 @@ export class TranscriptionController {
     };
 
     this.logger.debug('Service statistics:', stats);
-    return stats;
+    return buildSuccessResponse(stats);
   }
 }
