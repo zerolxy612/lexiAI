@@ -5,6 +5,7 @@ import { BaseParser, ParserOptions } from './base';
 import { PandocParser } from './pandoc.parser';
 import { MarkerParser } from './marker.parser';
 import { JinaParser } from './jina.parser';
+import { AntiwordParser } from './antiword.parser';
 import { PlainTextParser } from '../../knowledge/parsers/plain-text.parser';
 import { PdfjsParser } from '../../knowledge/parsers/pdfjs.parser';
 import { User } from '@refly/openapi-schema';
@@ -68,6 +69,8 @@ export class ParserFactory {
       }
       case 'application/epub+zip':
         return new PandocParser({ format: 'epub', ...options });
+      case 'application/msword':
+        return new AntiwordParser(options);
       case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
         return new PandocParser({ format: 'docx', ...options });
       default:
