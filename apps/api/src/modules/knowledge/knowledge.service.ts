@@ -682,11 +682,18 @@ export class KnowledgeService {
       resource = await this.indexResource(user, resource);
     } catch (err) {
       this.logger.error(`index resource error: ${err?.stack}`);
+
+      // Determine error type for better error handling
+      let errorType = 'unknownError';
+      if (err?.name === 'EmbeddingNotConfiguredError') {
+        errorType = 'embeddingNotConfigured';
+      }
+
       return this.prisma.resource.update({
         where: { resourceId, uid: user.uid },
         data: {
           indexStatus: 'index_failed',
-          indexError: JSON.stringify({ type: 'unknownError' } as IndexError),
+          indexError: JSON.stringify({ type: errorType } as IndexError),
         },
       });
     }

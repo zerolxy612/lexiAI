@@ -62,7 +62,8 @@ const NodeContent = memo(
       );
     }
 
-    if (indexStatus === 'parse_failed') {
+    // Show parse failed only if there's no content preview available
+    if (indexStatus === 'parse_failed' && !data.contentPreview) {
       return (
         <div className="flex justify-center items-center h-full">
           <Result
