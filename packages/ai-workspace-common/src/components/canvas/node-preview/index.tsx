@@ -39,7 +39,15 @@ interface DragItem {
 }
 
 const PreviewComponent = memo(
-  ({ node }: { node: CanvasNode<any> }) => {
+  ({
+    node,
+    searchViewMode,
+    setSearchViewMode,
+  }: {
+    node: CanvasNode<any>;
+    searchViewMode?: 'conversation' | 'history';
+    setSearchViewMode?: (mode: 'conversation' | 'history') => void;
+  }) => {
     if (!node?.type) return null;
 
     // Use useMemo to create the appropriate preview component
@@ -54,7 +62,14 @@ const PreviewComponent = memo(
         case 'tool':
           return <ToolNodePreview />;
         case 'skillResponse':
-          return <EnhancedSkillResponse node={node} resultId={node.data?.entityId} />;
+          return (
+            <EnhancedSkillResponse
+              node={node}
+              resultId={node.data?.entityId}
+              searchViewMode={searchViewMode}
+              setSearchViewMode={setSearchViewMode}
+            />
+          );
         case 'codeArtifact':
           return <CodeArtifactNodePreview nodeId={node.id} />;
         case 'website':
@@ -71,6 +86,7 @@ const PreviewComponent = memo(
       node.data?.metadata?.activeTab,
       node.data?.metadata?.url,
       node.data?.metadata?.viewMode,
+      searchViewMode,
     ]);
   },
   (prevProps, nextProps) => {
@@ -92,6 +108,9 @@ const PreviewComponent = memo(
     const statusEqual =
       prevProps.node?.data?.metadata?.status === nextProps.node?.data?.metadata?.status;
 
+    // Check search view mode for search nodes
+    const searchViewModeEqual = prevProps.searchViewMode === nextProps.searchViewMode;
+
     // Check node-specific metadata
     let nodeSpecificEqual = true;
     if (prevProps.node?.type === 'codeArtifact') {
@@ -103,7 +122,14 @@ const PreviewComponent = memo(
         prevProps.node?.data?.metadata?.viewMode === nextProps.node?.data?.metadata?.viewMode;
     }
 
-    return basicPropsEqual && contentEqual && titleEqual && statusEqual && nodeSpecificEqual;
+    return (
+      basicPropsEqual &&
+      contentEqual &&
+      titleEqual &&
+      statusEqual &&
+      searchViewModeEqual &&
+      nodeSpecificEqual
+    );
   },
 );
 
@@ -126,6 +152,23 @@ export const DraggableNodePreview = memo(
     const [isWideMode, setIsWideMode] = useState(false);
     const previewRef = useRef<HTMLDivElement>(null);
     const dragRef = useRef<HTMLDivElement>(null);
+
+    // Add searchViewMode state for search nodes
+    const [searchViewMode, setSearchViewMode] = useState<'conversation' | 'history'>(
+      'conversation',
+    );
+
+    // Check if this is a search node
+    const isSearchNode = useMemo(() => {
+      return (
+        node.type === 'skillResponse' &&
+        (node.data?.metadata?.searchNode === true ||
+          node.data?.metadata?.viewMode === 'search' ||
+          node.data?.metadata?.selectedSkill?.name?.includes('searchentry') ||
+          node.data?.metadata?.modelInfo?.name === 'hkgai-searchentry' ||
+          node.data?.metadata?.modelInfo?.label?.includes('Search Entry'))
+      );
+    }, [node.data?.metadata]);
 
     // Add ESC key handler to exit fullscreen
     useEffect(() => {
@@ -291,6 +334,8 @@ export const DraggableNodePreview = memo(
         isWideMode,
         dragHandleProps: { ref: dragRef },
         isDragging,
+        // Hide action bar (title and buttons) when in search history mode, but keep Search entry header
+        hideActionBar: isSearchNode && searchViewMode === 'history',
       }),
       [
         node,
@@ -301,11 +346,25 @@ export const DraggableNodePreview = memo(
         isMaximized,
         isWideMode,
         isDragging,
+        isSearchNode,
+        searchViewMode,
       ],
     );
 
     // Memoize PreviewComponent to prevent unnecessary re-renders
-    const previewComponent = useMemo(() => <PreviewComponent node={node} />, [node]);
+    const previewComponent = useMemo(() => {
+      // Pass searchViewMode and setSearchViewMode to EnhancedSkillResponse for search nodes
+      if (node.type === 'skillResponse' && isSearchNode) {
+        return (
+          <PreviewComponent
+            node={node}
+            searchViewMode={searchViewMode}
+            setSearchViewMode={setSearchViewMode}
+          />
+        );
+      }
+      return <PreviewComponent node={node} />;
+    }, [node, searchViewMode, isSearchNode]);
 
     return (
       <div
@@ -316,6 +375,7 @@ export const DraggableNodePreview = memo(
       >
         <div className={previewClassName} style={previewStyles}>
           <div ref={dragRef} className="pointer-events-auto">
+            {/* Always render NodePreviewHeader, but conditionally hide action bar */}
             <NodePreviewHeader {...headerProps} />
           </div>
           <div className="h-[calc(100%-48px)] overflow-auto rounded-b-lg pointer-events-auto preview-container">

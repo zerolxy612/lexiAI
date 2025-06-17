@@ -132,6 +132,7 @@ interface NodePreviewHeaderProps {
   isWideMode?: boolean;
   dragHandleProps?: any;
   isDragging?: boolean;
+  hideActionBar?: boolean;
 }
 
 export const NodePreviewHeader: FC<NodePreviewHeaderProps> = memo(
@@ -144,6 +145,7 @@ export const NodePreviewHeader: FC<NodePreviewHeaderProps> = memo(
     isWideMode = false,
     dragHandleProps,
     isDragging = false,
+    hideActionBar = false,
   }) => {
     const { t } = useTranslation();
     const IconComponent = getNodeIcon(node);
@@ -413,6 +415,15 @@ export const NodePreviewHeader: FC<NodePreviewHeaderProps> = memo(
         node.data?.metadata?.modelInfo?.name === 'hkgai-missinginfo' ||
         node.data?.metadata?.modelInfo?.label?.includes('Missing Info'));
 
+    // Check if this is a search related skillResponse
+    const isSearchResponse =
+      node.type === 'skillResponse' &&
+      (node.data?.metadata?.searchNode === true ||
+        node.data?.metadata?.viewMode === 'search' ||
+        node.data?.metadata?.selectedSkill?.name?.includes('searchentry') ||
+        node.data?.metadata?.modelInfo?.name === 'hkgai-searchentry' ||
+        node.data?.metadata?.modelInfo?.label?.includes('Search Entry'));
+
     return (
       <div className="flex flex-col">
         {/* Missing Information header for missinginfo nodes */}
@@ -422,102 +433,116 @@ export const NodePreviewHeader: FC<NodePreviewHeaderProps> = memo(
           </div>
         )}
 
-        <div
-          className={cn(
-            'flex items-center justify-between gap-2 p-3 bg-white dark:bg-gray-900',
-            'border-b border-gray-100 dark:border-gray-700',
-          )}
-        >
-          {dragHandleProps && (
-            <div
-              {...dragHandleProps}
-              className="absolute top-4 left-1/2 transform -translate-x-1/2 -translate-y-3 w-10 h-5 flex items-center justify-center cursor-move text-gray-300 hover:text-gray-500 bg-white border border-gray-100 rounded-b-md z-10 transition-colors duration-150 opacity-0 hover:opacity-100"
-            >
-              <GripVertical className="w-3 h-3 rotate-90" />
-            </div>
-          )}
-          {/* Left: Icon and Title */}
-          <div className="flex items-center gap-2 flex-grow overflow-hidden">
-            <div className="flex-grow overflow-hidden">
-              {node.type === 'skillResponse' ? (
-                <NodeHeader
-                  className="!mb-0"
-                  source="skillResponsePreview"
-                  query={node.data?.title || ''}
-                  disabled={readonly}
-                  showIcon
-                  updateTitle={handleTitleUpdate}
-                />
-              ) : (
-                <CommonNodeHeader
-                  source="preview"
-                  title={getNodeTitle(node, t)}
-                  fixedTitle={getNodeFixedTitle(node, t)}
-                  Icon={IconComponent}
-                  iconBgColor={nodeColor}
-                  canEdit={node.type !== 'document' && !readonly}
-                  updateTitle={handleTitleUpdate}
-                />
-              )}
-            </div>
+        {/* Search Entry header for search nodes */}
+        {isSearchResponse && (
+          <div className="bg-white dark:bg-gray-900 px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+            <div className="font-bold text-black dark:text-white text-lg">Search entry</div>
           </div>
+        )}
 
-          {/* Right: Action Buttons */}
-          <div className="flex items-center gap-1 flex-shrink-0">
-            {onWideMode && (
-              <Button
-                type="text"
-                className={`p-1.5 hover:bg-gray-100 ${isWideMode ? 'text-primary-600' : 'text-gray-500'}`}
-                onClick={() => onWideMode()}
-              >
-                {isWideMode ? (
-                  <IconExitWideMode className="w-4 h-4" />
-                ) : (
-                  <IconWideMode className="w-4 h-4" />
-                )}
-              </Button>
+        {/* Action bar with title and buttons - conditionally rendered */}
+        {!hideActionBar && (
+          <div
+            className={cn(
+              'flex items-center justify-between gap-2 p-3 bg-white dark:bg-gray-900',
+              'border-b border-gray-100 dark:border-gray-700',
             )}
-            {onMaximize && (
-              <Button
-                type="text"
-                className={`p-1.5 hover:bg-gray-100 ${isMaximized ? 'text-primary-600' : 'text-gray-500'}`}
-                onClick={() => onMaximize()}
+          >
+            {dragHandleProps && (
+              <div
+                {...dragHandleProps}
+                className="absolute top-4 left-1/2 transform -translate-x-1/2 -translate-y-3 w-10 h-5 flex items-center justify-center cursor-move text-gray-300 hover:text-gray-500 bg-white border border-gray-100 rounded-b-md z-10 transition-colors duration-150 opacity-0 hover:opacity-100"
               >
-                {isMaximized ? (
-                  <Minimize2 className="w-4 h-4" />
-                ) : (
-                  <Maximize2 className="w-4 h-4" />
-                )}
-              </Button>
+                <GripVertical className="w-3 h-3 rotate-90" />
+              </div>
             )}
-            <Button
-              type="text"
-              className={`p-1.5 hover:bg-gray-100 ${isPinned ? 'text-primary-600' : 'text-gray-500'}`}
-              onClick={() => handlePin()}
-            >
-              {isPinned ? <IconUnpin className="w-4 h-4" /> : <IconPin className="w-4 h-4" />}
-            </Button>
-            <Dropdown
-              menu={{ items: menuItems }}
-              trigger={['click']}
-              placement="bottomRight"
-              overlayClassName="min-w-[160px] w-max"
-              getPopupContainer={(triggerNode) => triggerNode.parentNode as HTMLElement}
-              dropdownRender={(menu) => (
-                <div className="min-w-[160px] bg-white rounded-lg border-[0.5px] border-[rgba(0,0,0,0.03)] shadow-lg">
-                  {menu}
-                </div>
+            {/* Left: Icon and Title */}
+            <div className="flex items-center gap-2 flex-grow overflow-hidden">
+              <div className="flex-grow overflow-hidden">
+                {node.type === 'skillResponse' ? (
+                  <NodeHeader
+                    className="!mb-0"
+                    source="skillResponsePreview"
+                    query={node.data?.title || ''}
+                    disabled={readonly}
+                    showIcon
+                    updateTitle={handleTitleUpdate}
+                  />
+                ) : (
+                  <CommonNodeHeader
+                    source="preview"
+                    title={getNodeTitle(node, t)}
+                    fixedTitle={getNodeFixedTitle(node, t)}
+                    Icon={IconComponent}
+                    iconBgColor={nodeColor}
+                    canEdit={node.type !== 'document' && !readonly}
+                    updateTitle={handleTitleUpdate}
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Right: Action Buttons */}
+            <div className="flex items-center gap-1 flex-shrink-0">
+              {onWideMode && (
+                <Button
+                  type="text"
+                  className={`p-1.5 hover:bg-gray-100 ${isWideMode ? 'text-primary-600' : 'text-gray-500'}`}
+                  onClick={() => onWideMode()}
+                >
+                  {isWideMode ? (
+                    <IconExitWideMode className="w-4 h-4" />
+                  ) : (
+                    <IconWideMode className="w-4 h-4" />
+                  )}
+                </Button>
               )}
-            >
-              <Button type="text" className="p-1.5 hover:bg-gray-100 text-gray-500">
-                <MoreHorizontal className="w-4 h-4" />
+              {onMaximize && (
+                <Button
+                  type="text"
+                  className={`p-1.5 hover:bg-gray-100 ${isMaximized ? 'text-primary-600' : 'text-gray-500'}`}
+                  onClick={() => onMaximize()}
+                >
+                  {isMaximized ? (
+                    <Minimize2 className="w-4 h-4" />
+                  ) : (
+                    <Maximize2 className="w-4 h-4" />
+                  )}
+                </Button>
+              )}
+              <Button
+                type="text"
+                className={`p-1.5 hover:bg-gray-100 ${isPinned ? 'text-primary-600' : 'text-gray-500'}`}
+                onClick={() => handlePin()}
+              >
+                {isPinned ? <IconUnpin className="w-4 h-4" /> : <IconPin className="w-4 h-4" />}
               </Button>
-            </Dropdown>
-            <Button type="text" className="p-1.5 hover:bg-gray-100 text-gray-500" onClick={onClose}>
-              <X className="w-4 h-4" />
-            </Button>
+              <Dropdown
+                menu={{ items: menuItems }}
+                trigger={['click']}
+                placement="bottomRight"
+                overlayClassName="min-w-[160px] w-max"
+                getPopupContainer={(triggerNode) => triggerNode.parentNode as HTMLElement}
+                dropdownRender={(menu) => (
+                  <div className="min-w-[160px] bg-white rounded-lg border-[0.5px] border-[rgba(0,0,0,0.03)] shadow-lg">
+                    {menu}
+                  </div>
+                )}
+              >
+                <Button type="text" className="p-1.5 hover:bg-gray-100 text-gray-500">
+                  <MoreHorizontal className="w-4 h-4" />
+                </Button>
+              </Dropdown>
+              <Button
+                type="text"
+                className="p-1.5 hover:bg-gray-100 text-gray-500"
+                onClick={onClose}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     );
   },

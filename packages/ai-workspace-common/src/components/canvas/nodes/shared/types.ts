@@ -112,6 +112,8 @@ export type ResponseNodeMeta = {
   originalWidth?: number;
   reasoningContent?: string;
   shareId?: string;
+  searchNode?: boolean;
+  viewMode?: string;
 };
 
 export type ImageNodeMeta = {

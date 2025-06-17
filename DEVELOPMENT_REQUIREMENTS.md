@@ -1896,3 +1896,390 @@ NodePreview
 ---
 
 *文档更新时间: 2024-12-19*
+
+### 修改记录 #007: Search entry头部文案添加 (2024-12-19)
+
+**需求描述**: 
+为search节点创建的对话界面顶部添加"Search entry"文案，与missinginfo节点的"Missing information"文案保持一致的样式和位置
+
+**具体修改**:
+在NodePreviewHeader组件中新增search节点识别逻辑，并显示"Search entry"头部文案
+
+**修改位置**:
+- **文件**: `packages/ai-workspace-common/src/components/canvas/node-preview/node-preview-header.tsx`
+- **组件**: `NodePreviewHeader` 组件中的头部区域
+- **具体代码行**: 第78-85行，新增search节点识别和头部显示逻辑
+
+**修改内容**:
+```typescript
+// 新增search节点识别逻辑
+const isSearchResponse =
+  node.type === 'skillResponse' &&
+  (node.data?.metadata?.searchNode === true ||
+    node.data?.metadata?.viewMode === 'search' ||
+    node.data?.metadata?.selectedSkill?.name?.includes('searchentry') ||
+    node.data?.metadata?.modelInfo?.name === 'hkgai-searchentry' ||
+    node.data?.metadata?.modelInfo?.label?.includes('Search Entry'));
+
+// 新增Search Entry头部显示
+{isSearchResponse && (
+  <div className="bg-white dark:bg-gray-900 px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+    <div className="font-bold text-black dark:text-white text-lg">Search entry</div>
+  </div>
+)}
+```
+
+**技术背景**:
+- **触发条件**: 节点类型为 `skillResponse` 且满足search相关条件时显示
+- **识别逻辑**: 检查以下任一条件：
+  - `metadata.searchNode === true` - 搜索节点标识
+  - `metadata.viewMode === 'search'` - 搜索视图模式
+  - `selectedSkill.name` 包含 `'searchentry'` 关键词
+  - `modelInfo.name === 'hkgai-searchentry'` - 搜索专用模型
+  - `modelInfo.label` 包含 `'Search Entry'` 关键词
+- **显示位置**: 对话界面的最顶部，与Missing information文案并列显示
+
+**search节点创建特征**:
+根据需求#010的实现，search节点具有以下metadata特征：
+- `searchNode: true` - 标识为搜索节点
+- `viewMode: 'search'` - 设置视图模式为搜索
+- `modelInfo.name: 'hkgai-searchentry'` - 使用专用搜索模型
+- `modelInfo.label: 'HKGAI Search Entry'` - 模型标签
+
+**布局结构**:
+```
+NodePreview
+├── Missing information (仅missinginfo节点显示)
+├── Search entry (仅search节点显示) ← 此次新增
+├── NodePreviewHeader (带图标和标题的头部)
+└── EnhancedSkillResponse (主要内容)
+    ├── threadContentComponent (对话历史)
+    └── chatPanelComponent (输入区域)
+```
+
+**样式详情**:
+- **字体大小**: `text-lg` (18px) - 与Missing information保持一致
+- **字体粗细**: `font-bold` (700)
+- **颜色**: `text-black dark:text-white` (深色模式自适应)
+- **背景**: `bg-white dark:bg-gray-900` (深色模式自适应)
+- **边距**: `px-4 py-3` (水平16px，垂直12px)
+- **底部边框**: `border-b border-gray-100 dark:border-gray-700`
+
+**验证方法**:
+1. 在空白画布右键点击，选择"Search"选项
+2. 创建search节点后，在节点中输入内容并提交
+3. 查看右侧出现的对话界面顶部
+4. 确认显示"Search entry"文案，字体大小与Missing information一致
+
+**互斥显示逻辑**:
+- missinginfo节点：显示"Missing information"
+- search节点：显示"Search entry"  
+- 其他节点：不显示额外头部文案
+- 两种文案不会同时显示（通过不同的识别条件确保互斥）
+
+**用户体验提升**:
+- 用户可以清晰区分不同类型的AI对话界面
+- 保持了与missinginfo节点一致的视觉设计
+- 提高了search功能的识别度和专业感
+
+**状态**: ✅ 已完成
+
+---
+
+*文档更新时间: 2024-12-19*
+
+### 修改记录 #008: Search节点双界面切换功能实现 (2024-12-19)
+
+**需求描述**: 
+为search entry对话面板实现双界面切换功能：保留现有对话界面，新增历史对话选择界面，通过切换按钮在两个界面间切换
+
+**具体修改**:
+在EnhancedSkillResponse组件中为search节点添加状态管理和双界面切换逻辑
+
+**修改位置**:
+- **主要文件**: `packages/ai-workspace-common/src/components/canvas/node-preview/skill-response/enhanced-skill-response.tsx`
+- **类型文件**: `packages/ai-workspace-common/src/components/canvas/nodes/shared/types.ts`
+
+**技术实现**:
+
+#### 1. **类型扩展**
+```typescript
+// 在ResponseNodeMeta中添加search节点支持
+export type ResponseNodeMeta = {
+  // ... 现有属性
+  searchNode?: boolean;  // 搜索节点标识
+  viewMode?: string;     // 视图模式支持
+};
+```
+
+#### 2. **组件状态管理**
+```typescript
+// 搜索节点识别逻辑
+const isSearchNode = useMemo(() => {
+  return node.data?.metadata?.searchNode === true ||
+         node.data?.metadata?.viewMode === 'search' ||
+         node.data?.metadata?.selectedSkill?.name?.includes('searchentry') ||
+         node.data?.metadata?.modelInfo?.name === 'hkgai-searchentry' ||
+         node.data?.metadata?.modelInfo?.label?.includes('Search Entry');
+}, [node.data?.metadata]);
+
+// 界面切换状态（仅search节点）
+const [searchViewMode, setSearchViewMode] = useState<'conversation' | 'history'>('conversation');
+```
+
+#### 3. **历史选择界面组件**
+```typescript
+// 占位组件：SearchHistorySelection
+const SearchHistorySelection = memo(({ onBack }: { onBack: () => void }) => {
+  return (
+    <div className="flex flex-col h-full w-full">
+      {/* 带返回按钮的头部 */}
+      <div className="flex items-center gap-3 p-4 border-b">
+        <Button type="text" icon={<ArrowLeftOutlined />} onClick={onBack}>
+          Back to conversation
+        </Button>
+      </div>
+      
+      {/* 历史选择内容区域 - 占位设计 */}
+      <div className="flex-1 p-4 overflow-y-auto">
+        <div className="text-center text-gray-500">
+          <HistoryOutlined className="text-4xl mb-4" />
+          <h3 className="text-lg font-medium mb-2">Search History</h3>
+          <p className="text-sm">
+            Historical conversation selection interface will be implemented here.
+            <br />
+            This is a placeholder for the detailed design.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+});
+```
+
+#### 4. **条件渲染逻辑**
+```typescript
+// 历史选择界面渲染
+if (isSearchNode && searchViewMode === 'history') {
+  return <SearchHistorySelection onBack={handleBackToConversation} />;
+}
+
+// 正常对话界面渲染（默认）
+return (
+  <div className="flex flex-col h-full w-full">
+    {/* 搜索切换按钮 - 仅search节点显示 */}
+    {isSearchNode && (
+      <div className="flex justify-end p-2 border-b">
+        <Button 
+          type="text" 
+          size="small" 
+          icon={<HistoryOutlined />} 
+          onClick={handleToggleToHistory}
+        >
+          Search History
+        </Button>
+      </div>
+    )}
+    
+    {/* 现有对话内容 */}
+    {threadContentComponent}
+    {chatPanelComponent}
+  </div>
+);
+```
+
+**功能特性**:
+
+#### **双界面模式**:
+- **界面A**: 对话界面（conversation）- 现有功能完全保留
+- **界面B**: 历史选择界面（history）- 新增功能，当前为占位设计
+
+#### **切换机制**:
+- **进入历史界面**: 点击右上角"Search History"按钮
+- **返回对话界面**: 点击历史界面的"Back to conversation"按钮
+- **默认状态**: 总是从对话界面开始
+
+#### **节点识别**:
+只有search节点会显示切换按钮和支持双界面，其他节点保持原有行为不变
+
+**UI设计**:
+
+#### **切换按钮位置**:
+- 位于对话内容区域的右上角
+- 使用HistoryOutlined图标和"Search History"文案
+- 小尺寸按钮，不占用过多空间
+
+#### **历史选择界面**:
+- 全屏占位设计，完全替代对话界面
+- 顶部带有返回按钮的导航栏
+- 中央显示占位内容和说明文字
+- 为后续详细设计预留完整空间
+
+**技术特点**:
+
+#### **状态隔离**:
+- 切换状态只影响search节点，不影响其他节点类型
+- 使用useMemo优化节点识别性能
+- 状态变化不会影响现有对话数据
+
+#### **向后兼容**:
+- 现有对话功能完全保留
+- 非search节点行为完全不变
+- 新增功能采用渐进式增强设计
+
+#### **扩展性**:
+- 占位组件为后续详细设计预留接口
+- 状态管理支持更多界面模式扩展
+- 组件结构便于后续功能迭代
+
+**验证方法**:
+1. 创建search节点并提交内容，进入对话界面
+2. 确认右上角显示"Search History"按钮
+3. 点击按钮，界面切换到历史选择占位页面
+4. 点击"Back to conversation"按钮，返回对话界面
+5. 验证非search节点不显示切换按钮
+
+**后续开发**:
+- 当前为基础框架实现，历史选择界面为占位设计
+- 等待详细设计确认后，将实现具体的历史对话选择功能
+- 可能包括：历史列表、搜索过滤、快速跳转等功能
+
+**状态**: ✅ 基础框架已完成，等待详细设计
+
+---
+
+*文档更新时间: 2024-12-19*
+
+### 修改记录 #009: Search历史界面搜索功能实现 (2024-12-19)
+
+**需求描述**: 
+根据设计稿要求，将SearchHistorySelection组件从占位设计改为实际的搜索界面，删除"Search History"标题和图标，替换为搜索输入框和筛选功能
+
+**具体修改**:
+完全重构SearchHistorySelection组件的内容区域，实现搜索界面设计
+
+**修改位置**:
+- **文件**: `packages/ai-workspace-common/src/components/canvas/node-preview/skill-response/enhanced-skill-response.tsx`
+- **组件**: `SearchHistorySelection` 组件内容区域
+
+**界面变更对比**:
+
+#### **修改前（占位设计）**:
+```typescript
+// 中央占位内容
+<div className="text-center text-gray-500">
+  <HistoryOutlined className="text-4xl mb-4" />
+  <h3 className="text-lg font-medium mb-2">Search History</h3>
+  <p className="text-sm">
+    Historical conversation selection interface will be implemented here.
+    This is a placeholder for the detailed design.
+  </p>
+</div>
+```
+
+#### **修改后（实际搜索界面）**:
+```typescript
+// 搜索输入框
+<div className="mb-4">
+  <Input
+    placeholder="Please enter the bill or clause you want to query"
+    value={searchQuery}
+    onChange={(e) => setSearchQuery(e.target.value)}
+    className="w-full"
+    size="large"
+    allowClear
+  />
+</div>
+
+// 筛选按钮组
+<div className="flex gap-3 mb-6">
+  <Button className="rounded-full border-gray-300">All Cases ▼</Button>
+  <Button className="rounded-full border-gray-300">Any Date ▼</Button>
+  <Button className="rounded-full border-gray-300">All States & Federal ▼</Button>
+</div>
+
+// 搜索结果区域
+<div className="space-y-4">
+  {searchQuery ? (
+    <div>Search results for "{searchQuery}" will be displayed here.</div>
+  ) : (
+    <div>Enter a search query to find historical cases.</div>
+  )}
+</div>
+```
+
+**实现的功能**:
+
+#### 1. **搜索输入框**
+- **占位文字**: "Please enter the bill or clause you want to query"
+- **功能特性**: 
+  - 大尺寸输入框 (`size="large"`)
+  - 支持清除按钮 (`allowClear`)
+  - 实时状态管理 (`searchQuery` state)
+  - 全宽度显示 (`className="w-full"`)
+
+#### 2. **筛选按钮组**
+- **三个筛选按钮**:
+  - "All Cases" - 案例类型筛选
+  - "Any Date" - 日期范围筛选  
+  - "All States & Federal" - 地区范围筛选
+- **样式特点**:
+  - 圆角按钮设计 (`rounded-full`)
+  - 灰色边框 (`border-gray-300`)
+  - 下拉箭头指示 (`▼`)
+  - 按钮间距 (`gap-3`)
+
+#### 3. **搜索结果区域**
+- **动态显示逻辑**:
+  - 有搜索内容时：显示 "Search results for 'xxx' will be displayed here."
+  - 无搜索内容时：显示 "Enter a search query to find historical cases."
+- **预留扩展空间**: `space-y-4` 为后续搜索结果列表预留样式
+
+#### 4. **状态管理**
+```typescript
+const [searchQuery, setSearchQuery] = useState('');
+```
+- 管理搜索输入框的内容
+- 支持实时更新和条件渲染
+
+**UI布局结构**:
+```
+SearchHistorySelection
+├── Header (Back to conversation 按钮)
+└── Content Area
+    ├── Search Input (搜索输入框)
+    ├── Filter Buttons (筛选按钮组)
+    └── Results Area (搜索结果区域)
+```
+
+**设计还原度**:
+- ✅ 删除了原有的"Search History"标题和图标
+- ✅ 添加了搜索输入框，占位文字完全匹配设计稿
+- ✅ 实现了三个筛选按钮，样式接近设计稿
+- ✅ 预留了搜索结果显示区域
+- ✅ 保持了顶部返回按钮的功能
+
+**技术特点**:
+- **响应式设计**: 支持深色模式适配
+- **状态驱动**: 根据搜索内容动态显示提示信息
+- **组件化**: 便于后续功能扩展和样式调整
+- **用户友好**: 提供清除按钮和实时反馈
+
+**验证方法**:
+1. 进入search节点的历史界面
+2. 确认搜索输入框显示正确的占位文字
+3. 测试输入功能和清除按钮
+4. 确认三个筛选按钮正确显示
+5. 验证搜索内容变化时的动态提示
+
+**后续开发**:
+- 筛选按钮的下拉菜单功能
+- 实际的搜索结果列表渲染
+- 搜索API集成和数据获取
+- 搜索结果的交互和选择功能
+
+**状态**: ✅ 搜索界面基础实现完成
+
+---
+
+*文档更新时间: 2024-12-19*
