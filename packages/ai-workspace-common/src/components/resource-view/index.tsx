@@ -82,6 +82,7 @@ const ResourceMeta = memo(
           />
         )}
 
+        {/* Temporarily commented out - file info display with icon and metadata
         <div className="knowledge-base-directory-site-intro">
           <div className="site-intro-icon flex justify-center items-center">
             <ResourceIcon
@@ -114,6 +115,7 @@ const ResourceMeta = memo(
             )}
           </div>
         </div>
+        */}
       </div>
     );
   },

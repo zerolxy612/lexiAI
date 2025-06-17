@@ -477,6 +477,7 @@ export const NodePreviewHeader: FC<NodePreviewHeaderProps> = memo(
                     iconBgColor={nodeColor}
                     canEdit={node.type !== 'document' && !readonly}
                     updateTitle={handleTitleUpdate}
+                    isResourceNode={node.type === 'resource'}
                   />
                 )}
               </div>
