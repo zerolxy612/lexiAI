@@ -1830,3 +1830,69 @@ const fixedSrc = useMemo(() => {
 - **第四阶段**：功能完善（高级搜索、用户体验优化、搜索历史）
 
 ---
+
+### 修改记录 #006: Missing information头部文案字体调整 (2024-12-19)
+
+**需求描述**: 
+针对missinginfo节点创建的对话界面顶部"Missing information"文案，将字体大小适当调整加大，提升用户视觉识别度
+
+**具体修改**:
+将头部文案字体从 `text-base` (16px) 调整为 `text-lg` (18px)
+
+**修改位置**:
+- **文件**: `packages/ai-workspace-common/src/components/canvas/node-preview/node-preview-header.tsx`
+- **组件**: `NodePreviewHeader` 组件中的 `Missing Information` 头部区域
+- **具体代码行**: 第69行，Missing information文案的样式设置
+
+**修改内容**:
+```typescript
+// 修改前
+<div className="font-bold text-black dark:text-white text-base">
+  Missing information
+</div>
+
+// 修改后  
+<div className="font-bold text-black dark:text-white text-lg">
+  Missing information
+</div>
+```
+
+**技术背景**:
+- **触发条件**: 只有当节点类型为 `skillResponse` 且满足missinginfo相关条件时才显示
+- **识别逻辑**: 检查 `selectedSkill.name` 或 `modelInfo.name` 是否包含 `'missinginfo'` 关键词
+- **显示位置**: 对话界面的最顶部，在标题栏之前，作为整个预览面板的第一个元素
+
+**布局结构**:
+```
+NodePreview
+├── Missing information (text-lg, 18px) ← 此次修改位置
+├── NodePreviewHeader (带图标和标题的头部)
+└── EnhancedSkillResponse (主要内容)
+    ├── threadContentComponent (对话历史)
+    └── chatPanelComponent (输入区域)
+```
+
+**样式详情**:
+- **字体大小**: `text-lg` (18px) 
+- **字体粗细**: `font-bold` (700)
+- **颜色**: `text-black dark:text-white` (深色模式自适应)
+- **背景**: `bg-white dark:bg-gray-900` (深色模式自适应)
+- **边距**: `px-4 py-3` (水平16px，垂直12px)
+- **底部边框**: `border-b border-gray-100 dark:border-gray-700`
+
+**验证方法**:
+1. 创建一个missinginfo节点
+2. 在节点中输入内容并提交
+3. 查看右侧出现的对话界面顶部
+4. 确认"Missing information"文案字体比之前更大更显著
+
+**用户体验提升**:
+- 提高了头部文案的视觉权重，用户更容易识别这是missinginfo相关的对话
+- 保持了与整体设计风格的一致性
+- 在深色模式下同样有良好的视觉效果
+
+**状态**: ✅ 已完成
+
+---
+
+*文档更新时间: 2024-12-19*

@@ -499,7 +499,11 @@ export const ChatPanel = memo(
 
     if (isList) {
       return (
-        <div className="relative w-full p-2" data-cy="launchpad-chat-panel">
+        <div
+          className="relative w-full p-2"
+          data-cy="launchpad-chat-panel"
+          data-debug="chat-panel-list-mode"
+        >
           <div
             className={cn(
               'ai-copilot-chat-container chat-input-container rounded-[7px] overflow-hidden',

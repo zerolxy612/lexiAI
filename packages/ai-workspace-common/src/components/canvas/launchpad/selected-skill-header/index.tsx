@@ -25,11 +25,22 @@ const SelectedSkillHeaderComponent = ({
   const { t } = useTranslation();
   const skillDisplayName = skill ? t(`${skill?.name}.name`, { ns: 'skill' }) : '';
 
+  // Check if this is a missing info related skill based on various possible indicators
+  const isMissingInfoSkill =
+    skill?.name?.includes('missinginfo') ||
+    skill?.name?.includes('missingInfo') ||
+    skill?.name === 'hkgai-missinginfo' ||
+    skillDisplayName?.includes('Missing information') ||
+    skillDisplayName?.includes('有什么缺失的信息') ||
+    skillDisplayName?.includes('Missing Information');
+
   return skill ? (
     <div className={classNames('selected-skill', className)}>
       <div className="selected-skill-profile">
-        {getSkillIcon(skill?.name)}
-        <p>{skillDisplayName}</p>
+        {!isMissingInfoSkill && getSkillIcon(skill?.name)}
+        <p className={isMissingInfoSkill ? 'font-bold text-black dark:text-white text-sm' : ''}>
+          {isMissingInfoSkill ? 'Missing information' : skillDisplayName}
+        </p>
       </div>
       {!readonly && (
         <div className="selected-skill-manage">

@@ -196,12 +196,14 @@ const ActualContent = memo(
     sources,
     buildContextItem,
     step,
+    result,
   }: {
     resultId: string;
     content: string;
     sources: Source[];
     buildContextItem: (text: string) => IContextItem;
     step: ActionStep;
+    result?: ActionResult;
   }) => {
     const { readonly } = useCanvasContext();
     const getSourceNode = useCallback(() => {
@@ -213,8 +215,16 @@ const ActualContent = memo(
 
     if (!content) return null;
 
+    // Check if this is a missing info model result
+    const isMissingInfoResult =
+      result?.modelInfo?.name?.includes('missinginfo') ||
+      result?.modelInfo?.name === 'hkgai-missinginfo' ||
+      result?.modelInfo?.label?.includes('Missing Info');
+
     return (
-      <div className="my-3 text-gray-600 dark:text-gray-300 text-base">
+      <div
+        className={`my-3 text-base ${isMissingInfoResult ? 'text-black dark:text-white font-bold' : 'text-gray-600 dark:text-gray-300'}`}
+      >
         <div className={`skill-response-content-${resultId}-${step.name}`}>
           <Markdown content={content} sources={sources} resultId={resultId} />
           {!readonly && (
@@ -382,6 +392,7 @@ export const ActionStepCard = memo(
             sources={parsedData.sources}
             buildContextItem={buildContextItem}
             step={step}
+            result={result}
           />
         )}
 

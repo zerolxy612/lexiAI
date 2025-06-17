@@ -48,6 +48,7 @@ import { NodeHeader } from '@refly-packages/ai-workspace-common/components/canva
 import { NodeHeader as CommonNodeHeader } from '@refly-packages/ai-workspace-common/components/canvas/nodes/shared/node-header';
 import { useExportDocument } from '@refly-packages/ai-workspace-common/hooks/use-export-document';
 import { useDebouncedCallback } from 'use-debounce';
+import { cn } from '@refly/utils/cn';
 
 // Get icon component based on node type and metadata
 const getNodeIcon = (node: CanvasNode<any>) => {
@@ -402,94 +403,120 @@ export const NodePreviewHeader: FC<NodePreviewHeaderProps> = memo(
       updateNodePreviewTitle(newTitle, node.data.entityId, node.id, node.type);
     };
 
+    // Check if this is a missing info related skillResponse
+    const isMissingInfoResponse =
+      node.type === 'skillResponse' &&
+      (node.data?.metadata?.selectedSkill?.name?.includes('missinginfo') ||
+        node.data?.metadata?.selectedSkill?.name?.includes('missingInfo') ||
+        node.data?.metadata?.selectedSkill?.name === 'hkgai-missinginfo' ||
+        node.data?.metadata?.modelInfo?.name?.includes('missinginfo') ||
+        node.data?.metadata?.modelInfo?.name === 'hkgai-missinginfo' ||
+        node.data?.metadata?.modelInfo?.label?.includes('Missing Info'));
+
     return (
-      <div
-        className={`flex justify-between items-center py-2 px-4 border-b border-[#EAECF0] ${isDragging ? 'bg-gray-50' : ''} relative`}
-      >
-        {dragHandleProps && (
-          <div
-            {...dragHandleProps}
-            className="absolute top-4 left-1/2 transform -translate-x-1/2 -translate-y-3 w-10 h-5 flex items-center justify-center cursor-move text-gray-300 hover:text-gray-500 bg-white border border-gray-100 rounded-b-md z-10 transition-colors duration-150 opacity-0 hover:opacity-100"
-          >
-            <GripVertical className="w-3 h-3 rotate-90" />
+      <div className="flex flex-col">
+        {/* Missing Information header for missinginfo nodes */}
+        {isMissingInfoResponse && (
+          <div className="bg-white dark:bg-gray-900 px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+            <div className="font-bold text-black dark:text-white text-lg">Missing information</div>
           </div>
         )}
-        {/* Left: Icon and Title */}
-        <div className="flex items-center gap-2 flex-grow overflow-hidden">
-          <div className="flex-grow overflow-hidden">
-            {node.type === 'skillResponse' ? (
-              <NodeHeader
-                className="!mb-0"
-                source="skillResponsePreview"
-                query={node.data?.title || ''}
-                disabled={readonly}
-                showIcon
-                updateTitle={handleTitleUpdate}
-              />
-            ) : (
-              <CommonNodeHeader
-                source="preview"
-                title={getNodeTitle(node, t)}
-                fixedTitle={getNodeFixedTitle(node, t)}
-                Icon={IconComponent}
-                iconBgColor={nodeColor}
-                canEdit={node.type !== 'document' && !readonly}
-                updateTitle={handleTitleUpdate}
-              />
-            )}
-          </div>
-        </div>
 
-        {/* Right: Action Buttons */}
-        <div className="flex items-center gap-1 flex-shrink-0">
-          {onWideMode && (
-            <Button
-              type="text"
-              className={`p-1.5 hover:bg-gray-100 ${isWideMode ? 'text-primary-600' : 'text-gray-500'}`}
-              onClick={() => onWideMode()}
+        <div
+          className={cn(
+            'flex items-center justify-between gap-2 p-3 bg-white dark:bg-gray-900',
+            'border-b border-gray-100 dark:border-gray-700',
+          )}
+        >
+          {dragHandleProps && (
+            <div
+              {...dragHandleProps}
+              className="absolute top-4 left-1/2 transform -translate-x-1/2 -translate-y-3 w-10 h-5 flex items-center justify-center cursor-move text-gray-300 hover:text-gray-500 bg-white border border-gray-100 rounded-b-md z-10 transition-colors duration-150 opacity-0 hover:opacity-100"
             >
-              {isWideMode ? (
-                <IconExitWideMode className="w-4 h-4" />
+              <GripVertical className="w-3 h-3 rotate-90" />
+            </div>
+          )}
+          {/* Left: Icon and Title */}
+          <div className="flex items-center gap-2 flex-grow overflow-hidden">
+            <div className="flex-grow overflow-hidden">
+              {node.type === 'skillResponse' ? (
+                <NodeHeader
+                  className="!mb-0"
+                  source="skillResponsePreview"
+                  query={node.data?.title || ''}
+                  disabled={readonly}
+                  showIcon
+                  updateTitle={handleTitleUpdate}
+                />
               ) : (
-                <IconWideMode className="w-4 h-4" />
+                <CommonNodeHeader
+                  source="preview"
+                  title={getNodeTitle(node, t)}
+                  fixedTitle={getNodeFixedTitle(node, t)}
+                  Icon={IconComponent}
+                  iconBgColor={nodeColor}
+                  canEdit={node.type !== 'document' && !readonly}
+                  updateTitle={handleTitleUpdate}
+                />
               )}
-            </Button>
-          )}
-          {onMaximize && (
+            </div>
+          </div>
+
+          {/* Right: Action Buttons */}
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {onWideMode && (
+              <Button
+                type="text"
+                className={`p-1.5 hover:bg-gray-100 ${isWideMode ? 'text-primary-600' : 'text-gray-500'}`}
+                onClick={() => onWideMode()}
+              >
+                {isWideMode ? (
+                  <IconExitWideMode className="w-4 h-4" />
+                ) : (
+                  <IconWideMode className="w-4 h-4" />
+                )}
+              </Button>
+            )}
+            {onMaximize && (
+              <Button
+                type="text"
+                className={`p-1.5 hover:bg-gray-100 ${isMaximized ? 'text-primary-600' : 'text-gray-500'}`}
+                onClick={() => onMaximize()}
+              >
+                {isMaximized ? (
+                  <Minimize2 className="w-4 h-4" />
+                ) : (
+                  <Maximize2 className="w-4 h-4" />
+                )}
+              </Button>
+            )}
             <Button
               type="text"
-              className={`p-1.5 hover:bg-gray-100 ${isMaximized ? 'text-primary-600' : 'text-gray-500'}`}
-              onClick={() => onMaximize()}
+              className={`p-1.5 hover:bg-gray-100 ${isPinned ? 'text-primary-600' : 'text-gray-500'}`}
+              onClick={() => handlePin()}
             >
-              {isMaximized ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+              {isPinned ? <IconUnpin className="w-4 h-4" /> : <IconPin className="w-4 h-4" />}
             </Button>
-          )}
-          <Button
-            type="text"
-            className={`p-1.5 hover:bg-gray-100 ${isPinned ? 'text-primary-600' : 'text-gray-500'}`}
-            onClick={() => handlePin()}
-          >
-            {isPinned ? <IconUnpin className="w-4 h-4" /> : <IconPin className="w-4 h-4" />}
-          </Button>
-          <Dropdown
-            menu={{ items: menuItems }}
-            trigger={['click']}
-            placement="bottomRight"
-            overlayClassName="min-w-[160px] w-max"
-            getPopupContainer={(triggerNode) => triggerNode.parentNode as HTMLElement}
-            dropdownRender={(menu) => (
-              <div className="min-w-[160px] bg-white rounded-lg border-[0.5px] border-[rgba(0,0,0,0.03)] shadow-lg">
-                {menu}
-              </div>
-            )}
-          >
-            <Button type="text" className="p-1.5 hover:bg-gray-100 text-gray-500">
-              <MoreHorizontal className="w-4 h-4" />
+            <Dropdown
+              menu={{ items: menuItems }}
+              trigger={['click']}
+              placement="bottomRight"
+              overlayClassName="min-w-[160px] w-max"
+              getPopupContainer={(triggerNode) => triggerNode.parentNode as HTMLElement}
+              dropdownRender={(menu) => (
+                <div className="min-w-[160px] bg-white rounded-lg border-[0.5px] border-[rgba(0,0,0,0.03)] shadow-lg">
+                  {menu}
+                </div>
+              )}
+            >
+              <Button type="text" className="p-1.5 hover:bg-gray-100 text-gray-500">
+                <MoreHorizontal className="w-4 h-4" />
+              </Button>
+            </Dropdown>
+            <Button type="text" className="p-1.5 hover:bg-gray-100 text-gray-500" onClick={onClose}>
+              <X className="w-4 h-4" />
             </Button>
-          </Dropdown>
-          <Button type="text" className="p-1.5 hover:bg-gray-100 text-gray-500" onClick={onClose}>
-            <X className="w-4 h-4" />
-          </Button>
+          </div>
         </div>
       </div>
     );
