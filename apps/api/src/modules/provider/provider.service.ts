@@ -431,7 +431,49 @@ export class ProviderService {
    */
   async prepareEmbeddings(user: User): Promise<Embeddings> {
     const providerItems = await this.findProviderItemsByCategory(user, 'embedding');
+
+    // If no provider items found in database, try to use environment variables as fallback
     if (!providerItems?.length) {
+      const embeddingsProvider = process.env.EMBEDDINGS_PROVIDER;
+      const jinaApiKey = process.env.JINA_API_KEY;
+
+      this.logger.log(
+        `Checking environment variables: EMBEDDINGS_PROVIDER=${embeddingsProvider}, JINA_API_KEY=${jinaApiKey ? jinaApiKey.substring(0, 10) + '...' : 'undefined'}`,
+      );
+
+      // Check if we have Jina configuration in environment variables
+      if (embeddingsProvider === 'jina' && jinaApiKey) {
+        this.logger.log(
+          'No embedding provider found in database, using Jina from environment variables',
+        );
+
+        // Create a mock provider and config for Jina
+        const mockProvider = {
+          providerKey: 'jina',
+          apiKey: jinaApiKey,
+          baseUrl: 'https://api.jina.ai',
+        };
+
+        const embeddingConfig: EmbeddingModelConfig = {
+          modelId: 'jina-embeddings-v3',
+          modelName: 'jina-embeddings-v3',
+          dimensions: 1024,
+          batchSize: 32,
+        };
+
+        this.logger.log(
+          `Creating Jina embeddings with config: modelId=${embeddingConfig.modelId}, dimensions=${embeddingConfig.dimensions}, batchSize=${embeddingConfig.batchSize}`,
+        );
+        this.logger.log(
+          `Mock provider: providerKey=${mockProvider.providerKey}, baseUrl=${mockProvider.baseUrl}, apiKey=${mockProvider.apiKey.substring(0, 10)}...`,
+        );
+
+        return getEmbeddings(mockProvider, embeddingConfig);
+      }
+
+      this.logger.warn(
+        `Environment variables not configured properly: embeddingsProvider=${embeddingsProvider}, jinaApiKey=${jinaApiKey ? 'present' : 'missing'}`,
+      );
       throw new EmbeddingNotConfiguredError();
     }
 
@@ -439,6 +481,9 @@ export class ProviderService {
     const { provider, config } = providerItem;
     const embeddingConfig: EmbeddingModelConfig = JSON.parse(config);
 
+    this.logger.log(
+      `Using database embedding provider: ${provider.providerKey}, modelId: ${embeddingConfig.modelId}`,
+    );
     return getEmbeddings(provider, embeddingConfig);
   }
 
