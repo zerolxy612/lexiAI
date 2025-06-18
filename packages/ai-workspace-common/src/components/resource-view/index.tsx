@@ -7,7 +7,6 @@ import getClient from '@refly-packages/ai-workspace-common/requests/proxiedReque
 import { Markdown } from '@refly-packages/ai-workspace-common/components/markdown';
 import { LoadingOutlined, ReloadOutlined } from '@ant-design/icons';
 import { IconSubscription } from '@refly-packages/ai-workspace-common/components/common/icon';
-import { ResourceIcon } from '@refly-packages/ai-workspace-common/components/common/resourceIcon';
 import { genUniqueId } from '@refly/utils/id';
 import { SelectionContext } from '@refly-packages/ai-workspace-common/modules/selection-menu/selection-context';
 import { useGetResourceDetail } from '@refly-packages/ai-workspace-common/queries';
@@ -15,8 +14,6 @@ import { IndexError, Resource } from '@refly/openapi-schema';
 
 import './index.scss';
 import { IContextItem } from '@refly-packages/ai-workspace-common/stores/context-panel';
-import { time } from '@refly-packages/ai-workspace-common/utils/time';
-import { LOCALE } from '@refly/common-types';
 import { TFunction } from 'i18next';
 import { useSubscriptionStoreShallow } from '@refly-packages/ai-workspace-common/stores/subscription';
 import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/canvas';

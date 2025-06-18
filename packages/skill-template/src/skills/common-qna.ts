@@ -84,9 +84,19 @@ export class CommonQnA extends BaseSkill {
     // Extract custom instructions only if project ID exists
     const projectId = project?.projectId;
 
-    // Only enable knowledge base search if both projectId AND runtimeConfig.enabledKnowledgeBase are true
-    const enableKnowledgeBaseSearch = !!projectId && !!runtimeConfig?.enabledKnowledgeBase;
+    // Enable knowledge base search if projectId exists OR if there are documents/resources in context
+    const hasDocumentsOrResources =
+      config.configurable?.documents?.length > 0 || config.configurable?.resources?.length > 0;
+    const enableKnowledgeBaseSearch =
+      (!!projectId && !!runtimeConfig?.enabledKnowledgeBase) || hasDocumentsOrResources;
 
+    this.engine.logger.log(`[DEBUG] hasDocumentsOrResources: ${hasDocumentsOrResources}`);
+    this.engine.logger.log(
+      `[DEBUG] documents count: ${config.configurable?.documents?.length || 0}`,
+    );
+    this.engine.logger.log(
+      `[DEBUG] resources count: ${config.configurable?.resources?.length || 0}`,
+    );
     this.engine.logger.log(
       `ProjectId: ${projectId}, Enable KB Search: ${enableKnowledgeBaseSearch}`,
     );

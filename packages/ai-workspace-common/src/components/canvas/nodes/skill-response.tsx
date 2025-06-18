@@ -68,6 +68,7 @@ export const NodeHeader = memo(
     showIcon,
     updateTitle,
     source,
+    metadata,
   }: {
     query: string;
     skillName?: string;
@@ -77,11 +78,19 @@ export const NodeHeader = memo(
     updateTitle: (title: string) => void;
     className?: string;
     source?: string;
+    metadata?: any; // Pass metadata to determine node type
   }) => {
     const { t } = useTranslation();
     const [editTitle, setEditTitle] = useState(query);
     const inputRef = useRef<InputRef>(null);
     const [isEditing, setIsEditing] = useState(false);
+
+    // Determine node type from metadata
+    const isSearchNode = metadata?.searchNode;
+    const isMissingInfoNode = metadata?.missingInfoNode;
+
+    // Debug log
+    console.log('🎨 [NodeHeader] Node type:', { isSearchNode, isMissingInfoNode, metadata });
 
     useEffect(() => {
       setEditTitle(query);
@@ -113,8 +122,22 @@ export const NodeHeader = memo(
         >
           <div className="flex items-center gap-2">
             {showIcon && (
-              <div className="w-6 h-6 rounded bg-[#F79009] shadow-lg flex items-center justify-center flex-shrink-0">
-                <IconResponse className="w-4 h-4 text-white dark:text-gray-900" />
+              <div
+                className={`w-6 h-6 rounded shadow-lg flex items-center justify-center flex-shrink-0 ${
+                  isSearchNode
+                    ? 'bg-[#17B26A]'
+                    : isMissingInfoNode
+                      ? 'bg-[#667085]'
+                      : 'bg-[#F79009]'
+                }`}
+              >
+                {isSearchNode ? (
+                  <IconSearch className="w-4 h-4 text-white dark:text-gray-900" />
+                ) : isMissingInfoNode ? (
+                  <span className="text-white dark:text-gray-900 font-bold text-xs">!</span>
+                ) : (
+                  <IconResponse className="w-4 h-4 text-white dark:text-gray-900" />
+                )}
               </div>
             )}
             {isEditing ? (
@@ -701,6 +724,7 @@ export const SkillResponseNode = memo(
                 skillName={skillName}
                 skill={skill}
                 updateTitle={onTitleChange}
+                metadata={metadata}
               />
 
               <div className={'relative flex-grow overflow-y-auto pr-2 -mr-2'}>

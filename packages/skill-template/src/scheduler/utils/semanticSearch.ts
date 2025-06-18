@@ -245,6 +245,9 @@ export async function processDocumentsWithSimilarity(
   maxTokens: number,
   ctx: { config: SkillRunnableConfig; ctxThis: BaseSkill; state: GraphState },
 ): Promise<SkillContextDocumentItem[]> {
+  ctx.ctxThis.engine.logger.log(`[DEBUG] processDocumentsWithSimilarity - query: ${query}`);
+  ctx.ctxThis.engine.logger.log(`[DEBUG] comingDocuments count: ${comingDocuments.length}`);
+
   const MAX_RAG_RELEVANT_DOCUMENTS_MAX_TOKENS = Math.floor(
     maxTokens * MAX_RAG_RELEVANT_DOCUMENTS_RATIO,
   );
@@ -253,6 +256,14 @@ export async function processDocumentsWithSimilarity(
   if (comingDocuments.length === 0) {
     return [];
   }
+
+  // Log document content for debugging
+  comingDocuments.forEach((doc, index) => {
+    const contentLength = doc?.document?.content?.length || 0;
+    ctx.ctxThis.engine.logger.log(
+      `[DEBUG] Document ${index} - docId: ${doc?.document?.docId}, content length: ${contentLength}`,
+    );
+  });
 
   // 1. calculate similarity and sort
   let sortedDocuments: SkillContextDocumentItem[] = [];
@@ -563,6 +574,10 @@ export async function knowledgeBaseSearchGetRelevantChunks(
   ctx: { config: SkillRunnableConfig; ctxThis: BaseSkill; state: GraphState },
 ): Promise<DocumentInterface[]> {
   try {
+    ctx.ctxThis.engine.logger.log(`[DEBUG] knowledgeBaseSearchGetRelevantChunks - query: ${query}`);
+    ctx.ctxThis.engine.logger.log(`[DEBUG] entities: ${JSON.stringify(metadata.entities)}`);
+    ctx.ctxThis.engine.logger.log(`[DEBUG] domains: ${JSON.stringify(metadata.domains)}`);
+
     // 1. search relevant chunks
     const res = await ctx.ctxThis.engine.service.search(
       ctx.config.configurable.user,
@@ -575,6 +590,9 @@ export async function knowledgeBaseSearchGetRelevantChunks(
       },
       { enableReranker: false },
     );
+
+    ctx.ctxThis.engine.logger.log(`[DEBUG] search result count: ${res?.data?.length || 0}`);
+
     const relevantChunks = res?.data?.map((item) => ({
       id: item.id,
       pageContent: item?.snippets?.map((s) => s.text).join('\n\n') || '',
@@ -585,6 +603,9 @@ export async function knowledgeBaseSearchGetRelevantChunks(
       },
     }));
 
+    ctx.ctxThis.engine.logger.log(
+      `[DEBUG] final relevantChunks count: ${relevantChunks?.length || 0}`,
+    );
     return relevantChunks || [];
   } catch (error) {
     // If search fails, log error and return empty array as fallback

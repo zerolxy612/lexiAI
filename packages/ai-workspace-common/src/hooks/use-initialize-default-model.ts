@@ -5,7 +5,7 @@ import { ProviderItem, ModelInfo } from '@refly/openapi-schema';
 
 /**
  * Hook to initialize default model when user logs in
- * Automatically sets the hkgai-missinginfo model as default if user doesn't have a default model configured
+ * Automatically sets the hkgai-general model as default if user doesn't have a default model configured
  */
 export const useInitializeDefaultModel = () => {
   const { userProfile, isLogin } = useUserStoreShallow((state) => ({
@@ -13,28 +13,32 @@ export const useInitializeDefaultModel = () => {
     isLogin: state.isLogin,
   }));
 
-  const { setSkillSelectedModel, skillSelectedModel } = useChatStoreShallow((state) => ({
-    setSkillSelectedModel: state.setSkillSelectedModel,
-    skillSelectedModel: state.skillSelectedModel,
-  }));
+  const { setSkillSelectedModel, skillSelectedModel, setSelectedModel, selectedModel } =
+    useChatStoreShallow((state) => ({
+      setSkillSelectedModel: state.setSkillSelectedModel,
+      skillSelectedModel: state.skillSelectedModel,
+      setSelectedModel: state.setSelectedModel,
+      selectedModel: state.selectedModel,
+    }));
 
   useEffect(() => {
-    // Only initialize if user is logged in and no model is currently selected
-    if (!isLogin || skillSelectedModel) {
+    // Only initialize if user is logged in and no models are currently selected
+    if (!isLogin || (skillSelectedModel && selectedModel)) {
       return;
     }
 
     const defaultModel = userProfile?.preferences?.defaultModel;
     let chatModel = defaultModel?.chat;
 
-    // If no default model configured, create hkgai-missinginfo as default
+    // If no default model configured, create hkgai-general as default
     if (!chatModel) {
-      // Initialize with hkgai-missinginfo as fallback for general AI conversations
+      // Initialize with hkgai-general as fallback for general AI conversations
+      // This matches the model used by askai nodes (1-for-general)
       const defaultModelInfo: ModelInfo = {
-        name: 'hkgai-missinginfo', // Use general model for conversations
-        label: 'HKGAI Missing Info',
+        name: 'hkgai-general', // Changed from hkgai-missinginfo to hkgai-general
+        label: 'HKGAI General',
         provider: 'hkgai',
-        providerItemId: 'hkgai-missinginfo-item', // Match exact itemId from database
+        providerItemId: 'hkgai-general-item', // Match exact itemId from database
         tier: 't2',
         contextLimit: 8000,
         maxOutput: 4000,
@@ -45,7 +49,7 @@ export const useInitializeDefaultModel = () => {
       // Convert ModelInfo to ProviderItem format
       chatModel = {
         providerId: defaultModelInfo.provider,
-        itemId: defaultModelInfo.providerItemId, // This will be 'hkgai-missinginfo-item'
+        itemId: defaultModelInfo.providerItemId, // This will be 'hkgai-general-item'
         category: 'llm',
         name: defaultModelInfo.label,
         enabled: true,
@@ -73,7 +77,21 @@ export const useInitializeDefaultModel = () => {
       isDefault: true,
     };
 
-    // Set the model in chat store
-    setSkillSelectedModel(modelInfo);
-  }, [isLogin, userProfile, skillSelectedModel, setSkillSelectedModel]);
+    // Set both models in chat store to ensure ReflyPilot uses the correct model
+    // skillSelectedModel: used by skill nodes
+    // selectedModel: used by ChatPanel (including ReflyPilot)
+    if (!skillSelectedModel) {
+      setSkillSelectedModel(modelInfo);
+    }
+    if (!selectedModel) {
+      setSelectedModel(modelInfo);
+    }
+  }, [
+    isLogin,
+    userProfile,
+    skillSelectedModel,
+    selectedModel,
+    setSkillSelectedModel,
+    setSelectedModel,
+  ]);
 };

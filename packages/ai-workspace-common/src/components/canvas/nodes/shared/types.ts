@@ -114,6 +114,7 @@ export type ResponseNodeMeta = {
   shareId?: string;
   searchNode?: boolean;
   viewMode?: string;
+  missingInfoNode?: boolean; // Add missingInfoNode field for missing info detection
 };
 
 export type ImageNodeMeta = {

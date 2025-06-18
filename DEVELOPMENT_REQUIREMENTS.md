@@ -2616,3 +2616,149 @@ setTimeout(() => {
 - 不影响其他节点的显示状态
 
 **状态**: ✅ 已完成修复
+
+### 修改记录 #011: AskLexiPlus按钮点击时ReflyPilot默认全屏展开 (2024-12-19)
+
+**需求描述**: 
+实现点击主页空白画布上的AskLexiPlus文本时，ReflyPilot组件默认以全屏模式展开，提供更好的AI对话体验
+
+**技术实现**:
+采用URL参数机制，通过`reflyPilotMaximized`参数控制ReflyPilot组件的初始最大化状态
+
+**修改文件**:
+
+#### 1. **EmptyGuide组件** (`packages/ai-workspace-common/src/components/canvas/empty-guide/index.tsx`)
+- **添加URL参数支持**: 导入`useSearchParams` hook
+- **创建专用点击处理**: `handleAskLexiPlusClick`函数
+- **设置全屏参数**: 显示ReflyPilot时自动设置`reflyPilotMaximized=true`
+
+#### 2. **ThreadContainer组件** (`packages/ai-workspace-common/src/components/canvas/refly-pilot/thread-container.tsx`)
+- **URL参数初始化**: 从`reflyPilotMaximized`参数读取初始最大化状态
+- **动态监听变化**: useEffect监听URL参数变化并同步状态
+- **完整状态管理**: 所有操作（最大化/最小化/关闭/ESC键）都同步更新URL参数
+
+**技术特点**:
+
+#### **状态同步机制**:
+```typescript
+// 用户点击流程
+EmptyGuide.handleAskLexiPlusClick() 
+  → setSearchParams({reflyPilotMaximized: 'true'}) 
+  → ThreadContainer.useEffect监听URL变化 
+  → setIsMaximized(true)
+```
+
+#### **完整的生命周期管理**:
+- **初始化**: 从URL参数读取初始状态
+- **用户操作**: 最大化/最小化按钮同步更新URL
+- **键盘操作**: ESC键退出全屏并清除URL参数
+- **关闭清理**: 关闭ReflyPilot时清除所有相关参数
+
+#### **调试支持**:
+- 添加控制台日志：`🎯 [ReflyPilot] URL parameter changed`
+- 记录状态变化过程，便于问题排查
+
+**用户体验提升**:
+- **即时全屏**: 点击AskLexiPlus后ReflyPilot立即以全屏模式打开
+- **状态持久**: 页面刷新后保持全屏状态
+- **完整控制**: 支持手动切换全屏/非全屏状态
+- **键盘友好**: ESC键快速退出全屏
+- **自动清理**: 关闭时自动清除URL参数
+
+**验证方法**:
+1. 在空白画布点击"AskLexiPlus"按钮，确认ReflyPilot以全屏模式打开
+2. 检查URL是否包含`reflyPilotMaximized=true`参数
+3. 测试最大化/最小化按钮功能
+4. 验证ESC键退出全屏功能
+5. 确认关闭ReflyPilot时URL参数被清除
+
+**与现有功能的一致性**:
+- 使用与底部聊天输入框相同的URL参数机制
+- 保持与NodePreview组件类似的状态管理模式
+- 遵循项目现有的交互设计规范
+
+**状态**: ✅ 已完成
+
+---
+
+*文档更新时间: 2024-12-19*
+
+### 修改记录 #012: ReflyPilot默认模型从hkgai-searchentry改为hkgai-general (2024-12-19)
+
+**需求描述**: 
+将ReflyPilot页面的默认模型从`hkgai-searchentry`更换为`hkgai-general`，使其与askai节点使用的1-for-general模型保持一致
+
+**技术背景**:
+- **当前问题**: ReflyPilot组件使用`hkgai-searchentry`模型作为默认
+- **用户需求**: 希望ReflyPilot使用与askai节点相同的`hkgai-general`模型
+- **模型对应关系**: `hkgai-general` = askai节点的1-for-general模型
+
+**🔍 问题根本原因**:
+1. **数据流不匹配**: ChatPanel使用`chatStore.selectedModel`，但`useInitializeDefaultModel`只设置了`skillSelectedModel`
+2. **默认值问题**: `selectedModel`的默认值为`null`，导致ReflyPilot没有获得正确的默认模型
+3. **模型字段分离**: 系统中存在两个独立的模型字段：
+   - `skillSelectedModel`: 用于skill节点
+   - `selectedModel`: 用于ChatPanel（包括ReflyPilot）
+
+**技术实现路径**:
+```
+ReflyPilot → LaunchPad → ChatPanel → useChatStore.selectedModel ← useInitializeDefaultModel
+```
+
+**✅ 修复方案**:
+
+#### **useInitializeDefaultModel Hook** (`packages/ai-workspace-common/src/hooks/use-initialize-default-model.ts`)
+- **核心修复**: 同时设置`selectedModel`和`skillSelectedModel`两个字段
+- **模型配置更新**:
+  ```typescript
+  // 修改前：只设置skillSelectedModel
+  setSkillSelectedModel(modelInfo);
+  
+  // 修改后：同时设置两个模型字段
+  if (!skillSelectedModel) {
+    setSkillSelectedModel(modelInfo);  // 用于skill节点
+  }
+  if (!selectedModel) {
+    setSelectedModel(modelInfo);       // 用于ChatPanel(ReflyPilot)
+  }
+  ```
+
+- **条件判断优化**:
+  ```typescript
+  // 修改前：只检查skillSelectedModel
+  if (!isLogin || skillSelectedModel) return;
+  
+  // 修改后：检查两个模型字段
+  if (!isLogin || (skillSelectedModel && selectedModel)) return;
+  ```
+
+**影响范围**:
+1. **ReflyPilot对话**: 现在使用hkgai-general模型进行AI对话
+2. **ChatPanel组件**: 所有ChatPanel实例都使用正确的默认模型
+3. **Skill节点**: 保持原有的skillSelectedModel设置不变
+4. **模型一致性**: ReflyPilot与askai节点现在使用相同的底层模型
+
+**验证方法**:
+1. 清除浏览器localStorage中的chat-storage数据
+2. 刷新页面重新登录
+3. 点击主页的"AskLexiPlus"按钮打开ReflyPilot
+4. 检查模型选择器是否显示"HKGAI General"而不是"HKGAI Search Entry"
+5. 发送测试消息，确认使用正确的模型API
+
+**向后兼容性**:
+- ✅ 现有用户的手动模型选择不受影响
+- ✅ 其他节点类型的默认模型保持不变
+- ✅ 只影响未设置模型的用户的默认初始化
+- ✅ 两个模型字段独立管理，不会相互干扰
+
+**技术教训**:
+- **数据流追踪**: 在复杂组件系统中，需要准确追踪数据的完整流向
+- **字段语义**: 不同的模型字段有不同的使用场景，需要明确其职责
+- **状态初始化**: 全局状态的初始化需要考虑所有使用场景
+
+**相关模型配置**:
+- **数据库配置**: `deploy/model-providers/hkgai.sql`
+- **API密钥**: `HKGAI_GENERAL_API_KEY = app-5PTDowg5Dn2MSEhG5n3FBWXs`
+- **模型标识**: `hkgai-general-item` (providerItemId)
+
+**状态**: ✅ 已完成修复
