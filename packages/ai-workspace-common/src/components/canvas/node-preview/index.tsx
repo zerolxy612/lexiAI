@@ -147,7 +147,15 @@ export const DraggableNodePreview = memo(
   }) => {
     const [searchParams, setSearchParams] = useSearchParams();
     const [isMaximized, setIsMaximized] = useState(() => {
-      return searchParams.get('isMaximized') === 'true';
+      const initialMaximized = searchParams.get('isMaximized') === 'true';
+      console.log('🎯 [NodePreview] Initial state setup for node:', {
+        nodeId: node.id,
+        entityId: node.data?.entityId,
+        title: node.data?.title,
+        initialMaximized,
+        urlParams: searchParams.toString(),
+      });
+      return initialMaximized;
     });
     const [isWideMode, setIsWideMode] = useState(false);
     const previewRef = useRef<HTMLDivElement>(null);
@@ -169,6 +177,37 @@ export const DraggableNodePreview = memo(
           node.data?.metadata?.modelInfo?.label?.includes('Search Entry'))
       );
     }, [node.data?.metadata]);
+
+    // Monitor URL parameter changes and update maximized state
+    useEffect(() => {
+      const isMaximizedFromUrl = searchParams.get('isMaximized') === 'true';
+      const previewIdFromUrl = searchParams.get('previewId');
+
+      console.log('🎯 [NodePreview] URL params changed:', {
+        nodeId: node.id,
+        entityId: node.data?.entityId,
+        previewIdFromUrl,
+        isMaximizedFromUrl,
+        currentIsMaximized: isMaximized,
+        urlParams: searchParams.toString(),
+      });
+
+      // Only apply maximized state if this node matches the previewId or if no previewId is specified
+      if (
+        !previewIdFromUrl ||
+        previewIdFromUrl === node.data?.entityId ||
+        previewIdFromUrl === node.id
+      ) {
+        if (isMaximizedFromUrl !== isMaximized) {
+          console.log('🎯 [NodePreview] Updating maximized state:', {
+            nodeId: node.id,
+            from: isMaximized,
+            to: isMaximizedFromUrl,
+          });
+          setIsMaximized(isMaximizedFromUrl);
+        }
+      }
+    }, [searchParams, node.data?.entityId, node.id, isMaximized]);
 
     // Add ESC key handler to exit fullscreen
     useEffect(() => {
@@ -503,6 +542,21 @@ export const NodePreview = memo(
     });
     const [isWideMode, setIsWideMode] = useState(false);
     const previewRef = useRef<HTMLDivElement>(null);
+
+    // Listen for URL parameter changes to update maximized state
+    useEffect(() => {
+      const isMaximizedFromUrl = searchParams.get('isMaximized') === 'true';
+      const previewIdFromUrl = searchParams.get('previewId');
+
+      // Only apply maximized state if this node matches the previewId or if no previewId is specified
+      if (
+        !previewIdFromUrl ||
+        previewIdFromUrl === node.data?.entityId ||
+        previewIdFromUrl === node.id
+      ) {
+        setIsMaximized(isMaximizedFromUrl);
+      }
+    }, [searchParams, node.data?.entityId, node.id]);
 
     // Add ESC key handler to exit fullscreen
     useEffect(() => {

@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useEffect, useState, useRef, memo } from 'react';
 import { Modal, Result, message } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import {
   ReactFlow,
   Background,
@@ -165,6 +166,9 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
 
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const { addNode } = useAddNode();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { previewNode } = useNodePreviewControl({ canvasId });
+  const { getNodes } = useReactFlow();
 
   // AI Chat functionality using invokeAction (same as skill nodes)
   const { invokeAction } = useInvokeAction();
@@ -449,31 +453,77 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
         },
       );
 
-      // Add skill response node to canvas
-      addNode(
-        {
-          type: 'skillResponse',
-          data: {
-            title: messageText,
-            entityId: resultId,
-            metadata: {
-              status: 'executing',
-              contextItems: [],
-              tplConfig: {},
-              selectedSkill: { name: 'commonQnA' },
-              modelInfo,
-              runtimeConfig: {},
-              structuredData: {
-                query: messageText,
-              },
+      // Create the node data
+      const newNode = {
+        type: 'skillResponse' as const,
+        data: {
+          title: messageText,
+          entityId: resultId,
+          metadata: {
+            status: 'executing',
+            contextItems: [],
+            tplConfig: {},
+            selectedSkill: { name: 'commonQnA' },
+            modelInfo,
+            runtimeConfig: {},
+            structuredData: {
+              query: messageText,
             },
           },
-          position: { x: 100, y: 100 },
         },
-        [],
-      );
+        position: { x: 100, y: 100 },
+      };
+
+      // Add skill response node to canvas
+      addNode(newNode, []);
+
+      // Show node preview and set maximized state for bottom chat responses
+      console.log('🚀 [BottomChat] Starting timeout for node preview and maximization');
+      console.log('🚀 [BottomChat] Created resultId:', resultId);
+
+      setTimeout(() => {
+        console.log('🚀 [BottomChat] Timeout triggered, looking for created node...');
+
+        // Get the created node from the store by entityId
+        const allNodes = getNodes();
+        console.log('🚀 [BottomChat] All nodes count:', allNodes.length);
+        console.log(
+          '🚀 [BottomChat] All node entityIds:',
+          allNodes.map((n) => n.data?.entityId),
+        );
+
+        const createdNode = allNodes.find((node) => node.data?.entityId === resultId);
+
+        console.log('🚀 [BottomChat] Found created node:', !!createdNode);
+        if (createdNode) {
+          console.log('🚀 [BottomChat] Created node details:', {
+            id: createdNode.id,
+            entityId: createdNode.data?.entityId,
+            type: createdNode.type,
+            title: createdNode.data?.title,
+          });
+
+          // First, show the node preview
+          console.log('🚀 [BottomChat] Calling previewNode...');
+          previewNode(createdNode as CanvasNode);
+          console.log('🚀 [BottomChat] previewNode called successfully');
+        } else {
+          console.error('❌ [BottomChat] Created node not found! Looking for entityId:', resultId);
+        }
+
+        // Set maximized state
+        console.log('🚀 [BottomChat] Setting URL parameters...');
+        setSearchParams((prev) => {
+          const newParams = new URLSearchParams(prev);
+          newParams.set('previewId', resultId);
+          newParams.set('isMaximized', 'true');
+          console.log('🚀 [BottomChat] New URL params:', newParams.toString());
+          return newParams;
+        });
+        console.log('🚀 [BottomChat] URL parameters set successfully');
+      }, 200);
     },
-    [invokeAction, canvasId, addNode, isLogin],
+    [invokeAction, canvasId, addNode, isLogin, setSearchParams, previewNode, getNodes],
   );
 
   const handleCopyAction = useCallback(() => {

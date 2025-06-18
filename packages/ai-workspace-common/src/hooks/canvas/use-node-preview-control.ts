@@ -74,8 +74,19 @@ export const useNodePreviewControl = ({
    */
   const previewNode = useCallback(
     (node: CanvasNode) => {
+      console.log('🔧 [PreviewControl] previewNode called:', {
+        canvasId,
+        nodeId: node.id,
+        entityId: node.data?.entityId,
+        title: node.data?.title,
+        type: node.type,
+      });
+
       addNodePreview(canvasId, node);
+      console.log('🔧 [PreviewControl] addNodePreview completed');
+
       setSelectedNode(node);
+      console.log('🔧 [PreviewControl] setSelectedNode completed');
     },
     [canvasId, addNodePreview, setSelectedNode],
   );

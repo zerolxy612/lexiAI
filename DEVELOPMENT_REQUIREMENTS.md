@@ -2283,3 +2283,336 @@ SearchHistorySelection
 ---
 
 *文档更新时间: 2024-12-19*
+
+## 📍 核心组件代码位置映射
+
+为提高开发效率，避免重复搜索组件位置，特记录节点对话系统的核心组件位置和代码结构。
+
+### 🎯 节点对话系统架构概览
+
+```
+节点点击 → NodePreview → 类型判断 → 对应的PreviewComponent
+                            ├── EnhancedSkillResponse (skillResponse节点)
+                            ├── ResourceNodePreview (resource节点)  
+                            ├── DocumentNodePreview (document节点)
+                            ├── SkillNodePreview (skill节点)
+                            └── 其他节点类型...
+```
+
+### 📁 主要组件文件位置
+
+#### 1. **节点预览核心组件**
+
+**NodePreview 入口组件**
+- **文件**: `packages/ai-workspace-common/src/components/canvas/node-preview/index.tsx`
+- **核心功能**: 
+  - 第39-91行: `PreviewComponent` - 根据节点类型分发到对应预览组件
+  - 第136-367行: `DraggableNodePreview` - 可拖拽的节点预览容器
+- **类型分发逻辑** (第47-66行):
+  ```typescript
+  switch (node.type) {
+    case 'skillResponse': return <EnhancedSkillResponse />;
+    case 'resource': return <ResourceNodePreview />;
+    case 'skill': return <SkillNodePreview />;
+    // ... 其他类型
+  }
+  ```
+
+**NodePreviewHeader 头部组件**
+- **文件**: `packages/ai-workspace-common/src/components/canvas/node-preview/node-preview-header.tsx`
+- **核心功能**:
+  - 第138-425行: 主要组件逻辑
+  - 第406-415行: `isMissingInfoResponse` - Missing information判断逻辑
+  - 第416-425行: `isSearchResponse` - Search entry判断逻辑
+- **头部文案显示** (第69-85行):
+  ```typescript
+  {isMissingInfoResponse && (
+    <div className="font-bold text-black dark:text-white text-lg">
+      Missing information
+    </div>
+  )}
+  {isSearchResponse && (
+    <div className="font-bold text-black dark:text-white text-lg">
+      Search entry
+    </div>
+  )}
+  ```
+
+#### 2. **对话系统核心组件**
+
+**EnhancedSkillResponse 对话核心**
+- **文件**: `packages/ai-workspace-common/src/components/canvas/node-preview/skill-response/enhanced-skill-response.tsx`
+- **组件结构**:
+  - 第37-103行: `SearchHistorySelection` - 搜索历史界面组件
+  - 第120-566行: `EnhancedSkillResponse` - 主要对话组件
+- **关键代码段**:
+  - 第128-137行: `isSearchNode` - 搜索节点识别逻辑
+  - 第457-504行: `chatPanelComponent` - ChatPanel组件实例化
+  - 第506-508行: `threadContentComponent` - LinearThreadContent组件实例化
+  - 第518-529行: 搜索历史界面条件渲染
+  - 第531-566行: 正常对话界面渲染
+
+**LinearThreadContent 对话历史**
+- **文件**: `packages/ai-workspace-common/src/components/canvas/refly-pilot/linear-thread.tsx`
+- **核心功能**:
+  - 第60-124行: `LinearThreadContent` - 对话消息列表渲染
+  - 第85-123行: 消息列表渲染逻辑，使用 `SkillResponseNodePreview` 渲染每条消息
+
+**ChatPanel 输入面板**
+- **文件**: `packages/ai-workspace-common/src/components/canvas/launchpad/chat-panel.tsx`
+- **组件结构**:
+  - 第41-79行: `PremiumBanner` - 付费横幅组件
+  - 第89-513行: `ChatPanel` - 主要聊天面板组件
+- **关键模块**:
+  - 导入的子组件: `SelectedSkillHeader`, `ContextManager`, `ConfigManager`, `ChatActions`, `ChatInput`
+  - 第200-316行: `handleSendMessage` - 发送消息处理逻辑
+
+#### 3. **节点内嵌对话组件**
+
+**Skill节点内嵌对话**
+- **文件**: `packages/ai-workspace-common/src/components/canvas/nodes/skill.tsx`
+- **核心组件**:
+  - 第46-118行: `SimpleSearchComponent` - 简化的搜索/缺失信息界面
+  - 第544-595行: 条件渲染逻辑
+- **界面切换逻辑** (第560-595行):
+  ```typescript
+  {metadata.searchNode || metadata.missingInfoNode ? (
+    <SimpleSearchComponent 
+      nodeType={metadata.missingInfoNode ? 'missingInfo' : 'search'}
+    />
+  ) : (
+    <ChatPanel mode="node" />
+  )}
+  ```
+
+### 🔧 关键数据流和状态管理
+
+#### 1. **消息数据流**
+```
+用户输入 → handleSendMessage → LinearThreadMessage → EnhancedSkillResponse → LinearThreadContent
+```
+
+#### 2. **搜索节点识别逻辑**
+搜索节点通过以下任一条件识别：
+- `metadata.searchNode === true`
+- `metadata.viewMode === 'search'`
+- `selectedSkill.name.includes('searchentry')`
+- `modelInfo.name === 'hkgai-searchentry'`
+- `modelInfo.label.includes('Search Entry')`
+
+#### 3. **界面切换状态管理**
+搜索节点支持双界面切换：
+- `searchViewMode: 'conversation' | 'history'`
+- 对话界面 (默认): 显示 `threadContentComponent` + `chatPanelComponent`
+- 历史界面: 显示 `SearchHistorySelection`
+
+### 🎨 UI组件层次结构
+
+```
+EnhancedSkillResponse (对话容器)
+├── SearchHistorySelection (搜索历史界面)
+│   ├── 搜索输入框
+│   ├── 筛选按钮组
+│   └── 搜索结果区域
+└── 正常对话界面
+    ├── Search History切换按钮 (仅搜索节点)
+    ├── LinearThreadContent (对话历史)
+    │   └── SkillResponseNodePreview[] (消息列表)
+    └── ChatPanel (输入面板)
+        ├── SelectedSkillHeader (技能头部)
+        ├── ContextManager (上下文管理)
+        ├── ConfigManager (配置管理)
+        ├── ChatActions (操作按钮)
+        └── ChatInput (输入框)
+```
+
+### 🔍 常用修改场景的定位指南
+
+#### **修改节点头部文案**
+- **位置**: `packages/ai-workspace-common/src/components/canvas/node-preview/node-preview-header.tsx`
+- **代码段**: 第69-85行的条件渲染区域
+
+#### **修改对话界面布局**
+- **位置**: `packages/ai-workspace-common/src/components/canvas/node-preview/skill-response/enhanced-skill-response.tsx`
+- **代码段**: 第531-566行的正常对话界面渲染
+
+#### **修改搜索历史界面**
+- **位置**: `packages/ai-workspace-common/src/components/canvas/node-preview/skill-response/enhanced-skill-response.tsx`
+- **代码段**: 第37-103行的 `SearchHistorySelection` 组件
+
+#### **修改节点内嵌对话**
+- **位置**: `packages/ai-workspace-common/src/components/canvas/nodes/skill.tsx`
+- **代码段**: 第46-118行的 `SimpleSearchComponent`
+
+#### **修改发送消息逻辑**
+- **位置**: `packages/ai-workspace-common/src/components/canvas/node-preview/skill-response/enhanced-skill-response.tsx`
+- **代码段**: 第321-386行的 `handleSendMessage` 函数
+
+### 📝 组件依赖关系
+
+```
+EnhancedSkillResponse
+├── depends on: LinearThreadContent, ChatPanel
+├── manages: messages[], searchViewMode
+└── renders: threadContentComponent, chatPanelComponent
+
+LinearThreadContent  
+├── depends on: SkillResponseNodePreview
+├── manages: message list rendering
+└── renders: conversation history
+
+ChatPanel
+├── depends on: ChatInput, ContextManager, ConfigManager
+├── manages: input state, context, config
+└── renders: input interface
+
+SimpleSearchComponent
+├── depends on: ChatInput
+├── manages: simplified search/missingInfo interface  
+└── renders: minimal input for special nodes
+```
+
+---
+
+*代码位置映射更新时间: 2024-12-19*
+
+### 修改记录 #010: 底部输入框发送消息后对话组件默认全屏显示 (2024-12-19)
+
+**需求描述**: 
+针对主页底部AI搜索框，当用户输入内容并发送后，出现的AI对话组件默认以全屏模式显示（之前默认不是全屏）
+
+**技术实现**:
+采用方案一 - 利用现有URL参数机制，在底部聊天发送消息后自动设置 `isMaximized=true` 参数
+
+**修改位置**:
+- **文件**: `packages/ai-workspace-common/src/components/canvas/index.tsx`
+- **函数**: `handleBottomChatSend` - 底部聊天发送处理函数
+
+**具体修改**:
+
+#### 1. **添加必要导入**
+```typescript
+import { useSearchParams } from 'react-router-dom';
+```
+
+#### 2. **在Flow组件中添加searchParams hook**
+```typescript
+const Flow = memo(({ canvasId }: { canvasId: string }) => {
+  // ... 现有代码
+  const [searchParams, setSearchParams] = useSearchParams();
+  // ... 其他代码
+});
+```
+
+#### 3. **在handleBottomChatSend函数中添加全屏设置**
+```typescript
+// 在addNode调用后添加
+// Set maximized state for bottom chat responses
+setSearchParams(prev => {
+  const newParams = new URLSearchParams(prev);
+  newParams.set('previewId', resultId);
+  newParams.set('isMaximized', 'true');
+  return newParams;
+});
+```
+
+#### 4. **更新依赖数组**
+```typescript
+[invokeAction, canvasId, addNode, isLogin, setSearchParams]
+```
+
+**工作原理**:
+
+#### **现有机制复用**:
+- NodePreview组件已有完善的URL参数处理逻辑
+- `isMaximized` 参数被NodePreview组件识别并应用全屏状态
+- `previewId` 参数确保对话组件自动显示
+
+#### **执行流程**:
+```
+用户在底部输入框发送消息
+↓
+handleBottomChatSend 创建skillResponse节点
+↓
+设置URL参数: previewId=resultId & isMaximized=true
+↓
+NodePreview组件读取URL参数并应用全屏状态
+↓
+对话组件以全屏模式显示
+```
+
+#### **技术特点**:
+- **零侵入性**: 不修改NodePreview组件，完全利用现有机制
+- **代码最小化**: 只添加了5行核心代码
+- **全局一致性**: 与其他全屏操作使用相同的URL参数机制
+- **状态同步**: URL参数确保全屏状态在页面刷新后保持
+
+**验证方法**:
+1. 在主页底部输入框输入内容并发送
+2. 观察右侧出现的对话组件是否默认为全屏状态
+3. 检查URL是否包含 `isMaximized=true` 参数
+4. 确认可以通过控制按钮正常切换全屏/非全屏状态
+
+**用户体验提升**:
+- 底部输入框发送的消息默认以全屏显示，提供更好的对话体验
+- 与用户期望一致：从底部发起的对话应该获得更多屏幕空间
+- 保持与其他全屏操作的一致性
+
+**兼容性考虑**:
+- 不影响其他节点的默认显示状态
+- 不影响右键创建节点的行为
+- 不影响现有的全屏控制功能
+
+**状态**: ✅ 已完成
+
+---
+
+*文档更新时间: 2024-12-19*
+
+#### **问题修复记录 (2024-12-19)**
+
+**问题**: 初始实现后，底部输入框发送消息时对话组件仍然在右侧显示，需要手动点击全屏按钮。
+
+**根本原因**: 
+1. NodePreview组件只在初始化时读取URL参数，没有监听参数变化
+2. URL参数设置时机与节点创建存在时序问题
+
+**修复方案**:
+
+1. **在NodePreview组件中添加URL参数监听**:
+```typescript
+// 监听URL参数变化并更新最大化状态
+useEffect(() => {
+  const isMaximizedFromUrl = searchParams.get('isMaximized') === 'true';
+  const previewIdFromUrl = searchParams.get('previewId');
+  
+  // 只对匹配的节点应用最大化状态
+  if (!previewIdFromUrl || previewIdFromUrl === node.data?.entityId || previewIdFromUrl === node.id) {
+    setIsMaximized(isMaximizedFromUrl);
+  }
+}, [searchParams, node.data?.entityId, node.id]);
+```
+
+2. **调整URL参数设置时机**:
+```typescript
+// 添加100ms延迟确保节点创建完成
+setTimeout(() => {
+  setSearchParams(prev => {
+    const newParams = new URLSearchParams(prev);
+    newParams.set('previewId', resultId);
+    newParams.set('isMaximized', 'true');
+    return newParams;
+  });
+}, 100);
+```
+
+**修复文件**:
+- `packages/ai-workspace-common/src/components/canvas/node-preview/index.tsx` - 添加URL参数监听
+- `packages/ai-workspace-common/src/components/canvas/index.tsx` - 调整参数设置时机
+
+**验证要点**:
+- 底部输入框发送消息后对话组件默认全屏显示
+- URL包含正确的previewId和isMaximized参数
+- 不影响其他节点的显示状态
+
+**状态**: ✅ 已完成修复
