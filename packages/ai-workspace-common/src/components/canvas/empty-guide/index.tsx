@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { Button } from 'antd';
 import {
   IconAskAI,
@@ -13,6 +14,7 @@ import { canvasTemplateEnabled } from '@refly-packages/ai-workspace-common/utils
 
 export const EmptyGuide = ({ canvasId }: { canvasId: string }) => {
   const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { setVisible } = useCanvasTemplateModal((state) => ({
     setVisible: state.setVisible,
   }));
@@ -25,6 +27,21 @@ export const EmptyGuide = ({ canvasId }: { canvasId: string }) => {
   const { setImportResourceModalVisible } = useImportResourceStoreShallow((state) => ({
     setImportResourceModalVisible: state.setImportResourceModalVisible,
   }));
+
+  // Handle AskLexiPlus button click with ReflyPilot maximized state
+  const handleAskLexiPlusClick = () => {
+    const newShowReflyPilot = !showReflyPilot;
+    setShowReflyPilot(newShowReflyPilot);
+
+    // If showing ReflyPilot, set it to maximized by default
+    if (newShowReflyPilot) {
+      setSearchParams((prev) => {
+        const newParams = new URLSearchParams(prev);
+        newParams.set('reflyPilotMaximized', 'true');
+        return newParams;
+      });
+    }
+  };
 
   return (
     <div
@@ -54,7 +71,7 @@ export const EmptyGuide = ({ canvasId }: { canvasId: string }) => {
             type="text"
             icon={<IconAskAI className="-mr-1 flex items-center justify-center" />}
             className="text-[20px] text-[#00968F] py-[4px] px-[8px]"
-            onClick={() => setShowReflyPilot(!showReflyPilot)}
+            onClick={handleAskLexiPlusClick}
             data-cy="canvas-ask-ai-button"
             style={{ pointerEvents: 'auto' }}
           >

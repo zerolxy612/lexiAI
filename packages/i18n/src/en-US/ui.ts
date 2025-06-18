@@ -1458,7 +1458,7 @@ const translations = {
       },
     },
     reflyPilot: {
-      title: 'Ask AI',
+      title: 'Ask LexiPlus',
       newConversation: 'New conversation',
       clearConversation: 'Clear conversation',
       welcome: {

@@ -1260,7 +1260,7 @@ const translations = {
       },
     },
     reflyPilot: {
-      title: '问问 AI',
+      title: 'Ask LexiPlus',
       newConversation: '新会话',
       clearConversation: '清空会话',
       welcome: {

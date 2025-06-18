@@ -1,5 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useState, forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { Button } from 'antd';
 import { cn } from '@refly/utils/cn';
 import {
@@ -70,44 +71,53 @@ const ThreadHeader = memo(
             {t('canvas.reflyPilot.title', { defaultValue: 'Ask AI' })}
           </span>
         </div>
-        <div className="flex items-center gap-2">
+
+        <div className="flex items-center gap-1">
           <Button
             type="text"
             size="small"
-            className="flex items-center text-gray-500 h-7 px-2"
+            icon={<RefreshCw className="w-3 h-3" />}
             onClick={onClearConversation}
-            icon={<RefreshCw className="w-3.5 h-3.5 mr-1" />}
-          >
-            {t('canvas.reflyPilot.newConversation', { defaultValue: 'New conversation' })}
-          </Button>
+            className="opacity-60 hover:opacity-100 transition-opacity"
+            title={t('canvas.reflyPilot.clearConversation', { defaultValue: 'Clear conversation' })}
+          />
+
+          {!isMaximized && (
+            <Button
+              type="text"
+              size="small"
+              icon={
+                isWideMode ? (
+                  <IconExitWideMode className="w-3 h-3" />
+                ) : (
+                  <IconWideMode className="w-3 h-3" />
+                )
+              }
+              onClick={onWideMode}
+              className="opacity-60 hover:opacity-100 transition-opacity"
+              title={isWideMode ? t('common.exitWideMode') : t('common.wideMode')}
+            />
+          )}
+
           <Button
             type="text"
             size="small"
-            className={`flex items-center justify-center p-0 w-7 h-7 ${isWideMode ? 'text-primary-600' : 'text-gray-500 hover:text-gray-600'} min-w-0`}
-            onClick={onWideMode}
-          >
-            {isWideMode ? (
-              <IconExitWideMode className="w-4 h-4" />
-            ) : (
-              <IconWideMode className="w-4 h-4" />
-            )}
-          </Button>
-          <Button
-            type="text"
-            size="small"
-            className={`flex items-center justify-center p-0 w-7 h-7 ${isMaximized ? 'text-primary-600' : 'text-gray-500 hover:text-gray-600'} min-w-0`}
+            icon={
+              isMaximized ? <Minimize2 className="w-3 h-3" /> : <Maximize2 className="w-3 h-3" />
+            }
             onClick={onMaximize}
-          >
-            {isMaximized ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-          </Button>
+            className="opacity-60 hover:opacity-100 transition-opacity"
+            title={isMaximized ? t('common.minimize') : t('common.maximize')}
+          />
+
           <Button
             type="text"
             size="small"
-            className="flex items-center justify-center p-0 w-7 h-7 text-gray-500 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300 min-w-0"
+            icon={<IconClose className="w-3 h-3" />}
             onClick={onClose}
-          >
-            <IconClose className="w-4 h-4" />
-          </Button>
+            className="opacity-60 hover:opacity-100 transition-opacity"
+            title={t('common.close')}
+          />
         </div>
       </div>
     );
@@ -130,9 +140,32 @@ export const ThreadContainer = memo(
       onUpdateTplConfig,
     } = props;
 
-    const [isMaximized, setIsMaximized] = useState(false);
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    // Initialize isMaximized from URL parameters
+    const [isMaximized, setIsMaximized] = useState(() => {
+      return searchParams.get('reflyPilotMaximized') === 'true';
+    });
     const [isWideMode, setIsWideMode] = useState(false);
     const [contentHeight, setContentHeight] = useState('auto');
+
+    // Monitor URL parameter changes for ReflyPilot maximized state
+    useEffect(() => {
+      const isMaximizedFromUrl = searchParams.get('reflyPilotMaximized') === 'true';
+      console.log('🎯 [ReflyPilot] URL parameter changed:', {
+        isMaximizedFromUrl,
+        currentIsMaximized: isMaximized,
+        urlParams: searchParams.toString(),
+      });
+
+      if (isMaximizedFromUrl !== isMaximized) {
+        console.log('🎯 [ReflyPilot] Updating maximized state:', {
+          from: isMaximized,
+          to: isMaximizedFromUrl,
+        });
+        setIsMaximized(isMaximizedFromUrl);
+      }
+    }, [searchParams, isMaximized]);
 
     // Get context panel store to manage context items
     const { setContextItems, setActiveResultId } = useContextPanelStoreShallow((state) => ({
@@ -169,6 +202,12 @@ export const ThreadContainer = memo(
       const handleEscKey = (event: KeyboardEvent) => {
         if (event.key === 'Escape' && isMaximized) {
           setIsMaximized(false);
+          // Update URL parameters when exiting fullscreen via ESC
+          setSearchParams((prev) => {
+            const newParams = new URLSearchParams(prev);
+            newParams.delete('reflyPilotMaximized');
+            return newParams;
+          });
         }
       };
 
@@ -177,27 +216,51 @@ export const ThreadContainer = memo(
       return () => {
         document.removeEventListener('keydown', handleEscKey);
       };
-    }, [isMaximized]);
+    }, [isMaximized, setSearchParams]);
 
     const handleClose = useCallback(() => {
       if (onClose) {
         onClose();
       }
-    }, [onClose]);
+      // Clear URL parameters when closing
+      setSearchParams((prev) => {
+        const newParams = new URLSearchParams(prev);
+        newParams.delete('reflyPilotMaximized');
+        return newParams;
+      });
+    }, [onClose, setSearchParams]);
 
     const handleMaximize = useCallback(() => {
-      setIsMaximized(!isMaximized);
+      const newIsMaximized = !isMaximized;
+      setIsMaximized(newIsMaximized);
       if (isWideMode && !isMaximized) {
         setIsWideMode(false);
       }
-    }, [isMaximized, isWideMode]);
+
+      // Update URL parameters when toggling maximize
+      setSearchParams((prev) => {
+        const newParams = new URLSearchParams(prev);
+        if (newIsMaximized) {
+          newParams.set('reflyPilotMaximized', 'true');
+        } else {
+          newParams.delete('reflyPilotMaximized');
+        }
+        return newParams;
+      });
+    }, [isMaximized, isWideMode, setSearchParams]);
 
     const handleWideMode = useCallback(() => {
       setIsWideMode(!isWideMode);
       if (isMaximized && !isWideMode) {
         setIsMaximized(false);
+        // Clear maximized URL parameter when entering wide mode
+        setSearchParams((prev) => {
+          const newParams = new URLSearchParams(prev);
+          newParams.delete('reflyPilotMaximized');
+          return newParams;
+        });
       }
-    }, [isWideMode, isMaximized]);
+    }, [isWideMode, isMaximized, setSearchParams]);
 
     const containerStyles = useMemo(
       () => ({

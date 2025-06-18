@@ -27,14 +27,14 @@ export const useInitializeDefaultModel = () => {
     const defaultModel = userProfile?.preferences?.defaultModel;
     let chatModel = defaultModel?.chat;
 
-    // If no default model configured, create hkgai-searchentry as default
+    // If no default model configured, create hkgai-missinginfo as default
     if (!chatModel) {
-      // Initialize with hkgai-searchentry as fallback
+      // Initialize with hkgai-missinginfo as fallback for general AI conversations
       const defaultModelInfo: ModelInfo = {
-        name: 'hkgai-searchentry', // Use model ID for proper HKGAI adapter matching
-        label: 'HKGAI Search Entry',
+        name: 'hkgai-missinginfo', // Use general model for conversations
+        label: 'HKGAI Missing Info',
         provider: 'hkgai',
-        providerItemId: 'hkgai-searchentry-item', // Match exact itemId from database
+        providerItemId: 'hkgai-missinginfo-item', // Match exact itemId from database
         tier: 't2',
         contextLimit: 8000,
         maxOutput: 4000,
@@ -45,7 +45,7 @@ export const useInitializeDefaultModel = () => {
       // Convert ModelInfo to ProviderItem format
       chatModel = {
         providerId: defaultModelInfo.provider,
-        itemId: defaultModelInfo.providerItemId, // This will be 'hkgai-searchentry-item'
+        itemId: defaultModelInfo.providerItemId, // This will be 'hkgai-missinginfo-item'
         category: 'llm',
         name: defaultModelInfo.label,
         enabled: true,
