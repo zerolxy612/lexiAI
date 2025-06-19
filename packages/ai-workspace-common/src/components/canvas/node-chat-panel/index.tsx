@@ -493,6 +493,7 @@ export const ChatPanel = memo(
           contextItems={contextItems}
           runtimeConfig={runtimeConfig}
           setRuntimeConfig={setRuntimeConfig}
+          readonly={readonly}
         />
       </>
     );

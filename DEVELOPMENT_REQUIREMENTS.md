@@ -2762,3 +2762,130 @@ ReflyPilot → LaunchPad → ChatPanel → useChatStore.selectedModel ← useIni
 - **模型标识**: `hkgai-general-item` (providerItemId)
 
 **状态**: ✅ 已完成修复
+
+### 需求 #014: 三段检索功能实现（优先级：高，长期迭代）
+
+**需求描述**: 
+从另一个chatbot项目迁移"三段检索"功能，实现渐进式AI分析，用户输入问题后自动执行三段分析并实时展示结果
+
+**功能概述**:
+三段检索是一个智能分析系统，通过三个渐进式的AI分析阶段，为用户提供从基础到深度的全面问题解答：
+
+1. **第一段：基础分析** - 快速回答核心问题
+2. **第二段：拓展分析** - 提供更全面的背景和相关信息  
+3. **第三段：深度剖析** - 深入分析复杂关系和潜在影响
+
+**UI设计规格**:
+```
+┌─────────────────────────────────────────────┐
+│ [问题标题] [下载] [复制] [关闭]              │
+├─────────────────────────────────────────────┤
+│ 📊 步骤进度展示                            │ 
+│ ├── ✅ 基础分析 (已完成)                   │
+│ ├── 🔄 拓展分析 (进行中)                   │
+│ └── ⏳ 深度剖析 (等待中)                   │
+├─────────────────────────────────────────────┤
+│ 📝 第一段：基础分析                        │
+│ [AI生成内容实时显示]                       │
+│ 🔗 [搜索来源链接1] [链接2] [链接3]         │
+├─────────────────────────────────────────────┤
+│ 📈 第二段：拓展分析                        │
+│ [AI生成内容实时显示]                       │  
+│ 🔗 [搜索来源链接1] [链接2] [链接3]         │
+├─────────────────────────────────────────────┤
+│ 🔍 第三段：深度剖析                        │
+│ [AI生成内容实时显示]                       │
+│ 🔗 [搜索来源链接1] [链接2] [链接3]         │
+└─────────────────────────────────────────────┘
+```
+
+**交互流程分析**（基于截图）:
+
+#### **实际交互流程**:
+```
+用户在ReflyPilot输入问题 
+→ 方式1: 点击输入框下方的deep_a.png图标 ⭐️ 已实现
+→ 方式2: AI回答后点击"Start Research"按钮 ⭐️ 待实现
+→ 右侧展开三段检索界面
+→ 自动执行三段分析 + 网站搜索
+→ 实时显示分析结果和搜索链接
+```
+
+**实现进度**:
+
+#### **✅ 第一里程碑: 基础入口实现（已完成）**
+1. **deep_a.png图标集成**:
+   - ✅ 导入图标资源：`import deepAnalysisIcon from '/src/assets/deep_a.png'`
+   - ✅ 添加到ChatPanel输入框下方左侧
+   - ✅ 只在ReflyPilot模式下显示（`embeddedMode`条件）
+   - ✅ 实现hover效果和点击事件
+
+2. **UI实现细节**:
+   ```typescript
+   // Add Deep Analysis action only in ReflyPilot mode
+   ...(embeddedMode ? [{
+     icon: (
+       <img 
+         src={deepAnalysisIcon} 
+         alt="Deep Analysis" 
+         className="w-4 h-4 opacity-70 hover:opacity-100 transition-opacity duration-200"
+       />
+     ),
+     title: 'Deep Analysis - Three-stage retrieval',
+     onClick: () => {
+       console.log('🎯 Deep Analysis triggered from customActions!');
+       // TODO: Implement three-stage analysis modal
+     },
+   }] : []),
+   ```
+
+3. **位置和样式优化**:
+   - **位置**: ChatActions右侧图标组中，与MCP工具和魔法棒图标并列
+   - **大小**: 16x16px (w-4 h-4) - 与其他功能图标保持一致
+   - **交互**: hover效果，opacity从70%到100%
+   - **集成方式**: 通过customActions数组动态添加，保持代码整洁
+   - **限制**: 只在ReflyPilot（embeddedMode）中显示
+
+#### **🔄 第二里程碑: 界面框架搭建（进行中）**
+1. 🔄 实现ThreadContainer的左右分栏布局
+2. 🔄 创建ThreeStageAnalysisPanel基础组件
+3. 🔄 实现右侧面板的展开/收起动画
+4. 🔄 添加"Start Research"按钮到AI回答后
+
+#### **⏳ 第三里程碑: 功能集成（待开始）**
+1. 🔄 集成AI三段分析逻辑
+2. 🔄 集成网站搜索API  
+3. 🔄 实现实时内容更新
+4. 🔄 实现下载和复制功能
+
+#### **⏳ 第四里程碑: 完善和优化（待开始）**
+1. 🔄 用户体验优化
+2. 🔄 错误处理和边界情况
+3. 🔄 性能优化和测试
+
+**修改文件记录**:
+- ✅ `packages/ai-workspace-common/src/components/canvas/launchpad/chat-panel.tsx` - 添加deep_a.png图标入口
+
+**验证方法**:
+1. 在ReflyPilot中查看输入框下方是否显示deep_a.png图标
+2. 验证图标的hover效果和点击事件
+3. 确认只在ReflyPilot模式下显示，其他地方不显示
+4. 检查浏览器控制台是否输出"🎯 Deep Analysis triggered!"
+
+**技术要点**:
+- **条件渲染**: 使用`embeddedMode`确保只在ReflyPilot中显示
+- **资源导入**: 使用Vite的静态资源导入方式
+- **样式设计**: Tailwind CSS + 深色模式支持
+- **交互设计**: hover状态 + 点击事件
+
+**下一步开发**:
+1. 实现三段检索面板的基础框架
+2. 添加左右分栏布局到ThreadContainer
+3. 创建ThreeStageAnalysisPanel组件
+4. 实现面板展开/收起动画
+
+---
+
+**优先级**: 高（长期迭代功能）
+**预估工时**: 7-10天（分4个里程碑）
+**状态**: 🔄 第一里程碑已完成，第二里程碑进行中

@@ -67,7 +67,7 @@ export const useInitializeDefaultModel = () => {
 
     // Convert ProviderItem to ModelInfo format
     const modelInfo: ModelInfo = {
-      name: chatModel.name,
+      name: chatModel.config?.modelId || chatModel.name,
       label: chatModel.name,
       provider: chatModel.providerId || 'hkgai',
       tier: chatModel.tier || 't2',

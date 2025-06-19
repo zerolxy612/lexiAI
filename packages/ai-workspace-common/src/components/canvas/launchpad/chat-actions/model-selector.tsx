@@ -25,6 +25,7 @@ interface ModelSelectorProps {
   placement?: DropdownProps['placement'];
   trigger?: DropdownProps['trigger'];
   contextItems?: IContextItem[];
+  readonly?: boolean;
 }
 
 // Memoize the selected model display
@@ -32,10 +33,14 @@ const SelectedModelDisplay = memo(
   ({
     model,
     handleOpenSettingModal,
-  }: { model: ModelInfo | null; handleOpenSettingModal: () => void }) => {
+    readonly = false,
+  }: { model: ModelInfo | null; handleOpenSettingModal: () => void; readonly?: boolean }) => {
     const { t } = useTranslation();
 
     if (!model) {
+      if (readonly) {
+        return <span className="text-xs text-gray-500">No model selected</span>;
+      }
       return (
         <Button
           type="text"
@@ -47,6 +52,15 @@ const SelectedModelDisplay = memo(
         >
           {t('copilot.modelSelector.configureModel')}
         </Button>
+      );
+    }
+
+    if (readonly) {
+      return (
+        <span className="text-xs flex items-center gap-1.5 text-gray-500">
+          <ModelIcon model={model.name} size={16} type={'color'} />
+          {model.label}
+        </span>
       );
     }
 
@@ -134,6 +148,7 @@ export const ModelSelector = memo(
     model,
     setModel,
     contextItems,
+    readonly = false,
   }: ModelSelectorProps) => {
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const { t } = useTranslation();
@@ -305,6 +320,25 @@ export const ModelSelector = memo(
 
     const remoteModel = modelList?.find((m) => m.name === model?.name);
 
+    // If readonly mode, return only the display without dropdown functionality
+    if (readonly) {
+      return (
+        <span className="text-xs flex items-center gap-1.5 text-gray-500">
+          <SelectedModelDisplay
+            model={model}
+            handleOpenSettingModal={handleOpenSettingModal}
+            readonly={readonly}
+          />
+
+          {!remoteModel?.capabilities?.vision && isContextIncludeImage && (
+            <Tooltip title={t('copilot.modelSelector.noVisionSupport')}>
+              <IconError className="w-3.5 h-3.5 text-[#faad14]" />
+            </Tooltip>
+          )}
+        </span>
+      );
+    }
+
     return (
       <Dropdown
         menu={{
@@ -321,7 +355,11 @@ export const ModelSelector = memo(
       >
         {!briefMode ? (
           <span className="text-xs flex items-center gap-1.5 text-gray-500 cursor-pointer transition-all duration-300 hover:text-gray-700">
-            <SelectedModelDisplay model={model} handleOpenSettingModal={handleOpenSettingModal} />
+            <SelectedModelDisplay
+              model={model}
+              handleOpenSettingModal={handleOpenSettingModal}
+              readonly={readonly}
+            />
 
             {!remoteModel?.capabilities?.vision && isContextIncludeImage && (
               <Tooltip title={t('copilot.modelSelector.noVisionSupport')}>
@@ -341,6 +379,7 @@ export const ModelSelector = memo(
       prevProps.briefMode === nextProps.briefMode &&
       prevProps.model === nextProps.model &&
       prevProps.contextItems === nextProps.contextItems &&
+      prevProps.readonly === nextProps.readonly &&
       JSON.stringify(prevProps.trigger) === JSON.stringify(nextProps.trigger)
     );
   },

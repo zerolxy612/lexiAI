@@ -12,6 +12,7 @@ import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/ca
 import { useUploadImage } from '@refly-packages/ai-workspace-common/hooks/use-upload-image';
 import { IContextItem } from '@refly-packages/ai-workspace-common/stores/context-panel';
 import { SkillRuntimeConfig } from '@refly/openapi-schema';
+import { ModelIcon } from '@lobehub/icons';
 
 export interface CustomAction {
   icon: React.ReactNode;
@@ -32,6 +33,7 @@ interface ChatActionsProps {
   customActions?: CustomAction[];
   onUploadImage?: (file: File) => Promise<void>;
   contextItems: IContextItem[];
+  readonly?: boolean;
 }
 
 export const ChatActions = memo(
@@ -47,9 +49,10 @@ export const ChatActions = memo(
       className,
       onUploadImage,
       contextItems,
+      readonly = false,
     } = props;
     const { t } = useTranslation();
-    const { canvasId, readonly } = useCanvasContext();
+    const { canvasId, readonly: canvasReadonly } = useCanvasContext();
     const { handleUploadImage } = useUploadImage();
 
     const handleSendClick = () => {
@@ -88,7 +91,12 @@ export const ChatActions = memo(
 
     const containerRef = useRef<HTMLDivElement>(null);
 
-    return readonly ? null : (
+    // If canvas is readonly, don't show any actions
+    if (canvasReadonly) {
+      return null;
+    }
+
+    return (
       <div className={cn('flex justify-between items-center', className)} ref={containerRef}>
         <div className="flex items-center">
           <ModelSelector
@@ -97,9 +105,10 @@ export const ChatActions = memo(
             briefMode={false}
             trigger={['click']}
             contextItems={contextItems}
+            readonly={readonly}
           />
 
-          {detectedUrls?.length > 0 && (
+          {!readonly && detectedUrls?.length > 0 && (
             <div className="flex items-center gap-1 ml-2">
               <Switch
                 size="small"
@@ -117,47 +126,50 @@ export const ChatActions = memo(
             </div>
           )}
         </div>
-        <div className="flex flex-row items-center gap-2">
-          {customActions?.map((action, index) => (
-            <Tooltip title={action.title} key={index}>
-              <Button size="small" icon={action.icon} onClick={action.onClick} className="mr-0" />
-            </Tooltip>
-          ))}
 
-          <Upload
-            accept="image/*"
-            showUploadList={false}
-            customRequest={({ file }) => {
-              if (onUploadImage) {
-                onUploadImage(file as File);
-              } else {
-                handleUploadImage(file as File, canvasId);
-              }
-            }}
-            multiple
-          >
-            <Tooltip title={t('common.uploadImage')}>
-              <Button
-                className="translate-y-[0.5px]"
-                size="small"
-                icon={<IconImage className="flex items-center" />}
-              />
-            </Tooltip>
-          </Upload>
+        {!readonly && (
+          <div className="flex flex-row items-center gap-2">
+            {customActions?.map((action, index) => (
+              <Tooltip title={action.title} key={index}>
+                <Button size="small" icon={action.icon} onClick={action.onClick} className="mr-0" />
+              </Tooltip>
+            ))}
 
-          {!isWeb ? null : (
-            <Button
-              size="small"
-              type="primary"
-              disabled={!canSendMessage}
-              className="text-xs flex items-center gap-1"
-              onClick={handleSendClick}
+            <Upload
+              accept="image/*"
+              showUploadList={false}
+              customRequest={({ file }) => {
+                if (onUploadImage) {
+                  onUploadImage(file as File);
+                } else {
+                  handleUploadImage(file as File, canvasId);
+                }
+              }}
+              multiple
             >
-              <SendOutlined />
-              <span>{t('copilot.chatActions.send')}</span>
-            </Button>
-          )}
-        </div>
+              <Tooltip title={t('common.uploadImage')}>
+                <Button
+                  className="translate-y-[0.5px]"
+                  size="small"
+                  icon={<IconImage className="flex items-center" />}
+                />
+              </Tooltip>
+            </Upload>
+
+            {!isWeb ? null : (
+              <Button
+                size="small"
+                type="primary"
+                disabled={!canSendMessage}
+                className="text-xs flex items-center gap-1"
+                onClick={handleSendClick}
+              >
+                <SendOutlined />
+                <span>{t('copilot.chatActions.send')}</span>
+              </Button>
+            )}
+          </div>
+        )}
       </div>
     );
   },

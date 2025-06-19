@@ -34,78 +34,172 @@ import { Button, Input } from 'antd';
 import { ArrowLeftOutlined, HistoryOutlined } from '@ant-design/icons';
 
 // Search History Selection Component (placeholder)
-const SearchHistorySelection = memo(({ onBack }: { onBack: () => void }) => {
-  const [searchQuery, setSearchQuery] = useState('');
+const SearchHistorySelection = memo(
+  ({
+    onBack,
+    messages = [],
+    onSelectMessage,
+  }: {
+    onBack: () => void;
+    messages?: LinearThreadMessage[];
+    onSelectMessage?: (messageId: string) => void;
+  }) => {
+    const [searchQuery, setSearchQuery] = useState('');
 
-  return (
-    <div className="flex flex-col h-full w-full">
-      {/* Header with back button */}
-      <div className="flex items-center gap-3 p-4 border-b border-gray-100 dark:border-gray-700">
-        <Button
-          type="text"
-          icon={<ArrowLeftOutlined />}
-          onClick={onBack}
-          className="flex items-center gap-2"
-        >
-          Back to conversation
-        </Button>
-      </div>
+    // Extract user query from message data for display
+    const getMessageTitle = (message: LinearThreadMessage) => {
+      const query = message.data?.metadata?.structuredData?.query as string;
+      const title = message.data?.title as string;
+      return query || title || 'Search Query';
+    };
 
-      {/* Search interface content */}
-      <div className="flex-1 p-4 overflow-y-auto">
-        {/* Search input */}
-        <div className="mb-4">
-          <Input
-            placeholder="Please enter the bill or clause you want to query"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full"
-            size="large"
-            allowClear
-          />
-        </div>
+    // Get message timestamp for display
+    const getMessageTime = (message: LinearThreadMessage) => {
+      const date = new Date(message.timestamp);
+      return date.toLocaleString();
+    };
 
-        {/* Filter buttons */}
-        <div className="flex gap-1 mb-6 flex-wrap">
+    // Truncate text for display
+    const truncateText = (text: string, maxLength = 60) => {
+      if (text.length <= maxLength) return text;
+      return `${text.substring(0, maxLength)}...`;
+    };
+
+    // Handle history item click
+    const handleHistoryItemClick = (message: LinearThreadMessage) => {
+      if (onSelectMessage) {
+        onSelectMessage(message.id);
+      }
+    };
+
+    return (
+      <div className="flex flex-col h-full w-full">
+        {/* Header with back button */}
+        <div className="flex items-center gap-3 p-4 border-b border-gray-100 dark:border-gray-700">
           <Button
-            className="rounded-full border-black font-bold text-xs px-2 py-0 h-6 min-h-0 text-[10px]"
-            size="small"
+            type="text"
+            icon={<ArrowLeftOutlined />}
+            onClick={onBack}
+            className="flex items-center gap-2"
           >
-            All Cases
-            <span className="ml-0.5 text-[8px]">▼</span>
-          </Button>
-          <Button
-            className="rounded-full border-black font-bold text-xs px-2 py-0 h-6 min-h-0 text-[10px]"
-            size="small"
-          >
-            Any Date
-            <span className="ml-0.5 text-[8px]">▼</span>
-          </Button>
-          <Button
-            className="rounded-full border-black font-bold text-xs px-2 py-0 h-6 min-h-0 text-[10px]"
-            size="small"
-          >
-            All States & Federal
-            <span className="ml-0.5 text-[8px]">▼</span>
+            Back to conversation
           </Button>
         </div>
 
-        {/* Search results area - placeholder for now */}
-        <div className="space-y-4">
-          {searchQuery ? (
-            <div className="text-gray-500 dark:text-gray-400 text-center py-8">
-              Search results for "{searchQuery}" will be displayed here.
+        {/* Search interface content */}
+        <div className="flex-1 p-4 overflow-y-auto">
+          {/* Search input */}
+          <div className="mb-4">
+            <Input
+              placeholder="Please enter the bill or clause you want to query"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full"
+              size="large"
+              allowClear
+            />
+          </div>
+
+          {/* Filter buttons */}
+          <div className="flex gap-1 mb-6 flex-wrap">
+            <Button
+              className="rounded-full border-black font-bold text-xs px-2 py-0 h-6 min-h-0 text-[10px]"
+              size="small"
+            >
+              All Cases
+              <span className="ml-0.5 text-[8px]">▼</span>
+            </Button>
+            <Button
+              className="rounded-full border-black font-bold text-xs px-2 py-0 h-6 min-h-0 text-[10px]"
+              size="small"
+            >
+              Any Date
+              <span className="ml-0.5 text-[8px]">▼</span>
+            </Button>
+            <Button
+              className="rounded-full border-black font-bold text-xs px-2 py-0 h-6 min-h-0 text-[10px]"
+              size="small"
+            >
+              All States & Federal
+              <span className="ml-0.5 text-[8px]">▼</span>
+            </Button>
+          </div>
+
+          {/* Search results area - placeholder for now */}
+          {/* <div className="mb-6">
+            {searchQuery ? (
+              <div className="text-gray-500 dark:text-gray-400 text-center py-8">
+                Search results for "{searchQuery}" will be displayed here.
+              </div>
+            ) : (
+              <div className="text-gray-500 dark:text-gray-400 text-center py-8">
+                Enter a search query to find historical cases.
+              </div>
+            )}
+          </div> */}
+
+          {/* History records section */}
+          {messages.length > 0 && (
+            <div className="border-t border-gray-200 dark:border-gray-600 pt-6">
+              {/* <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Search History
+              </h3> */}
+              <div className="space-y-4">
+                {messages.map((message, _index) => {
+                  const title = getMessageTitle(message);
+                  const time = getMessageTime(message);
+                  const truncatedTitle = truncateText(title);
+
+                  return (
+                    <div
+                      key={message.id}
+                      className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 cursor-pointer hover:border-blue-300 hover:shadow-sm transition-all duration-200 bg-white dark:bg-gray-800"
+                      onClick={() => handleHistoryItemClick(message)}
+                    >
+                      {/* Case title */}
+                      <div className="font-semibold text-gray-900 dark:text-white text-base mb-2">
+                        {truncatedTitle}
+                      </div>
+
+                      {/* Page indicator */}
+                      <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                        1 of 1 pages
+                      </div>
+
+                      {/* Results keywords */}
+                      <div className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                        <span className="text-gray-500">Results for: </span>
+                        <span className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-1 rounded">
+                          {truncateText(title, 30)}
+                        </span>
+                      </div>
+
+                      {/* Content preview */}
+                      <div className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                        Search query from {time}. Click to view full conversation and results.
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          ) : (
-            <div className="text-gray-500 dark:text-gray-400 text-center py-8">
-              Enter a search query to find historical cases.
+          )}
+
+          {/* Empty state for history */}
+          {messages.length === 0 && (
+            <div className="border-t border-gray-200 dark:border-gray-600 pt-6">
+              <div className="text-center text-gray-500 dark:text-gray-400 py-8">
+                <HistoryOutlined className="text-2xl mb-2" />
+                <p>No search history yet</p>
+                <p className="text-xs mt-1">Your search conversations will appear here</p>
+              </div>
             </div>
           )}
         </div>
       </div>
-    </div>
-  );
-});
+    );
+  },
+);
 
 SearchHistorySelection.displayName = 'SearchHistorySelection';
 
@@ -517,6 +611,32 @@ export const EnhancedSkillResponse = memo(
       currentSetSearchViewMode('conversation');
     }, [currentSetSearchViewMode]);
 
+    // Handle selecting a message from history
+    const handleSelectMessage = useCallback(
+      (messageId: string) => {
+        // Switch back to conversation view
+        currentSetSearchViewMode('conversation');
+
+        // Optional: Scroll to the specific message
+        // We can use setTimeout to ensure the DOM is updated before scrolling
+        setTimeout(() => {
+          const messageElement = document.getElementById(`message-wrapper-${messageId}`);
+          if (messageElement) {
+            messageElement.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center',
+            });
+            // Add a temporary highlight effect
+            messageElement.style.backgroundColor = '#f0f9ff';
+            setTimeout(() => {
+              messageElement.style.backgroundColor = '';
+            }, 2000);
+          }
+        }, 100);
+      },
+      [currentSetSearchViewMode],
+    );
+
     // Render search history selection for search nodes
     if (isSearchNode && currentSearchViewMode === 'history') {
       return (
@@ -526,7 +646,11 @@ export const EnhancedSkillResponse = memo(
           onClick={handleContainerClick}
           data-debug="enhanced-skill-response-container"
         >
-          <SearchHistorySelection onBack={handleBackToConversation} />
+          <SearchHistorySelection
+            onBack={handleBackToConversation}
+            messages={messages}
+            onSelectMessage={handleSelectMessage}
+          />
         </div>
       );
     }

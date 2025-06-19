@@ -40,6 +40,9 @@ import { useAskProject } from '@refly-packages/ai-workspace-common/hooks/canvas/
 import { McpSelectorPanel } from '@refly-packages/ai-workspace-common/components/canvas/launchpad/mcp-selector-panel';
 import { ToolOutlined } from '@ant-design/icons';
 
+// Import deep_a.png image
+import deepAnalysisIcon from '/src/assets/deep_a.png';
+
 const PremiumBanner = () => {
   const { t } = useTranslation();
   const { showPremiumBanner, setShowPremiumBanner } = useLaunchpadStoreShallow((state) => ({
@@ -360,6 +363,25 @@ export const ChatPanel = ({
           handleRecommendQuestionsToggle();
         },
       },
+      // Add Deep Analysis action only in ReflyPilot mode
+      ...(embeddedMode
+        ? [
+            {
+              icon: (
+                <img
+                  src={deepAnalysisIcon}
+                  alt="Deep Analysis"
+                  className="w-4 h-4 opacity-70 hover:opacity-100 transition-opacity duration-200"
+                />
+              ),
+              title: 'Deep Analysis - Three-stage retrieval',
+              onClick: () => {
+                console.log('🎯 Deep Analysis triggered from customActions!');
+                // TODO: Implement three-stage analysis modal
+              },
+            },
+          ]
+        : []),
     ],
     [
       handleRecommendQuestionsToggle,
@@ -367,6 +389,7 @@ export const ChatPanel = ({
       t,
       selectedMcpServers,
       handleMcpSelectorToggle,
+      embeddedMode, // Add embeddedMode to dependencies
     ],
   );
 
