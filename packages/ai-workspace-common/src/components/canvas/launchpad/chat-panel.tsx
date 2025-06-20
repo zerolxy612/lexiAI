@@ -39,6 +39,10 @@ import { ProjectKnowledgeToggle } from '@refly-packages/ai-workspace-common/comp
 import { useAskProject } from '@refly-packages/ai-workspace-common/hooks/canvas/use-ask-project';
 import { McpSelectorPanel } from '@refly-packages/ai-workspace-common/components/canvas/launchpad/mcp-selector-panel';
 import { ToolOutlined } from '@ant-design/icons';
+import {
+  useDeepResearchStoreShallow,
+  useDeepResearchStore,
+} from '@refly-packages/ai-workspace-common/stores/deep-research';
 
 // Import deep_a.png image
 import deepAnalysisIcon from '/src/assets/deep_a.png';
@@ -146,6 +150,11 @@ export const ChatPanel = ({
     selectedMcpServers: state.selectedMcpServers,
   }));
 
+  // Deep research store for tracking deep analysis selection
+  const { setDeepAnalysisSelected } = useDeepResearchStoreShallow((state) => ({
+    setDeepAnalysisSelected: state.setDeepAnalysisSelected,
+  }));
+
   const [form] = Form.useForm();
 
   // hooks
@@ -236,6 +245,15 @@ export const ChatPanel = ({
       nodeId: genUniqueId(),
     };
 
+    // Check if deep analysis was selected and transfer it to the new result
+    const { isDeepAnalysisSelected, clearDeepAnalysisSelection, setDeepAnalysisSelected } =
+      useDeepResearchStore.getState();
+    const hasDeepAnalysis = isDeepAnalysisSelected('next-response');
+    if (hasDeepAnalysis) {
+      clearDeepAnalysisSelection('next-response');
+      setDeepAnalysisSelected(newResultId, true);
+    }
+
     // Call onAddMessage callback with all required data
     if (onAddMessage) {
       onAddMessage(
@@ -258,6 +276,7 @@ export const ChatPanel = ({
                 query,
               },
               projectId: finalProjectId,
+              deepAnalysisSelected: hasDeepAnalysis,
             },
           },
         },
@@ -377,7 +396,8 @@ export const ChatPanel = ({
               title: 'Deep Analysis - Three-stage retrieval',
               onClick: () => {
                 console.log('🎯 Deep Analysis triggered from customActions!');
-                // TODO: Implement three-stage analysis modal
+                // Mark deep analysis as selected for the next response
+                setDeepAnalysisSelected('next-response', true);
               },
             },
           ]

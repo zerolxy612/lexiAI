@@ -19,6 +19,7 @@ import { IContextItem } from '@refly-packages/ai-workspace-common/stores/context
 import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/canvas';
 import { getParsedReasoningContent } from '@refly/utils/content-parser';
 import { IconThinking } from '@refly-packages/ai-workspace-common/components/common/icon';
+import { useDeepResearchStoreShallow } from '@refly-packages/ai-workspace-common/stores/deep-research';
 
 const parseStructuredData = (structuredData: Record<string, unknown>, field: string) => {
   return typeof structuredData[field] === 'string'
@@ -300,6 +301,20 @@ export const ActionStepCard = memo(
     const { setSelectedNodeByEntity } = useNodeSelection();
     const [logBoxCollapsed, setLogBoxCollapsed] = useState(false);
 
+    // Check if deep analysis is selected for this result
+    const { isDeepAnalysisSelected } = useDeepResearchStoreShallow((state) => ({
+      isDeepAnalysisSelected: state.isDeepAnalysisSelected,
+    }));
+
+    const shouldShowStartResearch = useMemo(() => {
+      return (
+        result?.resultId &&
+        isDeepAnalysisSelected(result.resultId) &&
+        stepStatus === 'finish' &&
+        result?.status === 'finish'
+      );
+    }, [result?.resultId, result?.status, isDeepAnalysisSelected, stepStatus]);
+
     useEffect(() => {
       if (result?.status === 'finish') {
         setLogBoxCollapsed(true);
@@ -347,6 +362,11 @@ export const ActionStepCard = memo(
       },
       [setSelectedNodeByEntity],
     );
+
+    const handleStartResearch = useCallback(() => {
+      console.log('🎯 Starting deep research for query:', query);
+      // TODO: Implement deep research modal opening logic
+    }, [query]);
 
     if (!step) return null;
 
@@ -406,6 +426,19 @@ export const ActionStepCard = memo(
           ))}
 
         <RecommendQuestions relatedQuestions={parsedData.recommendedQuestions?.questions || []} />
+
+        {/* Show Start Research button if deep analysis is selected and step is complete */}
+        {shouldShowStartResearch && (
+          <div className="flex justify-end mt-4">
+            <Button
+              type="primary"
+              className="bg-blue-500 hover:bg-blue-600 border-blue-500 hover:border-blue-600"
+              onClick={handleStartResearch}
+            >
+              Start Research
+            </Button>
+          </div>
+        )}
 
         <ActionContainer result={result} step={step} nodeId={nodeId} />
       </div>

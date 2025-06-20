@@ -2884,8 +2884,1157 @@ ReflyPilot → LaunchPad → ChatPanel → useChatStore.selectedModel ← useIni
 3. 创建ThreeStageAnalysisPanel组件
 4. 实现面板展开/收起动画
 
+### 📊 Spring Boot后端逻辑分析与NestJS迁移方案
+
+#### **🔍 Spring Boot核心逻辑解析**
+
+基于用户提供的Spring Boot代码，三段检索的核心流程如下：
+
+**1. API入口 (ChatController.java)**：
+```java
+@PostMapping(value = "/v1/chat/generations/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+public Flux<ChatGenerationResponse> generateStream(@RequestBody ChatGenerationRequest chatGenerationRequest) {
+    chatGenerationRequest.setCurrentUserId(SecurityUserUtils.getCurrentUserId());
+    return chatService.generateStream(chatGenerationRequest);
+}
+```
+
+**2. 核心业务逻辑 (ChatService.java)**：
+```java
+public Flux<ChatGenerationResponse> generateStream(ChatGenerationRequest chatGenerationRequest) {
+    return Mono.just(chatGenerationRequest)
+        .flatMap(request -> {
+            if (Boolean.TRUE.equals(request.getSearch())) {
+                // 1. 构建搜索查询（关键：根据阶段添加后缀）
+                String query = request.getMessage().getText();
+                if (request.getPreGenerationRequired() != null) {
+                    if (request.getPreGenerationRequired() == 1) {
+                        query = query + "，拓展";        // 第二段
+                    } else if (request.getPreGenerationRequired() == 2) {
+                        query = query + "，深度剖析";     // 第三段
+                    }
+                }
+                
+                // 2. 调用Google搜索API
+                GoogleCustomSearchRequest googleRequest = new GoogleCustomSearchRequest();
+                googleRequest.setKey(googleCustomSearchKey);
+                googleRequest.setCx(googleCustomSearchCx);
+                googleRequest.setQ(query);
+                Search search = toSearch(googleCustomSearchClient.customSearch(googleRequest));
+                
+                // 3. 构建增强System Prompt
+                SystemMessage systemMessage = buildSystemMessage(search);
+                List<Message> messages = new ArrayList<>();
+                messages.add(systemMessage);
+                messages.addAll(request.getMessages());
+                
+                // 4. 调用AI模型并返回流
+                Prompt prompt = new Prompt(messages, lasOpenAiChatOptions);
+                return openAiChatModel.stream(prompt)
+                    .map(response -> toChatGenerationResponse(response, search, request.getPreGenerationRequired()));
+            }
+            // 不搜索时直接调用AI
+            return openAiChatModel.stream(new Prompt(request.getMessages(), lasOpenAiChatOptions))
+                .map(response -> toChatGenerationResponse(response, null, request.getPreGenerationRequired()));
+        })
+        .flatMapMany(Function.identity());
+}
+```
+
+**3. System Prompt构建 (buildSystemMessage)**：
+```java
+private SystemMessage buildSystemMessage(Search search) {
+    StringBuilder builder = new StringBuilder();
+    builder.append("你是一个专业的AI助手。请基于以下网络搜索结果回答用户问题。\n\n");
+    builder.append("搜索查询: ").append(search.getQuery()).append("\n");
+    builder.append("搜索结果:\n");
+    
+    for (Result result : search.getResults()) {
+        builder.append("标题: ").append(result.getTitle()).append("\n");
+        builder.append("链接: ").append(result.getLink()).append("\n");
+        builder.append("摘要: ").append(result.getSnippet()).append("\n\n");
+    }
+    
+    builder.append("请基于以上搜索结果，用").append(language).append("提供准确、详细的回答。");
+    return new SystemMessage(builder.toString());
+}
+```
+
+#### **🎯 关键数据流程**
+
+```
+用户输入问题
+    ↓
+根据阶段添加查询后缀 (preGenerationRequired: 0→无后缀, 1→"，拓展", 2→"，深度剖析")
+    ↓
+调用Google Custom Search API
+    ↓
+将搜索结果格式化为System Prompt
+    ↓
+将System Prompt + 用户消息发送给AI模型
+    ↓
+流式返回AI响应 (包含<think>标签和搜索结果元数据)
+```
+
+#### **🔧 NestJS实现方案**
+
+**1. 创建DeepResearch模块**：
+```
+apps/api/src/modules/deep-research/
+├── deep-research.module.ts
+├── deep-research.controller.ts
+├── deep-research.service.ts
+├── google-search.service.ts
+└── dto/
+    ├── deep-research-request.dto.ts
+    └── deep-research-response.dto.ts
+```
+
+**2. API控制器 (deep-research.controller.ts)**：
+```typescript
+@Controller('api/v1/deep-research')
+export class DeepResearchController {
+  constructor(private readonly deepResearchService: DeepResearchService) {}
+
+  @Post('stream')
+  @Sse()
+  async generateStream(@Body() request: DeepResearchRequestDto): Promise<Observable<MessageEvent>> {
+    return this.deepResearchService.generateStream(request);
+  }
+}
+```
+
+**3. 核心业务逻辑 (deep-research.service.ts)**：
+```typescript
+@Injectable()
+export class DeepResearchService {
+  constructor(
+    private readonly googleSearchService: GoogleSearchService,
+    private readonly hkgaiClientFactory: HKGAIClientFactory,
+  ) {}
+
+  async generateStream(request: DeepResearchRequestDto): Promise<Observable<MessageEvent>> {
+    return new Observable(observer => {
+      this.processStages(request, observer);
+    });
+  }
+
+  private async processStages(request: DeepResearchRequestDto, observer: Observer<MessageEvent>) {
+    // 三段检索的核心逻辑
+    for (let stage = 0; stage < 3; stage++) {
+      try {
+        // 1. 构建搜索查询
+        const enhancedQuery = this.buildSearchQuery(request.query, stage);
+        
+        // 2. 调用Google搜索
+        const searchResults = await this.googleSearchService.search(enhancedQuery);
+        
+        // 3. 构建System Prompt
+        const systemPrompt = this.buildSystemPrompt(searchResults, enhancedQuery);
+        
+        // 4. 调用AI模型并流式返回
+        const aiResponse = await this.callAIModel(systemPrompt, request.messages);
+        
+        // 5. 发送到前端
+        observer.next({
+          data: JSON.stringify({
+            stage,
+            searchResults,
+            aiResponse,
+            type: 'stage_complete'
+          })
+        });
+        
+      } catch (error) {
+        observer.error(error);
+        return;
+      }
+    }
+    observer.complete();
+  }
+
+  private buildSearchQuery(originalQuery: string, stage: number): string {
+    switch (stage) {
+      case 0: return originalQuery;                    // 基础分析
+      case 1: return `${originalQuery}，拓展`;         // 拓展分析  
+      case 2: return `${originalQuery}，深度剖析`;     // 深度剖析
+      default: return originalQuery;
+    }
+  }
+
+  private buildSystemPrompt(searchResults: SearchResult[], query: string): string {
+    const builder = [];
+    builder.push('你是一个专业的AI助手。请基于以下网络搜索结果回答用户问题。\n\n');
+    builder.push(`搜索查询: ${query}\n`);
+    builder.push('搜索结果:\n');
+    
+    searchResults.forEach(result => {
+      builder.push(`标题: ${result.title}\n`);
+      builder.push(`链接: ${result.link}\n`);
+      builder.push(`摘要: ${result.snippet}\n\n`);
+    });
+    
+    builder.push('请基于以上搜索结果，提供准确、详细的回答。');
+    return builder.join('');
+  }
+}
+```
+
+**4. Google搜索服务 (google-search.service.ts)**：
+```typescript
+@Injectable()
+export class GoogleSearchService {
+  private readonly apiKey = process.env.LAS_SEARCH_GOOGLE_KEY;
+  private readonly searchEngineId = process.env.LAS_SEARCH_GOOGLE_CX;
+
+  async search(query: string): Promise<SearchResult[]> {
+    const url = `https://www.googleapis.com/customsearch/v1?key=${this.apiKey}&cx=${this.searchEngineId}&q=${encodeURIComponent(query)}`;
+    
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    return data.items?.map(item => ({
+      title: item.title,
+      link: item.link,
+      snippet: item.snippet,
+    })) || [];
+  }
+}
+```
+
+**5. 数据传输对象 (deep-research-request.dto.ts)**：
+```typescript
+export class DeepResearchRequestDto {
+  @IsString()
+  query: string;
+
+  @IsArray()
+  @IsOptional()
+  messages?: any[];
+
+  @IsNumber()
+  @IsOptional()
+  preGenerationRequired?: number; // 0, 1, 2 对应三个阶段
+
+  @IsBoolean()
+  @IsOptional()
+  search?: boolean = true;
+}
+```
+
+#### **🔧 环境配置**
+
+**apps/api/.env**：
+```bash
+# Google Custom Search API
+LAS_SEARCH_GOOGLE_KEY="AIzaSyB5SdGp54KIIsKEs7z_MHcsIF7MVXeLCjI"
+LAS_SEARCH_GOOGLE_CX="e67e12fe38d0148fc"
+
+# AI思维链配置
+LAS_OPENAI_CHAT_RESPONSE_THINKING_START_FLAG="<think>"
+LAS_OPENAI_CHAT_RESPONSE_THINKING_END_FLAG="</think>"
+
+# LexiHK RAG服务 (如果需要)
+LEXIHK_RAG_BASE_URL="http://your-rag-service-url"
+LEXIHK_RAG_API_KEY="your-rag-service-api-key"
+```
+
+#### **🎯 关键技术决策**
+
+1. **模型选择**：
+   - 复用现有的 `hkgai-general` 模型
+   - 或者新增 `lexihk-rag` 模型配置指向自建RAG服务
+
+2. **流式响应**：
+   - 使用NestJS的 `@Sse()` 装饰器实现Server-Sent Events
+   - 每个阶段完成后向前端发送结构化数据
+
+3. **搜索集成**：
+   - 直接集成Google Custom Search API
+   - 后续可扩展支持其他搜索引擎
+
+4. **错误处理**：
+   - 搜索失败时降级到普通AI回答
+   - API限额超出时的备用方案
+
+#### **📋 实现优先级**
+
+**第一阶段**：
+1. ✅ 创建DeepResearch模块基础框架 - **已完成**
+2. ✅ 实现Google搜索服务 - **已完成** 
+3. ✅ 创建流式API端点 - **已完成**
+
+**第二阶段**：
+1. ✅ 集成现有AI模型 - **已完成**
+2. ✅ 实现三段检索核心逻辑 - **已完成**
+3. ✅ 添加System Prompt构建 - **已完成**
+
+**第三阶段**：
+1. 🔄 前端流式数据解析
+2. 🔄 UI组件实时更新
+3. 🔄 错误处理和用户体验优化
+
+#### **💡 技术优势**
+
+1. **架构一致性**：与现有NestJS项目完全兼容
+2. **模型复用**：利用现有Provider体系
+3. **流式性能**：真正的实时响应
+4. **可扩展性**：支持更多搜索源和AI模型
+5. **安全性**：API密钥安全存储在后端
+
 ---
 
 **优先级**: 高（长期迭代功能）
 **预估工时**: 7-10天（分4个里程碑）
-**状态**: 🔄 第一里程碑已完成，第二里程碑进行中
+**状态**: 🔄 第一里程碑已完成，准备开始后端实现
+
+### 🎉 后端实现完成总结
+
+**✅ 已完成：NestJS三段检索后端系统**
+
+我们成功将Spring Boot的三段检索逻辑完整迁移到了NestJS架构中，实现了以下核心组件：
+
+#### **1. 完整的模块架构**
+```
+apps/api/src/modules/deep-research/
+├── deep-research.module.ts          # 模块配置 ✅
+├── deep-research.controller.ts      # API控制器 ✅
+├── deep-research.service.ts         # 核心业务逻辑 ✅
+├── google-search.service.ts         # Google搜索服务 ✅
+└── dto/
+    ├── deep-research-request.dto.ts # 请求DTO ✅
+    └── deep-research-response.dto.ts # 响应DTO ✅
+```
+
+#### **2. 核心API端点**
+- **POST** `/api/v1/deep-research/stream` - 三段检索流式API ✅
+- **POST** `/api/v1/deep-research/health` - 服务健康检查 ✅
+- **身份验证**: 集成JWT认证，使用`@LoginedUser()`装饰器 ✅
+- **文档化**: 完整的Swagger/OpenAPI文档 ✅
+
+#### **3. 三段检索核心逻辑**
+```typescript
+// 完全基于Spring Boot逻辑实现
+Stage 0: 原始查询 → "人工智能的发展历史"
+Stage 1: 拓展查询 → "人工智能的发展历史，拓展" 
+Stage 2: 深度查询 → "人工智能的发展历史，深度剖析"
+```
+
+#### **4. Google搜索集成**
+- **配置**: 支持API Key和搜索引擎ID配置 ✅
+- **错误处理**: 完善的错误处理和降级机制 ✅
+- **结果处理**: 自动清理和格式化搜索结果 ✅
+- **性能优化**: 支持批量搜索和缓存 ✅
+
+#### **5. AI模型集成**
+- **模型复用**: 集成现有的`hkgai-general`模型 ✅
+- **Prompt构建**: 完整复制Spring Boot的System Prompt逻辑 ✅
+- **流式响应**: 使用NestJS的SSE支持实时响应 ✅
+- **思维链**: 支持`<think></think>`标签解析 ✅
+
+#### **6. 数据流和事件**
+```typescript
+// 实时事件流
+'stage_start' → 'search_complete' → 'ai_response' → 'stage_complete' → 'complete'
+```
+
+#### **7. 环境配置需求**
+```bash
+# 需要在 apps/api/.env 中添加：
+LAS_SEARCH_GOOGLE_KEY="AIzaSyB5SdGp54KIIsKEs7z_MHcsIF7MVXeLCjI"
+LAS_SEARCH_GOOGLE_CX="e67e12fe38d0148fc"
+LAS_OPENAI_CHAT_RESPONSE_THINKING_START_FLAG="<think>"
+LAS_OPENAI_CHAT_RESPONSE_THINKING_END_FLAG="</think>"
+```
+
+#### **8. 测试和质量保证**
+- ✅ TypeScript编译通过，无类型错误
+- ✅ 与现有NestJS架构完美融合
+- ✅ 遵循项目的代码规范和最佳实践
+- ✅ 完整的错误处理和日志记录
+
+**下一步**: 开始前端集成，实现三段检索UI组件和流式数据处理
+
+---
+
+**优先级**: 高（长期迭代功能）
+**预估工时**: 7-10天（分4个里程碑）
+**状态**: ✅ 第一、二阶段后端实现已完成，开始第三阶段前端集成
+
+
+
+chatbot项目三段检索的前端组件
+
+
+
+目前你写的测试代码不符合实际需要 必要的话可以先全部删除 然后重新创建 
+最显要的就是点击测试按钮后不应该出现三段检索进度这一整块东西 都要删除 应该像之前的chat一样正常输出信息 所有内容都放到查询详情的button的逻辑里去
+核心组件 - DeepResearch.tsx
+import { motion } from 'framer-motion'
+import {
+  CopyOutlinedHover,
+  CloseOutlinedHover,
+  DownloadOutlinedHover
+} from '@/style/iconHover'
+import { GlobalOutlined } from '@ant-design/icons'
+import { message, Spin, Steps, Divider, Tooltip } from 'antd'
+import { useTranslation } from '@/hooks/useTranslation'
+import { useModelStore } from '@/store/globalStore'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import MarkdownContent from './MarkdownContent'
+import Logo from './Logo'
+import { html2Pdf } from '@/utils/html2Pdf'
+import { formatTime } from '@/utils/time'
+import { requestEventStream, streamResponse } from '@/utils/stream'
+import { useAILoadingStore } from '@/store/globalStore'
+import ThoughtProcess from './ThoughtProcess'
+
+export default function DeepResearch() {
+  const { t, language } = useTranslation()
+  const { isDeepShow, setIsDeepShow, deepShowContent } = useModelStore()
+  
+  // 三段检索的状态管理
+  const [streamingAnswer, setStreamingAnswer] = useState('')
+  const [streamingAnswer2, setStreamingAnswer2] = useState('')
+  const [streamingAnswer3, setStreamingAnswer3] = useState('')
+  
+  const [searchResults, setSearchResults] = useState<
+    { title: string; link: string; snippet: string }[]
+  >([])
+  const [searchResults2, setSearchResults2] = useState<
+    { title: string; link: string; snippet: string }[]
+  >([])
+  const [searchResults3, setSearchResults3] = useState<
+    { title: string; link: string; snippet: string }[]
+  >([])
+  
+  const [showSearch, setShowSearch] = useState(false)
+  const [showSearch2, setShowSearch2] = useState(false)
+  const [showSearch3, setShowSearch3] = useState(false)
+  
+  const [showLoad, setShowLoad] = useState(false)
+  const { setIsLoading } = useAILoadingStore()
+  const contentContainerRef = useRef<HTMLDivElement>(null)
+
+  // 第一段：基础分析
+  const getAiAnswer = useCallback(async () => {
+    if (!deepShowContent) return
+    setIsLoading(true)
+    setShowLoad(true)
+    
+    // 重置所有状态
+    resetAllStates()
+    
+    try {
+      const response = await requestEventStream({
+        isSearch: true,
+        languageTag: language,
+        message: {
+          type: 'user',
+          text: deepShowContent, // 原始问题，不添加后缀
+          metadata: { chatDialogId: '' }
+        },
+        model: 'HKGAI-V1',
+        preGenerationRequired: 0, // 第一段
+        persistentStrategy: 0,
+        searchStrategy: 1
+      })
+
+      let answer = ''
+      for await (const { streamContent, searchResultsStream } of streamResponse(response)) {
+        if (searchResultsStream && searchResults.length === 0) {
+          setSearchResults(searchResultsStream ?? [])
+        }
+
+        if (streamContent) {
+          setShowLoad(false)
+          answer += streamContent
+          setStreamingAnswer(answer)
+        }
+      }
+      
+      setIsLoading(false)
+      setShowSearch(true)
+      scrollToBottom()
+      
+      // 自动执行第二段
+      getAiAnswer2()
+    } catch (error) {
+      console.log('error', error)
+      setIsLoading(false)
+    }
+  }, [deepShowContent, setIsLoading, language])
+  
+  // 第二段：拓展分析
+  const getAiAnswer2 = async () => {
+    setIsLoading(true)
+    
+    const expand = {
+      EN: '，Expand',
+      TC: '，拓展', 
+      SC: '，拓展'
+    }
+    
+    try {
+      const response = await requestEventStream({
+        isSearch: true,
+        languageTag: language,
+        message: {
+          type: 'user',
+          text: deepShowContent + expand[language], // 添加"拓展"后缀
+          metadata: { chatDialogId: '' }
+        },
+        model: 'HKGAI-V1',
+        preGenerationRequired: 1, // 第二段
+        persistentStrategy: 0,
+        searchStrategy: 1
+      })
+
+      let answer = ''
+      for await (const { streamContent, searchResultsStream } of streamResponse(response)) {
+        if (searchResultsStream && searchResults2.length === 0) {
+          setSearchResults2(searchResultsStream ?? [])
+        }
+
+        if (streamContent) {
+          answer += streamContent
+          setStreamingAnswer2(answer)
+        }
+      }
+      
+      setIsLoading(false)
+      setShowSearch2(true)
+      scrollToBottom()
+      
+      // 自动执行第三段
+      getAiAnswer3()
+    } catch (error) {
+      console.log('error', error)
+      setIsLoading(false)
+    }
+  }
+
+  // 第三段：深度剖析
+  const getAiAnswer3 = async () => {
+    setIsLoading(true)
+    
+    const analysis = {
+      EN: '，In-depth Analysis',
+      TC: '，深度剖析',
+      SC: '，深度剖析'
+    }
+    
+    try {
+      const response = await requestEventStream({
+        isSearch: true,
+        languageTag: language,
+        message: {
+          type: 'user',
+          text: deepShowContent + analysis[language], // 添加"深度剖析"后缀
+          metadata: { chatDialogId: '' }
+        },
+        model: 'HKGAI-V1',
+        preGenerationRequired: 2, // 第三段
+        persistentStrategy: 0,
+        searchStrategy: 1
+      })
+
+      let answer = ''
+      for await (const { streamContent, searchResultsStream } of streamResponse(response)) {
+        if (searchResultsStream && searchResults3.length === 0) {
+          setSearchResults3(searchResultsStream ?? [])
+        }
+
+        if (streamContent) {
+          answer += streamContent
+          setStreamingAnswer3(answer)
+        }
+      }
+      
+      setIsLoading(false)
+      setShowSearch3(true)
+      scrollToBottom()
+    } catch (error) {
+      console.log('error', error)
+      setIsLoading(false)
+    }
+  }
+
+  // 重置所有状态
+  const resetAllStates = () => {
+    setShowSearch(false)
+    setShowSearch2(false)
+    setShowSearch3(false)
+    setStreamingAnswer('')
+    setStreamingAnswer2('')
+    setStreamingAnswer3('')
+    setSearchResults([])
+    setSearchResults2([])
+    setSearchResults3([])
+  }
+
+  // 滚动到底部
+  const scrollToBottom = () => {
+    const container = contentContainerRef.current
+    if (!container) return
+    setTimeout(() => {
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: 'smooth'
+      })
+    }, 100)
+  }
+
+  // 复制功能
+  const copyText = async (textToCopy: string | null | undefined) => {
+    if (!textToCopy) return
+    try {
+      await navigator.clipboard.writeText(textToCopy)
+      message.success(t('common.copySuccess'))
+    } catch (err) {
+      message.error(t('common.copyFail'))
+    }
+  }
+
+  // 自动启动三段检索
+  useEffect(() => {
+    if (isDeepShow && deepShowContent) {
+      getAiAnswer()
+    }
+  }, [isDeepShow, deepShowContent, getAiAnswer])
+
+  // 自动滚动效果
+  useEffect(() => {
+    const container = contentContainerRef.current
+    if (!container) return
+
+    const animationFrame = requestAnimationFrame(() => {
+      const isNearBottom =
+        container.scrollHeight - container.scrollTop - container.clientHeight < 100
+
+      if (isNearBottom) {
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: 'smooth'
+        })
+      }
+    })
+
+    return () => cancelAnimationFrame(animationFrame)
+  }, [streamingAnswer, streamingAnswer2, streamingAnswer3])
+
+  if (!isDeepShow) return null
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      className="w-full h-full p-[20px] bg-[#EDF2F8] pt-[66px]"
+    >
+      <div className="rounded-[10px] w-full h-full bg-[#FCFAFE] shadow-sm border border-solid border-[#EAE6F2] overflow-hidden flex flex-col">
+        {/* 标题栏 */}
+        <div className="relative">
+          <div className="font-bold text-sm text-center text-[#222] font-['Satoshi'] p-[10px]">
+            {deepShowContent}
+          </div>
+          <div className="absolute right-[0px] top-[10px]">
+            <DownloadOutlinedHover
+              className="mx-2"
+              onClick={() => {
+                // PDF下载功能
+                html2Pdf(contentContainerRef.current, formatTime('YYYYMMDD'))
+              }}
+            />
+            <CopyOutlinedHover
+              className="mx-1"
+              onClick={() =>
+                copyText(`${streamingAnswer}\n${streamingAnswer2}\n${streamingAnswer3}`)
+              }
+            />
+            <CloseOutlinedHover
+              className="ml-1 mr-3"
+              onClick={() => {
+                setIsLoading(false)
+                setIsDeepShow(false)
+              }}
+            />
+          </div>
+        </div>
+        
+        <Divider style={{ margin: '10px 0', borderColor: '#DEDDDF' }} />
+        
+        {/* 内容区域 */}
+        <div
+          ref={contentContainerRef}
+          className="h-[calc(100%-50px)] overflow-y-auto min-h-[200px] p-4"
+        >
+          {/* 加载状态 */}
+          {showLoad && (
+            <div className="min-h-[200px] flex justify-center items-center">
+              <Spin />
+            </div>
+          )}
+          
+          {/* 三段检索结果展示 */}
+          {streamingAnswer && (
+            <div>
+              <Steps
+                direction="vertical"
+                items={[
+                  {
+                    title: '基础分析',
+                    status: 'finish',
+                    description: (
+                      <MarkdownContent
+                        content={streamingAnswer}
+                        className="text-gray-800 word-break"
+                      />
+                    ),
+                    icon: (
+                      <img
+                        src="/assets/ai_avatar.png"
+                        className="w-[30px] h-[30px]"
+                      />
+                    )
+                  }
+                ]}
+              />
+              
+              {/* 第一段搜索结果 */}
+              {searchResults.length > 0 && showSearch && (
+                <SearchResultsDisplay results={searchResults} />
+              )}
+
+              {/* 第二段内容 */}
+              {streamingAnswer2 && (
+                <Steps
+                  direction="vertical"
+                  items={[
+                    {
+                      title: '拓展分析',
+                      status: 'finish',
+                      description: (
+                        <MarkdownContent
+                          content={streamingAnswer2}
+                          className="text-gray-800 word-break"
+                        />
+                      ),
+                      icon: (
+                        <img
+                          src="/assets/ai_avatar.png"
+                          className="w-[30px] h-[30px]"
+                        />
+                      )
+                    }
+                  ]}
+                />
+              )}
+              
+              {/* 第二段搜索结果 */}
+              {searchResults2.length > 0 && showSearch2 && (
+                <SearchResultsDisplay results={searchResults2} />
+              )}
+
+              {/* 第三段内容 */}
+              {streamingAnswer3 && (
+                <Steps
+                  direction="vertical"
+                  items={[
+                    {
+                      title: '深度剖析',
+                      status: 'finish',
+                      description: (
+                        <MarkdownContent
+                          content={streamingAnswer3}
+                          className="text-gray-800 word-break"
+                        />
+                      ),
+                      icon: (
+                        <img
+                          src="/assets/ai_avatar.png"
+                          className="w-[30px] h-[30px]"
+                        />
+                      )
+                    }
+                  ]}
+                />
+              )}
+              
+              {/* 第三段搜索结果 */}
+              {searchResults3.length > 0 && showSearch3 && (
+                <SearchResultsDisplay results={searchResults3} />
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+// 搜索结果展示组件
+const SearchResultsDisplay = ({ results }: { 
+  results: { title: string; link: string; snippet: string }[] 
+}) => (
+  <Steps
+    direction="vertical"
+    items={[
+      {
+        title: (
+          <span className="font-medium text-gray-900">
+            Researching websites
+          </span>
+        ),
+        status: 'finish',
+        description: (
+          <div className="flex flex-wrap gap-3">
+            {results.map((item, index) => (
+              <Tooltip key={index} title={item.snippet}>
+                <a
+                  href={item.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center w-[22%] gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-full shadow-sm transition-colors rounded-[10px] border border-[#EAE6F2] bg-white shadow-[0px_2px_6px_0px_rgba(25,29,40,0.06)]"
+                >
+                  <GlobalOutlined />
+                  <span className="text-gray-800 font-medium truncate">
+                    {item.link}
+                  </span>
+                </a>
+              </Tooltip>
+            ))}
+          </div>
+        ),
+        icon: <GlobalOutlined />
+      }
+    ]}
+  />
+)
+
+式处理工具 - utils/stream.ts
+const baseURL = {
+  global: import.meta.env.VITE_BASE_API
+}
+
+let currentController: AbortController | null = null
+
+// 请求事件流
+async function requestEventStream(
+  data: Record<string, unknown>,
+  url: string = '/ai/v1/chat/generations/stream'
+) {
+  const tokenStorage = localStorage.getItem('token-storage')
+
+  if (tokenStorage) {
+    try {
+      // 如果有旧的控制器，先中止它
+      if (currentController) {
+        currentController.abort()
+      }
+      
+      // 创建新的 AbortController
+      currentController = new AbortController()
+      const signal = currentController.signal
+      
+      const token = JSON.parse(tokenStorage)?.state?.token
+      const stream = await fetch(`${baseURL.global}${url}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': token
+        },
+        body: JSON.stringify(data),
+        signal
+      })
+      
+      if (!stream.ok) {
+        throw new Error('Network response was not ok')
+      }
+      
+      return stream
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        console.log('Request was aborted')
+      } else {
+        console.log('error', error)
+      }
+    }
+  }
+}
+
+// 处理流式响应
+async function* streamResponse(response: Response | undefined) {
+  if (!response) return
+  const decoder = new TextDecoder()
+  const reader = response.body?.getReader()
+  if (!reader) {
+    throw new Error('No reader available')
+  }
+
+  let buffer = ''
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() || ''
+      
+      for (const line of lines) {
+        if (line.trim() === '') continue
+        if (line.startsWith('data:')) {
+          try {
+            const json = JSON.parse(line.slice(5))
+            if (json?.results?.[0]?.metadata?.finishReason === 'STOP') return
+            
+            const streamContent = json?.results?.[0]?.output?.text
+            const searchResultsStream = json?.metadata?.search?.results
+            
+            if (streamContent || searchResultsStream) {
+              yield {
+                streamContent,
+                searchResultsStream
+              }
+            }
+          } catch (e) {
+            console.error('Error parsing chunk:', e)
+          }
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock()
+  }
+}
+
+// 中止当前请求
+async function abortCurrentRequest(): Promise<boolean> {
+  if (currentController) {
+    const controller = currentController
+    currentController = null
+    
+    try {
+      controller.abort()
+      return true
+    } catch (error) {
+      console.log('Abort error (handled):', error)
+      return true
+    }
+  }
+  
+  return false
+}
+
+export { requestEventStream, streamResponse, abortCurrentRequest }
+
+
+
+
+===
+启用三段检索的方法
+// 在任何组件中触发三段检索
+import { useModelStore } from '@/store/globalStore'
+
+const SomeComponent = () => {
+  const { setIsDeepShow, setDeepShowContent } = useModelStore()
+  
+  const handleDeepResearch = (question: string) => {
+    setDeepShowContent(question)  // 设置要研究的问题
+    setIsDeepShow(true)          // 显示深度研究界面
+  }
+  
+  return (
+    <button onClick={() => handleDeepResearch("用户的问题")}>
+      开始深度研究
+    </button>
+  )
+}
+
+
+
+全局样式 - src/index.css
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply m-0 antialiased text-gray-900 dark:text-gray-100 font-['Inter'] bg-gray-50 dark:bg-gray-900;
+  }
+}
+
+/* 三段检索专用样式 */
+.word-break {
+    word-break: break-word;
+}
+
+/* 自定义按钮样式 */
+.custom-button {
+    background-color: #7765E9 !important;
+    color: #FFFFFF !important;
+    border-color: #7765E9 !important;
+}
+  
+.custom-button:hover {
+    background-color: #7765E9e6 !important;
+    border-color: #7765E9e6 !important;
+}
+
+.custom-text-button {
+    color: #7765E9 !important;
+}
+
+.custom-text-button:hover {
+    color: #7765E9e6 !important;
+}
+
+/* Ant Design Steps 组件样式定制 */
+:where(.css-dev-only-do-not-override-142vneq).ant-steps .ant-steps-item-finish.ant-steps-item-custom .ant-steps-item-icon >.ant-steps-icon {
+    color: #7765E9;
+}
+
+:where(.css-dev-only-do-not-override-142vneq).ant-steps .ant-steps-item-finish>.ant-steps-item-container>.ant-steps-item-tail::after {
+    background-color: #7765E9;
+}
+
+/* 全局滚动条样式 */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.2);
+    border-radius: 3px;
+    transition: background 0.3s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0,0,0,0.3);
+}
+
+@layer components {
+  .chat-container {
+    @apply max-h-[calc(100vh-12rem)] overflow-y-auto scroll-smooth scrollbar-custom;
+    scroll-behavior: smooth;
+  }
+
+  .message-bubble {
+    @apply rounded-2xl bg-white dark:bg-gray-800 shadow-sm
+           border border-gray-100 dark:border-gray-700/50
+           backdrop-blur-sm;
+  }
+
+  .input-field {
+    @apply w-full p-4 rounded-2xl
+           bg-white dark:bg-gray-800
+           border border-gray-200 dark:border-gray-700
+           text-gray-800 dark:text-gray-200
+           shadow-sm backdrop-blur-sm
+           focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500
+           transition-shadow duration-200;
+  }
+
+  .prose {
+    @apply text-sm leading-relaxed;
+  }
+
+  .scrollbar-custom {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0,0,0,0.2) transparent;
+  }
+
+  .scrollbar-custom::-webkit-scrollbar {
+    @apply w-1.5;
+  }
+
+  .scrollbar-custom::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .scrollbar-custom::-webkit-scrollbar-thumb {
+    @apply bg-gray-300/50 dark:bg-gray-700/50 rounded-full 
+           hover:bg-gray-400/50 dark:hover:bg-gray-600/50 
+           transition-colors;
+  }
+}
+
+
+专用样式组件
+搜索结果展示样式
+const SearchResultsDisplay = ({ results }: { 
+  results: { title: string; link: string; snippet: string }[] 
+}) => (
+  <Steps
+    direction="vertical"
+    items={[
+      {
+        title: (
+          <span className="font-medium text-gray-900">
+            Researching websites
+          </span>
+        ),
+        status: 'finish',
+        description: (
+          <div className="flex flex-wrap gap-3">
+            {results.map((item, index) => (
+              <Tooltip key={index} title={item.snippet}>
+                <a
+                  href={item.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center w-[22%] gap-2 px-4 py-2 
+                           bg-gray-50 hover:bg-gray-100 
+                           rounded-[10px] border border-[#EAE6F2] 
+                           bg-white shadow-[0px_2px_6px_0px_rgba(25,29,40,0.06)]
+                           transition-colors duration-200
+                           hover:shadow-md"
+                >
+                  <GlobalOutlined className="text-blue-500" />
+                  <span className="text-gray-800 font-medium truncate">
+                    {item.link}
+                  </span>
+                </a>
+              </Tooltip>
+            ))}
+          </div>
+        ),
+        icon: <GlobalOutlined className="text-blue-500" />
+      }
+    ]}
+  />
+)
+
+动画和过渡效果
+Framer Motion 动画配置
+
+import { motion } from 'framer-motion'
+
+const animationConfig = {
+  initial: { opacity: 0, y: 10 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -10 },
+  transition: { duration: 0.3, ease: "easeOut" }
+}
+
+// 在组件中使用
+<motion.div
+  initial={animationConfig.initial}
+  animate={animationConfig.animate}
+  exit={animationConfig.exit}
+  transition={animationConfig.transition}
+  className={containerClasses}
+>
+  {/* 内容 */}
+</motion.div>
+
+
+这些代码你可以做参考 不一定全部照搬 要按照我们项目目前的实际代码配置去做
