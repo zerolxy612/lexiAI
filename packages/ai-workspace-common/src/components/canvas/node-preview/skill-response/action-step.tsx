@@ -20,6 +20,7 @@ import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/ca
 import { getParsedReasoningContent } from '@refly/utils/content-parser';
 import { IconThinking } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { useDeepResearchStoreShallow } from '@refly-packages/ai-workspace-common/stores/deep-research';
+import { DeepResearchPanel } from '@refly-packages/ai-workspace-common/components/deep-research/deep-research-panel';
 
 const parseStructuredData = (structuredData: Record<string, unknown>, field: string) => {
   return typeof structuredData[field] === 'string'
@@ -302,9 +303,14 @@ export const ActionStepCard = memo(
     const [logBoxCollapsed, setLogBoxCollapsed] = useState(false);
 
     // Check if deep analysis is selected for this result
-    const { isDeepAnalysisSelected } = useDeepResearchStoreShallow((state) => ({
-      isDeepAnalysisSelected: state.isDeepAnalysisSelected,
-    }));
+    const { isDeepAnalysisSelected, setIsPanelOpen, setCurrentQuery, isPanelOpen, currentQuery } =
+      useDeepResearchStoreShallow((state) => ({
+        isDeepAnalysisSelected: state.isDeepAnalysisSelected,
+        setIsPanelOpen: state.setIsPanelOpen,
+        setCurrentQuery: state.setCurrentQuery,
+        isPanelOpen: state.isPanelOpen,
+        currentQuery: state.currentQuery,
+      }));
 
     const shouldShowStartResearch = useMemo(() => {
       return (
@@ -365,8 +371,13 @@ export const ActionStepCard = memo(
 
     const handleStartResearch = useCallback(() => {
       console.log('🎯 Starting deep research for query:', query);
-      // TODO: Implement deep research modal opening logic
-    }, [query]);
+      setCurrentQuery(query);
+      setIsPanelOpen(true);
+    }, [query, setCurrentQuery, setIsPanelOpen]);
+
+    const handleClosePanel = useCallback(() => {
+      setIsPanelOpen(false);
+    }, [setIsPanelOpen]);
 
     if (!step) return null;
 
@@ -441,6 +452,9 @@ export const ActionStepCard = memo(
         )}
 
         <ActionContainer result={result} step={step} nodeId={nodeId} />
+
+        {/* Deep Research Panel */}
+        <DeepResearchPanel isOpen={isPanelOpen} onClose={handleClosePanel} query={currentQuery} />
       </div>
     );
   },

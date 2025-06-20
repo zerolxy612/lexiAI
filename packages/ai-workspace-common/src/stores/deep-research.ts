@@ -12,6 +12,10 @@ interface DeepResearchState {
   isDeepShow: boolean;
   deepShowContent: string;
 
+  // 新的面板状态
+  isPanelOpen: boolean;
+  currentQuery: string;
+
   // 三段检索内容
   streamingAnswer: string;
   streamingAnswer2: string;
@@ -34,6 +38,8 @@ interface DeepResearchState {
   // Actions
   setIsDeepShow: (show: boolean) => void;
   setDeepShowContent: (content: string) => void;
+  setIsPanelOpen: (open: boolean) => void;
+  setCurrentQuery: (query: string) => void;
   setStreamingAnswer: (answer: string) => void;
   setStreamingAnswer2: (answer: string) => void;
   setStreamingAnswer3: (answer: string) => void;
@@ -54,6 +60,8 @@ export const useDeepResearchStore = create<DeepResearchState>((set, get) => ({
   // Initial state
   isDeepShow: false,
   deepShowContent: '',
+  isPanelOpen: false,
+  currentQuery: '',
   streamingAnswer: '',
   streamingAnswer2: '',
   streamingAnswer3: '',
@@ -69,6 +77,8 @@ export const useDeepResearchStore = create<DeepResearchState>((set, get) => ({
   // Actions
   setIsDeepShow: (show) => set({ isDeepShow: show }),
   setDeepShowContent: (content) => set({ deepShowContent: content }),
+  setIsPanelOpen: (open) => set({ isPanelOpen: open }),
+  setCurrentQuery: (query) => set({ currentQuery: query }),
   setStreamingAnswer: (answer) => set({ streamingAnswer: answer }),
   setStreamingAnswer2: (answer) => set({ streamingAnswer2: answer }),
   setStreamingAnswer3: (answer) => set({ streamingAnswer3: answer }),
