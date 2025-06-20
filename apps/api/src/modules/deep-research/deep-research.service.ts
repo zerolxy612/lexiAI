@@ -22,30 +22,32 @@ export class DeepResearchService {
   private readonly thinkingStartFlag: string;
   private readonly thinkingEndFlag: string;
 
-  // Three-stage configuration based on Spring Boot logic
+  // Stage configurations for three-stage deep research
   private readonly stageConfigs: StageConfig[] = [
     {
-      name: '基础分析',
-      querySuffix: '',
-      description: 'Initial analysis of the topic',
+      name: 'Basic Analysis',
+      querySuffix: '基础分析',
+      description: 'Provide core answers and fundamental analysis',
     },
     {
-      name: '拓展分析',
-      querySuffix: '，拓展',
-      description: 'Extended analysis with broader context',
+      name: 'Extended Analysis',
+      querySuffix: '拓展分析',
+      description: 'Offer comprehensive background and related information',
     },
     {
-      name: '深度剖析',
-      querySuffix: '，深度剖析',
-      description: 'Deep dive analysis with comprehensive insights',
+      name: 'Deep Analysis',
+      querySuffix: '深度剖析',
+      description: 'Analyze complex relationships and potential impacts',
     },
   ];
 
   constructor(
-    private readonly googleSearchService: GoogleSearchService,
     private readonly configService: ConfigService,
+    private readonly googleSearchService: GoogleSearchService,
     private readonly hkgaiClientFactory: HKGAIClientFactory,
   ) {
+    this.logger.log('DeepResearchService initialized');
+    this.logger.log(`Using HKGAI RAG model for deep research analysis`);
     this.thinkingStartFlag = this.configService.get<string>(
       'LAS_OPENAI_CHAT_RESPONSE_THINKING_START_FLAG',
       '<think>',
@@ -154,10 +156,20 @@ export class DeepResearchService {
       let searchResults: SearchResultDto[] = [];
       if (request.search !== false) {
         this.logger.debug(`Searching with enhanced query: "${enhancedQuery}"`);
-        searchResults = await this.googleSearchService.search(enhancedQuery, {
-          num: 8, // Get more results for better context
-          language: 'zh-CN',
-        });
+        try {
+          searchResults = await this.googleSearchService.search(enhancedQuery, {
+            num: 8, // Get more results for better context
+            language: 'zh-CN',
+          });
+          this.logger.log(`✅ Google search successful: ${searchResults.length} results found`);
+        } catch (searchError) {
+          this.logger.warn(
+            `⚠️ Google search failed, continuing without search results:`,
+            searchError.message,
+          );
+          // Continue without search results - AI can still provide general knowledge
+          searchResults = [];
+        }
 
         // Send search complete event
         subject.next(
@@ -279,60 +291,90 @@ export class DeepResearchService {
    * @param stage - Current stage number
    * @returns Complete AI response content
    */
-  private async callAIModelWithStreaming(
+  private callAIModelWithStreaming(
     systemPrompt: string,
     messages: any[],
     subject: Subject<MessageEvent>,
     stage: number,
   ): Promise<string> {
-    try {
-      // Prepare messages with system prompt
-      const enhancedMessages = [{ role: 'system', content: systemPrompt }, ...messages];
-
-      // Call HKGAI API using the General model
-      const response = await this.hkgaiClientFactory.createChatCompletion(
-        'General', // Use the General model from HKGAIModelName enum
-        enhancedMessages,
-        {
-          temperature: 0.7,
-          stream: false, // For now, disable streaming
-        },
-      );
-
-      // Extract content from HKGAI response
-      let content = '';
+    return new Promise(async (resolve, reject) => {
       try {
-        if (response && response.choices && response.choices[0] && response.choices[0].message) {
-          content = response.choices[0].message.content || '';
-        } else if (typeof response === 'string') {
-          content = response;
-        } else {
-          content = 'AI model returned empty response';
-          this.logger.warn('Unexpected response format from HKGAI:', response);
-        }
-      } catch (parseError) {
-        this.logger.warn('Failed to parse AI response, using fallback:', parseError);
-        content = 'Response parsing failed';
-      }
+        // Prepare messages with system prompt
+        const enhancedMessages = [{ role: 'system', content: systemPrompt }, ...messages];
 
-      // Send AI response event
-      subject.next(
-        this.createEvent('ai_response', {
-          type: 'ai_response',
-          content,
-          progress: {
-            currentStage: stage,
-            totalStages: 3,
-            percentage: Math.round(((stage + 0.8) / 3) * 100),
+        // Call HKGAI API using the RAG model (optimized for retrieval-augmented generation)
+        const responseStream = await this.hkgaiClientFactory.createChatCompletion(
+          'RAG', // Use RAG model for better three-stage retrieval performance
+          enhancedMessages,
+          {
+            temperature: 0.7,
+            stream: true, // MUST be true for RAG model
+            max_tokens: 4000,
           },
-        }),
-      );
+        );
 
-      return content;
-    } catch (error) {
-      this.logger.error('Error calling AI model:', error);
-      throw new Error(`AI model call failed: ${error.message}`);
-    }
+        let fullContent = '';
+        let buffer = '';
+
+        responseStream.on('data', (chunk: Buffer) => {
+          buffer += chunk.toString('utf8');
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || ''; // Keep the last, possibly incomplete line in buffer
+
+          for (const line of lines) {
+            if (line.trim().startsWith('data: ')) {
+              const jsonStr = line.trim().substring(5).trim();
+              if (jsonStr === '[DONE]') {
+                // The stream is indicating completion
+                continue;
+              }
+              try {
+                const data = JSON.parse(jsonStr);
+                const delta = data.choices?.[0]?.delta?.content || '';
+                if (delta) {
+                  fullContent += delta;
+                  // Send AI response chunk event for real-time updates
+                  subject.next(
+                    this.createEvent('ai_response_chunk', {
+                      type: 'ai_response_chunk',
+                      content: delta,
+                      stage,
+                    }),
+                  );
+                }
+              } catch (e) {
+                this.logger.warn(`Error parsing stream data chunk: "${jsonStr}" - ${e.message}`);
+              }
+            }
+          }
+        });
+
+        responseStream.on('end', () => {
+          this.logger.log(`AI model stream ended for stage ${stage}.`);
+          // Send final stage complete event with the full content
+          subject.next(
+            this.createEvent('ai_response', {
+              type: 'ai_response',
+              content: fullContent,
+              progress: {
+                currentStage: stage,
+                totalStages: 3,
+                percentage: Math.round(((stage + 0.9) / 3) * 100), // Progress to near end of stage
+              },
+            }),
+          );
+          resolve(fullContent); // Resolve the promise with the full content
+        });
+
+        responseStream.on('error', (error: Error) => {
+          this.logger.error('Error in AI model stream:', error);
+          reject(new Error(`AI model stream error: ${error.message}`));
+        });
+      } catch (error) {
+        this.logger.error('Error calling AI model:', error);
+        reject(new Error(`AI model call failed: ${error.message}`));
+      }
+    });
   }
 
   /**
@@ -365,19 +407,19 @@ export class DeepResearchService {
   }> {
     const googleSearchHealth = await this.googleSearchService.testConnection();
 
-    // Test AI model connection
+    // Test AI model connection using RAG model
     let aiModelHealth = false;
     try {
-      // Test if we can get a client for the General model
-      const client = this.hkgaiClientFactory.getClient('General');
+      // Test if we can get a client for the RAG model
+      const client = this.hkgaiClientFactory.getClient('RAG');
       aiModelHealth = !!client;
     } catch (error) {
       this.logger.warn('AI model health check failed:', error);
     }
 
     const configurationHealth = !!(
-      this.configService.get('LAS_SEARCH_GOOGLE_KEY') &&
-      this.configService.get('LAS_SEARCH_GOOGLE_CX')
+      this.configService.get('credentials.google.searchApiKey') &&
+      this.configService.get('credentials.google.searchCx')
     );
 
     return {

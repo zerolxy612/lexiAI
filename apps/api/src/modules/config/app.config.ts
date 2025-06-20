@@ -121,6 +121,27 @@ export default () => ({
     sessionCancelUrl: process.env.STRIPE_SESSION_CANCEL_URL,
     portalReturnUrl: process.env.STRIPE_PORTAL_RETURN_URL,
   },
+  credentials: {
+    hkgai: {
+      baseUrl: process.env.HKGAI_BASE_URL || 'https://ragpipeline.hkgai.asia',
+      searchEntryKey: process.env.HKGAI_SEARCHENTRY_API_KEY || 'app-mYHumURK2S010ZonuvzeX1Ad',
+      missingInfoKey: process.env.HKGAI_MISSINGINFO_API_KEY || 'app-cWHko7usG7aP8ZsAnSeglYc3',
+      timelineKey: process.env.HKGAI_TIMELINE_API_KEY || 'app-R9k11qz64Cd86NCsw2ojZVLC',
+      generalKey: process.env.HKGAI_GENERAL_API_KEY || 'app-5PTDowg5Dn2MSEhG5n3FBWXs',
+      ragKey:
+        process.env.HKGAI_RAG_API_KEY ||
+        process.env.HKGAI_API_KEY ||
+        'sk-UgDQCBR58Fg66sb480Ff7f4003A740D8B7DcD97f3566BbAc',
+    },
+    google: {
+      searchApiKey:
+        process.env.GOOGLE_SEARCH_API_KEY ||
+        process.env.LAS_SEARCH_GOOGLE_KEY ||
+        'AIzaSyB5SdGp54KIIsKEs7z_MHcsIF7MVXeLCjI',
+      searchCx:
+        process.env.GOOGLE_SEARCH_CX || process.env.LAS_SEARCH_GOOGLE_CX || 'e67e12fe38d0148fc',
+    },
+  },
   quota: {
     token: {
       t1: Number.parseInt(process.env.QUOTA_T1_TOKEN) || -1,

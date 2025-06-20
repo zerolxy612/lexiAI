@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Sse, UseGuards, Logger } from '@nestjs/common';
+import { Controller, Post, Body, Sse, UseGuards, Logger, Get } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { Observable } from 'rxjs';
 import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
@@ -10,8 +10,6 @@ import { User } from '@refly/openapi-schema';
 
 @ApiTags('Deep Research')
 @Controller('api/v1/deep-research')
-@UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
 export class DeepResearchController {
   private readonly logger = new Logger(DeepResearchController.name);
 
@@ -19,6 +17,8 @@ export class DeepResearchController {
 
   @Post('stream')
   @Sse()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Generate streaming deep research response',
     description: 'Performs three-stage retrieval analysis with Google search and AI processing',
@@ -53,7 +53,7 @@ export class DeepResearchController {
     }
   }
 
-  @Post('health')
+  @Get('health')
   @ApiOperation({
     summary: 'Check deep research service health',
     description: 'Returns the health status of Google Search and AI model services',

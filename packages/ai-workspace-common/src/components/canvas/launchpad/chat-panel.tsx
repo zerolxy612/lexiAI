@@ -43,6 +43,7 @@ import {
   useDeepResearchStoreShallow,
   useDeepResearchStore,
 } from '@refly-packages/ai-workspace-common/stores/deep-research';
+import { useInitializeDefaultModel } from '@refly-packages/ai-workspace-common/hooks/use-initialize-default-model';
 
 // Import deep_a.png image
 import deepAnalysisIcon from '/src/assets/deep_a.png';
@@ -163,6 +164,9 @@ export const ChatPanel = ({
   const { addNode } = useAddNode();
   const { invokeAction, abortAction } = useInvokeAction();
   const { handleUploadImage, handleUploadMultipleImages } = useUploadImage();
+
+  // Initialize default model when user logs in
+  useInitializeDefaultModel();
 
   // Handle input focus
   const handleInputFocus = useCallback(() => {
@@ -444,6 +448,10 @@ export const ChatPanel = ({
       setContextItems([...contextItems, ...newContextItems]);
     }
   };
+
+  // Debug: Log the current selectedModel
+  console.log('🎯 [ChatPanel] Current selectedModel:', chatStore.selectedModel);
+  console.log('🎯 [ChatPanel] embeddedMode:', embeddedMode);
 
   return (
     <>

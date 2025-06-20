@@ -172,6 +172,25 @@ export const ModelSelector = memo(
       },
     );
 
+    // Debug: Check what the API is returning
+    console.log('🎯 [ModelSelector] Raw providerItemList response:', providerItemList);
+    console.log('🎯 [ModelSelector] providerItemList.data:', providerItemList?.data);
+    console.log('🎯 [ModelSelector] isModelListLoading:', isModelListLoading);
+
+    // Debug: Add a manual refresh function
+    const debugRefresh = () => {
+      console.log('🔄 [ModelSelector] Manual refresh triggered');
+      refetchModelList();
+    };
+
+    // Add debug button to DOM (temporary)
+    useEffect(() => {
+      if (typeof window !== 'undefined') {
+        (window as any).debugRefreshModels = debugRefresh;
+        console.log('🔧 [ModelSelector] Debug function added: window.debugRefreshModels()');
+      }
+    }, []);
+
     // Listen for model update events
     useEffect(() => {
       const handleModelRefetch = () => {
@@ -198,7 +217,7 @@ export const ModelSelector = memo(
     }, [setShowSettingModal, setSettingsModalActiveTab]);
 
     const modelList: ModelInfo[] = useMemo(() => {
-      return (
+      const result =
         providerItemList?.data?.map((item) => {
           const config = item.config as LLMModelConfig;
           return {
@@ -211,9 +230,11 @@ export const ModelSelector = memo(
             capabilities: config.capabilities,
             group: item.group,
           };
-        }) || []
-      );
-    }, [providerItemList?.data]);
+        }) || [];
+      console.log('🎯 [ModelSelector] modelList generated:', result);
+      console.log('🎯 [ModelSelector] current model prop:', model);
+      return result;
+    }, [providerItemList?.data, model]);
 
     const { handleGroupModelList } = useGroupModels();
     const sortedGroups = useMemo(() => handleGroupModelList(modelList), [modelList]);
@@ -274,25 +295,40 @@ export const ModelSelector = memo(
     // 3. Current model is not present in the model list
     // BUT only after data is fully loaded
     useEffect(() => {
+      console.log('🎯 [ModelSelector] Auto-select effect triggered');
+      console.log('🎯 [ModelSelector] isModelListLoading:', isModelListLoading);
+      console.log('🎯 [ModelSelector] isUsageLoading:', isUsageLoading);
+      console.log('🎯 [ModelSelector] modelList length:', modelList?.length);
+      console.log('🎯 [ModelSelector] current model:', model);
+
       // Don't auto-select while data is still loading
       if (isModelListLoading || isUsageLoading) {
+        console.log('🎯 [ModelSelector] Skipping - data still loading');
         return;
       }
 
       // Don't auto-select if modelList is empty (no models available)
       if (!modelList || modelList.length === 0) {
+        console.log('🎯 [ModelSelector] Skipping - modelList is empty');
         return;
       }
 
-      if (
-        !model ||
-        isModelDisabled(tokenUsage, model) ||
-        !modelList?.find((m) => m.name === model.name)
-      ) {
+      const modelFoundInList = modelList?.find((m) => m.name === model?.name);
+      const modelDisabled = model ? isModelDisabled(tokenUsage, model) : false;
+
+      console.log('🎯 [ModelSelector] modelFoundInList:', modelFoundInList);
+      console.log('🎯 [ModelSelector] modelDisabled:', modelDisabled);
+
+      if (!model || modelDisabled || !modelFoundInList) {
+        console.log('🎯 [ModelSelector] Condition met for auto-select');
         const availableModel = modelList?.find((m) => !isModelDisabled(tokenUsage, m));
+        console.log('🎯 [ModelSelector] availableModel found:', availableModel);
         if (availableModel) {
+          console.log('🎯 [ModelSelector] Setting model to:', availableModel);
           setModel(availableModel);
         }
+      } else {
+        console.log('🎯 [ModelSelector] No auto-select needed');
       }
     }, [
       model,

@@ -26,19 +26,22 @@ interface GoogleSearchItem {
 export class GoogleSearchService {
   private readonly logger = new Logger(GoogleSearchService.name);
   private readonly apiKey: string;
-  private readonly searchEngineId: string;
+  private readonly cx: string;
+  private readonly numResults: number;
+  private readonly safesearch: string;
+  private readonly language: string;
   private readonly baseUrl = 'https://www.googleapis.com/customsearch/v1';
 
   constructor(private readonly configService: ConfigService) {
-    this.apiKey = this.configService.get<string>('LAS_SEARCH_GOOGLE_KEY');
-    this.searchEngineId = this.configService.get<string>('LAS_SEARCH_GOOGLE_CX');
+    this.apiKey = this.configService.get('credentials.google.searchApiKey');
+    this.cx = this.configService.get('credentials.google.searchCx');
+    this.numResults = this.configService.get('GOOGLE_SEARCH_NUM_RESULTS') || 8;
+    this.safesearch = this.configService.get('GOOGLE_SEARCH_SAFE_SEARCH') || 'active';
+    this.language = this.configService.get('GOOGLE_SEARCH_LANGUAGE') || 'zh-CN';
 
-    if (!this.apiKey) {
-      this.logger.warn('Google Search API key not configured');
-    }
-    if (!this.searchEngineId) {
-      this.logger.warn('Google Search Engine ID not configured');
-    }
+    this.logger.log('GoogleSearchService initialized');
+    this.logger.log(`API Key configured: ${this.apiKey ? 'Yes' : 'No'}`);
+    this.logger.log(`Search CX configured: ${this.cx ? 'Yes' : 'No'}`);
   }
 
   /**
@@ -55,7 +58,7 @@ export class GoogleSearchService {
       language?: string;
     },
   ): Promise<SearchResultDto[]> {
-    if (!this.apiKey || !this.searchEngineId) {
+    if (!this.apiKey || !this.cx) {
       this.logger.error('Google Search API not properly configured');
       throw new HttpException('Search service not available', HttpStatus.SERVICE_UNAVAILABLE);
     }
@@ -63,11 +66,12 @@ export class GoogleSearchService {
     try {
       const params = new URLSearchParams({
         key: this.apiKey,
-        cx: this.searchEngineId,
+        cx: this.cx,
         q: query,
-        num: String(options?.num || 10),
+        num: String(options?.num || this.numResults),
         start: String(options?.start || 1),
         ...(options?.language && { hl: options.language }),
+        safesearch: this.safesearch,
       });
 
       const url = `${this.baseUrl}?${params.toString()}`;
@@ -170,9 +174,9 @@ export class GoogleSearchService {
     searchEngineId: boolean;
   } {
     return {
-      configured: !!(this.apiKey && this.searchEngineId),
+      configured: !!(this.apiKey && this.cx),
       apiKey: !!this.apiKey,
-      searchEngineId: !!this.searchEngineId,
+      searchEngineId: !!this.cx,
     };
   }
 }

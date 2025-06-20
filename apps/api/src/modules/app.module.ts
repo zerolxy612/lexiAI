@@ -34,6 +34,7 @@ import { PagesModule } from './pages/pages.module';
 import { ProjectModule } from './project/project.module';
 import { McpServerModule } from './mcp-server/mcp-server.module';
 import { TranscriptionModule } from './transcription/transcription.module';
+import { DeepResearchModule } from './deep-research/deep-research.module';
 
 class CustomThrottlerGuard extends ThrottlerGuard {
   protected async shouldSkip(context: ExecutionContext): Promise<boolean> {
@@ -137,6 +138,7 @@ class CustomThrottlerGuard extends ThrottlerGuard {
     ProjectModule,
     McpServerModule,
     TranscriptionModule,
+    DeepResearchModule,
   ],
   controllers: [AppController],
   providers: [

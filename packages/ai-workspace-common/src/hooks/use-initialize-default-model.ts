@@ -22,34 +22,46 @@ export const useInitializeDefaultModel = () => {
     }));
 
   useEffect(() => {
+    console.log('🔍 [useInitializeDefaultModel] Hook triggered');
+    console.log('🔍 [useInitializeDefaultModel] isLogin:', isLogin);
+    console.log('🔍 [useInitializeDefaultModel] skillSelectedModel:', skillSelectedModel);
+    console.log('🔍 [useInitializeDefaultModel] selectedModel:', selectedModel);
+    console.log('🔍 [useInitializeDefaultModel] userProfile:', userProfile);
+
     // Only initialize if user is logged in and no models are currently selected
     if (!isLogin || (skillSelectedModel && selectedModel)) {
+      console.log(
+        '🔍 [useInitializeDefaultModel] Early return - either not logged in or models already selected',
+      );
       return;
     }
 
     const defaultModel = userProfile?.preferences?.defaultModel;
+    console.log('🔍 [useInitializeDefaultModel] defaultModel from userProfile:', defaultModel);
     let chatModel = defaultModel?.chat;
 
     // If no default model configured, create hkgai-general as default
     if (!chatModel) {
-      // Initialize with hkgai-general as fallback for general AI conversations
-      // This matches the model used by askai nodes (1-for-general)
+      console.log('🔍 [useInitializeDefaultModel] No default model, creating RAG model');
+      // Initialize with hkgai-rag as fallback for general AI conversations
+      // This matches the model used by deep research service
       const defaultModelInfo: ModelInfo = {
-        name: 'hkgai-general', // Changed from hkgai-missinginfo to hkgai-general
-        label: 'HKGAI General',
+        name: 'hkgai-rag', // Changed to RAG model for better performance
+        label: 'HKGAI RAG',
         provider: 'hkgai',
-        providerItemId: 'hkgai-general-item', // Match exact itemId from database
+        providerItemId: 'hkgai-rag-item', // Match exact itemId from database
         tier: 't2',
         contextLimit: 8000,
         maxOutput: 4000,
         capabilities: {},
         isDefault: true,
       };
+      console.log('🔍 [useInitializeDefaultModel] Created defaultModelInfo:', defaultModelInfo);
 
       // Convert ModelInfo to ProviderItem format
       chatModel = {
         providerId: defaultModelInfo.provider,
-        itemId: defaultModelInfo.providerItemId, // This will be 'hkgai-general-item'
+        itemId: defaultModelInfo.providerItemId, // This will be 'hkgai-rag-item'
         category: 'llm',
         name: defaultModelInfo.label,
         enabled: true,
@@ -63,6 +75,7 @@ export const useInitializeDefaultModel = () => {
         order: 0,
         groupName: 'HKGAI',
       } as ProviderItem;
+      console.log('🔍 [useInitializeDefaultModel] Created chatModel:', chatModel);
     }
 
     // Convert ProviderItem to ModelInfo format
@@ -76,16 +89,21 @@ export const useInitializeDefaultModel = () => {
       capabilities: {},
       isDefault: true,
     };
+    console.log('🔍 [useInitializeDefaultModel] Final modelInfo to set:', modelInfo);
 
     // Set both models in chat store to ensure ReflyPilot uses the correct model
     // skillSelectedModel: used by skill nodes
     // selectedModel: used by ChatPanel (including ReflyPilot)
     if (!skillSelectedModel) {
+      console.log('🔍 [useInitializeDefaultModel] Setting skillSelectedModel');
       setSkillSelectedModel(modelInfo);
     }
     if (!selectedModel) {
+      console.log('🔍 [useInitializeDefaultModel] Setting selectedModel');
       setSelectedModel(modelInfo);
     }
+
+    console.log('🔍 [useInitializeDefaultModel] Model initialization completed');
   }, [
     isLogin,
     userProfile,

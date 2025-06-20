@@ -10,6 +10,7 @@ export enum HKGAIModelName {
   MISSING_INFO = 'MissingInfo',
   TIMELINE = 'Timeline',
   GENERAL = 'General',
+  RAG = 'RAG',
 }
 
 /**
@@ -32,9 +33,34 @@ export class HKGAIClientFactory {
       [HKGAIModelName.TIMELINE]: this.configService.get('credentials.hkgai.timelineKey'),
       [HKGAIModelName.GENERAL]:
         this.configService.get('credentials.hkgai.generalKey') || 'app-5PTDowg5Dn2MSEhG5n3FBWXs',
+      [HKGAIModelName.RAG]:
+        this.configService.get('credentials.hkgai.ragKey') ||
+        'sk-UgDQCBR58Fg66sb480Ff7f4003A740D8B7DcD97f3566BbAc',
     };
 
     this.logger.log(`HKGAI Client Factory initialized with base URL: ${this.baseUrl}`);
+    this.logger.log(`Available models: ${Object.keys(this.modelApiKeys).join(', ')}`);
+  }
+
+  /**
+   * 将模型ID映射到枚举值
+   */
+  private mapModelIdToEnum(modelId: string): string {
+    const mapping = {
+      'hkgai-searchentry': HKGAIModelName.SEARCH_ENTRY,
+      'hkgai-missinginfo': HKGAIModelName.MISSING_INFO,
+      'hkgai-timeline': HKGAIModelName.TIMELINE,
+      'hkgai-general': HKGAIModelName.GENERAL,
+      'hkgai-rag': HKGAIModelName.RAG,
+      // Also support direct enum values
+      [HKGAIModelName.SEARCH_ENTRY]: HKGAIModelName.SEARCH_ENTRY,
+      [HKGAIModelName.MISSING_INFO]: HKGAIModelName.MISSING_INFO,
+      [HKGAIModelName.TIMELINE]: HKGAIModelName.TIMELINE,
+      [HKGAIModelName.GENERAL]: HKGAIModelName.GENERAL,
+      [HKGAIModelName.RAG]: HKGAIModelName.RAG,
+    };
+
+    return mapping[modelId] || modelId;
   }
 
   /**
@@ -43,14 +69,21 @@ export class HKGAIClientFactory {
    * @returns Axios实例
    */
   getClient(modelName: string): AxiosInstance {
+    // Map model ID to enum value
+    const enumModelName = this.mapModelIdToEnum(modelName);
+
     // 检查是否已有此模型的客户端
-    if (this.clients.has(modelName)) {
-      return this.clients.get(modelName);
+    if (this.clients.has(enumModelName)) {
+      return this.clients.get(enumModelName);
     }
 
     // 获取该模型的API密钥
-    const apiKey = this.modelApiKeys[modelName];
+    const apiKey = this.modelApiKeys[enumModelName];
     if (!apiKey) {
+      this.logger.error(
+        `No API key configured for HKGAI model: ${modelName} (mapped to: ${enumModelName})`,
+      );
+      this.logger.error(`Available models: ${Object.keys(this.modelApiKeys).join(', ')}`);
       throw new Error(`No API key configured for HKGAI model: ${modelName}`);
     }
 
@@ -64,8 +97,8 @@ export class HKGAIClientFactory {
     });
 
     // 缓存客户端实例
-    this.clients.set(modelName, client);
-    this.logger.log(`Created client for model: ${modelName}`);
+    this.clients.set(enumModelName, client);
+    this.logger.log(`Created client for model: ${modelName} (mapped to: ${enumModelName})`);
 
     return client;
   }
@@ -86,21 +119,51 @@ export class HKGAIClientFactory {
       [key: string]: any;
     },
   ) {
+    // Map model ID to enum value
+    const enumModelName = this.mapModelIdToEnum(modelName);
     const client = this.getClient(modelName);
 
     try {
-      const response = await client.post('/chat/completions', {
-        app_id: this.modelApiKeys[modelName], // 使用模型对应的密钥作为app_id
-        messages,
-        // 可选参数
-        temperature: options?.temperature || 0.7,
-        stream: options?.stream || false,
-        ...options,
+      // For RAG model, use different API format
+      const isRagModel = enumModelName === HKGAIModelName.RAG;
+      const endpoint = isRagModel ? '/v1/chat/completions' : '/chat/completions';
+
+      const requestBody = isRagModel
+        ? {
+            model: 'Lexihk-RAG', // RAG model uses specific model name
+            messages,
+            temperature: options?.temperature || 0.7,
+            stream: options?.stream || false,
+            max_tokens: options?.max_tokens || 4000,
+            ...options,
+          }
+        : {
+            app_id: this.modelApiKeys[enumModelName], // Dify format uses app_id
+            messages,
+            temperature: options?.temperature || 0.7,
+            stream: options?.stream || false,
+            ...options,
+          };
+
+      this.logger.debug(
+        `Calling ${modelName} (mapped to: ${enumModelName}) with endpoint: ${endpoint}`,
+      );
+      this.logger.debug(`Request body:`, JSON.stringify(requestBody, null, 2));
+
+      const response = await client.post(endpoint, requestBody, {
+        responseType: options?.stream ? 'stream' : 'json',
       });
 
+      // If streaming, the response data is the stream itself.
+      // If not, it's the JSON body.
       return response.data;
     } catch (error) {
       this.logger.error(`Error calling HKGAI API for model ${modelName}: ${error.message}`);
+      this.logger.error(`Base URL: ${this.baseUrl}, Model: ${modelName}`);
+      if (error.response) {
+        this.logger.error(`Response status: ${error.response.status}`);
+        this.logger.error(`Response data:`, error.response.data);
+      }
       throw error;
     }
   }

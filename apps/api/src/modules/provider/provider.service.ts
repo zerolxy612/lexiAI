@@ -319,8 +319,8 @@ export class ProviderService {
   async listProviderItems(user: User, param: ListProviderItemsData['query']) {
     const { providerId, category, enabled } = param;
 
-    // Fetch user's provider items
-    return this.prisma.providerItem.findMany({
+    // First, try to fetch user's provider items
+    const userItems = await this.prisma.providerItem.findMany({
       where: {
         uid: user.uid,
         providerId,
@@ -335,6 +335,28 @@ export class ProviderService {
         order: 'asc',
       },
     });
+
+    // If user has their own items, decrypt API keys and return them
+    if (userItems.length > 0) {
+      return userItems.map((item) => ({
+        ...item,
+        provider: {
+          ...item.provider,
+          apiKey: this.encryptionService.decrypt(item.provider.apiKey),
+        },
+      }));
+    }
+
+    // Fallback to global provider items
+    const { items: globalItems } = await this.globalProviderCache.get();
+    const filteredGlobalItems = globalItems.filter((item) => {
+      const matchesProviderId = !providerId || item.providerId === providerId;
+      const matchesCategory = !category || item.category === category;
+      const matchesEnabled = enabled === undefined || item.enabled === enabled;
+      return matchesProviderId && matchesCategory && matchesEnabled;
+    });
+
+    return filteredGlobalItems;
   }
 
   async findProviderItemById(user: User, itemId: string) {

@@ -10,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { ACCESS_TOKEN_COOKIE } from '@refly/utils';
 import { AppMode } from '@/modules/config/app.config';
+import { PrismaService } from '../../../modules/common/prisma.service';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -18,6 +19,7 @@ export class JwtAuthGuard implements CanActivate {
   constructor(
     private jwtService: JwtService,
     private configService: ConfigService,
+    private prisma: PrismaService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -26,6 +28,22 @@ export class JwtAuthGuard implements CanActivate {
     // If we are in desktop mode, we don't need to check the JWT token
     if (this.configService.get('mode') === AppMode.Desktop) {
       request.user = { uid: this.configService.get('local.uid') };
+      return true;
+    }
+
+    // If auth verification is skipped (development mode), create a mock user
+    if (this.configService.get('auth.skipVerification')) {
+      this.logger.debug('Skipping JWT verification due to AUTH_SKIP_VERIFICATION=true');
+
+      const devUserId = 'u-dev-user';
+
+      // Ensure the dev user exists in database
+      await this.ensureDevUserExists(devUserId);
+
+      request.user = {
+        uid: devUserId,
+        email: 'dev@example.com',
+      };
       return true;
     }
 
@@ -46,6 +64,30 @@ export class JwtAuthGuard implements CanActivate {
       throw new UnauthorizedException();
     }
     return true;
+  }
+
+  private async ensureDevUserExists(uid: string): Promise<void> {
+    try {
+      const existingUser = await this.prisma.user.findUnique({
+        where: { uid },
+      });
+
+      if (!existingUser) {
+        await this.prisma.user.create({
+          data: {
+            uid,
+            name: 'Dev User',
+            nickname: 'Dev User',
+            email: 'dev@example.com',
+            emailVerified: new Date(),
+            outputLocale: 'auto',
+          },
+        });
+        this.logger.debug(`Created development user: ${uid}`);
+      }
+    } catch (error) {
+      this.logger.warn(`Failed to ensure dev user exists: ${error.message}`);
+    }
   }
 
   private extractTokenFromRequest(request: Request): string | undefined {
