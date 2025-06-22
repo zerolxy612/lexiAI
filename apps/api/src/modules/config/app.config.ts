@@ -123,7 +123,8 @@ export default () => ({
   },
   credentials: {
     hkgai: {
-      baseUrl: process.env.HKGAI_BASE_URL || 'https://ragpipeline.hkgai.asia',
+      baseUrl: process.env.HKGAI_BASE_URL || 'https://dify.hkgai.net',
+      ragBaseUrl: process.env.HKGAI_RAG_BASE_URL || 'https://ragpipeline.hkgai.asia',
       searchEntryKey: process.env.HKGAI_SEARCHENTRY_API_KEY || 'app-mYHumURK2S010ZonuvzeX1Ad',
       missingInfoKey: process.env.HKGAI_MISSINGINFO_API_KEY || 'app-cWHko7usG7aP8ZsAnSeglYc3',
       timelineKey: process.env.HKGAI_TIMELINE_API_KEY || 'app-R9k11qz64Cd86NCsw2ojZVLC',

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '@/modules/common/prisma.service';
 import {
   BatchUpsertProviderItemsRequest,
@@ -50,7 +50,7 @@ interface GlobalProviderConfig {
 const PROVIDER_ITEMS_BATCH_LIMIT = 50;
 
 @Injectable()
-export class ProviderService {
+export class ProviderService implements OnModuleInit {
   private logger = new Logger(ProviderService.name);
   private globalProviderCache: SingleFlightCache<GlobalProviderConfig>;
 
@@ -63,64 +63,92 @@ export class ProviderService {
     this.globalProviderCache = new SingleFlightCache(this.fetchGlobalProviderConfig.bind(this));
   }
 
+  async onModuleInit() {
+    this.logger.log('Invalidating global provider cache on module init');
+    this.globalProviderCache.invalidate();
+    await this.globalProviderCache.get();
+    this.logger.log('Global provider cache re-populated');
+  }
+
   async fetchGlobalProviderConfig(): Promise<GlobalProviderConfig> {
-    const providers = await this.prisma.provider.findMany({
-      where: {
-        isGlobal: true,
-        deletedAt: null,
-      },
-    });
-
-    // Initialize searxng global provider if SEARXNG_BASE_URL is set
-    if (process.env.SEARXNG_BASE_URL) {
-      const searXngProvider = providers.find((provider) => provider.providerKey === 'searxng');
-      if (!searXngProvider) {
-        const provider = await this.prisma.provider.create({
-          data: {
-            providerId: genProviderID(),
-            providerKey: 'searxng',
-            name: 'SearXNG',
-            baseUrl: process.env.SEARXNG_BASE_URL,
-            enabled: true,
-            categories: 'webSearch',
-            isGlobal: true,
-          },
-        });
-        this.logger.log(`Initialized global searxng provider ${provider.providerId}`);
-
-        providers.push(provider);
-      }
-    }
-
-    // Decrypt API keys for all providers
-    const decryptedProviders = providers.map((provider) => ({
-      ...provider,
-      apiKey: this.encryptionService.decrypt(provider.apiKey),
-    }));
-
-    const items = await this.prisma.providerItem.findMany({
-      where: {
-        providerId: {
-          in: providers.map((provider) => provider.providerId),
+    this.logger.log('[PROVIDER_DEBUG] Starting fetchGlobalProviderConfig...');
+    try {
+      const providers = await this.prisma.provider.findMany({
+        where: {
+          isGlobal: true,
+          deletedAt: null,
         },
-        uid: null,
-        deletedAt: null,
-      },
-      include: {
-        provider: true,
-      },
-    });
+      });
+      this.logger.log(`[PROVIDER_DEBUG] Found ${providers.length} global providers from DB.`);
 
-    // Decrypt API keys for all providers included in items
-    const decryptedItems = items.map((item) => ({
-      ...item,
-      provider: {
-        ...item.provider,
-        apiKey: this.encryptionService.decrypt(item.provider.apiKey),
-      },
-    }));
+      // Initialize searxng global provider if SEARXNG_BASE_URL is set
+      if (process.env.SEARXNG_BASE_URL) {
+        const searXngProvider = providers.find((provider) => provider.providerKey === 'searxng');
+        if (!searXngProvider) {
+          const provider = await this.prisma.provider.create({
+            data: {
+              providerId: genProviderID(),
+              providerKey: 'searxng',
+              name: 'SearXNG',
+              baseUrl: process.env.SEARXNG_BASE_URL,
+              enabled: true,
+              categories: 'webSearch',
+              isGlobal: true,
+            },
+          });
+          this.logger.log(
+            `[PROVIDER_DEBUG] Initialized global searxng provider ${provider.providerId}`,
+          );
 
-    return { providers: decryptedProviders, items: decryptedItems };
+          providers.push(provider);
+        }
+      }
+
+      // Decrypt API keys for all providers
+      const decryptedProviders = providers.map((provider) => ({
+        ...provider,
+        apiKey: this.encryptionService.decrypt(provider.apiKey),
+      }));
+      this.logger.log(`[PROVIDER_DEBUG] Decrypted ${decryptedProviders.length} providers.`);
+
+      const items = await this.prisma.providerItem.findMany({
+        where: {
+          providerId: {
+            in: providers.map((provider) => provider.providerId),
+          },
+          uid: null,
+          deletedAt: null,
+        },
+        include: {
+          provider: true,
+        },
+      });
+      this.logger.log(`[PROVIDER_DEBUG] Found ${items.length} global provider items from DB.`);
+
+      // Decrypt API keys for all providers included in items
+      const decryptedItems = items.map((item) => ({
+        ...item,
+        provider: {
+          ...item.provider,
+          apiKey: this.encryptionService.decrypt(item.provider.apiKey),
+        },
+      }));
+      this.logger.log(`[PROVIDER_DEBUG] Decrypted ${decryptedItems.length} provider items.`);
+
+      const result = { providers: decryptedProviders, items: decryptedItems };
+      this.logger.log(
+        `[PROVIDER_DEBUG] fetchGlobalProviderConfig finished successfully. Returning ${result.providers.length} providers and ${result.items.length} items.`,
+      );
+      return result;
+    } catch (error) {
+      this.logger.error(
+        '[PROVIDER_DEBUG] An error occurred within fetchGlobalProviderConfig!',
+        error,
+      );
+      // In case of any error, return an empty config to prevent crashing the whole app,
+      // but the error log above is the key to diagnosis.
+      return { providers: [], items: [] };
+    }
   }
 
   async listProviders(user: User, param: ListProvidersData['query']) {

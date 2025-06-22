@@ -20,11 +20,13 @@ export enum HKGAIModelName {
 export class HKGAIClientFactory {
   private clients: Map<string, AxiosInstance> = new Map();
   private baseUrl: string;
+  private ragBaseUrl: string;
   private modelApiKeys: Record<string, string>;
   private readonly logger = new Logger(HKGAIClientFactory.name);
 
   constructor(private configService: ConfigService) {
     this.baseUrl = this.configService.get('credentials.hkgai.baseUrl');
+    this.ragBaseUrl = this.configService.get('credentials.hkgai.ragBaseUrl');
 
     // 获取模型API密钥配置
     this.modelApiKeys = {
@@ -87,9 +89,12 @@ export class HKGAIClientFactory {
       throw new Error(`No API key configured for HKGAI model: ${modelName}`);
     }
 
+    const isRagModel = enumModelName === HKGAIModelName.RAG;
+    const baseURL = isRagModel ? this.ragBaseUrl : this.baseUrl;
+
     // 创建新的Axios客户端
     const client = axios.create({
-      baseURL: this.baseUrl,
+      baseURL,
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${apiKey}`,
@@ -122,11 +127,12 @@ export class HKGAIClientFactory {
     // Map model ID to enum value
     const enumModelName = this.mapModelIdToEnum(modelName);
     const client = this.getClient(modelName);
+    const isRagModel = enumModelName === HKGAIModelName.RAG;
+    const requestBaseUrl = isRagModel ? this.ragBaseUrl : this.baseUrl;
 
     try {
       // For RAG model, use different API format
-      const isRagModel = enumModelName === HKGAIModelName.RAG;
-      const endpoint = isRagModel ? '/v1/chat/completions' : '/chat/completions';
+      const endpoint = isRagModel ? '/v1/chat/completions' : '/v1/chat-messages';
 
       const requestBody = isRagModel
         ? {
@@ -138,15 +144,15 @@ export class HKGAIClientFactory {
             ...options,
           }
         : {
-            app_id: this.modelApiKeys[enumModelName], // Dify format uses app_id
-            messages,
-            temperature: options?.temperature || 0.7,
-            stream: options?.stream || false,
-            ...options,
+            inputs: {},
+            query: messages[messages.length - 1]?.content || '',
+            response_mode: options?.stream ? 'streaming' : 'blocking',
+            conversation_id: '',
+            user: 'user-refly',
           };
 
       this.logger.debug(
-        `Calling ${modelName} (mapped to: ${enumModelName}) with endpoint: ${endpoint}`,
+        `Calling ${modelName} (mapped to: ${enumModelName}) with endpoint: ${client.defaults.baseURL}${endpoint}`,
       );
       this.logger.debug(`Request body:`, JSON.stringify(requestBody, null, 2));
 
@@ -159,7 +165,7 @@ export class HKGAIClientFactory {
       return response.data;
     } catch (error) {
       this.logger.error(`Error calling HKGAI API for model ${modelName}: ${error.message}`);
-      this.logger.error(`Base URL: ${this.baseUrl}, Model: ${modelName}`);
+      this.logger.error(`Base URL: ${requestBaseUrl}, Model: ${modelName}`);
       if (error.response) {
         this.logger.error(`Response status: ${error.response.status}`);
         this.logger.error(`Response data:`, error.response.data);

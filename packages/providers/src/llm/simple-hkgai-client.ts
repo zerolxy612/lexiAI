@@ -3,17 +3,27 @@
  */
 export class SimpleHKGAIClient {
   private baseUrl: string;
+  private ragBaseUrl: string;
   private apiKeys: Record<string, string>;
   private lastUsage: any = null;
 
   constructor() {
     this.baseUrl = process.env.HKGAI_BASE_URL || 'https://dify.hkgai.net';
+    this.ragBaseUrl = process.env.HKGAI_RAG_BASE_URL || 'https://ragpipeline.hkgai.asia';
     this.apiKeys = {
       'hkgai-searchentry': process.env.HKGAI_SEARCHENTRY_API_KEY || 'app-mYHumURK2S010ZonuvzeX1Ad',
       'hkgai-missinginfo': process.env.HKGAI_MISSINGINFO_API_KEY || 'app-cWHko7usG7aP8ZsAnSeglYc3',
       'hkgai-timeline': process.env.HKGAI_TIMELINE_API_KEY || 'app-R9k11qz64Cd86NCsw2ojZVLC',
       'hkgai-general': process.env.HKGAI_GENERAL_API_KEY || 'app-5PTDowg5Dn2MSEhG5n3FBWXs',
+      'hkgai-rag':
+        process.env.HKGAI_RAG_API_KEY ||
+        process.env.HKGAI_API_KEY ||
+        'sk-UgDQCBR58Fg66sb480Ff7f4003A740D8B7DcD97f3566BbAc',
     };
+  }
+
+  private isRagModel(modelName: string): boolean {
+    return (modelName || '').toLowerCase().includes('rag');
   }
 
   /**
@@ -30,6 +40,8 @@ export class SimpleHKGAIClient {
       return this.apiKeys['hkgai-timeline'];
     } else if (lowerModelName.includes('general')) {
       return this.apiKeys['hkgai-general'];
+    } else if (this.isRagModel(lowerModelName)) {
+      return this.apiKeys['hkgai-rag'];
     } else {
       // 默认使用missinginfo的API Key
       return this.apiKeys['hkgai-missinginfo'];
@@ -50,12 +62,31 @@ export class SimpleHKGAIClient {
     this.lastUsage = null;
 
     try {
+      const isRag = this.isRagModel(modelName);
+      const baseUrl = isRag ? this.ragBaseUrl : this.baseUrl;
+      const endpoint = isRag ? '/v1/chat/completions' : '/v1/chat-messages';
+      const fullUrl = `${baseUrl}${endpoint}`;
+
       console.log(`[SimpleHKGAIClient] 调用模型: ${modelName}`);
       console.log(`[SimpleHKGAIClient] 使用API Key: ${apiKey.substring(0, 10)}...`);
-      console.log(`[SimpleHKGAIClient] Base URL: ${this.baseUrl}`);
+      console.log(`[SimpleHKGAIClient] Request URL: ${fullUrl}`);
       console.log(`[SimpleHKGAIClient] 查询内容: ${query}`);
 
-      const response = await fetch(`${this.baseUrl}/v1/chat-messages`, {
+      const requestBody = isRag
+        ? {
+            model: 'Lexihk-RAG',
+            messages: [{ role: 'user', content: query }],
+            stream: false,
+          }
+        : {
+            inputs: {},
+            query,
+            response_mode: 'blocking',
+            conversation_id: '',
+            user: 'user-refly',
+          };
+
+      const response = await fetch(fullUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -63,13 +94,7 @@ export class SimpleHKGAIClient {
           'HTTP-Referer': 'https://lexihk.com',
           'X-Title': 'LexiHK',
         },
-        body: JSON.stringify({
-          inputs: {},
-          query,
-          response_mode: 'blocking',
-          conversation_id: '',
-          user: 'user-refly',
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       console.log(`[SimpleHKGAIClient] 响应状态: ${response.status} ${response.statusText}`);
@@ -88,7 +113,7 @@ export class SimpleHKGAIClient {
         this.lastUsage = data.metadata.usage;
       }
 
-      const answer = data.answer || '';
+      const answer = isRag ? data.choices[0]?.message?.content || '' : data.answer || '';
       if (!answer) {
         console.warn(`[SimpleHKGAIClient] 响应中没有answer字段，使用默认回复`);
         return `我收到了您的问题: "${query}"，但暂时无法提供具体回答。请稍后再试。`;

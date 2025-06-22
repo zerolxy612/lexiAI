@@ -39,4 +39,8 @@ export class SingleFlightCache<T = any> {
       this.dataFetchPromise = null;
     }
   }
+
+  invalidate() {
+    this.dataSyncedAt = null;
+  }
 }
