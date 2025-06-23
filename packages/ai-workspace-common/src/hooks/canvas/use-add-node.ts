@@ -65,6 +65,14 @@ export const useAddNode = () => {
       shouldPreview = true,
       needSetCenter = false,
     ): XYPosition | undefined => {
+      console.log('🎯 [AddNode] Adding node:', {
+        type: node.type,
+        title: node.data?.title,
+        viewMode: node.data?.metadata?.viewMode,
+        shouldPreview,
+        needSetCenter,
+      });
+
       const { nodeSizeMode } = useCanvasStore.getState();
       const { nodes, edges, nodeLookup, parentLookup } = getState();
 
@@ -232,6 +240,14 @@ export const useAddNode = () => {
       });
       setState({ nodes: updatedNodes.filter((node) => !node.id.startsWith('ghost-')) });
 
+      console.log('🎯 [AddNode] Node created successfully:', {
+        id: newNode.id,
+        type: newNode.type,
+        title: newNode.data?.title,
+        viewMode: (newNode.data?.metadata as any)?.viewMode,
+        totalNodes: updatedNodes.length,
+      });
+
       // Then update edges with a slight delay to ensure nodes are registered first
       // This helps prevent the race condition where edges are created but nodes aren't ready
       setTimeout(() => {
@@ -270,8 +286,15 @@ export const useAddNode = () => {
       if (
         newNode.type === 'document' ||
         (newNode.type === 'resource' && shouldPreview) ||
+        (newNode.type === 'skill' && shouldPreview) ||
         (['skillResponse', 'codeArtifact', 'website'].includes(newNode.type) && shouldPreview)
       ) {
+        console.log(
+          '🎯 [AddNode] Calling previewNode for:',
+          newNode.type,
+          'shouldPreview:',
+          shouldPreview,
+        );
         previewNode(newNode as unknown as CanvasNode);
         locateToNodePreviewEmitter.emit('locateToNodePreview', { canvasId, id: newNode.id });
       }

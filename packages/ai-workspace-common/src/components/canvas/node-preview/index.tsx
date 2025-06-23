@@ -58,6 +58,12 @@ const PreviewComponent = memo(
         case 'document':
           return <DocumentNodePreview node={node} />;
         case 'skill':
+          console.log('🎯 [PreviewComponent] Rendering skill node:', {
+            type: node.type,
+            entityId: node.data?.entityId,
+            viewMode: node.data?.metadata?.viewMode,
+            metadata: node.data?.metadata,
+          });
           return <SkillNodePreview node={node} />;
         case 'tool':
           return <ToolNodePreview />;

@@ -64,7 +64,7 @@ export class SimpleHKGAIClient {
   async call(
     modelName: string,
     query: string,
-    options?: { temperature?: number },
+    options?: { temperature?: number; documentContent?: string },
   ): Promise<string> {
     // Critical safety check: RAG models are streaming-only and must not use this method.
     if (this.isRagModel(modelName)) {
@@ -92,15 +92,22 @@ export class SimpleHKGAIClient {
       const endpoint = isRag ? '/v1/chat/completions' : '/v1/chat-messages';
       const fullUrl = `${baseUrl}${endpoint}`;
 
+      // For contract models, include document content in query if provided
+      let finalQuery = query;
+      if (isContract && options?.documentContent) {
+        finalQuery = `请审查以下合同文档：\n\n${options.documentContent}\n\n用户问题：${query}`;
+        console.log('[SimpleHKGAIClient.call] Contract mode: document content included in query');
+      }
+
       const requestBody = isRag
         ? {
             model: modelName,
-            messages: [{ role: 'user', content: query }],
+            messages: [{ role: 'user', content: finalQuery }],
             stream: false,
           }
         : {
-            inputs: isContract ? { doc: '' } : {},
-            query,
+            inputs: isContract ? { doc: [] } : {},
+            query: finalQuery,
             response_mode: 'blocking',
             user: 'user-refly',
             conversation_id: '',
@@ -169,7 +176,7 @@ export class SimpleHKGAIClient {
   async stream(
     modelName: string,
     query: string,
-    options?: { temperature?: number },
+    options?: { temperature?: number; documentContent?: string },
   ): Promise<ReadableStream<Uint8Array>> {
     const apiKey = this.getApiKeyForModel(modelName);
     if (!apiKey) {
@@ -185,15 +192,22 @@ export class SimpleHKGAIClient {
     const endpoint = isRag ? '/v1/chat/completions' : '/v1/chat-messages';
     const fullUrl = `${baseUrl}${endpoint}`;
 
+    // For contract models, include document content in query if provided
+    let finalQuery = query;
+    if (isContract && options?.documentContent) {
+      finalQuery = `请审查以下合同文档：\n\n${options.documentContent}\n\n用户问题：${query}`;
+      console.log('[SimpleHKGAIClient.stream] Contract mode: document content included in query');
+    }
+
     const requestBody = isRag
       ? {
           model: modelName,
-          messages: [{ role: 'user', content: query }],
+          messages: [{ role: 'user', content: finalQuery }],
           stream: true,
         }
       : {
-          inputs: isContract ? { doc: '' } : {},
-          query,
+          inputs: isContract ? { doc: [] } : {},
+          query: finalQuery,
           response_mode: 'streaming',
           conversation_id: '',
           user: 'user-refly',

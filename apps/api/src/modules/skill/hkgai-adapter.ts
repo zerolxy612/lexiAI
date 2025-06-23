@@ -6,6 +6,7 @@ import { SkillRunnableConfig } from '@refly/skill-template';
 type InvokeParams = {
   skillName: string;
   query: string;
+  documentContent?: string;
   model: {
     name: string;
     // ... other properties
@@ -26,16 +27,20 @@ export class HKGAIAdapter {
   }
 
   async invoke(params: InvokeParams, config: SkillRunnableConfig) {
-    const { query, model } = params;
+    const { query, model, documentContent } = params;
     const modelName = model.name;
 
     this.logger.log(`Using HKGAI model: ${modelName}`);
+    if (documentContent) {
+      this.logger.log(`Document content provided: ${documentContent.length} characters`);
+    }
 
     const modelConfig = config.configurable?.modelConfigMap?.chat;
     const temperature = (modelConfig as any)?.parameters?.temperature ?? 0.7;
 
     return this.simpleHKGAIClient.stream(modelName, query, {
       temperature,
+      documentContent,
     });
   }
 

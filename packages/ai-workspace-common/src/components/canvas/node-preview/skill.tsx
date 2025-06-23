@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, memo, useRef, useMemo } from 'react';
 import { useDebouncedCallback } from 'use-debounce';
 import { useTranslation } from 'react-i18next';
 import { CloseOutlined, ToolOutlined } from '@ant-design/icons';
-import { Badge, Button, Form } from 'antd';
+import { Badge, Button, Form, Input, Upload } from 'antd';
 import { ModelInfo, Skill, SkillRuntimeConfig, SkillTemplateConfig } from '@refly/openapi-schema';
 import { CanvasNode, CanvasNodeData, SkillNodeMeta } from '../nodes/shared/types';
 import { ChatInput } from '@refly-packages/ai-workspace-common/components/canvas/launchpad/chat-input';
@@ -30,6 +30,9 @@ import { useReactFlow } from '@xyflow/react';
 import { McpSelectorPanel } from '@refly-packages/ai-workspace-common/components/canvas/launchpad/mcp-selector-panel';
 import { useLaunchpadStoreShallow } from '@refly-packages/ai-workspace-common/stores/launchpad';
 import { t } from 'i18next';
+import { cn } from '@refly/utils/cn';
+
+const { TextArea } = Input;
 
 // Memoized Header Component
 const NodeHeader = memo(
@@ -84,10 +87,32 @@ export const SkillNodePreview = memo(({ node }: SkillNodePreviewProps) => {
   const { deleteElements } = useReactFlow();
 
   const { entityId, metadata = {} } = node?.data ?? {};
-  const { query, selectedSkill, modelInfo, contextItems = [], tplConfig, runtimeConfig } = metadata;
+  const {
+    query,
+    selectedSkill,
+    modelInfo,
+    contextItems = [],
+    tplConfig,
+    runtimeConfig,
+    viewMode,
+  } = metadata;
   const skill = useFindSkill(selectedSkill?.name);
 
   const [localQuery, setLocalQuery] = useState(query);
+  const [documentContent, setDocumentContent] = useState(metadata?.documentContent || '');
+
+  // Debug log for contract review mode
+  useEffect(() => {
+    if (viewMode === 'contract-review') {
+      console.log('🎯 [Contract Review] Node preview initialized:', {
+        viewMode,
+        selectedSkill,
+        modelInfo,
+        documentContent,
+        entityId,
+      });
+    }
+  }, [viewMode, selectedSkill, modelInfo, documentContent, entityId]);
 
   // Update local state when query changes from external sources
   useEffect(() => {
@@ -95,6 +120,13 @@ export const SkillNodePreview = memo(({ node }: SkillNodePreviewProps) => {
       setLocalQuery(query);
     }
   }, [query]);
+
+  // Update documentContent when metadata changes
+  useEffect(() => {
+    if (metadata?.documentContent !== documentContent) {
+      setDocumentContent(metadata?.documentContent || '');
+    }
+  }, [metadata?.documentContent]);
 
   const { skillSelectedModel, setSkillSelectedModel } = useChatStoreShallow((state) => ({
     skillSelectedModel: state.skillSelectedModel,
@@ -118,7 +150,7 @@ export const SkillNodePreview = memo(({ node }: SkillNodePreviewProps) => {
       setLocalQuery(query);
       updateNodeData({ title: query, metadata: { query } });
     },
-    [entityId, updateNodeData],
+    [updateNodeData],
   );
 
   const setModelInfo = useCallback(
@@ -143,11 +175,62 @@ export const SkillNodePreview = memo(({ node }: SkillNodePreviewProps) => {
     [entityId, setNodeDataByEntity],
   );
 
+  const setDocumentContentValue = useCallback(
+    (content: string) => {
+      setDocumentContent(content);
+      updateNodeData({ metadata: { documentContent: content } });
+    },
+    [updateNodeData],
+  );
+
+  // Handle document upload and content extraction
+  const handleDocumentUpload = useCallback(
+    async (file: File) => {
+      try {
+        console.log('🎯 [Contract] Processing file:', file.name, file.type);
+
+        // For now, let's implement basic text file reading
+        // TODO: Add support for PDF, DOC parsing using project's existing logic
+        if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
+          const content = await file.text();
+          setDocumentContentValue(content);
+          console.log('🎯 [Contract] Text content extracted, length:', content.length);
+        } else {
+          // For other file types, show a placeholder message
+          const placeholder = `[Document: ${file.name}]\nThis is a ${file.type} file. Document content extraction will be implemented using the project's existing document processing logic.`;
+          setDocumentContentValue(placeholder);
+          console.log('🎯 [Contract] Placeholder content set for:', file.type);
+        }
+      } catch (error) {
+        console.error('🎯 [Contract] Error processing file:', error);
+      }
+    },
+    [setDocumentContentValue],
+  );
+
   useEffect(() => {
     if (skillSelectedModel && !modelInfo) {
       setModelInfo(skillSelectedModel);
     }
-  }, [skillSelectedModel, modelInfo, setModelInfo]);
+  }, [skillSelectedModel, modelInfo]);
+
+  // Initialize model for contract review mode
+  useEffect(() => {
+    if (viewMode === 'contract-review' && !modelInfo) {
+      const contractModelInfo = {
+        name: 'hkgai/contract',
+        label: 'HKGAI Contract Review',
+        provider: 'hkgai',
+        providerItemId: 'hkgai-contract-item',
+        tier: 't2' as const,
+        contextLimit: 16000,
+        maxOutput: 4000,
+        capabilities: {},
+        isDefault: false,
+      };
+      setModelInfo(contractModelInfo);
+    }
+  }, [viewMode, modelInfo]);
 
   const setSelectedSkill = useCallback(
     (newSelectedSkill: Skill | null) => {
@@ -190,10 +273,29 @@ export const SkillNodePreview = memo(({ node }: SkillNodePreviewProps) => {
     if (!node) return;
 
     const data = node?.data as CanvasNodeData<SkillNodeMeta>;
-    const { query = '', contextItems = [], runtimeConfig = {} } = data?.metadata ?? {};
+    const {
+      query = '',
+      contextItems = [],
+      runtimeConfig = {},
+      documentContent: nodeDocumentContent = '',
+    } = data?.metadata ?? {};
     const { runtimeConfig: contextRuntimeConfig = {} } = useContextPanelStore.getState();
 
     const tplConfig = form.getFieldValue('tplConfig');
+
+    // Use current documentContent state for contract review mode
+    const finalDocumentContent =
+      viewMode === 'contract-review' ? documentContent : nodeDocumentContent;
+
+    // For contract review mode, include document content in query
+    let finalQuery = query;
+    if (viewMode === 'contract-review' && finalDocumentContent) {
+      finalQuery = `请审查以下合同文档：\n\n${finalDocumentContent}\n\n用户问题：${query || '请审查这份合同并指出潜在的法律风险'}`;
+      console.log(
+        '🎯 [Contract] Final query with document content:',
+        finalQuery.substring(0, 200) + '...',
+      );
+    }
 
     deleteElements({ nodes: [node] });
 
@@ -203,6 +305,7 @@ export const SkillNodePreview = memo(({ node }: SkillNodePreviewProps) => {
         {
           resultId,
           ...data?.metadata,
+          query: finalQuery, // Use modified query for contract review
           tplConfig,
           runtimeConfig: {
             ...contextRuntimeConfig,
@@ -218,7 +321,7 @@ export const SkillNodePreview = memo(({ node }: SkillNodePreviewProps) => {
         {
           type: 'skillResponse',
           data: {
-            title: query,
+            title: viewMode === 'contract-review' ? 'Legal Contract Review' : query,
             entityId: resultId,
             metadata: {
               status: 'executing',
@@ -231,7 +334,7 @@ export const SkillNodePreview = memo(({ node }: SkillNodePreviewProps) => {
         convertContextItemsToNodeFilters(contextItems),
       );
     });
-  }, [node, deleteElements, invokeAction, canvasId, addNode, form]);
+  }, [node, deleteElements, invokeAction, canvasId, addNode, form, viewMode, documentContent]);
 
   const handleImageUpload = async (file: File) => {
     const nodeData = await handleUploadImage(file, canvasId);
@@ -289,6 +392,105 @@ export const SkillNodePreview = memo(({ node }: SkillNodePreviewProps) => {
 
   if (!node) return null;
 
+  console.log('🎯 [SkillNodePreview] Rendering with:', {
+    viewMode,
+    modelInfo,
+    selectedSkill,
+    documentContent,
+    entityId,
+    isContractReview: viewMode === 'contract-review',
+  });
+
+  // Contract review mode UI
+  if (viewMode === 'contract-review') {
+    return (
+      <div className="flex flex-col gap-3 h-full p-3 box-border">
+        <McpSelectorPanel isOpen={mcpSelectorOpen} onClose={() => setMcpSelectorOpen(false)} />
+
+        <NodeHeader
+          readonly={readonly}
+          selectedSkillName={skill?.name || 'Legal Contract Review'}
+          setSelectedSkill={setSelectedSkill}
+        />
+
+        {/* Document Upload Interface */}
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {t('skill.contractReview.documentUpload', 'Upload Contract Document')}
+          </label>
+          <Upload.Dragger
+            accept=".pdf,.doc,.docx,.txt"
+            beforeUpload={(file) => {
+              handleDocumentUpload(file);
+              return false; // Prevent default upload
+            }}
+            showUploadList={true}
+            maxCount={1}
+            disabled={readonly}
+            className="border-dashed border-2 border-gray-300 rounded-lg p-4 hover:border-blue-400 transition-colors"
+          >
+            <div className="flex flex-col items-center justify-center py-6">
+              <div className="text-4xl mb-2">📄</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                {t('skill.contractReview.uploadHint', 'Click or drag contract file to upload')}
+              </div>
+              <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                Support: PDF, DOC, DOCX, TXT
+              </div>
+              {documentContent && (
+                <div className="text-xs text-green-600 dark:text-green-400 mt-2">
+                  ✓ Document content loaded ({documentContent.length} characters)
+                </div>
+              )}
+            </div>
+          </Upload.Dragger>
+        </div>
+
+        <ContextManager
+          className="px-0.5"
+          contextItems={contextItems}
+          setContextItems={setContextItems}
+        />
+
+        {skill?.configSchema?.items?.length > 0 && (
+          <ConfigManager
+            readonly={readonly}
+            key={skill?.name}
+            form={form}
+            formErrors={formErrors}
+            setFormErrors={setFormErrors}
+            schema={skill?.configSchema}
+            tplConfig={tplConfig}
+            fieldPrefix="tplConfig"
+            configScope="runtime"
+            resetConfig={() => {
+              const defaultConfig = skill?.tplConfig ?? {};
+              form.setFieldValue('tplConfig', defaultConfig);
+            }}
+            onFormValuesChange={(_changedValues, allValues) => {
+              handleTplConfigChange(allValues.tplConfig);
+            }}
+          />
+        )}
+
+        <ChatActions
+          customActions={customActions}
+          query={'Contract Review'}
+          model={modelInfo}
+          setModel={setModelInfo}
+          handleSendMessage={handleSendMessage}
+          handleAbort={abortAction}
+          onUploadImage={handleImageUpload}
+          contextItems={contextItems}
+          runtimeConfig={runtimeConfig}
+          setRuntimeConfig={setRuntimeConfig}
+          readonly={readonly}
+        />
+      </div>
+    );
+  }
+
+  // Default skill node UI
   return (
     <div className="flex flex-col gap-3 h-full p-3 box-border">
       <McpSelectorPanel isOpen={mcpSelectorOpen} onClose={() => setMcpSelectorOpen(false)} />

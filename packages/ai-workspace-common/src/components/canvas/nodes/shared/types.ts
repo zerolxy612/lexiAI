@@ -84,6 +84,7 @@ export type SkillNodeMeta = {
   searchNode?: boolean;
   missingInfoNode?: boolean;
   viewMode?: string;
+  documentContent?: string; // Document content for contract review after file upload
 };
 
 export type ToolNodeMeta = {

@@ -66,13 +66,15 @@ export class HKGAIClientFactory {
       'hkgai-contract': HKGAIModelName.CONTRACT,
       'hkgai-general': HKGAIModelName.GENERAL,
       'hkgai-rag': HKGAIModelName.RAG,
-      // Also support direct enum values
+      // Support direct enum values and string variants
       [HKGAIModelName.SEARCH_ENTRY]: HKGAIModelName.SEARCH_ENTRY,
       [HKGAIModelName.MISSING_INFO]: HKGAIModelName.MISSING_INFO,
       [HKGAIModelName.TIMELINE]: HKGAIModelName.TIMELINE,
       [HKGAIModelName.CONTRACT]: HKGAIModelName.CONTRACT,
       [HKGAIModelName.GENERAL]: HKGAIModelName.GENERAL,
-      [HKGAIModelName.RAG]: HKGAIModelName.RAG,
+      // Support direct string 'RAG' mapping to the correct enum value
+      RAG: HKGAIModelName.RAG,
+      Rag: HKGAIModelName.RAG,
     };
 
     return mapping[modelId] || modelId;

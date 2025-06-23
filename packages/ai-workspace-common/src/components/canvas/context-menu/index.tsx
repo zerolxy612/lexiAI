@@ -1,6 +1,6 @@
 import { Button, Divider } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { FC, useEffect, useRef, useState } from 'react';
+import { FC, useEffect, useRef, useState, useMemo } from 'react';
 import { useReactFlow } from '@xyflow/react';
 import { SearchList } from '@refly-packages/ai-workspace-common/modules/entity-selector/components';
 import { useCreateDocument } from '@refly-packages/ai-workspace-common/hooks/canvas/use-create-document';
@@ -106,7 +106,6 @@ export const ContextMenu: FC<ContextMenuProps> = ({ open, position, setOpen }) =
     showReflyPilot: state.showReflyPilot,
     clickToPreview: state.clickToPreview,
     nodeSizeMode: state.nodeSizeMode,
-    setShowEdges: state.setShowEdges,
     setShowReflyPilot: state.setShowReflyPilot,
     setClickToPreview: state.setClickToPreview,
     setNodeSizeMode: state.setNodeSizeMode,
@@ -117,6 +116,17 @@ export const ContextMenu: FC<ContextMenuProps> = ({ open, position, setOpen }) =
   const { hoverCardEnabled, toggleHoverCard } = useHoverCard();
   const { toggleEdgeVisible } = useEdgeVisible();
   const { updateAllNodesSizeMode } = useNodeOperations();
+
+  // Define contract skill constant to avoid recreation
+  const contractSkill = useMemo(
+    () => ({
+      name: 'legalContractReview',
+      displayName: 'Legal Contract Review',
+      description: 'Review legal contracts for potential issues',
+      icon: 'VscLaw',
+    }),
+    [],
+  );
 
   // Creation utility functions
   const createSkillNode = (position: { x: number; y: number }) => {
@@ -222,7 +232,7 @@ export const ContextMenu: FC<ContextMenuProps> = ({ open, position, setOpen }) =
       label: 'HKGAI Search Entry',
       provider: 'hkgai',
       providerItemId: 'hkgai-searchentry-item', // Match exact itemId from database
-      tier: 't2',
+      tier: 't2' as const,
       contextLimit: 8000,
       maxOutput: 4000,
       capabilities: {},
@@ -252,16 +262,22 @@ export const ContextMenu: FC<ContextMenuProps> = ({ open, position, setOpen }) =
   const createLegalContractNode = (position: { x: number; y: number }) => {
     // Contract node should specifically use hkgai-contract model
     const contractModelInfo = {
-      name: 'hkgai-contract', // Dedicated contract review model
+      name: 'hkgai/contract', // Use slash format to match backend modelId
       label: 'HKGAI Contract Review',
       provider: 'hkgai',
       providerItemId: 'hkgai-contract-item', // Match exact itemId from database
-      tier: 't2',
+      tier: 't2' as const,
       contextLimit: 16000, // Contract model may need larger context
       maxOutput: 4000,
       capabilities: {},
       isDefault: false,
     };
+
+    console.log('🎯 [Legal Contract] Creating contract node with:', {
+      viewMode: 'contract-review',
+      modelInfo: contractModelInfo,
+      selectedSkill: contractSkill,
+    });
 
     addNode(
       {
@@ -270,8 +286,9 @@ export const ContextMenu: FC<ContextMenuProps> = ({ open, position, setOpen }) =
           title: t('canvas.toolbar.legalContractReview', 'Legal Contract Review'),
           entityId: genSkillID(),
           metadata: {
-            viewMode: 'search', // Use search view for chat-like interface
+            viewMode: 'contract-review', // Use contract-review view for document input interface
             modelInfo: contractModelInfo, // Pre-set contract-specific model
+            selectedSkill: contractSkill, // Set the contract review skill
           },
         },
         position,
@@ -518,39 +535,48 @@ export const ContextMenu: FC<ContextMenuProps> = ({ open, position, setOpen }) =
   };
 
   const handleMenuClick = async (key: string) => {
+    console.log('🎯 [ContextMenu] Menu clicked:', key);
     setActiveKey(key);
 
     // Creation actions
     switch (key) {
       case 'askAI':
+        console.log('🎯 [ContextMenu] Executing askAI case');
         createSkillNode(position);
         setOpen(false);
         break;
       case 'legalContractReview':
+        console.log('🎯 [ContextMenu] Executing legalContractReview case');
         createLegalContractNode(position);
         setOpen(false);
         break;
       case 'createDocument':
+        console.log('🎯 [ContextMenu] Executing createDocument case');
         await createSingleDocumentInCanvas(position);
         setOpen(false);
         break;
       case 'createMemo':
+        console.log('🎯 [ContextMenu] Executing createMemo case');
         createMemo(position);
         setOpen(false);
         break;
       case 'createCodeArtifact':
+        console.log('🎯 [ContextMenu] Executing createCodeArtifact case');
         createCodeArtifactNode({ position });
         setOpen(false);
         break;
       case 'createWebsite':
+        console.log('🎯 [ContextMenu] Executing createWebsite case');
         createWebsiteNode(position);
         setOpen(false);
         break;
       case 'search':
+        console.log('🎯 [ContextMenu] Executing search case');
         createSearchNode(position);
         setOpen(false);
         break;
       case 'importResource':
+        console.log('🎯 [ContextMenu] Executing importResource case');
         setInsertNodePosition(position);
         setImportResourceModalVisible(true);
         setOpen(false);
@@ -558,18 +584,22 @@ export const ContextMenu: FC<ContextMenuProps> = ({ open, position, setOpen }) =
 
       // Settings actions
       case 'toggleLaunchpad':
+        console.log('🎯 [ContextMenu] Executing toggleLaunchpad case');
         setShowReflyPilot(!showReflyPilot);
         setOpen(false);
         break;
       case 'toggleEdges':
+        console.log('🎯 [ContextMenu] Executing toggleEdges case');
         toggleEdgeVisible();
         setOpen(false);
         break;
       case 'toggleClickPreview':
+        console.log('🎯 [ContextMenu] Executing toggleClickPreview case');
         setClickToPreview(!clickToPreview);
         setOpen(false);
         break;
       case 'toggleNodeSizeMode': {
+        console.log('🎯 [ContextMenu] Executing toggleNodeSizeMode case');
         const newMode = nodeSizeMode === 'compact' ? 'adaptive' : 'compact';
         setNodeSizeMode(newMode);
         updateAllNodesSizeMode(newMode);
@@ -577,12 +607,17 @@ export const ContextMenu: FC<ContextMenuProps> = ({ open, position, setOpen }) =
         break;
       }
       case 'toggleAutoLayout':
+        console.log('🎯 [ContextMenu] Executing toggleAutoLayout case');
         setAutoLayout(!autoLayout);
         setOpen(false);
         break;
       case 'toggleHoverCard':
+        console.log('🎯 [ContextMenu] Executing toggleHoverCard case');
         toggleHoverCard(!hoverCardEnabled);
         setOpen(false);
+        break;
+      default:
+        console.log('🎯 [ContextMenu] No matching case for:', key);
         break;
     }
   };
@@ -617,6 +652,11 @@ export const ContextMenu: FC<ContextMenuProps> = ({ open, position, setOpen }) =
 
   if (!open) return null;
 
+  console.log(
+    '🎯 [ContextMenu] Rendering menu with items:',
+    menuItems.map((item) => ({ key: item.key, title: item.title, type: item.type })),
+  );
+
   const renderButton = (item: MenuItem) => {
     const button = (
       <Button
@@ -633,7 +673,10 @@ export const ContextMenu: FC<ContextMenuProps> = ({ open, position, setOpen }) =
         type="text"
         loading={getIsLoading(item.key)}
         icon={item.icon && <item.icon className="flex items-center w-4 h-4" />}
-        onClick={() => handleMenuClick(item.key)}
+        onClick={() => {
+          console.log('🎯 [ContextMenu] Button clicked, key:', item.key, 'title:', item.title);
+          handleMenuClick(item.key);
+        }}
       >
         <span className="flex-1 text-left truncate">{item.title}</span>
       </Button>

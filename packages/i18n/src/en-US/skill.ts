@@ -194,6 +194,13 @@ const translations = {
       note: 'Note: If the image is not displayed on the canvas, please check your network connection or refresh the page. If the problem persists, you can try regenerating using the "Image ID".',
     },
   },
+  contractReview: {
+    documentContent: 'Contract Document Content',
+    documentPlaceholder: 'Paste your contract document content here for legal review...',
+    documentRequired: 'Contract document is required for review',
+    documentUpload: 'Upload Contract Document',
+    uploadHint: 'Click or drag contract file to upload',
+  },
 };
 
 export default translations;

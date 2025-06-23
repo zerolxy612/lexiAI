@@ -202,6 +202,13 @@ const translations = {
       note: '注意: 如果图像未显示在画板中，请检查网络连接或刷新页面。如果问题仍然存在，可以尝试使用"图像ID"重新生成。',
     },
   },
+  contractReview: {
+    documentContent: '合同文档内容',
+    documentPlaceholder: '请在此处粘贴您的合同文档内容以进行法律审查...',
+    documentUpload: '上传合同文档',
+    uploadHint: '点击或拖拽合同文件上传',
+    documentRequired: '合同审查需要上传文档',
+  },
 };
 
 export default translations;
