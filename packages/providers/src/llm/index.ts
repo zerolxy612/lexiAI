@@ -6,147 +6,186 @@ import { ChatFireworks } from '@langchain/community/chat_models/fireworks';
 import { BaseProvider } from '../types';
 import { OpenAIBaseInput } from '@langchain/openai';
 import { simpleHKGAIClient } from './simple-hkgai-client';
-import { AIMessage } from '@langchain/core/messages';
-import type { BaseMessage } from '@langchain/core/messages';
-import type { ChatResult, ChatGeneration } from '@langchain/core/outputs';
-import type { CallbackManagerForLLMRun } from '@langchain/core/callbacks/manager';
+import { AIMessage, BaseMessage, AIMessageChunk } from '@langchain/core/messages';
+import { ChatResult, ChatGeneration, ChatGenerationChunk } from '@langchain/core/outputs';
+import { CallbackManagerForLLMRun } from '@langchain/core/callbacks/manager';
 
-// Import HKGAI DifyChatModel
-export class DifyChatModel extends BaseChatModel {
+/**
+ * A unified ChatModel for all HKGAI providers.
+ * It handles the logic of switching between RAG and normal models,
+ * and supports both streaming and non-streaming modes.
+ */
+export class HKGAIChatModel extends BaseChatModel {
   modelName: string;
-  apiKey: string;
-  baseUrl: string;
   temperature: number;
-  tier: string;
+  streaming: boolean;
 
   constructor(options: {
     modelName: string;
-    apiKey: string;
-    baseUrl: string;
     temperature?: number;
-    tier?: string;
+    streaming?: boolean;
   }) {
     super({});
     this.modelName = options.modelName;
-    this.apiKey = options.apiKey;
-    this.baseUrl = options.baseUrl;
     this.temperature = options.temperature ?? 0.7;
-    this.tier = options.tier ?? 't2';
+    this.streaming = options.streaming ?? false;
   }
 
   _llmType() {
-    return 'dify-chat';
+    return 'hkgai';
   }
 
-  _identifyingParams() {
-    return {
-      model_name: this.modelName,
-      model: this.modelName,
-      provider: 'hkgai',
-      tier: this.tier,
-      apiKey: this.apiKey,
-      baseUrl: this.baseUrl,
-    };
+  private _extractQueryFromMessages(messages: BaseMessage[]): string {
+    if (!messages || messages.length === 0) {
+      return '';
+    }
+    const lastMessage = messages[messages.length - 1];
+    const content = lastMessage.content;
+
+    if (typeof content === 'string') {
+      return content;
+    }
+
+    // It's a complex message (array of parts), find the text part.
+    for (const part of content) {
+      if (part.type === 'text') {
+        return part.text;
+      }
+    }
+
+    return ''; // No text part found
   }
 
   async _generate(
     messages: BaseMessage[],
-    options?: any,
+    options: this['ParsedCallOptions'],
     runManager?: CallbackManagerForLLMRun,
   ): Promise<ChatResult> {
-    try {
-      console.log(`[DifyChatModel] 开始生成回答，模型: ${this.modelName}`);
-
-      // 提取查询内容
-      const query = this._extractQueryFromMessages(messages);
-
-      // 使用简化的HKGAI客户端
-      const content = await simpleHKGAIClient.call(this.modelName, query);
-
-      console.log(`[DifyChatModel] 成功生成回答: ${content.substring(0, 100)}...`);
-
-      // 模拟流式输出
-      const chunks = this._splitIntoChunks(content);
-      console.log(`[DifyChatModel] 获取到完整回答，开始模拟流式输出`);
-
-      for (let i = 0; i < chunks.length; i++) {
-        const chunk = chunks[i];
-        const isLast = i === chunks.length - 1;
-
-        // 触发流式事件
-        if (runManager?.handleLLMNewToken) {
-          await runManager.handleLLMNewToken(chunk, {
-            prompt: 0,
-            completion: i,
-          });
-        }
-
-        // 添加小延迟模拟真实流式响应
-        await new Promise((resolve) => setTimeout(resolve, 50));
+    if (this.streaming) {
+      const stream = this._stream(messages, options, runManager);
+      const chunks: ChatGenerationChunk[] = [];
+      for await (const chunk of stream) {
+        chunks.push(chunk);
+      }
+      if (chunks.length === 0) {
+        return {
+          generations: [],
+          llmOutput: {},
+        };
       }
 
-      console.log(`[DifyChatModel] 流式输出完成，共发送 ${chunks.length} 个块`);
-
-      // 创建正确的AIMessage实例
-      const message = new AIMessage({
-        content: content,
-        additional_kwargs: {},
+      const aggregated = new ChatGenerationChunk({
+        text: chunks.map((chunk) => chunk.text).join(''),
+        message: new AIMessageChunk({
+          content: chunks.map((chunk) => chunk.message.content).join(''),
+          additional_kwargs: {},
+        }),
       });
 
-      // 返回符合ChatResult接口的结果
-      const generation: ChatGeneration = {
-        text: content,
-        message: message,
-        generationInfo: {
-          model: this.modelName,
-          provider: 'hkgai',
-          finishReason: 'stop',
-        },
-      };
-
       return {
-        generations: [generation],
-        llmOutput: {
-          model: this.modelName,
-          provider: 'hkgai',
-        },
+        generations: [
+          {
+            text: aggregated.text,
+            message: new AIMessage(aggregated.message.content as string),
+          },
+        ],
+        llmOutput: {},
       };
-    } catch (error) {
-      console.error(`[DifyChatModel] 生成回答失败:`, error);
-      throw error;
+    } else {
+      return this._call(messages, options, runManager);
     }
   }
 
-  private _extractQueryFromMessages(messages: BaseMessage[]): string {
-    // 从消息中提取最后一个用户消息
-    for (let i = messages.length - 1; i >= 0; i--) {
-      const message = messages[i];
-      if (message._getType() === 'human') {
-        return message.content as string;
+  async *_stream(
+    messages: BaseMessage[],
+    options: this['ParsedCallOptions'],
+    runManager?: CallbackManagerForLLMRun,
+  ): AsyncGenerator<ChatGenerationChunk> {
+    const query = this._extractQueryFromMessages(messages);
+    const stream = await simpleHKGAIClient.stream(this.modelName, query, {
+      temperature: this.temperature,
+    });
+
+    const reader = stream.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || ''; // Keep the last, possibly incomplete line
+
+      for (const line of lines) {
+        if (line.trim().startsWith('data:')) {
+          const jsonStr = line.trim().substring(5).trim();
+          if (jsonStr === '[DONE]') {
+            continue;
+          }
+          try {
+            const data = JSON.parse(jsonStr);
+            const delta = data.choices?.[0]?.delta?.content || '';
+            if (delta) {
+              const chunk = new ChatGenerationChunk({
+                text: delta,
+                message: new AIMessageChunk({ content: delta }),
+              });
+              yield chunk;
+              void runManager?.handleLLMNewToken(delta);
+            }
+          } catch (e) {
+            console.error(`[HKGAIChatModel] Error parsing stream chunk: "${jsonStr}"`, e);
+          }
+        }
       }
     }
-    return '';
   }
 
-  _splitIntoChunks(text: string, chunkSize = 50): string[] {
-    const chunks = [];
-    for (let i = 0; i < text.length; i += chunkSize) {
-      chunks.push(text.slice(i, i + chunkSize));
+  async _call(
+    messages: BaseMessage[],
+    options: this['ParsedCallOptions'],
+    runManager?: CallbackManagerForLLMRun,
+  ): Promise<ChatResult> {
+    const query = this._extractQueryFromMessages(messages);
+    const content = await simpleHKGAIClient.call(this.modelName, query, {
+      temperature: this.temperature,
+    });
+
+    if (content === 'No output in the non-streaming mode') {
+      console.warn(
+        `[HKGAIChatModel] Received 'No output' message from API for model ${this.modelName}. This might indicate an issue with the non-streaming endpoint.`,
+      );
     }
-    return chunks;
+
+    void runManager?.handleLLMNewToken(content);
+
+    return {
+      generations: [
+        {
+          text: content,
+          message: new AIMessage(content),
+        },
+      ],
+      llmOutput: {},
+    };
   }
 }
 
 export const getChatModel = (
   provider: BaseProvider,
   config: LLMModelConfig,
-  params?: Partial<OpenAIBaseInput>,
+  params?: Partial<OpenAIBaseInput> & { streaming?: boolean },
 ): BaseChatModel => {
   switch (provider?.providerKey) {
     case 'openai':
       return new EnhancedChatOpenAI({
         model: config.modelId,
         apiKey: provider.apiKey,
+        streaming: params?.streaming ?? false,
         configuration: {
           baseURL: provider.baseUrl,
         },
@@ -166,13 +205,12 @@ export const getChatModel = (
         ...params,
       });
     case 'hkgai':
-      // Use specialized DifyChatModel for HKGAI models
-      return new DifyChatModel({
+      // For RAG models, streaming is required by the API.
+      const isRagModel = (config.modelId || '').toLowerCase().includes('rag');
+      return new HKGAIChatModel({
         modelName: config.modelId,
-        apiKey: provider.apiKey,
-        baseUrl: provider.baseUrl || 'https://dify.hkgai.net',
         temperature: params?.temperature ?? 0.7,
-        tier: 't2',
+        streaming: isRagModel || (params?.streaming ?? false),
       });
     default:
       throw new Error(`Unsupported provider: ${provider?.providerKey}`);

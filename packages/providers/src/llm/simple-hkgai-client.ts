@@ -49,16 +49,27 @@ export class SimpleHKGAIClient {
   }
 
   /**
-   * 调用HKGAI API
+   * 调用HKGAI API (非流式)
    */
-  async call(modelName: string, query: string): Promise<string> {
+  async call(
+    modelName: string,
+    query: string,
+    options?: { temperature?: number },
+  ): Promise<string> {
+    // Critical safety check: RAG models are streaming-only and must not use this method.
+    if (this.isRagModel(modelName)) {
+      console.error(
+        `[SimpleHKGAIClient] CRITICAL: The RAG model '${modelName}' was incorrectly called in non-streaming mode. This indicates a logic error in the calling code. RAG models must use the .stream() method.`,
+      );
+      throw new Error(`RAG model '${modelName}' cannot be called in non-streaming mode.`);
+    }
+
     const apiKey = this.getApiKeyForModel(modelName);
 
     if (!apiKey) {
       throw new Error(`API key for model ${modelName} not configured`);
     }
 
-    // 重置使用统计
     this.lastUsage = null;
 
     try {
@@ -67,16 +78,12 @@ export class SimpleHKGAIClient {
       const endpoint = isRag ? '/v1/chat/completions' : '/v1/chat-messages';
       const fullUrl = `${baseUrl}${endpoint}`;
 
-      console.log(`[SimpleHKGAIClient] 调用模型: ${modelName}`);
-      console.log(`[SimpleHKGAIClient] 使用API Key: ${apiKey.substring(0, 10)}...`);
-      console.log(`[SimpleHKGAIClient] Request URL: ${fullUrl}`);
-      console.log(`[SimpleHKGAIClient] 查询内容: ${query}`);
-
       const requestBody = isRag
         ? {
             model: 'Lexihk-RAG',
             messages: [{ role: 'user', content: query }],
-            stream: false,
+            stream: false, // Explicitly non-streaming
+            temperature: options?.temperature ?? 0.7,
           }
         : {
             inputs: {},
@@ -84,6 +91,7 @@ export class SimpleHKGAIClient {
             response_mode: 'blocking',
             conversation_id: '',
             user: 'user-refly',
+            temperature: options?.temperature ?? 0.7,
           };
 
       const response = await fetch(fullUrl, {
@@ -125,6 +133,63 @@ export class SimpleHKGAIClient {
       console.error(`[SimpleHKGAIClient] 调用失败:`, error);
       throw error;
     }
+  }
+
+  /**
+   * 调用HKGAI API (流式)
+   */
+  async stream(
+    modelName: string,
+    query: string,
+    options?: { temperature?: number },
+  ): Promise<ReadableStream<Uint8Array>> {
+    const apiKey = this.getApiKeyForModel(modelName);
+    if (!apiKey) {
+      throw new Error(`API key for model ${modelName} not configured`);
+    }
+
+    const isRag = this.isRagModel(modelName);
+    const baseUrl = isRag ? this.ragBaseUrl : this.baseUrl;
+    const endpoint = isRag ? '/v1/chat/completions' : '/v1/chat-messages';
+    const fullUrl = `${baseUrl}${endpoint}`;
+
+    const requestBody = isRag
+      ? {
+          model: 'Lexihk-RAG',
+          messages: [{ role: 'user', content: query }],
+          stream: true,
+          temperature: options?.temperature ?? 0.7,
+        }
+      : {
+          inputs: {},
+          query,
+          response_mode: 'streaming',
+          conversation_id: '',
+          user: 'user-refly',
+          temperature: options?.temperature ?? 0.7,
+        };
+
+    const response = await fetch(fullUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://lexihk.com',
+        'X-Title': 'LexiHK',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HKGAI stream API failed: ${response.status} ${errorText}`);
+    }
+
+    if (!response.body) {
+      throw new Error('Response body is null');
+    }
+
+    return response.body;
   }
 
   getLastUsage(): any {

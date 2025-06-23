@@ -447,12 +447,12 @@ export class SkillService {
     let modelProviderMap: any;
 
     if (isHKGAIModelItem) {
-      this.logger.log(`[SkillService] 检测到HKGAI模型，使用简化流程: ${modelItemId}`);
+      this.logger.log(`[SkillService] HKGAI model detected, using simplified flow: ${modelItemId}`);
 
-      // 为HKGAI模型创建虚拟的provider item和config
       const hkgaiModelName = modelItemId.replace('-item', '').replace('hkgai-', 'hkgai/');
+      const isRag = hkgaiModelName.includes('rag');
 
-      providerItem = {
+      const hkgaiProviderItem = {
         itemId: modelItemId,
         name: 'HKGAI Model',
         category: 'llm' as const,
@@ -463,28 +463,52 @@ export class SkillService {
           providerId: 'hkgai-global',
           providerKey: 'hkgai',
           name: 'HKGAI',
-          apiKey: '', // 将使用环境变量
+          apiKey: '',
           baseUrl: 'https://dify.hkgai.net',
         },
+        config: JSON.stringify({
+          modelId: hkgaiModelName,
+          contextLimit: 16384,
+          maxOutput: 4096,
+          capabilities: {},
+        }),
       };
 
-      const hkgaiConfig = {
-        modelId: hkgaiModelName,
-        contextLimit: 16384,
-        maxOutput: 4096,
-        capabilities: {},
-      };
+      if (isRag) {
+        // RAG model is only suitable for the main chat.
+        // For auxiliary tasks, use the user's general default model.
+        const defaultChatModelItem = await this.providerService.findDefaultProviderItem(
+          user,
+          'chat',
+        );
+        if (!defaultChatModelItem) {
+          throw new ProviderItemNotFoundError(
+            'A default chat model must be configured to use the RAG model.',
+          );
+        }
 
-      const hkgaiProviderItem = {
-        ...providerItem,
-        config: JSON.stringify(hkgaiConfig),
-      };
+        const defaultTitleModelItem =
+          (await this.providerService.findDefaultProviderItem(user, 'titleGeneration')) ||
+          defaultChatModelItem;
+        const defaultQueryAnalysisModelItem =
+          (await this.providerService.findDefaultProviderItem(user, 'queryAnalysis')) ||
+          defaultChatModelItem;
 
-      modelProviderMap = {
-        chat: hkgaiProviderItem,
-        titleGeneration: hkgaiProviderItem,
-        queryAnalysis: hkgaiProviderItem,
-      };
+        modelProviderMap = {
+          chat: hkgaiProviderItem,
+          titleGeneration: defaultTitleModelItem,
+          queryAnalysis: defaultQueryAnalysisModelItem,
+        };
+        providerItem = hkgaiProviderItem;
+      } else {
+        // For non-RAG HKGAI models, use it for all scenes
+        modelProviderMap = {
+          chat: hkgaiProviderItem,
+          titleGeneration: hkgaiProviderItem,
+          queryAnalysis: hkgaiProviderItem,
+        };
+        providerItem = hkgaiProviderItem;
+      }
     } else {
       // 原有的provider查询逻辑
       providerItem = await this.providerService.findProviderItemById(user, modelItemId);
@@ -1209,6 +1233,10 @@ export class SkillService {
         const chunk: AIMessageChunk = event.data?.chunk ?? event.data?.output;
 
         switch (event.event) {
+          // This event often contains the final, unwanted metadata payload.
+          // We will explicitly ignore it to prevent it from being sent to the client.
+          case 'on_llm_end':
+            continue;
           case 'on_tool_end':
           case 'on_tool_start': {
             // Extract tool_call_chunks from AIMessageChunk
@@ -1254,6 +1282,22 @@ ${event.data?.input ? JSON.stringify(event.data?.input?.input) : ''}
           }
           case 'on_chat_model_stream': {
             const content = chunk.content.toString();
+            // Critical Check: Intercept and discard the final metadata object from the RAG stream.
+            // The RAG API incorrectly sends its final metadata payload as a content chunk.
+            // We identify it by trying to parse it as JSON and checking for a known key.
+            try {
+              const parsedContent = JSON.parse(content);
+              if (
+                parsedContent &&
+                typeof parsedContent === 'object' &&
+                'chatPreGenerationResponse' in parsedContent
+              ) {
+                this.logger.log('Intercepted and discarded final RAG metadata payload.');
+                continue; // Skip processing this chunk
+              }
+            } catch (e) {
+              // This is expected for normal text chunks, so we do nothing.
+            }
             const reasoningContent = chunk?.additional_kwargs?.reasoning_content?.toString() || '';
 
             if ((content || reasoningContent) && res && !runMeta?.suppressOutput) {
