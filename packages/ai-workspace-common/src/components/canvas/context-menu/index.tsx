@@ -25,6 +25,7 @@ import {
   IconSearch,
 } from '@refly-packages/ai-workspace-common/components/common/icon';
 import { IoAnalyticsOutline } from 'react-icons/io5';
+import { VscLaw } from 'react-icons/vsc';
 import { useEdgeVisible } from '@refly-packages/ai-workspace-common/hooks/canvas/use-edge-visible';
 import { useNodeOperations } from '@refly-packages/ai-workspace-common/hooks/canvas/use-node-operations';
 import { genMemoID, genSkillID } from '@refly/utils/id';
@@ -35,6 +36,7 @@ import { useHoverCard } from '@refly-packages/ai-workspace-common/hooks/use-hove
 import { useCreateCodeArtifact } from '@refly-packages/ai-workspace-common/hooks/use-create-code-artifact';
 import { useUserStoreShallow } from '@refly-packages/ai-workspace-common/stores/user';
 import { useChatStoreShallow } from '@refly-packages/ai-workspace-common/stores/chat';
+import { useLegalReviewStore } from '@refly-packages/ai-workspace-common/stores/legal-review';
 
 interface ContextMenuProps {
   open: boolean;
@@ -67,6 +69,7 @@ export const ContextMenu: FC<ContextMenuProps> = ({ open, position, setOpen }) =
   const [activeKey, setActiveKey] = useState<string | null>(null);
   const { createSingleDocumentInCanvas, isCreating: isCreatingDocument } = useCreateDocument();
   const { addNode } = useAddNode();
+  const { openLegalReviewPanel } = useLegalReviewStore();
 
   const [showSearchResourceList, setShowSearchResourceList] = useState(false);
   const [showSearchDocumentList, setShowSearchDocumentList] = useState(false);
@@ -259,6 +262,19 @@ export const ContextMenu: FC<ContextMenuProps> = ({ open, position, setOpen }) =
         title: t('canvas.toolbar.askAI'),
         description: t('canvas.toolbar.askAIDescription'),
         videoUrl: 'https://static.refly.ai/onboarding/menuPopper/menuPopper-askAI.webm',
+      },
+    },
+    {
+      key: 'legalContractReview',
+      icon: VscLaw,
+      type: 'button',
+      title: t('canvas.toolbar.legalContractReview', 'Legal Contract Review'),
+      hoverContent: {
+        title: t('canvas.toolbar.legalContractReview', 'Legal Contract Review'),
+        description: t(
+          'canvas.toolbar.legalContractReviewDescription',
+          'Review a legal contract for potential issues.',
+        ),
       },
     },
     { key: 'divider-creation-1', type: 'divider' },
@@ -475,6 +491,12 @@ export const ContextMenu: FC<ContextMenuProps> = ({ open, position, setOpen }) =
     switch (key) {
       case 'askAI':
         createSkillNode(position);
+        setOpen(false);
+        break;
+      case 'legalContractReview':
+        openLegalReviewPanel(
+          'This is a sample contract text for review. It contains clauses about confidentiality and liability that need to be checked.',
+        );
         setOpen(false);
         break;
       case 'createDocument':

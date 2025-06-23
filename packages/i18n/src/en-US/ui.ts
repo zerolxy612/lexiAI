@@ -1172,6 +1172,7 @@ const translations = {
       disableHoverCard: 'Disable Hover Guide',
       toggleHoverCardDescription:
         'Toggle hover guide feature that shows additional information and tutorials when hovering over items',
+      askAI: 'Ask AI',
     },
     toolbar: {
       searchNode: 'Search Node',
@@ -1198,12 +1199,11 @@ const translations = {
       createDocument: 'Create Document',
       createDocumentDescription: 'Create a document for writing.',
       createCodeArtifact: 'Create Code Artifact',
-      createCodeArtifactDescription: 'Create an empty code artifact to write your code',
+      createCodeArtifactDescription: 'Create a code artifact from a description',
       search: 'Search',
-      searchDescription: 'Create a search node to search and find content',
+      searchDescription: 'Search for information on the web',
       addDocument: 'Add Document',
-      addDocumentDescription:
-        'User-created content in Refly, created through AI writing or manually creating a new document, which can be searched and answered through the AI knowledge base.',
+      addDocumentDescription: 'Add a document from your library',
       addHighlight: 'Add Highlight',
       hidePreview: 'Hide Node Preview',
       showPreview: 'Show Node Preview',
@@ -1261,6 +1261,8 @@ const translations = {
       createMindMap: 'Create Mind Map Node',
       createMindMapDescription: 'Create a mind map node to embed a mind map in your canvas',
       removeFromProject: 'Remove from Project',
+      legalContractReview: 'Legal Contract Review',
+      legalContractReviewDescription: 'Review a legal contract for potential issues.',
     },
     connectionTimeout: {
       title: 'Connection Timeout',

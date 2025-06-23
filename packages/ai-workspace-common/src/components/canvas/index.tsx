@@ -72,6 +72,8 @@ import {
   nodeOperationsEmitter,
 } from '@refly-packages/ai-workspace-common/events/nodeOperations';
 import { useCanvasInitialActions } from '@refly-packages/ai-workspace-common/hooks/use-canvas-initial-actions';
+import { useLegalReviewStore } from '@refly-packages/ai-workspace-common/stores/legal-review';
+import { LegalReviewPanel } from '../legal-review/legal-review-panel';
 
 const GRID_SIZE = 10;
 
@@ -163,6 +165,16 @@ const MiniMapNode = (props: any) => {
 const Flow = memo(({ canvasId }: { canvasId: string }) => {
   const { t } = useTranslation();
   useCanvasInitialActions(canvasId);
+
+  const {
+    isPanelOpen: isLegalReviewPanelOpen,
+    contractText,
+    setPanelOpen: setLegalReviewPanelOpen,
+  } = useLegalReviewStore((state) => ({
+    isPanelOpen: state.isPanelOpen,
+    contractText: state.contractText,
+    setPanelOpen: state.setPanelOpen,
+  }));
 
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const { addNode } = useAddNode();
@@ -1251,6 +1263,13 @@ const Flow = memo(({ canvasId }: { canvasId: string }) => {
             onCopy={handleCopyAction}
             onRestart={handleRestartAction}
             onDelete={handleDeleteAction}
+          />
+        )}
+        {isLegalReviewPanelOpen && (
+          <LegalReviewPanel
+            isOpen={isLegalReviewPanelOpen}
+            onClose={() => setLegalReviewPanelOpen(false)}
+            query={contractText}
           />
         )}
       </div>
