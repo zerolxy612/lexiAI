@@ -1,11 +1,43 @@
 import { Logger } from '@nestjs/common';
+import { simpleHKGAIClient, SimpleHKGAIClient } from '@refly/providers/src/llm/simple-hkgai-client';
+import { ProviderService } from '../provider/provider.service';
+import { SkillRunnableConfig } from '@refly/skill-template';
 
+type InvokeParams = {
+  skillName: string;
+  query: string;
+  model: {
+    name: string;
+    // ... other properties
+  };
+};
 /**
  * HKGAI模型适配器
  * 用于支持HKGAI模型的特殊处理需求
  */
 export class HKGAIAdapter {
-  private static logger = new Logger('HKGAIAdapter');
+  private logger = new Logger('HKGAIAdapter');
+  private providerService: ProviderService;
+  private simpleHKGAIClient: SimpleHKGAIClient;
+
+  constructor(providerService: ProviderService) {
+    this.providerService = providerService;
+    this.simpleHKGAIClient = new SimpleHKGAIClient();
+  }
+
+  async invoke(params: InvokeParams, config: SkillRunnableConfig) {
+    const { query, model } = params;
+    const modelName = model.name;
+
+    this.logger.log(`Using HKGAI model: ${modelName}`);
+
+    const modelConfig = config.configurable?.modelConfigMap?.chat;
+    const temperature = (modelConfig as any)?.parameters?.temperature ?? 0.7;
+
+    return this.simpleHKGAIClient.stream(modelName, query, {
+      temperature,
+    });
+  }
 
   /**
    * 检查给定的模型名称是否是HKGAI模型
@@ -38,6 +70,8 @@ export class HKGAIAdapter {
       return 'searchentry';
     } else if (lowerModelName.includes('timeline')) {
       return 'timeline';
+    } else if (lowerModelName.includes('contract')) {
+      return 'contract';
     } else if (lowerModelName.includes('gpt-4')) {
       return 'gpt-4';
     } else if (lowerModelName.includes('claude')) {
@@ -151,7 +185,7 @@ export class HKGAIAdapter {
       // 处理内容为null/undefined的情况
       if (!content) {
         return {
-          content: this.getDefaultErrorMessage(this.getHKGAIModelType(modelName)),
+          content: HKGAIAdapter.getDefaultErrorMessage(HKGAIAdapter.getHKGAIModelType(modelName)),
         };
       }
 
@@ -163,33 +197,35 @@ export class HKGAIAdapter {
         contentStr = content;
       } else {
         // 使用增强的内容提取函数
-        contentStr = this.extractContent(content);
+        contentStr = HKGAIAdapter.extractContent(content);
       }
 
       // 检查内容是否为空
       if (!contentStr || contentStr.trim() === '') {
         return {
-          content: this.getDefaultErrorMessage(this.getHKGAIModelType(modelName)),
+          content: HKGAIAdapter.getDefaultErrorMessage(HKGAIAdapter.getHKGAIModelType(modelName)),
         };
       }
 
-      const modelType = this.getHKGAIModelType(modelName);
+      const modelType = HKGAIAdapter.getHKGAIModelType(modelName);
 
       // 针对特定模型类型进行处理
       switch (modelType) {
         case 'timeline':
-          return this.processTimelineResponse(contentStr, reasoningContent);
+          return HKGAIAdapter.processTimelineResponse(contentStr, reasoningContent);
         case 'searchentry':
-          return this.processSearchResponse(contentStr, reasoningContent);
+          return HKGAIAdapter.processSearchResponse(contentStr, reasoningContent);
         case 'missinginfo':
-          return this.processMissingInfoResponse(contentStr, reasoningContent);
+          return HKGAIAdapter.processMissingInfoResponse(contentStr, reasoningContent);
+        case 'contract':
+          return HKGAIAdapter.processContractResponse(contentStr, reasoningContent);
         default:
           return { content: contentStr, reasoningContent };
       }
     } catch (error) {
       console.error(`HKGAI响应处理错误:`, error);
       return {
-        content: this.getDefaultErrorMessage(this.getHKGAIModelType(modelName)),
+        content: HKGAIAdapter.getDefaultErrorMessage(HKGAIAdapter.getHKGAIModelType(modelName)),
       };
     }
   }
@@ -235,6 +271,14 @@ export class HKGAIAdapter {
     reasoningContent: string | null,
   ): { content: string; reasoningContent?: string } {
     // 处理缺失信息模型输出，通常不需要特殊处理
+    return { content, reasoningContent };
+  }
+
+  private static processContractResponse(
+    content: string,
+    reasoningContent: string | null,
+  ): { content: string; reasoningContent?: string } {
+    // 处理合同审查模型输出，通常不需要特殊处理
     return { content, reasoningContent };
   }
 }

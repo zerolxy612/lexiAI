@@ -451,6 +451,7 @@ export class SkillService {
 
       const hkgaiModelName = modelItemId.replace('-item', '').replace('hkgai-', 'hkgai/');
       const isRag = hkgaiModelName.includes('rag');
+      const isContract = hkgaiModelName.includes('contract');
 
       const hkgaiProviderItem = {
         itemId: modelItemId,
@@ -501,7 +502,7 @@ export class SkillService {
         };
         providerItem = hkgaiProviderItem;
       } else {
-        // For non-RAG HKGAI models, use it for all scenes
+        // For non-RAG HKGAI models (including Contract), use it for all scenes
         modelProviderMap = {
           chat: hkgaiProviderItem,
           titleGeneration: hkgaiProviderItem,
@@ -510,7 +511,7 @@ export class SkillService {
         providerItem = hkgaiProviderItem;
       }
     } else {
-      // 原有的provider查询逻辑
+      // Original provider query logic
       providerItem = await this.providerService.findProviderItemById(user, modelItemId);
 
       if (!providerItem || providerItem.category !== 'llm' || !providerItem.enabled) {

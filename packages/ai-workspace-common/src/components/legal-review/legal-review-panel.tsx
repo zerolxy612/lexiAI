@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Button, Steps, Spin, message } from 'antd';
+import { Button, Spin, message } from 'antd';
 import { IoClose } from 'react-icons/io5';
 import { GlobalOutlined, DownloadOutlined, CopyOutlined } from '@ant-design/icons';
 import { cn } from '@refly/utils/cn';

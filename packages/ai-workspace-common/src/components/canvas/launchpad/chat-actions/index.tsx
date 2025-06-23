@@ -12,7 +12,6 @@ import { useCanvasContext } from '@refly-packages/ai-workspace-common/context/ca
 import { useUploadImage } from '@refly-packages/ai-workspace-common/hooks/use-upload-image';
 import { IContextItem } from '@refly-packages/ai-workspace-common/stores/context-panel';
 import { SkillRuntimeConfig } from '@refly/openapi-schema';
-import { ModelIcon } from '@lobehub/icons';
 
 export interface CustomAction {
   icon: React.ReactNode;

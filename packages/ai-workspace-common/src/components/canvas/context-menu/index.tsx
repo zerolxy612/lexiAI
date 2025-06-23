@@ -249,6 +249,39 @@ export const ContextMenu: FC<ContextMenuProps> = ({ open, position, setOpen }) =
     );
   };
 
+  const createLegalContractNode = (position: { x: number; y: number }) => {
+    // Contract node should specifically use hkgai-contract model
+    const contractModelInfo = {
+      name: 'hkgai-contract', // Dedicated contract review model
+      label: 'HKGAI Contract Review',
+      provider: 'hkgai',
+      providerItemId: 'hkgai-contract-item', // Match exact itemId from database
+      tier: 't2',
+      contextLimit: 16000, // Contract model may need larger context
+      maxOutput: 4000,
+      capabilities: {},
+      isDefault: false,
+    };
+
+    addNode(
+      {
+        type: 'skill', // Use 'skill' type for consistency
+        data: {
+          title: t('canvas.toolbar.legalContractReview', 'Legal Contract Review'),
+          entityId: genSkillID(),
+          metadata: {
+            viewMode: 'search', // Use search view for chat-like interface
+            modelInfo: contractModelInfo, // Pre-set contract-specific model
+          },
+        },
+        position,
+      },
+      [],
+      true,
+      true,
+    );
+  };
+
   // Combined menu items
   const menuItems: MenuItem[] = [
     // Creation menu items
@@ -494,9 +527,7 @@ export const ContextMenu: FC<ContextMenuProps> = ({ open, position, setOpen }) =
         setOpen(false);
         break;
       case 'legalContractReview':
-        openLegalReviewPanel(
-          'This is a sample contract text for review. It contains clauses about confidentiality and liability that need to be checked.',
-        );
+        createLegalContractNode(position);
         setOpen(false);
         break;
       case 'createDocument':

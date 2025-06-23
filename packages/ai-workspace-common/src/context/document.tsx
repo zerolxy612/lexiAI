@@ -81,8 +81,8 @@ export const DocumentProvider = ({
     local: localProvider,
     doc,
   } = useMemo(() => {
-    // Don't create providers when in readonly mode
-    if (readonly) {
+    // Don't create providers when in readonly mode or token is not available
+    if (readonly || !token) {
       return { remote: null, local: null, doc: null };
     }
 
@@ -112,7 +112,7 @@ export const DocumentProvider = ({
     providerCache.set(docId, providers);
 
     return { remote: remoteProvider, local: localProvider, doc };
-  }, [docId, token, readonly, updateDocumentData]);
+  }, [docId, token, readonly, updateDocumentData, refreshToken]);
 
   // Register event handlers for sync events
   useEffect(() => {

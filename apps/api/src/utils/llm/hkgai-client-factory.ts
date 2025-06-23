@@ -9,8 +9,9 @@ export enum HKGAIModelName {
   SEARCH_ENTRY = 'SearchEntry',
   MISSING_INFO = 'MissingInfo',
   TIMELINE = 'Timeline',
+  CONTRACT = 'Contract',
   GENERAL = 'General',
-  RAG = 'RAG',
+  RAG = 'Rag',
 }
 
 /**
@@ -31,8 +32,10 @@ export class HKGAIClientFactory {
       [HKGAIModelName.SEARCH_ENTRY]: this.configService.get('credentials.hkgai.searchEntryKey'),
       [HKGAIModelName.MISSING_INFO]: this.configService.get('credentials.hkgai.missingInfoKey'),
       [HKGAIModelName.TIMELINE]: this.configService.get('credentials.hkgai.timelineKey'),
+      [HKGAIModelName.CONTRACT]: this.configService.get('credentials.hkgai.contractKey'),
       [HKGAIModelName.GENERAL]:
         this.configService.get('credentials.hkgai.generalKey') || 'app-5PTDowg5Dn2MSEhG5n3FBWXs',
+      [HKGAIModelName.RAG]: this.configService.get('credentials.hkgai.ragKey'),
     };
 
     // --- Definitive Fix ---
@@ -41,6 +44,9 @@ export class HKGAIClientFactory {
     this.ragBaseUrl = process.env.HKGAI_BASE_URL || 'https://ragpipeline.hkgai.asia';
     this.modelApiKeys[HKGAIModelName.RAG] =
       process.env.HKGAI_API_KEY || 'sk-UgDQCBR58Fg66sb480Ff7f4003A740D8B7DcD97f3566BbAc';
+    this.modelApiKeys[HKGAIModelName.CONTRACT] =
+      this.configService.get('credentials.hkgai.contractKey') ||
+      'sk-UgDQCBR58Fg66sb480Ff7f4003A740D8B7DcD97f3566BbAc';
 
     this.logger.log('HKGAI Client Factory initialized.');
     this.logger.log(`RAG Base URL (from env): ${this.ragBaseUrl}`);
@@ -57,12 +63,14 @@ export class HKGAIClientFactory {
       'hkgai-searchentry': HKGAIModelName.SEARCH_ENTRY,
       'hkgai-missinginfo': HKGAIModelName.MISSING_INFO,
       'hkgai-timeline': HKGAIModelName.TIMELINE,
+      'hkgai-contract': HKGAIModelName.CONTRACT,
       'hkgai-general': HKGAIModelName.GENERAL,
       'hkgai-rag': HKGAIModelName.RAG,
       // Also support direct enum values
       [HKGAIModelName.SEARCH_ENTRY]: HKGAIModelName.SEARCH_ENTRY,
       [HKGAIModelName.MISSING_INFO]: HKGAIModelName.MISSING_INFO,
       [HKGAIModelName.TIMELINE]: HKGAIModelName.TIMELINE,
+      [HKGAIModelName.CONTRACT]: HKGAIModelName.CONTRACT,
       [HKGAIModelName.GENERAL]: HKGAIModelName.GENERAL,
       [HKGAIModelName.RAG]: HKGAIModelName.RAG,
     };

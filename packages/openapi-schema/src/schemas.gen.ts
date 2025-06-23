@@ -4746,6 +4746,15 @@ export const ActionContextItemSchema = {
 export const InvokeSkillRequestSchema = {
   type: 'object',
   properties: {
+    documentContent: {
+      type: 'string',
+    },
+    skillId: {
+      type: 'string',
+    },
+    skillName: {
+      type: 'string',
+    },
     input: {
       description: 'Skill input',
       $ref: '#/components/schemas/SkillInput',
@@ -4768,11 +4777,6 @@ export const InvokeSkillRequestSchema = {
     tplConfig: {
       description: 'Skill template config',
       $ref: '#/components/schemas/SkillTemplateConfig',
-    },
-    skillName: {
-      type: 'string',
-      description: 'Skill name (if not provided, commonQnA will be used)',
-      default: 'commonQnA',
     },
     target: {
       description: 'Skill invocation target',
@@ -4802,10 +4806,6 @@ export const InvokeSkillRequestSchema = {
     modelItemId: {
       type: 'string',
       description: 'Selected model item ID',
-    },
-    skillId: {
-      type: 'string',
-      description: 'Skill ID',
     },
     triggerId: {
       type: 'string',

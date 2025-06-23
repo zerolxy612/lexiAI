@@ -27,7 +27,7 @@ let currentController: AbortController | null = null;
 // 请求事件流
 export async function requestEventStream(
   data: StreamRequestData,
-  url: string = '/api/v1/deep-research/stream',
+  url = '/api/v1/deep-research/stream',
 ): Promise<Response | undefined> {
   try {
     // 如果有旧的控制器，先中止它

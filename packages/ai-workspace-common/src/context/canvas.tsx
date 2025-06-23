@@ -144,8 +144,8 @@ export const CanvasProvider = ({
   );
 
   const { remote: provider, local: localProvider } = useMemo(() => {
-    // Don't create providers when in readonly mode
-    if (readonly) {
+    // Don't create providers when in readonly mode or token is not available
+    if (readonly || !token) {
       return { remote: null, local: null };
     }
 
@@ -195,6 +195,7 @@ export const CanvasProvider = ({
     setCanvasRemoteSynced,
     setCanvasLocalSynced,
     setCanvasDataFromYDoc,
+    refreshToken,
   ]);
 
   // Handle connection retries

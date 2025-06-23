@@ -3344,6 +3344,9 @@ export type ActionContextItem = {
 };
 
 export type InvokeSkillRequest = {
+  documentContent?: string;
+  skillId?: string;
+  skillName?: string;
   /**
    * Skill input
    */
@@ -3364,10 +3367,6 @@ export type InvokeSkillRequest = {
    * Skill template config
    */
   tplConfig?: SkillTemplateConfig;
-  /**
-   * Skill name (if not provided, commonQnA will be used)
-   */
-  skillName?: string;
   /**
    * Skill invocation target
    */
@@ -3397,10 +3396,6 @@ export type InvokeSkillRequest = {
    * Selected model item ID
    */
   modelItemId?: string;
-  /**
-   * Skill ID
-   */
-  skillId?: string;
   /**
    * Trigger ID
    */

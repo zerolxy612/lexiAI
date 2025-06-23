@@ -346,48 +346,126 @@ export class ProviderService implements OnModuleInit {
 
   async listProviderItems(user: User, param: ListProviderItemsData['query']) {
     const { providerId, category, enabled } = param;
-
-    // First, try to fetch user's provider items
-    const userItems = await this.prisma.providerItem.findMany({
-      where: {
-        uid: user.uid,
-        providerId,
-        category,
-        enabled,
-        deletedAt: null,
-      },
+    const where = {
+      uid: user.uid,
+      providerId,
+      category,
+      enabled,
+      deletedAt: null,
+    };
+    if (!category) {
+      delete where.category;
+    }
+    const items = await this.prisma.providerItem.findMany({
+      where,
       include: {
         provider: true,
       },
-      orderBy: {
-        order: 'asc',
-      },
     });
 
-    // If user has their own items, decrypt API keys and return them
-    if (userItems.length > 0) {
-      return userItems.map((item) => ({
-        ...item,
-        provider: {
-          ...item.provider,
-          apiKey: this.encryptionService.decrypt(item.provider.apiKey),
-        },
-      }));
-    }
-
-    // Fallback to global provider items
     const { items: globalItems } = await this.globalProviderCache.get();
+
     const filteredGlobalItems = globalItems.filter((item) => {
-      const matchesProviderId = !providerId || item.providerId === providerId;
-      const matchesCategory = !category || item.category === category;
-      const matchesEnabled = enabled === undefined || item.enabled === enabled;
+      const matchesProviderId = providerId ? item.providerId === providerId : true;
+      const matchesCategory = category ? item.category === category : true;
+      const matchesEnabled = enabled ? item.enabled === enabled : true;
       return matchesProviderId && matchesCategory && matchesEnabled;
     });
 
-    return filteredGlobalItems;
+    const combinedItems = [...items, ...filteredGlobalItems];
+
+    if (category && category !== 'llm') {
+      return combinedItems;
+    }
+
+    // Manually inject HKGAI RAG and Contract models if they are not present,
+    // as they are special, system-level models.
+    const hasRag = combinedItems.some((item) => item.itemId === 'hkgai-rag-item');
+    if (!hasRag) {
+      combinedItems.push({
+        itemId: 'hkgai-rag-item',
+        name: 'HKGAI RAG',
+        providerId: 'hkgai-global',
+        category: 'llm',
+        tier: 't2',
+        enabled: true,
+        config: JSON.stringify({
+          modelId: 'hkgai/rag',
+          contextLimit: 8000,
+          maxOutput: 4096,
+        }),
+        modelInfo: {
+          name: 'hkgai-rag',
+          label: 'HKGAI RAG',
+          provider: 'hkgai',
+        },
+      } as any);
+    }
+
+    const hasContract = combinedItems.some((item) => item.itemId === 'hkgai-contract-item');
+    if (!hasContract) {
+      combinedItems.push({
+        itemId: 'hkgai-contract-item',
+        name: 'HKGAI Contract',
+        providerId: 'hkgai-global',
+        category: 'llm',
+        tier: 't2',
+        enabled: true,
+        config: JSON.stringify({
+          modelId: 'hkgai/contract',
+          contextLimit: 16000,
+          maxOutput: 4096,
+        }),
+        modelInfo: {
+          name: 'hkgai-contract',
+          label: 'HKGAI Contract',
+          provider: 'hkgai',
+        },
+      } as any);
+    }
+
+    return combinedItems;
   }
 
   async findProviderItemById(user: User, itemId: string) {
+    if (itemId === 'hkgai-rag-item') {
+      return {
+        itemId: 'hkgai-rag-item',
+        name: 'HKGAI RAG',
+        providerId: 'hkgai-global',
+        category: 'llm',
+        tier: 't2',
+        enabled: true,
+        config: JSON.stringify({
+          modelId: 'hkgai/rag',
+          contextLimit: 8000,
+          maxOutput: 4096,
+        }),
+        provider: {
+          providerKey: 'hkgai',
+        },
+      } as any;
+    }
+
+    if (itemId === 'hkgai-contract-item') {
+      return {
+        itemId: 'hkgai-contract-item',
+        name: 'HKGAI Contract',
+        providerId: 'hkgai-global',
+        category: 'llm',
+        tier: 't2',
+        enabled: true,
+        config: JSON.stringify({
+          modelId: 'hkgai/contract',
+          contextLimit: 16000,
+          maxOutput: 4096,
+        }),
+        provider: {
+          providerKey: 'hkgai',
+        },
+      } as any;
+    }
+
     const item = await this.prisma.providerItem.findUnique({
       where: { itemId, uid: user.uid, deletedAt: null },
       include: {
@@ -396,7 +474,9 @@ export class ProviderService implements OnModuleInit {
     });
 
     if (!item) {
-      return null;
+      const { items: globalItems } = await this.globalProviderCache.get();
+      const globalItem = globalItems.find((item) => item.itemId === itemId);
+      return globalItem;
     }
 
     // Decrypt API key
