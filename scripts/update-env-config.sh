@@ -49,6 +49,13 @@ update_env_var "HKGAI_TIMELINE_API_KEY" "app-R9k11qz64Cd86NCsw2ojZVLC" "时间�
 update_env_var "HKGAI_GENERAL_API_KEY" "app-5PTDowg5Dn2MSEhG5n3FBWXs" "通用模型API密钥"
 update_env_var "HKGAI_RAG_API_KEY" "sk-UgDQCBR58Fg66sb480Ff7f4003A740D8B7DcD97f3566BbAc" "RAG模型API密钥"
 
+# 新增的Dify模型API密钥
+update_env_var "HKGAI_CASE_SEARCH_API_KEY" "app-Fbs0YwuFNGHlhtAPPlvybrJm" "案例搜索模型API密钥"
+update_env_var "HKGAI_CODE_SEARCH_API_KEY" "app-1rFXyZanlbQJdKtQTaZ3wuSS" "代码搜索模型API密钥"
+
+# Dify模型的基础URL
+update_env_var "HKGAI_DIFY_BASE_URL" "https://dify.hkgai.net" "Dify模型的基础URL"
+
 echo "环境变量配置已更新！"
 echo "备份文件已保存为 ${ENV_FILE}.backup"
 

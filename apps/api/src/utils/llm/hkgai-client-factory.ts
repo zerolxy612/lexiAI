@@ -12,6 +12,8 @@ export enum HKGAIModelName {
   CONTRACT = 'Contract',
   GENERAL = 'General',
   RAG = 'Rag',
+  CASE_SEARCH = 'CaseSearch',
+  CODE_SEARCH = 'CodeSearch',
 }
 
 /**
@@ -22,12 +24,16 @@ export class HKGAIClientFactory {
   private clients: Map<string, AxiosInstance> = new Map();
   private baseUrl: string;
   private ragBaseUrl: string;
+  private difyBaseUrl: string;
   private modelApiKeys: Record<string, string>;
   private readonly logger = new Logger(HKGAIClientFactory.name);
 
   constructor(private configService: ConfigService) {
     // For non-RAG models, continue using ConfigService for backward compatibility.
     this.baseUrl = this.configService.get('credentials.hkgai.baseUrl');
+    this.ragBaseUrl = this.configService.get('credentials.hkgai.ragBaseUrl');
+    this.difyBaseUrl = this.configService.get('credentials.hkgai.difyBaseUrl');
+
     this.modelApiKeys = {
       [HKGAIModelName.SEARCH_ENTRY]: this.configService.get('credentials.hkgai.searchEntryKey'),
       [HKGAIModelName.MISSING_INFO]: this.configService.get('credentials.hkgai.missingInfoKey'),
@@ -36,6 +42,8 @@ export class HKGAIClientFactory {
       [HKGAIModelName.GENERAL]:
         this.configService.get('credentials.hkgai.generalKey') || 'app-5PTDowg5Dn2MSEhG5n3FBWXs',
       [HKGAIModelName.RAG]: this.configService.get('credentials.hkgai.ragKey'),
+      [HKGAIModelName.CASE_SEARCH]: this.configService.get('credentials.hkgai.caseSearchKey'),
+      [HKGAIModelName.CODE_SEARCH]: this.configService.get('credentials.hkgai.codeSearchKey'),
     };
 
     // --- Definitive Fix ---
@@ -66,15 +74,18 @@ export class HKGAIClientFactory {
       'hkgai-contract': HKGAIModelName.CONTRACT,
       'hkgai-general': HKGAIModelName.GENERAL,
       'hkgai-rag': HKGAIModelName.RAG,
-      // Support direct enum values and string variants
-      [HKGAIModelName.SEARCH_ENTRY]: HKGAIModelName.SEARCH_ENTRY,
-      [HKGAIModelName.MISSING_INFO]: HKGAIModelName.MISSING_INFO,
-      [HKGAIModelName.TIMELINE]: HKGAIModelName.TIMELINE,
-      [HKGAIModelName.CONTRACT]: HKGAIModelName.CONTRACT,
-      [HKGAIModelName.GENERAL]: HKGAIModelName.GENERAL,
-      // Support direct string 'RAG' mapping to the correct enum value
+      'hkgai-case-search': HKGAIModelName.CASE_SEARCH,
+      'hkgai-code-search': HKGAIModelName.CODE_SEARCH,
+      // Support direct string mappings
       RAG: HKGAIModelName.RAG,
       Rag: HKGAIModelName.RAG,
+      CaseSearch: HKGAIModelName.CASE_SEARCH,
+      CodeSearch: HKGAIModelName.CODE_SEARCH,
+      SearchEntry: HKGAIModelName.SEARCH_ENTRY,
+      MissingInfo: HKGAIModelName.MISSING_INFO,
+      Timeline: HKGAIModelName.TIMELINE,
+      Contract: HKGAIModelName.CONTRACT,
+      General: HKGAIModelName.GENERAL,
     };
 
     return mapping[modelId] || modelId;
@@ -105,7 +116,17 @@ export class HKGAIClientFactory {
     }
 
     const isRagModel = enumModelName === HKGAIModelName.RAG;
-    const baseURL = isRagModel ? this.ragBaseUrl : this.baseUrl;
+    const isDifyModel =
+      enumModelName === HKGAIModelName.CASE_SEARCH || enumModelName === HKGAIModelName.CODE_SEARCH;
+
+    let baseURL;
+    if (isRagModel) {
+      baseURL = this.ragBaseUrl;
+    } else if (isDifyModel) {
+      baseURL = this.difyBaseUrl;
+    } else {
+      baseURL = this.baseUrl;
+    }
 
     // 创建新的Axios客户端
     const client = axios.create({
@@ -143,29 +164,50 @@ export class HKGAIClientFactory {
     const enumModelName = this.mapModelIdToEnum(modelName);
     const client = this.getClient(modelName);
     const isRagModel = enumModelName === HKGAIModelName.RAG;
-    const requestBaseUrl = isRagModel ? this.ragBaseUrl : this.baseUrl;
+    const isDifyModel =
+      enumModelName === HKGAIModelName.CASE_SEARCH || enumModelName === HKGAIModelName.CODE_SEARCH;
 
     try {
-      // For RAG model, use different API format
-      const endpoint = isRagModel ? '/v1/chat/completions' : '/v1/chat-messages';
+      // Different API endpoints for different model types
+      let endpoint;
+      if (isRagModel) {
+        endpoint = '/v1/chat/completions';
+      } else if (isDifyModel) {
+        endpoint = '/v1/chat-messages';
+      } else {
+        endpoint = '/v1/chat-messages';
+      }
 
-      const requestBody = isRagModel
-        ? {
-            model: 'Lexihk-RAG', // RAG model uses specific model name
-            messages,
-            temperature: options?.temperature ?? 0.7,
-            stream: options?.stream ?? true, // Default to true for RAG
-            max_tokens: options?.max_tokens ?? 4000,
-          }
-        : {
-            inputs: {},
-            query: messages[messages.length - 1]?.content ?? '',
-            response_mode: options?.stream ? 'streaming' : 'blocking',
-            conversation_id: '',
-            user: 'user-refly',
-            // Pass full message history for context, if available
-            messages: messages.length > 1 ? messages.slice(0, -1) : [],
-          };
+      let requestBody;
+      if (isRagModel) {
+        // RAG model uses OpenAI-like format
+        requestBody = {
+          model: 'Lexihk-RAG',
+          messages,
+          temperature: options?.temperature ?? 0.7,
+          stream: options?.stream ?? true,
+          max_tokens: options?.max_tokens ?? 4000,
+        };
+      } else if (isDifyModel) {
+        // Dify models use dify-specific format
+        requestBody = {
+          inputs: {},
+          query: messages[messages.length - 1]?.content ?? '',
+          response_mode: options?.stream ? 'streaming' : 'blocking',
+          conversation_id: '',
+          user: 'user-refly',
+        };
+      } else {
+        // Standard HKGAI models
+        requestBody = {
+          inputs: {},
+          query: messages[messages.length - 1]?.content ?? '',
+          response_mode: options?.stream ? 'streaming' : 'blocking',
+          conversation_id: '',
+          user: 'user-refly',
+          messages: messages.length > 1 ? messages.slice(0, -1) : [],
+        };
+      }
 
       this.logger.log(
         `[createChatCompletion] Preparing to call ${modelName} at ${client.defaults.baseURL}${endpoint}`,

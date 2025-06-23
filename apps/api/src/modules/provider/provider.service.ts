@@ -64,9 +64,22 @@ export class ProviderService implements OnModuleInit {
   }
 
   async onModuleInit() {
+    console.log('🔧 [ProviderService] Starting module initialization...');
     this.logger.log('Invalidating global provider cache on module init');
     this.globalProviderCache.invalidate();
-    await this.globalProviderCache.get();
+    console.log('🔧 [ProviderService] Fetching global provider config...');
+    const config = await this.globalProviderCache.get();
+    console.log(
+      `🔧 [ProviderService] Global provider cache populated with ${config.providers.length} providers and ${config.items.length} items`,
+    );
+    console.log(
+      '🔧 [ProviderService] Available global providers:',
+      config.providers.map((p) => `${p.providerKey}(${p.name})`),
+    );
+    console.log(
+      '🔧 [ProviderService] Available global items:',
+      config.items.map((i) => `${i.itemId}:${i.name}`),
+    );
     this.logger.log('Global provider cache re-populated');
   }
 

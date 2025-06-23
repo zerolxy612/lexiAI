@@ -386,6 +386,14 @@ export class HKGAIClientFactory {
         modelName: 'gpt-3.5-turbo', // Dify使用标准模型名称
         apiKey: process.env.HKGAI_GENERAL_API_KEY || 'app-5PTDowg5Dn2MSEhG5n3FBWXs',
       },
+      'hkgai-case-search': {
+        modelName: 'gpt-3.5-turbo', // Dify使用标准模型名称
+        apiKey: process.env.HKGAI_CASE_SEARCH_API_KEY || 'app-Fbs0YwuFNGHlhtAPPlvybrJm',
+      },
+      'hkgai-code-search': {
+        modelName: 'gpt-3.5-turbo', // Dify使用标准模型名称
+        apiKey: process.env.HKGAI_CODE_SEARCH_API_KEY || 'app-1rFXyZanlbQJdKtQTaZ3wuSS',
+      },
       // Add models with database format for compatibility
       'hkgai/searchentry': {
         modelName: 'gpt-3.5-turbo',
@@ -402,6 +410,14 @@ export class HKGAIClientFactory {
       'hkgai/general': {
         modelName: 'gpt-3.5-turbo',
         apiKey: process.env.HKGAI_GENERAL_API_KEY || 'app-5PTDowg5Dn2MSEhG5n3FBWXs',
+      },
+      'hkgai/case-search': {
+        modelName: 'gpt-3.5-turbo',
+        apiKey: process.env.HKGAI_CASE_SEARCH_API_KEY || 'app-Fbs0YwuFNGHlhtAPPlvybrJm',
+      },
+      'hkgai/code-search': {
+        modelName: 'gpt-3.5-turbo',
+        apiKey: process.env.HKGAI_CODE_SEARCH_API_KEY || 'app-1rFXyZanlbQJdKtQTaZ3wuSS',
       },
     };
 

@@ -17,6 +17,74 @@ export class DeepResearchService {
   private readonly thinkingStartFlag: string;
   private readonly thinkingEndFlag: string;
 
+  // Keywords for intelligent model selection
+  private readonly legalKeywords = [
+    '法律',
+    '法规',
+    '条例',
+    '判决',
+    '案例',
+    '诉讼',
+    '合同',
+    '协议',
+    '法院',
+    '律师',
+    '法条',
+    '司法',
+    '法务',
+    '法理',
+    '判例',
+    '起诉',
+    '辩护',
+    '仲裁',
+    '调解',
+    'legal',
+    'law',
+    'case',
+    'court',
+    'contract',
+    'lawsuit',
+    'attorney',
+    'judge',
+  ];
+
+  private readonly codeKeywords = [
+    '代码',
+    '编程',
+    '程序',
+    '开发',
+    '算法',
+    '函数',
+    '类',
+    '方法',
+    '变量',
+    '数据库',
+    '前端',
+    '后端',
+    'API',
+    'bug',
+    '调试',
+    '测试',
+    '框架',
+    '库',
+    '编译',
+    '部署',
+    'code',
+    'programming',
+    'development',
+    'algorithm',
+    'function',
+    'class',
+    'method',
+    'variable',
+    'database',
+    'frontend',
+    'backend',
+    'debug',
+    'test',
+    'framework',
+  ];
+
   // Stage configurations for three-stage deep research
   private readonly stageConfigs: StageConfig[] = [
     {
@@ -42,7 +110,7 @@ export class DeepResearchService {
     private readonly hkgaiClientFactory: HKGAIClientFactory,
   ) {
     this.logger.log('DeepResearchService initialized');
-    this.logger.log(`Using HKGAI RAG model for deep research analysis`);
+    this.logger.log(`Using intelligent model selection for deep research analysis`);
     this.thinkingStartFlag = this.configService.get<string>(
       'LAS_OPENAI_CHAT_RESPONSE_THINKING_START_FLAG',
       '<think>',
@@ -51,6 +119,47 @@ export class DeepResearchService {
       'LAS_OPENAI_CHAT_RESPONSE_THINKING_END_FLAG',
       '</think>',
     );
+  }
+
+  /**
+   * Intelligently select the best model based on query content
+   * @param query - The user's query
+   * @returns The selected model name
+   */
+  private selectModelForQuery(query: string): string {
+    const lowerQuery = query.toLowerCase();
+
+    // Check for legal-related keywords
+    const hasLegalKeywords = this.legalKeywords.some((keyword) =>
+      lowerQuery.includes(keyword.toLowerCase()),
+    );
+
+    // Check for code-related keywords
+    const hasCodeKeywords = this.codeKeywords.some((keyword) =>
+      lowerQuery.includes(keyword.toLowerCase()),
+    );
+
+    let selectedModel = 'RAG'; // Default model
+
+    if (hasLegalKeywords && !hasCodeKeywords) {
+      selectedModel = 'CaseSearch';
+      this.logger.log(`Selected CaseSearch model for legal query: "${query.substring(0, 50)}..."`);
+    } else if (hasCodeKeywords && !hasLegalKeywords) {
+      selectedModel = 'CodeSearch';
+      this.logger.log(`Selected CodeSearch model for coding query: "${query.substring(0, 50)}..."`);
+    } else if (hasLegalKeywords && hasCodeKeywords) {
+      // If query has both legal and code keywords, prefer CaseSearch
+      selectedModel = 'CaseSearch';
+      this.logger.log(
+        `Selected CaseSearch model for mixed legal/code query: "${query.substring(0, 50)}..."`,
+      );
+    } else {
+      this.logger.log(
+        `Selected default RAG model for general query: "${query.substring(0, 50)}..."`,
+      );
+    }
+
+    return selectedModel;
   }
 
   /**
@@ -140,12 +249,14 @@ export class DeepResearchService {
 
         this.logger.log(`[Stage ${stage}] Preparing to call AI model...`);
 
+        const selectedModel = this.selectModelForQuery(query);
         const aiContent = await this.callAIModelWithStreaming(
           systemPrompt,
           query,
           messages || [],
           subject,
           stage,
+          selectedModel,
         );
 
         subject.next(
@@ -220,6 +331,7 @@ Please provide an accurate and detailed answer in the same language as the user'
    * @param messages - Previous conversation messages
    * @param subject - RxJS subject for streaming SSE events
    * @param stage - The current stage number
+   * @param modelName - The selected model name (RAG, CaseSearch, or CodeSearch)
    * @returns Complete AI response content
    */
   private callAIModelWithStreaming(
@@ -228,6 +340,7 @@ Please provide an accurate and detailed answer in the same language as the user'
     messages: any[],
     subject: Subject<MessageEvent>,
     stage: number,
+    modelName: string = 'RAG',
   ): Promise<string> {
     return new Promise(async (resolve, reject) => {
       let fullContent = '';
@@ -246,8 +359,9 @@ Please provide an accurate and detailed answer in the same language as the user'
           `[Stage ${stage}] Final messages being sent to AI: ${JSON.stringify(enhancedMessages)}`,
         );
 
+        this.logger.log(`[Stage ${stage}] Using model: ${modelName} for AI completion`);
         const responseStream = await this.hkgaiClientFactory.createChatCompletion(
-          'RAG',
+          modelName,
           enhancedMessages,
           { stream: true },
         );

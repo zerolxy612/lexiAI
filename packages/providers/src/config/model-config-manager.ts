@@ -30,29 +30,56 @@ export class EnvironmentConfigProvider implements ConfigProvider {
   }
 
   private loadFromEnvironment(): void {
+    console.log('🔧 [ModelConfigManager] Loading configurations from environment...');
+
     // HKGAI模型配置
     const hkgaiBaseUrl = process.env.HKGAI_BASE_URL || 'https://dify.hkgai.net';
+    const hkgaiDifyBaseUrl = process.env.HKGAI_DIFY_BASE_URL || 'https://dify.hkgai.net';
+
+    console.log('🔧 [ModelConfigManager] HKGAI Base URLs:');
+    console.log('  - hkgaiBaseUrl:', hkgaiBaseUrl);
+    console.log('  - hkgaiDifyBaseUrl:', hkgaiDifyBaseUrl);
+
     const hkgaiModels = [
       { name: 'hkgai/searchentry', apiKey: process.env.HKGAI_SEARCHENTRY_API_KEY },
       { name: 'hkgai/missinginfo', apiKey: process.env.HKGAI_MISSINGINFO_API_KEY },
       { name: 'hkgai/timeline', apiKey: process.env.HKGAI_TIMELINE_API_KEY },
+      {
+        name: 'hkgai/case-search',
+        apiKey: process.env.HKGAI_CASE_SEARCH_API_KEY,
+        baseUrl: hkgaiDifyBaseUrl,
+      },
+      {
+        name: 'hkgai/code-search',
+        apiKey: process.env.HKGAI_CODE_SEARCH_API_KEY,
+        baseUrl: hkgaiDifyBaseUrl,
+      },
     ];
 
+    console.log('🔧 [ModelConfigManager] Processing HKGAI models:');
     for (const model of hkgaiModels) {
+      console.log(
+        `  - ${model.name}: API Key ${model.apiKey ? 'FOUND' : 'MISSING'} (${model.apiKey ? model.apiKey.substring(0, 10) + '...' : 'N/A'})`,
+      );
       if (model.apiKey) {
-        this.envConfigs.set(model.name, {
+        const config = {
           modelName: model.name,
           provider: 'hkgai',
           apiKey: model.apiKey,
-          baseUrl: hkgaiBaseUrl,
+          baseUrl: model.baseUrl || hkgaiBaseUrl,
           tier: 't2',
           temperature: 0.7,
-        });
+        };
+        this.envConfigs.set(model.name, config);
+        console.log(`    ✅ Configured: ${model.name} -> ${config.baseUrl}`);
+      } else {
+        console.log(`    ❌ Skipped: ${model.name} (no API key)`);
       }
     }
 
     // OpenAI模型配置
     const openaiApiKey = process.env.OPENAI_API_KEY;
+    console.log('🔧 [ModelConfigManager] OpenAI API Key:', openaiApiKey ? 'FOUND' : 'MISSING');
     if (openaiApiKey) {
       const openaiModels = ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo'];
       for (const modelName of openaiModels) {
@@ -64,12 +91,14 @@ export class EnvironmentConfigProvider implements ConfigProvider {
           tier: 't2',
           temperature: 0.7,
         });
+        console.log(`    ✅ Configured: ${modelName}`);
       }
     }
 
     console.log(
-      `[EnvironmentConfigProvider] Loaded ${this.envConfigs.size} model configurations from environment`,
+      `🔧 [ModelConfigManager] Loaded ${this.envConfigs.size} model configurations from environment`,
     );
+    console.log('🔧 [ModelConfigManager] Available models:', Array.from(this.envConfigs.keys()));
   }
 
   async getConfig(modelName: string): Promise<ModelConfig | null> {

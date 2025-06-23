@@ -24,6 +24,8 @@ export class SimpleHKGAIClient {
         process.env.HKGAI_API_KEY ||
         'sk-UgDQCBR58Fg66sb480Ff7f4003A740D8B7DcD97f3566BbAc',
       'hkgai-contract': process.env.HKGAI_CONTRACT_API_KEY || 'app-6KYmzKxZCLvoKMMh3VnrgFMs',
+      'hkgai-case-search': process.env.HKGAI_CASE_SEARCH_API_KEY || 'app-Fbs0YwuFNGHlhtAPPlvybrJm',
+      'hkgai-code-search': process.env.HKGAI_CODE_SEARCH_API_KEY || 'app-1rFXyZanlbQJdKtQTaZ3wuSS',
     };
   }
 
@@ -53,6 +55,10 @@ export class SimpleHKGAIClient {
       return this.apiKeys['hkgai-rag'];
     } else if (this.isContractModel(modelName)) {
       return this.apiKeys['hkgai-contract'];
+    } else if (lowerModelName.includes('case-search') || lowerModelName.includes('casesearch')) {
+      return this.apiKeys['hkgai-case-search'];
+    } else if (lowerModelName.includes('code-search') || lowerModelName.includes('codesearch')) {
+      return this.apiKeys['hkgai-code-search'];
     }
 
     return process.env.HKGAI_API_KEY;
