@@ -24,7 +24,7 @@ export class DeepResearchRequestDto {
   })
   @IsNumber()
   @IsOptional()
-  preGenerationRequired?: number;
+  stage?: number;
 
   @ApiPropertyOptional({
     description: 'Whether to perform web search',

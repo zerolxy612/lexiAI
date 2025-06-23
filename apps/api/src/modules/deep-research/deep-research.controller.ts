@@ -52,39 +52,4 @@ export class DeepResearchController {
       throw error;
     }
   }
-
-  @Get('health')
-  @ApiOperation({
-    summary: 'Check deep research service health',
-    description: 'Returns the health status of Google Search and AI model services',
-  })
-  async getHealthStatus(): Promise<{
-    status: 'healthy' | 'degraded' | 'unhealthy';
-    services: {
-      googleSearch: boolean;
-      aiModel: boolean;
-      configuration: boolean;
-    };
-    timestamp: string;
-  }> {
-    this.logger.debug('Checking deep research service health');
-
-    const services = await this.deepResearchService.getHealthStatus();
-
-    // Determine overall status
-    let status: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
-    const healthyServices = Object.values(services).filter(Boolean).length;
-
-    if (healthyServices === 0) {
-      status = 'unhealthy';
-    } else if (healthyServices < Object.keys(services).length) {
-      status = 'degraded';
-    }
-
-    return {
-      status,
-      services,
-      timestamp: new Date().toISOString(),
-    };
-  }
 }

@@ -1,21 +1,7 @@
 import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { SearchResultDto } from './dto/deep-research-response.dto';
 
-interface GoogleSearchResponse {
-  items?: GoogleSearchItem[];
-  searchInformation?: {
-    totalResults: string;
-    searchTime: number;
-  };
-  error?: {
-    code: number;
-    message: string;
-    errors: any[];
-  };
-}
-
-interface GoogleSearchItem {
+export interface SearchResult {
   title: string;
   link: string;
   snippet: string;
@@ -27,156 +13,115 @@ export class GoogleSearchService {
   private readonly logger = new Logger(GoogleSearchService.name);
   private readonly apiKey: string;
   private readonly cx: string;
-  private readonly numResults: number;
-  private readonly safesearch: string;
-  private readonly language: string;
   private readonly baseUrl = 'https://www.googleapis.com/customsearch/v1';
 
   constructor(private readonly configService: ConfigService) {
-    this.apiKey = this.configService.get('credentials.google.searchApiKey');
-    this.cx = this.configService.get('credentials.google.searchCx');
-    this.numResults = this.configService.get('GOOGLE_SEARCH_NUM_RESULTS') || 8;
-    this.safesearch = this.configService.get('GOOGLE_SEARCH_SAFE_SEARCH') || 'active';
-    this.language = this.configService.get('GOOGLE_SEARCH_LANGUAGE') || 'zh-CN';
+    this.apiKey = this.configService.get<string>('LAS_SEARCH_GOOGLE_KEY');
+    this.cx = this.configService.get<string>('LAS_SEARCH_GOOGLE_CX');
 
-    this.logger.log('GoogleSearchService initialized');
-    this.logger.log(`API Key configured: ${this.apiKey ? 'Yes' : 'No'}`);
-    this.logger.log(`Search CX configured: ${this.cx ? 'Yes' : 'No'}`);
+    if (!this.apiKey || !this.cx) {
+      this.logger.warn('Google Search API Key or CX is not configured. The service will not work.');
+    } else {
+      this.logger.log('GoogleSearchService initialized successfully with API Key and CX.');
+    }
   }
 
-  /**
-   * Perform Google Custom Search
-   * @param query - Search query string
-   * @param options - Additional search options
-   * @returns Array of search results
-   */
   async search(
     query: string,
-    options?: {
-      num?: number;
-      start?: number;
-      language?: string;
-    },
-  ): Promise<SearchResultDto[]> {
+    options?: { num?: number; start?: number; language?: string },
+  ): Promise<SearchResult[]> {
     if (!this.apiKey || !this.cx) {
-      this.logger.error('Google Search API not properly configured');
-      throw new HttpException('Search service not available', HttpStatus.SERVICE_UNAVAILABLE);
+      this.logger.error('Google Search API is not configured.');
+      throw new HttpException('Search service is not available', HttpStatus.SERVICE_UNAVAILABLE);
     }
 
+    const params = new URLSearchParams({
+      key: this.apiKey,
+      cx: this.cx,
+      q: query,
+      num: String(options?.num || 8),
+      start: String(options?.start || 1),
+      safesearch: 'active',
+      ...(options?.language && { hl: options.language }),
+    });
+
+    const url = `${this.baseUrl}?${params.toString()}`;
+    this.logger.debug(`[GoogleSearch] Sending request to: ${url.replace(this.apiKey, '***')}`);
+
     try {
-      const params = new URLSearchParams({
-        key: this.apiKey,
-        cx: this.cx,
-        q: query,
-        num: String(options?.num || this.numResults),
-        start: String(options?.start || 1),
-        ...(options?.language && { hl: options.language }),
-        safesearch: this.safesearch,
-      });
+      const response = await fetch(url);
+      const data = await response.json();
+      this.logger.debug(`[GoogleSearch] Received raw response: ${JSON.stringify(data, null, 2)}`);
 
-      const url = `${this.baseUrl}?${params.toString()}`;
-
-      this.logger.debug(`Performing Google search for query: "${query}"`);
-      this.logger.debug(`Search URL: ${url.replace(this.apiKey, '***')}`);
-
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': 'LexiHK Deep Research Bot/1.0',
-        },
-      });
-
-      if (!response.ok) {
+      if (!response.ok || data.error) {
+        const errorDetails = data.error
+          ? JSON.stringify(data.error)
+          : `${response.status} ${response.statusText}`;
+        this.logger.error(`Google Search API error: ${errorDetails}`);
         throw new HttpException(
-          `Google Search API error: ${response.status} ${response.statusText}`,
-          HttpStatus.BAD_GATEWAY,
+          `Google Search API error: ${errorDetails}`,
+          response.status || HttpStatus.BAD_GATEWAY,
         );
       }
 
-      const data: GoogleSearchResponse = await response.json();
-
-      // Handle API errors
-      if (data.error) {
-        this.logger.error('Google Search API error:', data.error);
-        throw new HttpException(
-          `Google Search API error: ${data.error.message}`,
-          HttpStatus.BAD_GATEWAY,
-        );
-      }
-
-      // Transform results
-      const results = this.transformSearchResults(data.items || []);
-
-      this.logger.log(`Found ${results.length} search results for query: "${query}"`);
-      return results;
+      const searchResults = (data.items || []).map((item) => ({
+        title: item.title,
+        link: item.link,
+        snippet: item.snippet,
+        displayLink: item.displayLink,
+      }));
+      this.logger.debug(`[GoogleSearch] Parsed ${searchResults.length} results.`);
+      return searchResults;
     } catch (error) {
+      this.logger.error(
+        `[GoogleSearch] An unexpected error occurred during the fetch call for query "${query}". Full error:`,
+        error,
+      );
+
+      // Fallback to mock data in development environment
+      if (process.env.NODE_ENV === 'development') {
+        this.logger.warn('Google Search failed in DEV mode. Returning mock data instead.');
+        return this.getMockSearchResults(query);
+      }
+
       if (error instanceof HttpException) {
         throw error;
       }
-
-      this.logger.error('Unexpected error during Google search:', error);
       throw new HttpException(
-        'Search service temporarily unavailable',
+        `Search service call failed due to an internal error: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
 
-  /**
-   * Transform Google Search API response to our DTO format
-   * @param items - Google search items
-   * @returns Transformed search results
-   */
-  private transformSearchResults(items: GoogleSearchItem[]): SearchResultDto[] {
-    return items.map((item) => ({
-      title: this.cleanText(item.title),
-      link: item.link,
-      snippet: this.cleanText(item.snippet),
-      displayLink: item.displayLink,
-    }));
-  }
-
-  /**
-   * Clean and sanitize text content
-   * @param text - Raw text from search results
-   * @returns Cleaned text
-   */
-  private cleanText(text: string): string {
-    if (!text) return '';
-
-    return text
-      .replace(/\n/g, ' ') // Replace newlines with spaces
-      .replace(/\s+/g, ' ') // Collapse multiple spaces
-      .replace(/[^\x20-\x7E\u4e00-\u9fff]/g, '') // Keep only ASCII and Chinese characters
-      .trim();
-  }
-
-  /**
-   * Test the Google Search API configuration
-   * @returns Boolean indicating if the service is working
-   */
-  async testConnection(): Promise<boolean> {
-    try {
-      const results = await this.search('test', { num: 1 });
-      return results.length >= 0; // Even 0 results is a successful connection
-    } catch (error) {
-      this.logger.error('Google Search service test failed:', error);
-      return false;
-    }
-  }
-
-  /**
-   * Get service health status
-   * @returns Service health information
-   */
-  getHealthStatus(): {
-    configured: boolean;
-    apiKey: boolean;
-    searchEngineId: boolean;
-  } {
-    return {
-      configured: !!(this.apiKey && this.cx),
-      apiKey: !!this.apiKey,
-      searchEngineId: !!this.cx,
-    };
+  private getMockSearchResults(query: string): SearchResult[] {
+    this.logger.log(`Generating mock search results for query: "${query}"`);
+    return [
+      {
+        title: 'Mock Result 1: Comprehensive Guide to Topic',
+        link: 'https://mock-link-1.com/guide',
+        snippet: `This is a detailed mock snippet for the query "${query}". It provides an overview of the main concepts, key features, and important considerations. This guide is designed for both beginners and experts.`,
+      },
+      {
+        title: 'Mock Result 2: Advanced Techniques',
+        link: 'https://mock-link-2.com/advanced',
+        snippet: `Explore advanced techniques related to "${query}". This article covers in-depth strategies, performance optimizations, and real-world case studies to enhance your understanding.`,
+      },
+      {
+        title: 'Mock Result 3: News and Recent Developments',
+        link: 'https://mock-link-3.com/news',
+        snippet: `Stay up-to-date with the latest news and developments on "${query}". This resource provides timely updates from credible sources around the world.`,
+      },
+      {
+        title: 'Mock Result 4: Community Forum Discussion',
+        link: 'https://mock-link-4.com/forum',
+        snippet: `Join the community discussion about "${query}". See what others are saying, ask questions, and share your own experiences and insights with a large community of peers.`,
+      },
+      {
+        title: 'Mock Result 5: Official Documentation',
+        link: 'https://mock-link-5.com/docs',
+        snippet: `The official documentation provides the most accurate and reliable information. Refer to this for technical specifications and usage guidelines regarding "${query}".`,
+      },
+    ];
   }
 }

@@ -1,13 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Observable, Subject } from 'rxjs';
-import { GoogleSearchService } from './google-search.service';
+import { Subject, Observable } from 'rxjs';
+import { GoogleSearchService, SearchResult } from './google-search.service';
 import { DeepResearchRequestDto } from './dto/deep-research-request.dto';
-import {
-  DeepResearchResponseDto,
-  SearchResultDto,
-  DeepResearchStageDto,
-} from './dto/deep-research-response.dto';
 import { HKGAIClientFactory } from '../../utils/llm/hkgai-client-factory';
 
 interface StageConfig {
@@ -59,187 +54,130 @@ export class DeepResearchService {
   }
 
   /**
-   * Generate streaming deep research response
-   * This is the main entry point for three-stage retrieval
+   * Generate streaming deep research response for a single stage
+   * This is the main entry point, now processing one stage per call.
    */
   generateStream(request: DeepResearchRequestDto): Observable<MessageEvent> {
     const subject = new Subject<MessageEvent>();
-
-    // Execute the three-stage process asynchronously
-    this.processThreeStages(request, subject).catch((error) => {
-      this.logger.error('Error in three-stage processing:', error);
-      subject.next(this.createErrorEvent(error.message || 'Unknown error occurred'));
+    this.logger.log(`Starting generateStream for query: "${request.query}"`);
+    this.processAllStages(request, subject).catch((error) => {
+      this.logger.error(`Unhandled error in processAllStages: ${error.message}`, error.stack);
+      const errorEvent = this.createErrorEvent(
+        `Critical error during processing: ${error.message}`,
+      );
+      subject.next(errorEvent);
       subject.complete();
     });
-
+    this.logger.log(`Returning observable from generateStream.`);
     return subject.asObservable();
   }
 
   /**
-   * Core method: Process all three stages of deep research
-   * Based on Spring Boot ChatService.generateStream logic
-   */
-  private async processThreeStages(
-    request: DeepResearchRequestDto,
-    subject: Subject<MessageEvent>,
-  ): Promise<void> {
-    try {
-      this.logger.log(`Starting three-stage deep research for query: "${request.query}"`);
-
-      // Process each stage sequentially
-      for (let stage = 0; stage < 3; stage++) {
-        await this.processStage(request, stage, subject);
-      }
-
-      // Send completion event
-      subject.next(
-        this.createEvent('complete', {
-          type: 'complete',
-          progress: {
-            currentStage: 3,
-            totalStages: 3,
-            percentage: 100,
-          },
-        }),
-      );
-
-      subject.complete();
-      this.logger.log('Three-stage deep research completed successfully');
-    } catch (error) {
-      this.logger.error('Error in three-stage processing:', error);
-      subject.next(this.createErrorEvent(error.message));
-      subject.complete();
-    }
-  }
-
-  /**
-   * Process a single stage of research
+   * Process all stages of research in a loop
    * @param request - Original request
-   * @param stage - Current stage (0, 1, 2)
-   * @param subject - RxJS subject for streaming
+   * @param subject - RxJS subject for streaming SSE events
    */
-  private async processStage(
-    request: DeepResearchRequestDto,
-    stage: number,
-    subject: Subject<MessageEvent>,
-  ): Promise<void> {
-    const stageConfig = this.stageConfigs[stage];
-    const timestamp = new Date();
+  private async processAllStages(request: DeepResearchRequestDto, subject: Subject<MessageEvent>) {
+    const { query, messages } = request;
 
-    this.logger.log(`Processing stage ${stage}: ${stageConfig.name}`);
+    this.logger.log(`>>>>> ENTERING processAllStages for query: "${query}"`);
 
-    // Send stage start event
-    subject.next(
-      this.createEvent('stage_start', {
-        type: 'stage_start',
-        progress: {
-          currentStage: stage,
-          totalStages: 3,
-          percentage: Math.round((stage / 3) * 100),
-        },
-        stageData: {
-          stage,
-          stageName: stageConfig.name,
-          searchQuery: '',
-          searchResults: [],
-          aiContent: '',
-          timestamp,
-        },
-      }),
-    );
+    for (let stage = 0; stage < this.stageConfigs.length; stage++) {
+      const stageConfig = this.stageConfigs[stage];
+      const stageName = stageConfig.name;
 
-    try {
-      // Step 1: Build enhanced search query (key logic from Spring Boot)
-      const enhancedQuery = this.buildSearchQuery(request.query, stage);
+      this.logger.log(`[Stage ${stage}] Processing: ${stageName}`);
 
-      // Step 2: Perform Google search
-      let searchResults: SearchResultDto[] = [];
-      if (request.search !== false) {
-        this.logger.debug(`Searching with enhanced query: "${enhancedQuery}"`);
+      try {
+        subject.next(
+          this.createEvent('stage_start', {
+            type: 'stage_start',
+            stage,
+            stageName,
+          }),
+        );
+
+        const enhancedQuery = this.buildSearchQuery(query, stage);
+        this.logger.debug(`[Stage ${stage}] Built enhanced search query: "${enhancedQuery}"`);
+        let searchResults: SearchResult[] = [];
+
         try {
-          searchResults = await this.googleSearchService.search(enhancedQuery, {
-            num: 8, // Get more results for better context
-            language: 'zh-CN',
-          });
-          this.logger.log(`✅ Google search successful: ${searchResults.length} results found`);
+          searchResults = await this.googleSearchService.search(enhancedQuery);
+          this.logger.debug(
+            `[Stage ${stage}] googleSearchService returned ${
+              searchResults.length
+            } results. First result: ${JSON.stringify(searchResults[0])}`,
+          );
         } catch (searchError) {
           this.logger.warn(
-            `⚠️ Google search failed, continuing without search results:`,
-            searchError.message,
+            `[Stage ${stage}] Google search failed, continuing without search results: ${searchError.message}`,
           );
-          // Continue without search results - AI can still provide general knowledge
-          searchResults = [];
+          // Proceed without search results
         }
 
-        // Send search complete event
+        const searchCompleteEventData = {
+          type: 'search_complete',
+          stage,
+          stageData: {
+            stage,
+            stageName,
+            searchQuery: enhancedQuery,
+            searchResults,
+            aiContent: '',
+            timestamp: new Date().toISOString(),
+          },
+        };
+        this.logger.debug(
+          `[Stage ${stage}] Sending 'search_complete' event with data: ${JSON.stringify(
+            searchCompleteEventData,
+            null,
+            2,
+          )}`,
+        );
+        subject.next(this.createEvent('search_complete', searchCompleteEventData));
+
+        const systemPrompt = this.buildSystemPrompt(searchResults, enhancedQuery);
+
+        this.logger.log(`[Stage ${stage}] Preparing to call AI model...`);
+
+        const aiContent = await this.callAIModelWithStreaming(
+          systemPrompt,
+          query,
+          messages || [],
+          subject,
+          stage,
+        );
+
         subject.next(
-          this.createEvent('search_complete', {
-            type: 'search_complete',
+          this.createEvent('stage_complete', {
+            type: 'stage_complete',
+            stage, // send stage number in the event
             stageData: {
               stage,
-              stageName: stageConfig.name,
+              stageName,
               searchQuery: enhancedQuery,
               searchResults,
-              aiContent: '',
-              timestamp,
+              aiContent,
+              timestamp: new Date().toISOString(),
             },
           }),
         );
+        this.logger.log(`[Stage ${stage}] Completed: ${stageName}`);
+      } catch (error) {
+        this.logger.error(`[Stage ${stage}] CRITICAL ERROR in stage:`, error.stack);
+        const errorMessage = `Stage ${stage} (${stageName}) failed: ${error.message}`;
+        subject.next(this.createErrorEvent(errorMessage));
+        // We stop further processing if one stage fails
+        subject.complete();
+        this.logger.error(`<<<<< ERRORED and STOPPED processAllStages at stage ${stage}`);
+        return;
       }
-
-      // Step 3: Build system prompt with search results
-      const systemPrompt = this.buildSystemPrompt(searchResults, enhancedQuery);
-
-      // Step 4: Call AI model and stream response
-      const aiContent = await this.callAIModelWithStreaming(
-        systemPrompt,
-        request.messages || [],
-        subject,
-        stage,
-      );
-
-      // Step 5: Send stage complete event
-      const stageData: DeepResearchStageDto = {
-        stage,
-        stageName: stageConfig.name,
-        searchQuery: enhancedQuery,
-        searchResults,
-        aiContent,
-        timestamp,
-      };
-
-      subject.next(
-        this.createEvent('stage_complete', {
-          type: 'stage_complete',
-          stageData,
-          progress: {
-            currentStage: stage + 1,
-            totalStages: 3,
-            percentage: Math.round(((stage + 1) / 3) * 100),
-          },
-        }),
-      );
-
-      this.logger.log(`Stage ${stage} completed successfully`);
-    } catch (error) {
-      this.logger.error(`Error in stage ${stage}:`, error);
-
-      // Try to continue with next stage even if current stage fails
-      subject.next(
-        this.createEvent('stage_complete', {
-          type: 'stage_complete',
-          error: `Stage ${stage} failed: ${error.message}`,
-          stageData: {
-            stage,
-            stageName: stageConfig.name,
-            searchQuery: '',
-            searchResults: [],
-            aiContent: `Error in stage ${stage}: ${error.message}`,
-            timestamp,
-          },
-        }),
-      );
     }
+
+    // After all stages are complete
+    subject.next(this.createEvent('complete', { type: 'complete' }));
+    subject.complete();
+    this.logger.log(`<<<<< COMPLETED processAllStages for query: "${query}"`);
   }
 
   /**
@@ -247,185 +185,162 @@ export class DeepResearchService {
    * Core logic from Spring Boot ChatService
    */
   private buildSearchQuery(originalQuery: string, stage: number): string {
+    this.logger.log(`Building search query for stage ${stage}`);
     const stageConfig = this.stageConfigs[stage];
-    return originalQuery + stageConfig.querySuffix;
+    if (stageConfig) {
+      return `${originalQuery} ${stageConfig.querySuffix}`;
+    }
+    return originalQuery;
   }
 
   /**
    * Build system prompt with search results
    * Based on Spring Boot buildSystemMessage method
    */
-  private buildSystemPrompt(searchResults: SearchResultDto[], query: string): string {
-    if (!searchResults || searchResults.length === 0) {
-      return '你是一个专业的AI助手，请根据你的知识回答用户问题。';
-    }
+  private buildSystemPrompt(searchResults: SearchResult[], query: string): string {
+    const resultsText =
+      searchResults?.length > 0
+        ? searchResults
+            .map((r) => `Title: ${r.title}\nLink: ${r.link}\nSnippet: ${r.snippet}`)
+            .join('\n\n')
+        : 'No search results found.';
 
-    const builder: string[] = [];
+    return `You are a professional AI assistant. Please answer the user's question based on the following web search results.
+Search Query: ${query}
+Search Results:
+${resultsText}
 
-    builder.push('你是一个专业的AI助手。请基于以下网络搜索结果回答用户问题。\n\n');
-    builder.push(`搜索查询: ${query}\n`);
-    builder.push('搜索结果:\n');
-
-    searchResults.forEach((result, index) => {
-      builder.push(`${index + 1}. 标题: ${result.title}\n`);
-      builder.push(`   链接: ${result.link}\n`);
-      builder.push(`   摘要: ${result.snippet}\n\n`);
-    });
-
-    builder.push(
-      '请基于以上搜索结果，用中文提供准确、详细的回答。如果搜索结果不足以回答问题，请说明并提供你的专业建议。\n\n',
-    );
-    builder.push('重要说明：\n');
-    builder.push('1. 请将你的思考过程放在 <think></think> 标签中\n');
-    builder.push('2. 在思考过程中可以引用搜索结果的链接\n');
-    builder.push('3. 最终回答应该综合分析所有相关信息\n');
-
-    return builder.join('');
+Please provide an accurate and detailed answer in the same language as the user's query.`;
   }
 
   /**
    * Call AI model with streaming response
    * @param systemPrompt - Enhanced system prompt with search results
+   * @param query - Main search query
    * @param messages - Previous conversation messages
-   * @param subject - RxJS subject for streaming
-   * @param stage - Current stage number
+   * @param subject - RxJS subject for streaming SSE events
+   * @param stage - The current stage number
    * @returns Complete AI response content
    */
   private callAIModelWithStreaming(
     systemPrompt: string,
+    query: string,
     messages: any[],
     subject: Subject<MessageEvent>,
     stage: number,
   ): Promise<string> {
     return new Promise(async (resolve, reject) => {
+      let fullContent = '';
       try {
-        // Prepare messages with system prompt
-        const enhancedMessages = [{ role: 'system', content: systemPrompt }, ...messages];
+        let finalMessages = messages;
+        if (!finalMessages || finalMessages.length === 0) {
+          this.logger.warn(
+            `[Stage ${stage}] The 'messages' array is empty. Using the main 'query' as the user message.`,
+          );
+          finalMessages = [{ role: 'user', content: query }];
+        }
 
-        // Call HKGAI API using the RAG model (optimized for retrieval-augmented generation)
-        const responseStream = await this.hkgaiClientFactory.createChatCompletion(
-          'RAG', // Use RAG model for better three-stage retrieval performance
-          enhancedMessages,
-          {
-            temperature: 0.7,
-            stream: true, // MUST be true for RAG model
-            max_tokens: 4000,
-          },
+        const enhancedMessages = [{ role: 'system', content: systemPrompt }, ...finalMessages];
+
+        this.logger.debug(
+          `[Stage ${stage}] Final messages being sent to AI: ${JSON.stringify(enhancedMessages)}`,
         );
 
-        let fullContent = '';
-        let buffer = '';
+        const responseStream = await this.hkgaiClientFactory.createChatCompletion(
+          'RAG',
+          enhancedMessages,
+          { stream: true },
+        );
 
-        responseStream.on('data', (chunk: Buffer) => {
-          buffer += chunk.toString('utf8');
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || ''; // Keep the last, possibly incomplete line in buffer
+        for await (const chunk of responseStream) {
+          const lines = chunk
+            .toString('utf8')
+            .split('\n')
+            .filter((line) => line.trim() !== '');
 
           for (const line of lines) {
-            if (line.trim().startsWith('data: ')) {
-              const jsonStr = line.trim().substring(5).trim();
-              if (jsonStr === '[DONE]') {
-                // The stream is indicating completion
-                continue;
+            if (line.startsWith('data: ')) {
+              const dataStr = line.substring(5).trim();
+
+              if (dataStr === '[DONE]') {
+                this.logger.log(`[Stage ${stage}] AI response stream finished.`);
+                resolve(fullContent);
+                return;
               }
+
               try {
-                const data = JSON.parse(jsonStr);
-                const delta = data.choices?.[0]?.delta?.content || '';
+                const parsedData = JSON.parse(dataStr);
+                const delta = parsedData.choices?.[0]?.delta?.content;
+
                 if (delta) {
-                  fullContent += delta;
-                  // Send AI response chunk event for real-time updates
-                  subject.next(
-                    this.createEvent('ai_response_chunk', {
-                      type: 'ai_response_chunk',
-                      content: delta,
-                      stage,
-                    }),
-                  );
+                  // Don't stream thinking blocks
+                  if (
+                    delta.includes(this.thinkingStartFlag) ||
+                    delta.includes(this.thinkingEndFlag)
+                  ) {
+                    continue;
+                  }
+
+                  // Ensure we only stream actual text content, not stringified JSON objects
+                  if (typeof delta === 'string') {
+                    // Check if the string is not a JSON object
+                    let isJsonObject = false;
+                    try {
+                      JSON.parse(delta);
+                      isJsonObject = true;
+                    } catch (e) {
+                      // Not a JSON object, which is what we want
+                    }
+
+                    if (!isJsonObject) {
+                      fullContent += delta;
+                      subject.next(
+                        this.createEvent('ai_response', {
+                          type: 'ai_response',
+                          stage,
+                          content: delta,
+                        }),
+                      );
+                    }
+                  }
                 }
               } catch (e) {
-                this.logger.warn(`Error parsing stream data chunk: "${jsonStr}" - ${e.message}`);
+                this.logger.error(
+                  `[Stage ${stage}] Failed to parse AI stream data chunk: ${dataStr}`,
+                  e,
+                );
               }
             }
           }
-        });
-
-        responseStream.on('end', () => {
-          this.logger.log(`AI model stream ended for stage ${stage}.`);
-          // Send final stage complete event with the full content
-          subject.next(
-            this.createEvent('ai_response', {
-              type: 'ai_response',
-              content: fullContent,
-              progress: {
-                currentStage: stage,
-                totalStages: 3,
-                percentage: Math.round(((stage + 0.9) / 3) * 100), // Progress to near end of stage
-              },
-            }),
-          );
-          resolve(fullContent); // Resolve the promise with the full content
-        });
-
-        responseStream.on('error', (error: Error) => {
-          this.logger.error('Error in AI model stream:', error);
-          reject(new Error(`AI model stream error: ${error.message}`));
-        });
+        }
+        this.logger.log(`[Stage ${stage}] Completed consuming AI stream.`);
+        resolve(fullContent);
       } catch (error) {
-        this.logger.error('Error calling AI model:', error);
-        reject(new Error(`AI model call failed: ${error.message}`));
+        this.logger.error(
+          `[Stage ${stage}] Error in callAIModelWithStreaming: ${error.message}`,
+          error.stack,
+        );
+        reject(error);
       }
     });
   }
 
-  /**
-   * Create a Server-Sent Event
-   */
+  private getStageName(stage: number): string {
+    if (stage >= 0 && stage < this.stageConfigs.length) {
+      return this.stageConfigs[stage].name;
+    }
+    return 'Unknown Stage';
+  }
+
   private createEvent(type: string, data: any): MessageEvent {
     return {
-      data: JSON.stringify(data),
-      type,
+      data: JSON.stringify({ ...data, type }),
     } as MessageEvent;
   }
 
-  /**
-   * Create an error event
-   */
   private createErrorEvent(message: string): MessageEvent {
-    return this.createEvent('error', {
-      type: 'error',
-      error: message,
-    });
-  }
-
-  /**
-   * Health check for the service
-   */
-  async getHealthStatus(): Promise<{
-    googleSearch: boolean;
-    aiModel: boolean;
-    configuration: boolean;
-  }> {
-    const googleSearchHealth = await this.googleSearchService.testConnection();
-
-    // Test AI model connection using RAG model
-    let aiModelHealth = false;
-    try {
-      // Test if we can get a client for the RAG model
-      const client = this.hkgaiClientFactory.getClient('RAG');
-      aiModelHealth = !!client;
-    } catch (error) {
-      this.logger.warn('AI model health check failed:', error);
-    }
-
-    const configurationHealth = !!(
-      this.configService.get('credentials.google.searchApiKey') &&
-      this.configService.get('credentials.google.searchCx')
-    );
-
     return {
-      googleSearch: googleSearchHealth,
-      aiModel: aiModelHealth,
-      configuration: configurationHealth,
-    };
+      data: JSON.stringify({ type: 'error', error: message }),
+    } as MessageEvent;
   }
 }

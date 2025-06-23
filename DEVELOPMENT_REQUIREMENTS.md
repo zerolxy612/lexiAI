@@ -3142,8 +3142,7 @@ LEXIHK_RAG_API_KEY="your-rag-service-api-key"
 #### **🎯 关键技术决策**
 
 1. **模型选择**：
-   - 复用现有的 `hkgai-general` 模型
-   - 或者新增 `lexihk-rag` 模型配置指向自建RAG服务
+新增 `lexihk-rag` 模型配置指向自建RAG服务
 
 2. **流式响应**：
    - 使用NestJS的 `@Sse()` 装饰器实现Server-Sent Events
@@ -3289,203 +3288,121 @@ import { requestEventStream, streamResponse } from '@/utils/stream'
 import { useAILoadingStore } from '@/store/globalStore'
 import ThoughtProcess from './ThoughtProcess'
 
+// Define stage constants
+const STAGES = {
+  IDLE: -1,
+  BASIC_ANALYSIS: 0,
+  EXTENDED_ANALYSIS: 1,
+  DEEP_ANALYSIS: 2,
+  COMPLETED: 3,
+};
+
 export default function DeepResearch() {
   const { t, language } = useTranslation()
   const { isDeepShow, setIsDeepShow, deepShowContent } = useModelStore()
   
-  // 三段检索的状态管理
-  const [streamingAnswer, setStreamingAnswer] = useState('')
-  const [streamingAnswer2, setStreamingAnswer2] = useState('')
-  const [streamingAnswer3, setStreamingAnswer3] = useState('')
-  
-  const [searchResults, setSearchResults] = useState<
-    { title: string; link: string; snippet: string }[]
-  >([])
-  const [searchResults2, setSearchResults2] = useState<
-    { title: string; link: string; snippet: string }[]
-  >([])
-  const [searchResults3, setSearchResults3] = useState<
-    { title: string; link: string; snippet: string }[]
-  >([])
-  
-  const [showSearch, setShowSearch] = useState(false)
-  const [showSearch2, setShowSearch2] = useState(false)
-  const [showSearch3, setShowSearch3] = useState(false)
-  
-  const [showLoad, setShowLoad] = useState(false)
-  const { setIsLoading } = useAILoadingStore()
+  // Refactored state management
+  const [currentStage, setCurrentStage] = useState(STAGES.IDLE);
+  const [stageData, setStageData] = useState<
+    { answer: string; results: any[]; showSearch: boolean }[]
+  >([
+    { answer: '', results: [], showSearch: false },
+    { answer: '', results: [], showSearch: false },
+    { answer: '', results: [], showSearch: false },
+  ]);
+  const [isLoading, setIsLoading] = useState(false);
   const contentContainerRef = useRef<HTMLDivElement>(null)
 
-  // 第一段：基础分析
-  const getAiAnswer = useCallback(async () => {
-    if (!deepShowContent) return
-    setIsLoading(true)
-    setShowLoad(true)
-    
-    // 重置所有状态
-    resetAllStates()
-    
+  // Combined and memoized function for all stages
+  const runAnalysisStage = useCallback(async (stage: number) => {
+    if (!deepShowContent) return;
+
+    setIsLoading(true);
+
+    const stageSuffixes = {
+      [STAGES.BASIC_ANALYSIS]: '',
+      [STAGES.EXTENDED_ANALYSIS]: { EN: ', Expand', TC: ', 拓展', SC: ', 拓展' }[language],
+      [STAGES.DEEP_ANALYSIS]: { EN: ', In-depth Analysis', TC: ', 深度剖析', SC: ', 深度剖析' }[language],
+    };
+
     try {
       const response = await requestEventStream({
-        isSearch: true,
+        query: deepShowContent,
+        messages: [{ role: 'user', content: deepShowContent }],
+        search: true,
         languageTag: language,
-        message: {
-          type: 'user',
-          text: deepShowContent, // 原始问题，不添加后缀
-          metadata: { chatDialogId: '' }
-        },
-        model: 'HKGAI-V1',
-        preGenerationRequired: 0, // 第一段
-        persistentStrategy: 0,
-        searchStrategy: 1
-      })
+        stage: stage,
+      });
 
-      let answer = ''
-      for await (const { streamContent, searchResultsStream } of streamResponse(response)) {
-        if (searchResultsStream && searchResults.length === 0) {
-          setSearchResults(searchResultsStream ?? [])
+      // This is a flag to ensure we only advance to the next stage once.
+      let stageCompleted = false;
+
+      for await (const { streamContent, searchResultsStream, event } of streamResponse(response)) {
+        if (event === 'complete') {
+            stageCompleted = true;
+            break; // Exit the loop on completion signal from backend
+        }
+        
+        if (searchResultsStream) {
+          setStageData(prev => {
+            const newData = [...prev];
+            newData[stage].results = searchResultsStream ?? [];
+            return newData;
+          });
         }
 
         if (streamContent) {
-          setShowLoad(false)
-          answer += streamContent
-          setStreamingAnswer(answer)
+          setStageData(prev => {
+            const newData = [...prev];
+            newData[stage].answer += streamContent;
+            return newData;
+          });
         }
       }
       
-      setIsLoading(false)
-      setShowSearch(true)
-      scrollToBottom()
-      
-      // 自动执行第二段
-      getAiAnswer2()
-    } catch (error) {
-      console.log('error', error)
-      setIsLoading(false)
-    }
-  }, [deepShowContent, setIsLoading, language])
-  
-  // 第二段：拓展分析
-  const getAiAnswer2 = async () => {
-    setIsLoading(true)
-    
-    const expand = {
-      EN: '，Expand',
-      TC: '，拓展', 
-      SC: '，拓展'
-    }
-    
-    try {
-      const response = await requestEventStream({
-        isSearch: true,
-        languageTag: language,
-        message: {
-          type: 'user',
-          text: deepShowContent + expand[language], // 添加"拓展"后缀
-          metadata: { chatDialogId: '' }
-        },
-        model: 'HKGAI-V1',
-        preGenerationRequired: 1, // 第二段
-        persistentStrategy: 0,
-        searchStrategy: 1
-      })
+      if (stageCompleted) {
+        setStageData(prev => {
+            const newData = [...prev];
+            newData[stage].showSearch = true;
+            return newData;
+        });
 
-      let answer = ''
-      for await (const { streamContent, searchResultsStream } of streamResponse(response)) {
-        if (searchResultsStream && searchResults2.length === 0) {
-          setSearchResults2(searchResultsStream ?? [])
-        }
-
-        if (streamContent) {
-          answer += streamContent
-          setStreamingAnswer2(answer)
-        }
+        // Move to the next stage
+        setCurrentStage(prevStage => prevStage + 1);
       }
-      
-      setIsLoading(false)
-      setShowSearch2(true)
-      scrollToBottom()
-      
-      // 自动执行第三段
-      getAiAnswer3()
+
     } catch (error) {
-      console.log('error', error)
-      setIsLoading(false)
+      console.error(`Error in stage ${stage}:`, error);
+      setCurrentStage(STAGES.COMPLETED); // Stop on error
+    } finally {
+      setIsLoading(false);
     }
-  }
+  }, [deepShowContent, language]);
 
-  // 第三段：深度剖析
-  const getAiAnswer3 = async () => {
-    setIsLoading(true)
-    
-    const analysis = {
-      EN: '，In-depth Analysis',
-      TC: '，深度剖析',
-      SC: '，深度剖析'
+  // Main effect to drive the process
+  useEffect(() => {
+    if (isDeepShow && deepShowContent && currentStage === STAGES.IDLE) {
+      // Reset states and start the process
+      setStageData([
+        { answer: '', results: [], showSearch: false },
+        { answer: '', results: [], showSearch: false },
+        { answer: '', results: [], showSearch: false },
+      ]);
+      setCurrentStage(STAGES.BASIC_ANALYSIS);
+    } else if (!isDeepShow) {
+      // Reset when panel is hidden
+      setCurrentStage(STAGES.IDLE);
     }
-    
-    try {
-      const response = await requestEventStream({
-        isSearch: true,
-        languageTag: language,
-        message: {
-          type: 'user',
-          text: deepShowContent + analysis[language], // 添加"深度剖析"后缀
-          metadata: { chatDialogId: '' }
-        },
-        model: 'HKGAI-V1',
-        preGenerationRequired: 2, // 第三段
-        persistentStrategy: 0,
-        searchStrategy: 1
-      })
+  }, [isDeepShow, deepShowContent, currentStage]);
 
-      let answer = ''
-      for await (const { streamContent, searchResultsStream } of streamResponse(response)) {
-        if (searchResultsStream && searchResults3.length === 0) {
-          setSearchResults3(searchResultsStream ?? [])
-        }
-
-        if (streamContent) {
-          answer += streamContent
-          setStreamingAnswer3(answer)
-        }
-      }
-      
-      setIsLoading(false)
-      setShowSearch3(true)
-      scrollToBottom()
-    } catch (error) {
-      console.log('error', error)
-      setIsLoading(false)
+  // Effect to run each stage
+  useEffect(() => {
+    if (currentStage >= STAGES.BASIC_ANALYSIS && currentStage < STAGES.COMPLETED) {
+      runAnalysisStage(currentStage);
     }
-  }
+  }, [currentStage, runAnalysisStage]);
 
-  // 重置所有状态
-  const resetAllStates = () => {
-    setShowSearch(false)
-    setShowSearch2(false)
-    setShowSearch3(false)
-    setStreamingAnswer('')
-    setStreamingAnswer2('')
-    setStreamingAnswer3('')
-    setSearchResults([])
-    setSearchResults2([])
-    setSearchResults3([])
-  }
-
-  // 滚动到底部
-  const scrollToBottom = () => {
-    const container = contentContainerRef.current
-    if (!container) return
-    setTimeout(() => {
-      container.scrollTo({
-        top: container.scrollHeight,
-        behavior: 'smooth'
-      })
-    }, 100)
-  }
-
-  // 复制功能
+  // copy function remains the same
   const copyText = async (textToCopy: string | null | undefined) => {
     if (!textToCopy) return
     try {
@@ -3496,49 +3413,38 @@ export default function DeepResearch() {
     }
   }
 
-  // 自动启动三段检索
+  // Auto-scroll effect
   useEffect(() => {
-    if (isDeepShow && deepShowContent) {
-      getAiAnswer()
+    const container = contentContainerRef.current;
+    if (container) {
+        container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
     }
-  }, [isDeepShow, deepShowContent, getAiAnswer])
-
-  // 自动滚动效果
-  useEffect(() => {
-    const container = contentContainerRef.current
-    if (!container) return
-
-    const animationFrame = requestAnimationFrame(() => {
-      const isNearBottom =
-        container.scrollHeight - container.scrollTop - container.clientHeight < 100
-
-      if (isNearBottom) {
-        container.scrollTo({
-          top: container.scrollHeight,
-          behavior: 'smooth'
-        })
-      }
-    })
-
-    return () => cancelAnimationFrame(animationFrame)
-  }, [streamingAnswer, streamingAnswer2, streamingAnswer3])
+  }, [stageData]);
 
   if (!isDeepShow) return null
+  
+  const { answer: streamingAnswer, results: searchResults, showSearch } = stageData[0];
+  const { answer: streamingAnswer2, results: searchResults2, showSearch: showSearch2 } = stageData[1];
+  const { answer: streamingAnswer3, results: searchResults3, showSearch: showSearch3 } = stageData[2];
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      className="w-full h-full p-[20px] bg-[#EDF2F8] pt-[66px]"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+      className="fixed inset-0 w-full h-full bg-black/30 backdrop-blur-sm z-40 flex items-center justify-center p-4"
     >
-      <div className="rounded-[10px] w-full h-full bg-[#FCFAFE] shadow-sm border border-solid border-[#EAE6F2] overflow-hidden flex flex-col">
+      <div
+        className="rounded-[10px] w-full max-w-4xl h-[90vh] bg-[#FCFAFE] shadow-lg border border-solid border-[#EAE6F2] overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+      >
         {/* 标题栏 */}
-        <div className="relative">
-          <div className="font-bold text-sm text-center text-[#222] font-['Satoshi'] p-[10px]">
+        <div className="relative flex-shrink-0">
+          <div className="font-bold text-lg text-center text-[#222] font-['Satoshi'] p-4">
             {deepShowContent}
           </div>
-          <div className="absolute right-[0px] top-[10px]">
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center">
             <DownloadOutlinedHover
               className="mx-2"
               onClick={() => {
@@ -3562,15 +3468,15 @@ export default function DeepResearch() {
           </div>
         </div>
         
-        <Divider style={{ margin: '10px 0', borderColor: '#DEDDDF' }} />
+        <Divider style={{ margin: '0', borderColor: '#DEDDDF' }} />
         
         {/* 内容区域 */}
         <div
           ref={contentContainerRef}
-          className="h-[calc(100%-50px)] overflow-y-auto min-h-[200px] p-4"
+          className="flex-grow h-full overflow-y-auto min-h-[200px] p-4 scrollbar-custom"
         >
           {/* 加载状态 */}
-          {showLoad && (
+          {isLoading && currentStage === STAGES.BASIC_ANALYSIS && (
             <div className="min-h-[200px] flex justify-center items-center">
               <Spin />
             </div>
@@ -3581,90 +3487,77 @@ export default function DeepResearch() {
             <div>
               <Steps
                 direction="vertical"
+                current={currentStage}
                 items={[
                   {
                     title: '基础分析',
-                    status: 'finish',
+                    status: currentStage > STAGES.BASIC_ANALYSIS ? 'finish' : 'process',
                     description: (
                       <MarkdownContent
                         content={streamingAnswer}
                         className="text-gray-800 word-break"
                       />
                     ),
-                    icon: (
-                      <img
-                        src="/assets/ai_avatar.png"
-                        className="w-[30px] h-[30px]"
-                      />
-                    )
+                    icon: <img src="/assets/ai_avatar.png" className="w-[30px] h-[30px]" />
                   }
                 ]}
               />
               
-              {/* 第一段搜索结果 */}
               {searchResults.length > 0 && showSearch && (
                 <SearchResultsDisplay results={searchResults} />
               )}
+            </div>
+          )}
 
-              {/* 第二段内容 */}
-              {streamingAnswer2 && (
+          {currentStage > STAGES.BASIC_ANALYSIS && streamingAnswer2 && (
+             <div>
                 <Steps
                   direction="vertical"
+                  current={currentStage}
                   items={[
                     {
                       title: '拓展分析',
-                      status: 'finish',
+                      status: currentStage > STAGES.EXTENDED_ANALYSIS ? 'finish' : 'process',
                       description: (
                         <MarkdownContent
                           content={streamingAnswer2}
                           className="text-gray-800 word-break"
                         />
                       ),
-                      icon: (
-                        <img
-                          src="/assets/ai_avatar.png"
-                          className="w-[30px] h-[30px]"
-                        />
-                      )
+                      icon: <img src="/assets/ai_avatar.png" className="w-[30px] h-[30px]" />
                     }
                   ]}
                 />
-              )}
-              
-              {/* 第二段搜索结果 */}
-              {searchResults2.length > 0 && showSearch2 && (
-                <SearchResultsDisplay results={searchResults2} />
-              )}
+                
+                {searchResults2.length > 0 && showSearch2 && (
+                  <SearchResultsDisplay results={searchResults2} />
+                )}
+             </div>
+          )}
 
-              {/* 第三段内容 */}
-              {streamingAnswer3 && (
+          {currentStage > STAGES.EXTENDED_ANALYSIS && streamingAnswer3 && (
+            <div>
                 <Steps
                   direction="vertical"
+                  current={currentStage}
                   items={[
                     {
                       title: '深度剖析',
-                      status: 'finish',
+                      status: currentStage >= STAGES.COMPLETED ? 'finish' : 'process',
                       description: (
                         <MarkdownContent
                           content={streamingAnswer3}
                           className="text-gray-800 word-break"
                         />
                       ),
-                      icon: (
-                        <img
-                          src="/assets/ai_avatar.png"
-                          className="w-[30px] h-[30px]"
-                        />
-                      )
+                      icon: <img src="/assets/ai_avatar.png" className="w-[30px] h-[30px]" />
                     }
                   ]}
                 />
-              )}
-              
-              {/* 第三段搜索结果 */}
-              {searchResults3.length > 0 && showSearch3 && (
-                <SearchResultsDisplay results={searchResults3} />
-              )}
+                
+                {searchResults3.length > 0 && showSearch3 && (
+                  <SearchResultsDisplay results={searchResults3} />
+                )}
             </div>
           )}
         </div>

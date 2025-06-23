@@ -25,23 +25,28 @@ export class HKGAIClientFactory {
   private readonly logger = new Logger(HKGAIClientFactory.name);
 
   constructor(private configService: ConfigService) {
+    // For non-RAG models, continue using ConfigService for backward compatibility.
     this.baseUrl = this.configService.get('credentials.hkgai.baseUrl');
-    this.ragBaseUrl = this.configService.get('credentials.hkgai.ragBaseUrl');
-
-    // 获取模型API密钥配置
     this.modelApiKeys = {
       [HKGAIModelName.SEARCH_ENTRY]: this.configService.get('credentials.hkgai.searchEntryKey'),
       [HKGAIModelName.MISSING_INFO]: this.configService.get('credentials.hkgai.missingInfoKey'),
       [HKGAIModelName.TIMELINE]: this.configService.get('credentials.hkgai.timelineKey'),
       [HKGAIModelName.GENERAL]:
         this.configService.get('credentials.hkgai.generalKey') || 'app-5PTDowg5Dn2MSEhG5n3FBWXs',
-      [HKGAIModelName.RAG]:
-        this.configService.get('credentials.hkgai.ragKey') ||
-        'sk-UgDQCBR58Fg66sb480Ff7f4003A740D8B7DcD97f3566BbAc',
     };
 
-    this.logger.log(`HKGAI Client Factory initialized with base URL: ${this.baseUrl}`);
-    this.logger.log(`Available models: ${Object.keys(this.modelApiKeys).join(', ')}`);
+    // --- Definitive Fix ---
+    // For RAG, read directly from process.env to ensure correctness and bypass config mapping issues.
+    // This aligns the code with the documented environment setup and fixes the migration gap.
+    this.ragBaseUrl = process.env.HKGAI_BASE_URL || 'https://ragpipeline.hkgai.asia';
+    this.modelApiKeys[HKGAIModelName.RAG] =
+      process.env.HKGAI_API_KEY || 'sk-UgDQCBR58Fg66sb480Ff7f4003A740D8B7DcD97f3566BbAc';
+
+    this.logger.log('HKGAI Client Factory initialized.');
+    this.logger.log(`RAG Base URL (from env): ${this.ragBaseUrl}`);
+    this.logger.log(
+      `RAG API Key (from env): ${this.modelApiKeys[HKGAIModelName.RAG] ? 'Loaded' : 'NOT LOADED'}`,
+    );
   }
 
   /**
@@ -138,38 +143,74 @@ export class HKGAIClientFactory {
         ? {
             model: 'Lexihk-RAG', // RAG model uses specific model name
             messages,
-            temperature: options?.temperature || 0.7,
-            stream: options?.stream || false,
-            max_tokens: options?.max_tokens || 4000,
-            ...options,
+            temperature: options?.temperature ?? 0.7,
+            stream: options?.stream ?? true, // Default to true for RAG
+            max_tokens: options?.max_tokens ?? 4000,
           }
         : {
             inputs: {},
-            query: messages[messages.length - 1]?.content || '',
+            query: messages[messages.length - 1]?.content ?? '',
             response_mode: options?.stream ? 'streaming' : 'blocking',
             conversation_id: '',
             user: 'user-refly',
+            // Pass full message history for context, if available
+            messages: messages.length > 1 ? messages.slice(0, -1) : [],
           };
 
-      this.logger.debug(
-        `Calling ${modelName} (mapped to: ${enumModelName}) with endpoint: ${client.defaults.baseURL}${endpoint}`,
+      this.logger.log(
+        `[createChatCompletion] Preparing to call ${modelName} at ${client.defaults.baseURL}${endpoint}`,
       );
-      this.logger.debug(`Request body:`, JSON.stringify(requestBody, null, 2));
+      this.logger.debug(
+        `[createChatCompletion] Request Body for ${modelName}:\n${JSON.stringify(requestBody, null, 2)}`,
+      );
 
       const response = await client.post(endpoint, requestBody, {
         responseType: options?.stream ? 'stream' : 'json',
       });
 
-      // If streaming, the response data is the stream itself.
-      // If not, it's the JSON body.
+      this.logger.log(`[createChatCompletion] Successfully initiated call for ${modelName}.`);
       return response.data;
     } catch (error) {
-      this.logger.error(`Error calling HKGAI API for model ${modelName}: ${error.message}`);
-      this.logger.error(`Base URL: ${requestBaseUrl}, Model: ${modelName}`);
-      if (error.response) {
-        this.logger.error(`Response status: ${error.response.status}`);
-        this.logger.error(`Response data:`, error.response.data);
+      this.logger.error(
+        `[createChatCompletion] ❌ FAILED to call HKGAI API for model ${modelName}.`,
+      );
+      this.logger.error(`[createChatCompletion] Error Message: ${error.message}`);
+
+      if (axios.isAxiosError(error)) {
+        this.logger.error(
+          `[createChatCompletion] Request URL: ${error.config?.method?.toUpperCase()} ${error.config?.url}`,
+        );
+        if (error.response) {
+          this.logger.error(
+            `[createChatCompletion] Response Status: ${error.response.status} ${error.response.statusText}`,
+          );
+
+          // --- Robust Error Stream Logging ---
+          // The error response from a streaming API might itself be a stream.
+          const responseData = error.response.data;
+          if (responseData && typeof responseData.on === 'function') {
+            this.logger.error(
+              '[createChatCompletion] Error response is a stream. Reading for details...',
+            );
+            const errorBody = await new Promise((resolve) => {
+              const chunks: any[] = [];
+              responseData.on('data', (chunk: any) => chunks.push(chunk));
+              responseData.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+              responseData.on('error', (err: Error) =>
+                resolve(`Failed to read error stream: ${err.message}`),
+              );
+            });
+            this.logger.error(`[createChatCompletion] STREAM-ERROR-BODY: ${errorBody}`);
+          } else {
+            this.logger.error(
+              `[createChatCompletion] Response Body:\n${JSON.stringify(responseData, null, 2)}`,
+            );
+          }
+        } else if (error.request) {
+          this.logger.error('[createChatCompletion] No response received from server.');
+        }
       }
+      this.logger.error('[createChatCompletion] Full Error Stack:', error.stack);
       throw error;
     }
   }
