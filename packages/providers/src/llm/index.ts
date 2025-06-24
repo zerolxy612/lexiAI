@@ -9,6 +9,8 @@ import { simpleHKGAIClient } from './simple-hkgai-client';
 import { AIMessage, BaseMessage, AIMessageChunk } from '@langchain/core/messages';
 import { ChatResult, ChatGeneration, ChatGenerationChunk } from '@langchain/core/outputs';
 import { CallbackManagerForLLMRun } from '@langchain/core/callbacks/manager';
+import { EnhancedHKGAIChatModel } from './enhanced-hkgai-chat-model';
+import { getModelConfig, modelRequiresStreaming } from '../config/model-configs';
 
 /**
  * A unified ChatModel for all HKGAI providers.
@@ -205,13 +207,25 @@ export const getChatModel = (
         ...params,
       });
     case 'hkgai':
-      // For RAG models, streaming is required by the API.
-      const isRagModel = (config.modelId || '').toLowerCase().includes('rag');
-      return new HKGAIChatModel({
-        modelName: config.modelId,
-        temperature: params?.temperature ?? 0.7,
-        streaming: isRagModel || (params?.streaming ?? false),
-      });
+      // Use the new enhanced HKGAI model with configuration system
+      const modelConfig = getModelConfig(config.modelId);
+      if (modelConfig) {
+        // Use the new enhanced model that handles all configuration automatically
+        return new EnhancedHKGAIChatModel({
+          modelName: config.modelId,
+          temperature: params?.temperature ?? modelConfig.defaultTemperature,
+          streaming: params?.streaming,
+        });
+      } else {
+        // Fallback to the original model for backward compatibility
+        console.warn(`[getChatModel] No configuration found for ${config.modelId}, using fallback`);
+        const isRagModel = (config.modelId || '').toLowerCase().includes('rag');
+        return new HKGAIChatModel({
+          modelName: config.modelId,
+          temperature: params?.temperature ?? 0.7,
+          streaming: isRagModel || (params?.streaming ?? false),
+        });
+      }
     default:
       throw new Error(`Unsupported provider: ${provider?.providerKey}`);
   }

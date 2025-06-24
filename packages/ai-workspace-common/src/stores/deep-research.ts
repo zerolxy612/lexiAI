@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
+import { persist } from 'zustand/middleware';
 
 export interface SearchResult {
   title: string;
@@ -56,73 +57,82 @@ interface DeepResearchState {
   isDeepAnalysisSelected: (resultId: string) => boolean;
 }
 
-export const useDeepResearchStore = create<DeepResearchState>((set, get) => ({
-  // Initial state
-  isDeepShow: false,
-  deepShowContent: '',
-  isPanelOpen: false,
-  currentQuery: '',
-  streamingAnswer: '',
-  streamingAnswer2: '',
-  streamingAnswer3: '',
-  searchResults: [],
-  searchResults2: [],
-  searchResults3: [],
-  showSearch: false,
-  showSearch2: false,
-  showSearch3: false,
-  showLoad: false,
-  deepAnalysisSelected: {},
-
-  // Actions
-  setIsDeepShow: (show) => set({ isDeepShow: show }),
-  setDeepShowContent: (content) => set({ deepShowContent: content }),
-  setIsPanelOpen: (open) => set({ isPanelOpen: open }),
-  setCurrentQuery: (query) => set({ currentQuery: query }),
-  setStreamingAnswer: (answer) => set({ streamingAnswer: answer }),
-  setStreamingAnswer2: (answer) => set({ streamingAnswer2: answer }),
-  setStreamingAnswer3: (answer) => set({ streamingAnswer3: answer }),
-  setSearchResults: (results) => set({ searchResults: results }),
-  setSearchResults2: (results) => set({ searchResults2: results }),
-  setSearchResults3: (results) => set({ searchResults3: results }),
-  setShowSearch: (show) => set({ showSearch: show }),
-  setShowSearch2: (show) => set({ showSearch2: show }),
-  setShowSearch3: (show) => set({ showSearch3: show }),
-  setShowLoad: (show) => set({ showLoad: show }),
-
-  resetAllStates: () =>
-    set({
-      showSearch: false,
-      showSearch2: false,
-      showSearch3: false,
+export const useDeepResearchStore = create<DeepResearchState>()(
+  persist(
+    (set, get) => ({
+      // Initial state
+      isDeepShow: false,
+      deepShowContent: '',
+      isPanelOpen: false,
+      currentQuery: '',
       streamingAnswer: '',
       streamingAnswer2: '',
       streamingAnswer3: '',
       searchResults: [],
       searchResults2: [],
       searchResults3: [],
+      showSearch: false,
+      showSearch2: false,
+      showSearch3: false,
       showLoad: false,
-    }),
+      deepAnalysisSelected: {},
 
-  setDeepAnalysisSelected: (resultId: string, selected: boolean) =>
-    set((state) => ({
-      deepAnalysisSelected: {
-        ...state.deepAnalysisSelected,
-        [resultId]: selected,
+      // Actions
+      setIsDeepShow: (show) => set({ isDeepShow: show }),
+      setDeepShowContent: (content) => set({ deepShowContent: content }),
+      setIsPanelOpen: (open) => set({ isPanelOpen: open }),
+      setCurrentQuery: (query) => set({ currentQuery: query }),
+      setStreamingAnswer: (answer) => set({ streamingAnswer: answer }),
+      setStreamingAnswer2: (answer) => set({ streamingAnswer2: answer }),
+      setStreamingAnswer3: (answer) => set({ streamingAnswer3: answer }),
+      setSearchResults: (results) => set({ searchResults: results }),
+      setSearchResults2: (results) => set({ searchResults2: results }),
+      setSearchResults3: (results) => set({ searchResults3: results }),
+      setShowSearch: (show) => set({ showSearch: show }),
+      setShowSearch2: (show) => set({ showSearch2: show }),
+      setShowSearch3: (show) => set({ showSearch3: show }),
+      setShowLoad: (show) => set({ showLoad: show }),
+
+      resetAllStates: () =>
+        set({
+          showSearch: false,
+          showSearch2: false,
+          showSearch3: false,
+          streamingAnswer: '',
+          streamingAnswer2: '',
+          streamingAnswer3: '',
+          searchResults: [],
+          searchResults2: [],
+          searchResults3: [],
+          showLoad: false,
+        }),
+
+      setDeepAnalysisSelected: (resultId: string, selected: boolean) =>
+        set((state) => ({
+          deepAnalysisSelected: {
+            ...state.deepAnalysisSelected,
+            [resultId]: selected,
+          },
+        })),
+
+      clearDeepAnalysisSelection: (resultId: string) =>
+        set((state) => {
+          const { [resultId]: _, ...rest } = state.deepAnalysisSelected;
+          return { deepAnalysisSelected: rest };
+        }),
+
+      isDeepAnalysisSelected: (resultId: string) => {
+        const state = get();
+        return state.deepAnalysisSelected[resultId] || false;
       },
-    })),
-
-  clearDeepAnalysisSelection: (resultId: string) =>
-    set((state) => {
-      const { [resultId]: _, ...rest } = state.deepAnalysisSelected;
-      return { deepAnalysisSelected: rest };
     }),
-
-  isDeepAnalysisSelected: (resultId: string) => {
-    const state = get();
-    return state.deepAnalysisSelected[resultId] || false;
-  },
-}));
+    {
+      name: 'deep-research-storage',
+      // Only persist the deepAnalysisSelected state
+      partialize: (state) => ({ deepAnalysisSelected: state.deepAnalysisSelected }),
+    },
+  ),
+);
 
 export const useDeepResearchStoreShallow = <T>(selector: (state: DeepResearchState) => T) => {
   return useDeepResearchStore(useShallow(selector));

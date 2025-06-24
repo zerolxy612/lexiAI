@@ -313,13 +313,34 @@ export const ActionStepCard = memo(
       }));
 
     const shouldShowStartResearch = useMemo(() => {
-      return (
-        result?.resultId &&
-        isDeepAnalysisSelected(result.resultId) &&
-        stepStatus === 'finish' &&
-        result?.status === 'finish'
-      );
-    }, [result?.resultId, result?.status, isDeepAnalysisSelected, stepStatus]);
+      // More robust conditions for showing Start Research button
+      const hasResultId = !!result?.resultId;
+      const isResultFinished = result?.status === 'finish';
+      const isStepFinished = stepStatus === 'finish';
+      const isDeepAnalysisSelectedForResult =
+        hasResultId && isDeepAnalysisSelected(result.resultId);
+
+      console.log('🎯 shouldShowStartResearch conditions:', {
+        hasResultId,
+        resultId: result?.resultId,
+        isResultFinished,
+        isStepFinished,
+        isDeepAnalysisSelectedForResult,
+        deepAnalysisSelected: hasResultId ? isDeepAnalysisSelected(result.resultId) : false,
+      });
+
+      return hasResultId && isResultFinished && isStepFinished && isDeepAnalysisSelectedForResult;
+    }, [result?.resultId, result?.status, stepStatus, isDeepAnalysisSelected]);
+
+    // Add effect to track result completion and maintain deep analysis selection
+    useEffect(() => {
+      if (result?.resultId && result?.status === 'finish' && stepStatus === 'finish') {
+        console.log('🎯 Result finished, checking deep analysis selection:', {
+          resultId: result.resultId,
+          isSelected: isDeepAnalysisSelected(result.resultId),
+        });
+      }
+    }, [result?.resultId, result?.status, stepStatus, isDeepAnalysisSelected]);
 
     useEffect(() => {
       if (result?.status === 'finish') {

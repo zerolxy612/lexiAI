@@ -151,10 +151,20 @@ export const ChatPanel = ({
     selectedMcpServers: state.selectedMcpServers,
   }));
 
-  // Deep research store for tracking deep analysis selection
-  const { setDeepAnalysisSelected } = useDeepResearchStoreShallow((state) => ({
-    setDeepAnalysisSelected: state.setDeepAnalysisSelected,
-  }));
+  // Get deep analysis selection state
+  const { setDeepAnalysisSelected, isDeepAnalysisSelected, clearDeepAnalysisSelection } =
+    useDeepResearchStoreShallow((state) => ({
+      setDeepAnalysisSelected: state.setDeepAnalysisSelected,
+      isDeepAnalysisSelected: state.isDeepAnalysisSelected,
+      clearDeepAnalysisSelection: state.clearDeepAnalysisSelection,
+    }));
+
+  // Check if deep analysis is selected for next response
+  const isDeepAnalysisActive = isDeepAnalysisSelected('next-response');
+
+  // Force re-render when deep analysis state changes
+  const [, forceUpdate] = useState({});
+  const triggerUpdate = () => forceUpdate({});
 
   const [form] = Form.useForm();
 
@@ -391,17 +401,34 @@ export const ChatPanel = ({
         ? [
             {
               icon: (
-                <img
-                  src={deepAnalysisIcon}
-                  alt="Deep Analysis"
-                  className="w-4 h-4 opacity-70 hover:opacity-100 transition-opacity duration-200"
-                />
+                <div className="relative">
+                  <img
+                    src={deepAnalysisIcon}
+                    alt="Deep Analysis"
+                    className={cn(
+                      'w-4 h-4 transition-all duration-200',
+                      isDeepAnalysisActive
+                        ? 'opacity-100 brightness-110 drop-shadow-sm'
+                        : 'opacity-70 hover:opacity-100',
+                    )}
+                  />
+                  {isDeepAnalysisActive && (
+                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full border border-white"></div>
+                  )}
+                </div>
               ),
-              title: 'Deep Analysis - Three-stage retrieval',
+              title: isDeepAnalysisActive
+                ? 'Deep Analysis - Selected (Click to deselect)'
+                : 'Deep Analysis - Three-stage retrieval (Click to select)',
               onClick: () => {
-                console.log('🎯 Deep Analysis triggered from customActions!');
-                // Mark deep analysis as selected for the next response
-                setDeepAnalysisSelected('next-response', true);
+                // Toggle deep analysis selection
+                if (isDeepAnalysisActive) {
+                  clearDeepAnalysisSelection('next-response');
+                } else {
+                  setDeepAnalysisSelected('next-response', true);
+                }
+                // Force component to re-render
+                triggerUpdate();
               },
             },
           ]
@@ -412,8 +439,11 @@ export const ChatPanel = ({
       handleMcpSelectorToggle,
       t,
       selectedMcpServers,
-      handleMcpSelectorToggle,
-      embeddedMode, // Add embeddedMode to dependencies
+      embeddedMode,
+      isDeepAnalysisActive,
+      setDeepAnalysisSelected,
+      clearDeepAnalysisSelection,
+      triggerUpdate,
     ],
   );
 
@@ -448,10 +478,6 @@ export const ChatPanel = ({
       setContextItems([...contextItems, ...newContextItems]);
     }
   };
-
-  // Debug: Log the current selectedModel
-  console.log('🎯 [ChatPanel] Current selectedModel:', chatStore.selectedModel);
-  console.log('🎯 [ChatPanel] embeddedMode:', embeddedMode);
 
   return (
     <>

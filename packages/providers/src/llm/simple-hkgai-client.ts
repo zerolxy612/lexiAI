@@ -1,64 +1,23 @@
+import { getModelConfig, getModelApiKey, modelRequiresStreaming } from '../config/model-configs';
+
 /**
- * 简化的HKGAI客户端 - 直接使用环境变量配置，不依赖数据库
+ * 简化的HKGAI客户端 - 使用新的配置系统
  */
 export class SimpleHKGAIClient {
-  private baseUrl: string;
-  private ragBaseUrl: string;
-  private apiKeys: Record<string, string>;
   private lastUsage: any = null;
-  private readonly ragModelNames = ['hkgai/rag'];
 
   constructor() {
-    this.baseUrl = process.env.HKGAI_BASE_URL || 'https://dify.hkgai.net';
-    this.ragBaseUrl = process.env.HKGAI_RAG_BASE_URL || 'https://ragpipeline.hkgai.asia';
-    this.apiKeys = {
-      'hkgai-searchentry': process.env.HKGAI_SEARCHENTRY_API_KEY || 'app-mYHumURK2S010ZonuvzeX1Ad',
-      'hkgai-missinginfo': process.env.HKGAI_MISSINGINFO_API_KEY || 'app-cWHko7usG7aP8ZsAnSeglYc3',
-      'hkgai-timeline': process.env.HKGAI_TIMELINE_API_KEY || 'app-R9k11qz64Cd86NCsw2ojZVLC',
-      'hkgai-general': process.env.HKGAI_GENERAL_API_KEY || 'app-5PTDowg5Dn2MSEhG5n3FBWXs',
-      'hkgai-rag':
-        process.env.HKGAI_RAG_API_KEY ||
-        process.env.HKGAI_API_KEY ||
-        'sk-UgDQCBR58Fg66sb480Ff7f4003A740D8B7DcD97f3566BbAc',
-      'hkgai-contract': process.env.HKGAI_CONTRACT_API_KEY || 'app-6KYmzKxZCLvoKMMh3VnrgFMs',
-      'hkgai-case-search': process.env.HKGAI_CASE_SEARCH_API_KEY || 'app-Fbs0YwuFNGHlhtAPPlvybrJm',
-      'hkgai-code-search': process.env.HKGAI_CODE_SEARCH_API_KEY || 'app-1rFXyZanlbQJdKtQTaZ3wuSS',
-    };
+    // Configuration is now handled by the model-configs system
   }
 
   isRagModel(modelName: string): boolean {
-    return this.ragModelNames.includes(modelName);
+    const config = getModelConfig(modelName);
+    return config?.isRagModel ?? false;
   }
 
   isContractModel(modelName: string): boolean {
-    return modelName === 'hkgai/contract';
-  }
-
-  /**
-   * 根据模型名称获取对应的API Key
-   */
-  private getApiKeyForModel(modelName: string): string | undefined {
-    const lowerModelName = (modelName || '').toLowerCase();
-
-    if (lowerModelName.includes('searchentry')) {
-      return this.apiKeys['hkgai-searchentry'];
-    } else if (lowerModelName.includes('missinginfo')) {
-      return this.apiKeys['hkgai-missinginfo'];
-    } else if (lowerModelName.includes('timeline')) {
-      return this.apiKeys['hkgai-timeline'];
-    } else if (lowerModelName.includes('general')) {
-      return this.apiKeys['hkgai-general'];
-    } else if (this.isRagModel(lowerModelName)) {
-      return this.apiKeys['hkgai-rag'];
-    } else if (this.isContractModel(modelName)) {
-      return this.apiKeys['hkgai-contract'];
-    } else if (lowerModelName.includes('case-search') || lowerModelName.includes('casesearch')) {
-      return this.apiKeys['hkgai-case-search'];
-    } else if (lowerModelName.includes('code-search') || lowerModelName.includes('codesearch')) {
-      return this.apiKeys['hkgai-code-search'];
-    }
-
-    return process.env.HKGAI_API_KEY;
+    const config = getModelConfig(modelName);
+    return config?.isContractModel ?? false;
   }
 
   /**
@@ -70,15 +29,19 @@ export class SimpleHKGAIClient {
     options?: { temperature?: number; documentContent?: string },
   ): Promise<string> {
     // Critical safety check: RAG models are streaming-only and must not use this method.
-    if (this.isRagModel(modelName)) {
+    if (modelRequiresStreaming(modelName)) {
       console.error(
-        `[SimpleHKGAIClient] CRITICAL: The RAG model '${modelName}' was incorrectly called in non-streaming mode. This indicates a logic error in the calling code. RAG models must use the .stream() method.`,
+        `[SimpleHKGAIClient] CRITICAL: The model '${modelName}' requires streaming mode. This indicates a logic error in the calling code. This model must use the .stream() method.`,
       );
-      throw new Error(`RAG model '${modelName}' cannot be called in non-streaming mode.`);
+      throw new Error(`Model '${modelName}' cannot be called in non-streaming mode.`);
     }
 
-    const apiKey = this.getApiKeyForModel(modelName);
+    const config = getModelConfig(modelName);
+    if (!config) {
+      throw new Error(`Model configuration not found for: ${modelName}`);
+    }
 
+    const apiKey = getModelApiKey(modelName);
     if (!apiKey) {
       throw new Error(`API key for model ${modelName} not configured`);
     }
@@ -86,36 +49,45 @@ export class SimpleHKGAIClient {
     this.lastUsage = null;
 
     try {
-      const isRag = this.isRagModel(modelName);
-      const isContract = this.isContractModel(modelName);
-      let baseUrl = isRag ? this.ragBaseUrl : this.baseUrl;
-      if (isContract) {
-        baseUrl = 'https://api.dify.ai';
-      }
-      const endpoint = isRag ? '/v1/chat/completions' : '/v1/chat-messages';
-      const fullUrl = `${baseUrl}${endpoint}`;
+      const fullUrl = `${config.baseUrl}${config.endpoint}`;
 
       // For contract models, include document content in query if provided
       let finalQuery = query;
-      if (isContract && options?.documentContent) {
+      if (config.isContractModel && options?.documentContent) {
         finalQuery = `请审查以下合同文档：\n\n${options.documentContent}\n\n用户问题：${query}`;
         console.log('[SimpleHKGAIClient.call] Contract mode: document content included in query');
       }
 
-      const requestBody = isRag
-        ? {
+      let requestBody: any;
+      switch (config.requestFormat) {
+        case 'openai':
+          requestBody = {
             model: modelName,
             messages: [{ role: 'user', content: finalQuery }],
             stream: false,
-          }
-        : {
-            inputs: isContract ? { doc: [] } : {},
+          };
+          break;
+        case 'dify':
+          requestBody = {
+            inputs: config.isContractModel ? { doc: [] } : {},
             query: finalQuery,
             response_mode: 'blocking',
             user: 'user-refly',
             conversation_id: '',
-            model: this.isContractModel(modelName) ? 'contract' : undefined,
+            ...(config.isContractModel && { model: 'contract' }),
           };
+          break;
+        case 'hkgai':
+        default:
+          requestBody = {
+            inputs: {},
+            query: finalQuery,
+            response_mode: 'blocking',
+            user: 'user-refly',
+            conversation_id: '',
+          };
+          break;
+      }
 
       const headers = {
         'Content-Type': 'application/json',
@@ -159,7 +131,18 @@ export class SimpleHKGAIClient {
         this.lastUsage = data.metadata.usage;
       }
 
-      const answer = isRag ? data.choices[0]?.message?.content || '' : data.answer || '';
+      let answer = '';
+      switch (config.responseFormat) {
+        case 'openai':
+          answer = data.choices?.[0]?.message?.content || '';
+          break;
+        case 'dify':
+        case 'hkgai':
+        default:
+          answer = data.answer || '';
+          break;
+      }
+
       if (!answer) {
         console.warn(`[SimpleHKGAIClient] 响应中没有answer字段，使用默认回复`);
         return `我收到了您的问题: "${query}"，但暂时无法提供具体回答。请稍后再试。`;
@@ -181,42 +164,57 @@ export class SimpleHKGAIClient {
     query: string,
     options?: { temperature?: number; documentContent?: string },
   ): Promise<ReadableStream<Uint8Array>> {
-    const apiKey = this.getApiKeyForModel(modelName);
+    const config = getModelConfig(modelName);
+    if (!config) {
+      throw new Error(`Model configuration not found for: ${modelName}`);
+    }
+
+    const apiKey = getModelApiKey(modelName);
     if (!apiKey) {
       throw new Error(`API key for model ${modelName} not configured`);
     }
 
-    const isRag = this.isRagModel(modelName);
-    const isContract = this.isContractModel(modelName);
-    let baseUrl = isRag ? this.ragBaseUrl : this.baseUrl;
-    if (isContract) {
-      baseUrl = 'https://api.dify.ai';
-    }
-    const endpoint = isRag ? '/v1/chat/completions' : '/v1/chat-messages';
-    const fullUrl = `${baseUrl}${endpoint}`;
+    const fullUrl = `${config.baseUrl}${config.endpoint}`;
 
     // For contract models, include document content in query if provided
     let finalQuery = query;
-    if (isContract && options?.documentContent) {
+    if (config.isContractModel && options?.documentContent) {
       finalQuery = `请审查以下合同文档：\n\n${options.documentContent}\n\n用户问题：${query}`;
       console.log('[SimpleHKGAIClient.stream] Contract mode: document content included in query');
     }
 
-    const requestBody = isRag
-      ? {
+    let requestBody: any;
+    switch (config.requestFormat) {
+      case 'openai':
+        requestBody = {
           model: modelName,
           messages: [{ role: 'user', content: finalQuery }],
           stream: true,
-        }
-      : {
-          inputs: isContract ? { doc: [] } : {},
+        };
+        break;
+      case 'dify':
+        requestBody = {
+          inputs: config.isContractModel ? { doc: [] } : {},
           query: finalQuery,
           response_mode: 'streaming',
           conversation_id: '',
           user: 'user-refly',
-          temperature: options?.temperature ?? 0.7,
-          model: this.isContractModel(modelName) ? 'contract' : undefined,
+          temperature: options?.temperature ?? config.defaultTemperature,
+          ...(config.isContractModel && { model: 'contract' }),
         };
+        break;
+      case 'hkgai':
+      default:
+        requestBody = {
+          inputs: {},
+          query: finalQuery,
+          response_mode: 'streaming',
+          conversation_id: '',
+          user: 'user-refly',
+          temperature: options?.temperature ?? config.defaultTemperature,
+        };
+        break;
+    }
 
     const headers = {
       'Content-Type': 'application/json',

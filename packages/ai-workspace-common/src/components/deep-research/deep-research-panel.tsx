@@ -15,7 +15,9 @@ interface DeepResearchStage {
   title: string;
   content: string;
   searchResults: SearchResult[];
-  status: 'waiting' | 'loading' | 'completed';
+  status: 'waiting' | 'searching' | 'search_complete' | 'ai_processing' | 'completed';
+  isSearching?: boolean;
+  isAiProcessing?: boolean;
 }
 
 interface DeepResearchPanelProps {
@@ -47,24 +49,9 @@ interface DeepResearchEvent {
 
 // Initial stages structure
 const initialStages: DeepResearchStage[] = [
-  {
-    title: 'Basic Analysis',
-    content: '',
-    searchResults: [],
-    status: 'waiting',
-  },
-  {
-    title: 'Extended Analysis',
-    content: '',
-    searchResults: [],
-    status: 'waiting',
-  },
-  {
-    title: 'Deep Analysis',
-    content: '',
-    searchResults: [],
-    status: 'waiting',
-  },
+  { title: 'Stage 1: Basic Analysis', content: '', searchResults: [], status: 'waiting' },
+  { title: 'Stage 2: Extended Analysis', content: '', searchResults: [], status: 'waiting' },
+  { title: 'Stage 3: Deep Analysis', content: '', searchResults: [], status: 'waiting' },
 ];
 
 const SearchResultsSection: React.FC<{ results: SearchResult[] }> = ({ results }) => (
@@ -101,42 +88,133 @@ const SearchResultsSection: React.FC<{ results: SearchResult[] }> = ({ results }
 const StageContent: React.FC<{ stage: DeepResearchStage; index: number }> = ({ stage, index }) => (
   <div className="mb-6">
     {/* Stage Header */}
-    <div className="flex items-center gap-2 mb-3">
-      {stage.status === 'loading' ? (
-        <Spin size="small" />
-      ) : stage.status === 'completed' ? (
-        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-          <span className="text-white text-xs">✓</span>
-        </div>
-      ) : (
-        <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
-          <span className="text-gray-600 text-xs">{index + 1}</span>
-        </div>
-      )}
-      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">{stage.title}</h3>
+    <div className="flex items-center gap-3 mb-4">
+      {/* Stage Status Icon */}
+      <div className="flex items-center gap-2">
+        {stage.status === 'searching' ? (
+          <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+            <Spin size="small" className="text-white" />
+          </div>
+        ) : stage.status === 'search_complete' ? (
+          <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+            <span className="text-white text-xs">✓</span>
+          </div>
+        ) : stage.status === 'ai_processing' ? (
+          <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
+            <Spin size="small" className="text-white" />
+          </div>
+        ) : stage.status === 'completed' ? (
+          <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+            <span className="text-white text-xs">✓</span>
+          </div>
+        ) : (
+          <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
+            <span className="text-gray-600 text-xs">{index + 1}</span>
+          </div>
+        )}
+
+        {/* Stage Title */}
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">{stage.title}</h3>
+      </div>
+
+      {/* Status Badges */}
+      <div className="flex items-center gap-2 ml-auto">
+        {stage.status === 'searching' && (
+          <span className="text-xs text-blue-600 bg-blue-100 dark:bg-blue-900 dark:text-blue-300 px-2 py-1 rounded-full flex items-center gap-1">
+            <Spin size="small" />
+            Searching...
+          </span>
+        )}
+        {stage.status === 'search_complete' && (
+          <span className="text-xs text-green-600 bg-green-100 dark:bg-green-900 dark:text-green-300 px-2 py-1 rounded-full">
+            Search Complete
+          </span>
+        )}
+        {stage.status === 'ai_processing' && (
+          <span className="text-xs text-purple-600 bg-purple-100 dark:bg-purple-900 dark:text-purple-300 px-2 py-1 rounded-full flex items-center gap-1">
+            <Spin size="small" />
+            AI Processing...
+          </span>
+        )}
+        {stage.status === 'completed' && (
+          <span className="text-xs text-green-600 bg-green-100 dark:bg-green-900 dark:text-green-300 px-2 py-1 rounded-full">
+            Completed
+          </span>
+        )}
+      </div>
     </div>
 
-    {/* Stage Content */}
-    {(stage.status === 'completed' || stage.status === 'loading') && (
-      <div className="ml-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-          {stage.content && (
-            <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
-              {stage.content}
-            </p>
-          )}
-
-          {stage.status === 'completed' && stage.searchResults.length > 0 && (
-            <SearchResultsSection results={stage.searchResults} />
-          )}
-
-          {stage.status === 'loading' && (
-            <div className="flex items-center gap-2 text-gray-500">
-              <Spin size="small" />
-              <span className="text-sm">Processing...</span>
+    {/* Stage Content - Show content as soon as we have search results or AI content */}
+    {stage.status !== 'waiting' && (
+      <div className="ml-8 space-y-4">
+        {/* Search Results Section - Show immediately when available */}
+        {stage.searchResults.length > 0 && (
+          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-xs">🔍</span>
+              </div>
+              <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                Search Results
+              </span>
+              <span className="text-xs text-blue-500 bg-blue-100 dark:bg-blue-800 px-2 py-1 rounded">
+                {stage.searchResults.length} results
+              </span>
             </div>
-          )}
-        </div>
+            <SearchResultsSection results={stage.searchResults} />
+          </div>
+        )}
+
+        {/* AI Content Section - Show as it streams in */}
+        {(stage.content || stage.status === 'ai_processing') && (
+          <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-800">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-xs">🤖</span>
+              </div>
+              <span className="text-sm font-medium text-purple-700 dark:text-purple-300">
+                AI Analysis
+              </span>
+              {stage.status === 'ai_processing' && (
+                <span className="text-xs text-purple-500 bg-purple-100 dark:bg-purple-800 px-2 py-1 rounded flex items-center gap-1">
+                  <Spin size="small" />
+                  Generating...
+                </span>
+              )}
+              {stage.status === 'completed' && stage.content && (
+                <span className="text-xs text-green-500 bg-green-100 dark:bg-green-800 px-2 py-1 rounded">
+                  {stage.content.length} characters
+                </span>
+              )}
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+              {stage.content ? (
+                <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
+                  {stage.content}
+                  {stage.status === 'ai_processing' && (
+                    <span className="inline-block w-2 h-4 bg-purple-500 ml-1 animate-pulse"></span>
+                  )}
+                </p>
+              ) : (
+                <div className="flex items-center gap-2 text-gray-500">
+                  <Spin size="small" />
+                  <span className="text-sm">Generating AI analysis...</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Loading states for different phases */}
+        {stage.status === 'searching' && (
+          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+            <div className="flex items-center gap-2 text-blue-600">
+              <Spin size="small" />
+              <span className="text-sm">Searching for relevant information...</span>
+            </div>
+          </div>
+        )}
       </div>
     )}
   </div>
@@ -180,8 +258,13 @@ export const DeepResearchPanel: React.FC<DeepResearchPanelProps> = ({ isOpen, on
     }
 
     console.log('🚀 Starting deep research for query:', query);
+    setIsProcessing(true);
+    setError(null);
+    setCurrentStage(-1);
+
+    // Initialize stages with waiting status
     setStages([
-      { title: 'Stage 1: Basic Analysis', content: '', searchResults: [], status: 'loading' },
+      { title: 'Stage 1: Basic Analysis', content: '', searchResults: [], status: 'waiting' },
       { title: 'Stage 2: Extended Analysis', content: '', searchResults: [], status: 'waiting' },
       { title: 'Stage 3: Deep Analysis', content: '', searchResults: [], status: 'waiting' },
     ]);
@@ -283,7 +366,7 @@ export const DeepResearchPanel: React.FC<DeepResearchPanelProps> = ({ isOpen, on
           setCurrentStage(event.stageData.stage);
           setStages((prev) =>
             prev.map((stage, index) =>
-              index === event.stageData!.stage ? { ...stage, status: 'loading' } : stage,
+              index === event.stageData!.stage ? { ...stage, status: 'searching' } : stage,
             ),
           );
         }
@@ -299,7 +382,11 @@ export const DeepResearchPanel: React.FC<DeepResearchPanelProps> = ({ isOpen, on
           setStages((prev) =>
             prev.map((stage, index) =>
               index === event.stageData!.stage
-                ? { ...stage, searchResults: event.stageData!.searchResults }
+                ? {
+                    ...stage,
+                    status: 'search_complete',
+                    searchResults: event.stageData!.searchResults,
+                  }
                 : stage,
             ),
           );
@@ -316,6 +403,7 @@ export const DeepResearchPanel: React.FC<DeepResearchPanelProps> = ({ isOpen, on
             prev.map((stage, index) =>
               index === targetStage
                 ? {
+                    status: 'ai_processing',
                     ...stage,
                     content: (stage.content || '') + event.content!,
                   }
@@ -344,11 +432,13 @@ export const DeepResearchPanel: React.FC<DeepResearchPanelProps> = ({ isOpen, on
         break;
 
       case 'complete':
+        setIsProcessing(false);
         console.log('🎉 All stages completed!');
         setCurrentStage(-1);
         break;
 
       case 'error':
+        setIsProcessing(false);
         console.error('❌ Stream error:', event.error);
         setError(event.error || 'Unknown error occurred');
         break;
@@ -446,18 +536,74 @@ export const DeepResearchPanel: React.FC<DeepResearchPanelProps> = ({ isOpen, on
                 </div>
               )}
 
-              {isProcessing && currentStage === -1 && (
-                <div className="flex items-center justify-center py-8">
-                  <div className="text-center">
-                    <Spin size="large" />
-                    <p className="mt-2 text-gray-500">Initializing deep research...</p>
+              {/* Overall Progress Indicator */}
+              {isProcessing && (
+                <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Spin size="small" />
+                    <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                      Deep Research in Progress
+                    </span>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="w-full bg-blue-100 dark:bg-blue-800 rounded-full h-2">
+                    <div
+                      className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                      style={{
+                        width: `${(stages.filter((s) => s.status === 'completed').length / stages.length) * 100}%`,
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex justify-between text-xs text-blue-600 dark:text-blue-400 mt-2">
+                    <span>
+                      {stages.filter((s) => s.status === 'completed').length} of {stages.length}{' '}
+                      stages completed
+                    </span>
+                    <span>
+                      {Math.round(
+                        (stages.filter((s) => s.status === 'completed').length / stages.length) *
+                          100,
+                      )}
+                      %
+                    </span>
                   </div>
                 </div>
               )}
 
+              {/* Show initial loading only when no stages have started */}
+              {isProcessing &&
+                currentStage === -1 &&
+                stages.every((s) => s.status === 'waiting') && (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-center">
+                      <Spin size="large" />
+                      <p className="mt-2 text-gray-500">Initializing deep research...</p>
+                    </div>
+                  </div>
+                )}
+
+              {/* Render all stages */}
               {stages.map((stage, index) => (
                 <StageContent key={index} stage={stage} index={index} />
               ))}
+
+              {/* Completion Message */}
+              {!isProcessing && stages.every((s) => s.status === 'completed') && (
+                <div className="mt-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                  <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
+                    <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs">✓</span>
+                    </div>
+                    <span className="font-medium">Deep research completed successfully!</span>
+                  </div>
+                  <p className="text-sm text-green-600 dark:text-green-400 mt-2">
+                    All {stages.length} stages have been processed. You can now copy or download the
+                    results.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </>
