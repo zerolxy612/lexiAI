@@ -184,6 +184,17 @@ export const Markdown = memo(
                     img: MarkdownImage,
                     mark: HighlightComponent,
                     del: StrikethroughComponent,
+                    p: ({ node, children }) => {
+                      const firstChild = node.children[0];
+                      if (
+                        node.children.length === 1 &&
+                        firstChild.type === 'element' &&
+                        firstChild.tagName === 'img'
+                      ) {
+                        return <div className="my-2 flex justify-center">{children}</div>;
+                      }
+                      return <p>{children}</p>;
+                    },
                   }}
                   linkTarget={'_blank'}
                 >

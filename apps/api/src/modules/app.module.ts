@@ -56,6 +56,7 @@ class CustomThrottlerGuard extends ThrottlerGuard {
 @Module({
   imports: [
     ConfigModule.forRoot({
+      envFilePath: ['.env', '.env.local'],
       load: [configuration],
       isGlobal: true,
       cache: true,

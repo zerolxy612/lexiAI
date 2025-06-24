@@ -17,90 +17,22 @@ export class DeepResearchService {
   private readonly thinkingStartFlag: string;
   private readonly thinkingEndFlag: string;
 
-  // Keywords for intelligent model selection
-  private readonly legalKeywords = [
-    '法律',
-    '法规',
-    '条例',
-    '判决',
-    '案例',
-    '诉讼',
-    '合同',
-    '协议',
-    '法院',
-    '律师',
-    '法条',
-    '司法',
-    '法务',
-    '法理',
-    '判例',
-    '起诉',
-    '辩护',
-    '仲裁',
-    '调解',
-    'legal',
-    'law',
-    'case',
-    'court',
-    'contract',
-    'lawsuit',
-    'attorney',
-    'judge',
-  ];
-
-  private readonly codeKeywords = [
-    '代码',
-    '编程',
-    '程序',
-    '开发',
-    '算法',
-    '函数',
-    '类',
-    '方法',
-    '变量',
-    '数据库',
-    '前端',
-    '后端',
-    'API',
-    'bug',
-    '调试',
-    '测试',
-    '框架',
-    '库',
-    '编译',
-    '部署',
-    'code',
-    'programming',
-    'development',
-    'algorithm',
-    'function',
-    'class',
-    'method',
-    'variable',
-    'database',
-    'frontend',
-    'backend',
-    'debug',
-    'test',
-    'framework',
-  ];
-
   // Stage configurations for three-stage deep research
   private readonly stageConfigs: StageConfig[] = [
     {
-      name: 'Basic Analysis',
-      querySuffix: '基础分析',
-      description: 'Provide core answers and fundamental analysis',
+      name: 'Primary Authorities Search',
+      querySuffix: '初级法律权威检索',
+      description: 'Search for legally binding primary authorities like statutes and case law.',
     },
     {
-      name: 'Extended Analysis',
-      querySuffix: '拓展分析',
-      description: 'Offer comprehensive background and related information',
+      name: 'Secondary Sources Analysis',
+      querySuffix: '次级法律权威分析',
+      description: 'Analyze secondary sources like law reviews for context and interpretation.',
     },
     {
-      name: 'Deep Analysis',
-      querySuffix: '深度剖析',
-      description: 'Analyze complex relationships and potential impacts',
+      name: 'Synthesis and Final Report',
+      querySuffix: '非法律资料与综合分析',
+      description: 'Synthesize all findings with supplemental sources into a final report.',
     },
   ];
 
@@ -122,44 +54,15 @@ export class DeepResearchService {
   }
 
   /**
-   * Intelligently select the best model based on query content
-   * @param query - The user's query
-   * @returns The selected model name
+   * Intelligently select the best model based on query content.
+   * For Deep Research, we now force the use of the RAG model.
+   * @param query - The user's query (used for logging)
+   * @returns The RAG model name
    */
   private selectModelForQuery(query: string): string {
-    const lowerQuery = query.toLowerCase();
-
-    // Check for legal-related keywords
-    const hasLegalKeywords = this.legalKeywords.some((keyword) =>
-      lowerQuery.includes(keyword.toLowerCase()),
-    );
-
-    // Check for code-related keywords
-    const hasCodeKeywords = this.codeKeywords.some((keyword) =>
-      lowerQuery.includes(keyword.toLowerCase()),
-    );
-
-    let selectedModel = 'RAG'; // Default model
-
-    if (hasLegalKeywords && !hasCodeKeywords) {
-      selectedModel = 'CaseSearch';
-      this.logger.log(`Selected CaseSearch model for legal query: "${query.substring(0, 50)}..."`);
-    } else if (hasCodeKeywords && !hasLegalKeywords) {
-      selectedModel = 'CodeSearch';
-      this.logger.log(`Selected CodeSearch model for coding query: "${query.substring(0, 50)}..."`);
-    } else if (hasLegalKeywords && hasCodeKeywords) {
-      // If query has both legal and code keywords, prefer CaseSearch
-      selectedModel = 'CaseSearch';
-      this.logger.log(
-        `Selected CaseSearch model for mixed legal/code query: "${query.substring(0, 50)}..."`,
-      );
-    } else {
-      this.logger.log(
-        `Selected default RAG model for general query: "${query.substring(0, 50)}..."`,
-      );
-    }
-
-    return selectedModel;
+    // The dynamic model selection has been removed to ensure Deep Research always uses the RAG model.
+    this.logger.log(`Forcing RAG model for Deep Research query: "${query.substring(0, 50)}..."`);
+    return 'hkgai/rag';
   }
 
   /**
@@ -219,10 +122,17 @@ export class DeepResearchService {
             } results. First result: ${JSON.stringify(searchResults[0])}`,
           );
         } catch (searchError) {
-          this.logger.warn(
-            `[Stage ${stage}] Google search failed, continuing without search results: ${searchError.message}`,
+          this.logger.error(
+            `[Stage ${stage}] Google search failed catastrophically: ${searchError.message}`,
+            searchError.stack,
           );
-          // Proceed without search results
+          // Stop the process and inform the frontend immediately
+          const errorEvent = this.createErrorEvent(
+            `Stage ${stage} (${stageName}) failed: Google Search returned an error - ${searchError.message}`,
+          );
+          subject.next(errorEvent);
+          subject.complete(); // End the stream
+          return; // Stop further processing
         }
 
         const searchCompleteEventData = {
@@ -249,7 +159,7 @@ export class DeepResearchService {
         const isFinalStage = stage === this.stageConfigs.length - 1;
         const systemPrompt = isFinalStage
           ? this.buildFinalStagePrompt(searchResults, enhancedQuery, allStagesAiContent)
-          : this.buildSystemPrompt(searchResults, enhancedQuery);
+          : this.buildSystemPrompt(searchResults, enhancedQuery, stage);
 
         this.logger.log(`[Stage ${stage}] Preparing to call AI model...`);
 
@@ -314,7 +224,7 @@ export class DeepResearchService {
    * Build system prompt with search results
    * Based on Spring Boot buildSystemMessage method
    */
-  private buildSystemPrompt(searchResults: SearchResult[], query: string): string {
+  private buildSystemPrompt(searchResults: SearchResult[], query: string, stage: number): string {
     const resultsText =
       searchResults?.length > 0
         ? searchResults
@@ -322,6 +232,45 @@ export class DeepResearchService {
             .join('\n\n')
         : 'No search results found.';
 
+    // Stage 0: Primary Authorities
+    if (stage === 0) {
+      return `You are an AI legal research assistant specializing in identifying primary legal authorities. Your task is to analyze the provided web search results and extract legally binding information relevant to the user's query.
+
+**User Query:** ${query}
+
+**Search Results:**
+${resultsText}
+
+**Instructions:**
+1.  **Focus exclusively on Primary Authorities:** From the search results, identify and list statutes (成文法), case law (判例法), regulations (行政法规), treaties (条约), and other legally binding documents.
+2.  **Be Precise:** For each authority, provide its title, citation (if available), and a brief snippet explaining its relevance to the query.
+3.  **Organize the Output:** Group the findings by type (e.g., Statutes, Case Law, Regulations).
+4.  **Ignore Other Sources:** Do not include secondary sources (like law reviews, articles) or non-legal materials in this stage.
+5.  **Language:** Respond in the same language as the user's query.
+
+Please begin your analysis.`;
+    }
+
+    // Stage 1: Secondary Sources
+    if (stage === 1) {
+      return `You are an AI legal research assistant. In this stage, your focus is on identifying Secondary Sources that provide context and analysis for legal issues. These sources are not legally binding but are crucial for understanding the law.
+
+**User Query:** ${query}
+
+**Search Results:**
+${resultsText}
+
+**Instructions:**
+1.  **Focus on Secondary Sources:** Identify and summarize materials like law review articles (法律评论文章), legal journals (法律期刊), treatises (法律专著), practice guides (实务指南), and legal commentary from the search results.
+2.  **Explain Relevance:** For each source, explain how it helps to understand, interpret, or locate primary legal authorities related to the user's query.
+3.  **Summarize Key Arguments:** Briefly describe the main points or arguments presented in each secondary source.
+4.  **Do Not Include:** Do not list primary authorities (statutes, cases) or non-legal materials.
+5.  **Language:** Respond in the same language as the user's query.
+
+Please proceed with your analysis of secondary sources.`;
+    }
+
+    // Fallback for any other stage, though it shouldn't be reached with the current logic.
     return `You are a professional AI assistant. Please answer the user's question based on the following web search results.
 Search Query: ${query}
 Search Results:
@@ -356,20 +305,32 @@ ${content}
             .join('\n')
         : 'No previous analysis available.';
 
-    return `You are an expert-level AI research analyst. Your final task is to synthesize information from multiple research stages into a single, comprehensive, and well-structured report.
+    return `You are an expert-level AI legal analyst. Your final task is to synthesize all research findings into a structured and comprehensive legal research memo. You will integrate the previously identified Primary and Secondary Authorities with new supplemental information, following established legal research standards.
 
-### Primary Task: Deep Analysis
-First, based on the LATEST search results provided below, perform a deep analysis of the user's query.
-- User Query for this stage: "${query}"
-- Latest Search Results:
+**User's Original Legal Issue:** ${query}
+
+**Context from Previous Research Stages:**
+${previousSummaries} 
+
+**Current Task: Analysis of Non-Legal/Supplemental Sources**
+First, analyze the latest search results provided below. These may contain non-legal or supplemental information (非法律或辅助性资料) such as news reports, expert opinions, or investigative findings that can provide factual context.
+
+**Latest Search Results (Supplemental Sources):**
 ${resultsText}
 
-### Context: Summaries from Previous Stages
-Next, carefully review the summaries from the previous research stages. This context is crucial for your final report.
-${previousSummaries}
+**Final Instruction: Synthesize and Generate a Comprehensive Research Memo**
+Your main task is to create a final report that follows this standard legal research methodology:
 
-### Final Instruction: Synthesize and Generate Comprehensive Report
-Your most important task is to integrate everything. Combine your deep analysis from the latest search results with the context from the previous summaries. Generate a final, insightful, and coherent report. The report should be well-organized, easy to read, and directly address the user's original question in depth, providing a holistic view of the topic. Ensure your output is in the same language as the user's query.`;
+1.  **Re-state Legal Issue and Goal:** Begin by clearly stating the core legal issue (法律问题) from the user's query and the research objective.
+2.  **Applicable Jurisdiction:** Based on the information gathered, identify the likely applicable jurisdiction (司法管辖区).
+3.  **Synthesize Authorities:**
+    *   **Primary Authorities:** Present the binding legal authorities you found. Distinguish between mandatory (强制性) and persuasive (劝说性) authority. For case law, note its precedential value and verify its current validity (i.e., it's "good law"), if possible from the context.
+    *   **Secondary Authorities:** Explain how the secondary sources clarify the legal landscape and interpret the primary authorities.
+4.  **Integrate Supplemental Facts:** Weave in relevant facts from the non-legal/supplemental sources to provide context or support legal arguments.
+5.  **Analysis and Conclusion:** Combine all information to form a coherent analysis. Structure your arguments and conclude with a well-supported legal opinion or research summary that directly addresses the user's original question.
+6.  **Update and Verification Warning:** Conclude the memo with a disclaimer advising that legal standards are dynamic and all cited authorities should be independently verified for their current status.
+
+Produce a well-organized, insightful, and actionable report in the same language as the user's query.`;
   }
 
   /**

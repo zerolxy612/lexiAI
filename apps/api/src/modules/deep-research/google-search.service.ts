@@ -78,11 +78,13 @@ export class GoogleSearchService {
         error,
       );
 
-      // Fallback to mock data in development environment
+      // Fallback to mock data in development environment - THIS HIDES THE REAL ERROR
+      /*
       if (process.env.NODE_ENV === 'development') {
         this.logger.warn('Google Search failed in DEV mode. Returning mock data instead.');
         return this.getMockSearchResults(query);
       }
+      */
 
       if (error instanceof HttpException) {
         throw error;

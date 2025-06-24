@@ -102,9 +102,9 @@ export const ConversationHistory = memo(() => {
   return (
     <div className="flex-1 flex flex-col p-3 min-h-0">
       <div className="flex-1 overflow-y-auto space-y-1 min-h-0">
-        {conversationItems.map((item) => (
+        {conversationItems.map((item, index) => (
           <div
-            key={item.id}
+            key={`${item.id}-${index}`}
             className={cn(
               'group relative p-2 rounded-lg text-sm cursor-pointer transition-colors',
               'hover:bg-gray-50 dark:hover:bg-gray-800',

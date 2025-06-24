@@ -38,9 +38,24 @@ import {
   FallbackReranker,
   getReranker,
   getChatModel,
+  MODEL_CONFIGS,
 } from '@refly/providers';
 import { ConfigService } from '@nestjs/config';
 import { QdrantService } from '@/modules/common/qdrant.service';
+
+// Define default provider and item configurations
+const DEFAULT_PROVIDER_CONFIG = {
+  providerId: 'hkgai-global',
+  providerKey: 'hkgai',
+  name: 'HKGAI',
+  baseUrl: 'https://dify.hkgai.net',
+  enabled: true,
+  categories: 'llm,embeddings,reranker',
+  isGlobal: true,
+};
+
+// This is now deprecated, we will generate items dynamically
+// const DEFAULT_CHAT_ITEM_CONFIG = { ... };
 
 interface GlobalProviderConfig {
   providers: ProviderModel[];
@@ -64,10 +79,10 @@ export class ProviderService implements OnModuleInit {
   }
 
   async onModuleInit() {
-    console.log('🔧 [ProviderService] Starting module initialization...');
+    this.logger.log('[ProviderService] Initializing module...');
+    await this.ensureDefaultProviderAndItem();
     this.logger.log('Invalidating global provider cache on module init');
     this.globalProviderCache.invalidate();
-    console.log('🔧 [ProviderService] Fetching global provider config...');
     const config = await this.globalProviderCache.get();
     console.log(
       `🔧 [ProviderService] Global provider cache populated with ${config.providers.length} providers and ${config.items.length} items`,
@@ -81,6 +96,66 @@ export class ProviderService implements OnModuleInit {
       config.items.map((i) => `${i.itemId}:${i.name}`),
     );
     this.logger.log('Global provider cache re-populated');
+  }
+
+  private async ensureDefaultProviderAndItem() {
+    this.logger.log('Checking for default provider...');
+    const hkgaiProvider = await this.prisma.provider.findUnique({
+      where: { providerId: DEFAULT_PROVIDER_CONFIG.providerId },
+    });
+
+    if (!hkgaiProvider) {
+      this.logger.log('Default HKGAI provider not found. Creating it...');
+      await this.prisma.provider.create({
+        data: DEFAULT_PROVIDER_CONFIG,
+      });
+      this.logger.log('Default HKGAI provider created.');
+    } else {
+      this.logger.log('Default HKGAI provider already exists.');
+    }
+
+    // Now, ensure all models from the config exist as provider items
+    this.logger.log('Syncing models from MODEL_CONFIGS to database...');
+    const modelIds = Object.keys(MODEL_CONFIGS);
+    let createdCount = 0;
+
+    for (const modelId of modelIds) {
+      const modelConfig = MODEL_CONFIGS[modelId];
+      const itemId = `hkgai-${modelConfig.modelId.split('/')[1]}-item`;
+      const category = modelId.includes('embedding') ? 'embeddings' : 'llm';
+
+      const existingItem = await this.prisma.providerItem.findUnique({
+        where: { itemId },
+      });
+
+      if (!existingItem) {
+        createdCount++;
+        this.logger.log(
+          `Creating missing model item: ${modelConfig.modelId.replace('hkgai/', '')} (${itemId})`,
+        );
+        await this.prisma.providerItem.create({
+          data: {
+            itemId,
+            providerId: DEFAULT_PROVIDER_CONFIG.providerId,
+            category,
+            name: modelConfig.modelId.replace('hkgai/', '').replace('jina-ai/', ''),
+            enabled: true,
+            tier: 't2', // Default tier
+            config: JSON.stringify({
+              modelId: modelConfig.modelId,
+              contextLimit: 8000, // Default values
+              maxOutput: 2048,
+            }),
+          },
+        });
+      }
+    }
+
+    if (createdCount > 0) {
+      this.logger.log(`Sync complete. Created ${createdCount} new model items.`);
+    } else {
+      this.logger.log('Sync complete. All model items are up-to-date.');
+    }
   }
 
   async fetchGlobalProviderConfig(): Promise<GlobalProviderConfig> {
