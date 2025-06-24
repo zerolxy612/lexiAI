@@ -49,9 +49,14 @@ interface DeepResearchEvent {
 
 // Initial stages structure
 const initialStages: DeepResearchStage[] = [
-  { title: 'Stage 1: Basic Analysis', content: '', searchResults: [], status: 'waiting' },
-  { title: 'Stage 2: Extended Analysis', content: '', searchResults: [], status: 'waiting' },
-  { title: 'Stage 3: Deep Analysis', content: '', searchResults: [], status: 'waiting' },
+  { title: 'Stage 1: Primary Authorities', content: '', searchResults: [], status: 'waiting' },
+  { title: 'Stage 2: Secondary Sources', content: '', searchResults: [], status: 'waiting' },
+  {
+    title: 'Stage 3: Nonlegal or Supplemental Sources',
+    content: '',
+    searchResults: [],
+    status: 'waiting',
+  },
 ];
 
 const SearchResultsSection: React.FC<{ results: SearchResult[] }> = ({ results }) => (
@@ -263,11 +268,7 @@ export const DeepResearchPanel: React.FC<DeepResearchPanelProps> = ({ isOpen, on
     setCurrentStage(-1);
 
     // Initialize stages with waiting status
-    setStages([
-      { title: 'Stage 1: Basic Analysis', content: '', searchResults: [], status: 'waiting' },
-      { title: 'Stage 2: Extended Analysis', content: '', searchResults: [], status: 'waiting' },
-      { title: 'Stage 3: Deep Analysis', content: '', searchResults: [], status: 'waiting' },
-    ]);
+    setStages(initialStages);
 
     try {
       // Check if we're in development environment

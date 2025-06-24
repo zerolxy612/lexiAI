@@ -49,15 +49,16 @@ export class HKGAIClientFactory {
     // --- Definitive Fix ---
     // For RAG, read directly from process.env to ensure correctness and bypass config mapping issues.
     // This aligns the code with the documented environment setup and fixes the migration gap.
-    this.ragBaseUrl = process.env.HKGAI_BASE_URL || 'https://ragpipeline.hkgai.asia';
-    this.modelApiKeys[HKGAIModelName.RAG] =
-      process.env.HKGAI_API_KEY || 'sk-UgDQCBR58Fg66sb480Ff7f4003A740D8B7DcD97f3566BbAc';
+
+    // DIAGNOSTIC: Forcibly hardcode the correct RAG URL to isolate environment issues.
+    this.ragBaseUrl = 'https://ragpipeline.hkgai.asia';
+    this.modelApiKeys[HKGAIModelName.RAG] = this.configService.get('credentials.hkgai.ragKey');
     this.modelApiKeys[HKGAIModelName.CONTRACT] =
       this.configService.get('credentials.hkgai.contractKey') ||
       'sk-UgDQCBR58Fg66sb480Ff7f4003A740D8B7DcD97f3566BbAc';
 
     this.logger.log('HKGAI Client Factory initialized.');
-    this.logger.log(`RAG Base URL (from env): ${this.ragBaseUrl}`);
+    this.logger.log(`[DIAGNOSTIC] Forcing RAG Base URL to: ${this.ragBaseUrl}`);
     this.logger.log(
       `RAG API Key (from env): ${this.modelApiKeys[HKGAIModelName.RAG] ? 'Loaded' : 'NOT LOADED'}`,
     );
