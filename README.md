@@ -153,6 +153,18 @@ We're continuously improving Refly with exciting new features. For a detailed ro
 - 🔒 Enhanced security and compliance tools
 - 🔒 Advanced team management and analytics
 
+## 🔧 Troubleshooting
+
+If you encounter issues with HKGAI model configuration, especially "API key not configured for model" errors, please refer to:
+
+📖 **[HKGAI Model Configuration Troubleshooting Guide](./TROUBLESHOOTING_HKGAI_MODELS.md)**
+
+This comprehensive guide covers:
+- Environment variable configuration issues
+- API server environment loading problems
+- Model configuration system problems
+- Complete diagnostic and resolution workflows
+
 ## How to Use?
 
 - **Cloud**

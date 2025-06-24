@@ -149,6 +149,17 @@ npm run validate-env
 
 ## 故障排除
 
+### 常见错误诊断
+
+如果遇到 **"API key not configured for model"** 错误或其他HKGAI模型配置问题，请参考：
+
+📖 **[HKGAI模型配置故障排除指南](./TROUBLESHOOTING_HKGAI_MODELS.md)**
+
+该文档包含了完整的问题诊断流程、解决方案和预防措施，特别针对：
+- 环境变量配置问题
+- API服务器环境变量加载问题  
+- 模型配置系统问题
+
 ### E3001错误
 如果遇到 `[E3001] Model provider error` 错误：
 

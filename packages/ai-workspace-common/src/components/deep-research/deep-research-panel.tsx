@@ -375,7 +375,7 @@ export const DeepResearchPanel: React.FC<DeepResearchPanelProps> = ({ isOpen, on
       case 'search_complete':
         if (event.stageData) {
           console.log(
-            `🔍 Search completed for stage ${event.stageData.stage}:`,
+            `🔍 Search completed for stage ${event.stageData.stage}, switching to AI processing.`,
             event.stageData.searchResults.length,
             'results',
           );
@@ -384,7 +384,7 @@ export const DeepResearchPanel: React.FC<DeepResearchPanelProps> = ({ isOpen, on
               index === event.stageData!.stage
                 ? {
                     ...stage,
-                    status: 'search_complete',
+                    status: 'ai_processing',
                     searchResults: event.stageData!.searchResults,
                   }
                 : stage,
@@ -403,8 +403,8 @@ export const DeepResearchPanel: React.FC<DeepResearchPanelProps> = ({ isOpen, on
             prev.map((stage, index) =>
               index === targetStage
                 ? {
-                    status: 'ai_processing',
                     ...stage,
+                    status: 'ai_processing',
                     content: (stage.content || '') + event.content!,
                   }
                 : stage,

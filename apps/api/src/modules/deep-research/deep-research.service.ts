@@ -188,6 +188,7 @@ export class DeepResearchService {
    */
   private async processAllStages(request: DeepResearchRequestDto, subject: Subject<MessageEvent>) {
     const { query, messages } = request;
+    const allStagesAiContent: string[] = [];
 
     this.logger.log(`>>>>> ENTERING processAllStages for query: "${query}"`);
 
@@ -245,7 +246,10 @@ export class DeepResearchService {
         );
         subject.next(this.createEvent('search_complete', searchCompleteEventData));
 
-        const systemPrompt = this.buildSystemPrompt(searchResults, enhancedQuery);
+        const isFinalStage = stage === this.stageConfigs.length - 1;
+        const systemPrompt = isFinalStage
+          ? this.buildFinalStagePrompt(searchResults, enhancedQuery, allStagesAiContent)
+          : this.buildSystemPrompt(searchResults, enhancedQuery);
 
         this.logger.log(`[Stage ${stage}] Preparing to call AI model...`);
 
@@ -258,6 +262,8 @@ export class DeepResearchService {
           stage,
           selectedModel,
         );
+
+        allStagesAiContent.push(aiContent);
 
         subject.next(
           this.createEvent('stage_complete', {
@@ -322,6 +328,48 @@ Search Results:
 ${resultsText}
 
 Please provide an accurate and detailed answer in the same language as the user's query.`;
+  }
+
+  private buildFinalStagePrompt(
+    searchResults: SearchResult[],
+    query: string,
+    previousStagesContent: string[],
+  ): string {
+    const resultsText =
+      searchResults?.length > 0
+        ? searchResults
+            .map((r) => `Title: ${r.title}\nLink: ${r.link}\nSnippet: ${r.snippet}`)
+            .join('\n\n')
+        : 'No search results found.';
+
+    const previousSummaries =
+      previousStagesContent.length > 0
+        ? previousStagesContent
+            .map(
+              (content, index) => `
+---
+## Summary from Stage ${index + 1} (${this.stageConfigs[index].name})
+${content}
+---
+`,
+            )
+            .join('\n')
+        : 'No previous analysis available.';
+
+    return `You are an expert-level AI research analyst. Your final task is to synthesize information from multiple research stages into a single, comprehensive, and well-structured report.
+
+### Primary Task: Deep Analysis
+First, based on the LATEST search results provided below, perform a deep analysis of the user's query.
+- User Query for this stage: "${query}"
+- Latest Search Results:
+${resultsText}
+
+### Context: Summaries from Previous Stages
+Next, carefully review the summaries from the previous research stages. This context is crucial for your final report.
+${previousSummaries}
+
+### Final Instruction: Synthesize and Generate Comprehensive Report
+Your most important task is to integrate everything. Combine your deep analysis from the latest search results with the context from the previous summaries. Generate a final, insightful, and coherent report. The report should be well-organized, easy to read, and directly address the user's original question in depth, providing a holistic view of the topic. Ensure your output is in the same language as the user's query.`;
   }
 
   /**

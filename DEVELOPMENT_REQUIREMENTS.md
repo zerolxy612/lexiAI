@@ -2960,6 +2960,131 @@ private SystemMessage buildSystemMessage(Search search) {
 }
 ```
 
+// 文件路径: services/lexihk-ai/lexihk-ai-server/src/main/java/com/hkgai/lexihk/ai/server/service/ChatService.java
+
+private ChatGenerationResponse googleSearchAndGenerate(ChatGenerationRequest chatGenerationRequest) {
+    // 1. 调用Google搜索API
+    GoogleCustomSearchRequest googleCustomSearchRequest = new GoogleCustomSearchRequest();
+    // ... 设置key, cx, q ...
+    ChatGenerationResponse.Search search = toSearch(googleCustomSearchClient.customSearch(googleCustomSearchRequest));
+
+    // 2. 动态构建Prompt (System Message)
+    List<Message> messages = new ArrayList<>();
+    StringBuilder searchSystemMessageBuilder = new StringBuilder();
+
+    // ===> 这是Prompt的第一部分：前缀指令 <===
+    searchSystemMessageBuilder.append("Please act as a professional research assistant. ");
+    searchSystemMessageBuilder.append("Based on the following search results, provide a comprehensive answer to the user's question.\n");
+    searchSystemMessageBuilder.append("The search results are as follows:\n");
+
+    // ===> 这是Prompt的第二部分：动态注入的Google搜索结果 <===
+    for (ChatGenerationResponse.Search.Result result : search.getResults()) {
+        searchSystemMessageBuilder.append(String.format("Source: %s\nContent: %s\n\n", result.getLink(), result.getSnippet()));
+    }
+
+    // ===> 这是Prompt的第三部分：后缀指令 <===
+    searchSystemMessageBuilder.append("Please answer the user's question now.");
+    
+    // 3. 创建最终的Message列表
+    // 将构建好的Prompt作为系统消息
+    messages.add(new SystemMessage(searchSystemMessageBuilder.toString())); 
+    // 将用户的原始消息作为用户消息
+    messages.add(new UserMessage(chatGenerationRequest.getMessage().getText()));
+
+    // 4. 调用AI模型
+    ChatClient.ChatClientRequest chatClientRequest = ChatClient.ChatClientRequest.create(new Prompt(messages));
+    // ... 发起调用 ...
+    return response;
+}
+
+迁移到Next.js的建议方案
+// 文件路径: app/api/chat/stream/route.ts
+
+import OpenAI from 'openai';
+import { OpenAIStream, StreamingTextResponse } from 'ai';
+
+// 假设你有一个用于调用Google搜索的辅助函数
+// 你需要自己实现或找一个库来完成这部分
+async function googleSearch(query: string): Promise<any[]> {
+    const API_KEY = process.env.GOOGLE_SEARCH_API_KEY;
+    const CX = process.env.GOOGLE_SEARCH_CX;
+    const url = `https://www.googleapis.com/customsearch/v1?key=${API_KEY}&cx=${CX}&q=${encodeURIComponent(query)}`;
+    
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            console.error("Google Search API error:", await response.text());
+            return [];
+        }
+        const data = await response.json();
+        return data.items || []; // 返回搜索结果条目
+    } catch (error) {
+        console.error("Failed to fetch Google Search:", error);
+        return [];
+    }
+}
+
+
+// 初始化OpenAI客户端，从环境变量读取配置
+const openai = new OpenAI({
+    baseURL: process.env.HKGAI_BASE_URL,
+    apiKey: process.env.HKGAI_API_KEY,
+});
+
+export const runtime = 'edge'; // 推荐使用Edge运行时以获得更好的流式性能
+
+export async function POST(req: Request) {
+    try {
+        const { messages } = await req.json();
+
+        // 1. 获取用户的最新问题
+        const userMessage = messages[messages.length - 1].content;
+
+        // 2. 执行Google搜索
+        const searchResults = await googleSearch(userMessage);
+
+        // 3. 构建动态Prompt
+        let systemPrompt = `Please act as a professional research assistant. Based on the following search results, provide a comprehensive answer to the user's question.\nThe search results are as follows:\n`;
+
+        if (searchResults.length > 0) {
+            systemPrompt += searchResults
+                .map(result => `Source: ${result.link}\nContent: ${result.snippet}\n\n`)
+                .join('');
+        } else {
+            systemPrompt += "No search results found.\n\n";
+        }
+        
+        systemPrompt += "Please answer the user's question now.";
+
+
+        // 4. 构建发送给AI的最终消息列表
+        const messagesForAI = [
+            {
+                role: 'system',
+                content: systemPrompt, // 注入包含搜索结果的系统Prompt
+            },
+            ...messages, // 包含用户的原始问题
+        ];
+
+        // 5. 调用AI模型并获取流式响应
+        const response = await openai.chat.completions.create({
+            model: process.env.HKGAI_MODEL || 'Lexihk-RAG',
+            stream: true, // 必须是流式
+            messages: messagesForAI,
+        });
+
+        const stream = OpenAIStream(response);
+        
+        return new StreamingTextResponse(stream);
+
+    } catch (error) {
+        console.error("[CHAT_API_ERROR]", error);
+        // 返回一个表示错误的500响应
+        return new Response("Internal Server Error", { status: 500 });
+    }
+}
+
+
 #### **🎯 关键数据流程**
 
 ```
