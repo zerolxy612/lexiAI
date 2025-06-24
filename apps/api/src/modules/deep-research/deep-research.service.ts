@@ -366,6 +366,9 @@ Please provide an accurate and detailed answer in the same language as the user'
           { stream: true },
         );
 
+        // Determine if this is a Dify model (CaseSearch or CodeSearch)
+        const isDifyModel = modelName === 'CaseSearch' || modelName === 'CodeSearch';
+
         for await (const chunk of responseStream) {
           const lines = chunk
             .toString('utf8')
@@ -384,7 +387,88 @@ Please provide an accurate and detailed answer in the same language as the user'
 
               try {
                 const parsedData = JSON.parse(dataStr);
-                const delta = parsedData.choices?.[0]?.delta?.content;
+                let delta = '';
+
+                if (isDifyModel) {
+                  // Handle Dify format
+                  this.logger.debug(`[Stage ${stage}] Processing Dify event: ${parsedData.event}`);
+
+                  if (parsedData.event === 'message' && parsedData.answer) {
+                    // Complete message response
+                    delta = parsedData.answer;
+                    this.logger.log(
+                      `[Stage ${stage}] Dify message event - answer length: ${delta.length}, content preview: "${delta.substring(0, 50)}..."`,
+                    );
+                  } else if (parsedData.event === 'message_stream' && parsedData.content) {
+                    // Streaming message content
+                    delta = parsedData.content;
+                    this.logger.log(
+                      `[Stage ${stage}] Dify message_stream - content length: ${delta.length}, content: "${delta}"`,
+                    );
+                  } else if (parsedData.event === 'agent_message' && parsedData.answer) {
+                    // Agent message response
+                    delta = parsedData.answer;
+                    this.logger.log(
+                      `[Stage ${stage}] Dify agent_message - answer length: ${delta.length}, content preview: "${delta.substring(0, 50)}..."`,
+                    );
+                  } else if (parsedData.event === 'node_finished') {
+                    // Node finished event - extract content from outputs
+                    if (parsedData.data?.outputs?.text) {
+                      delta = parsedData.data.outputs.text;
+                      this.logger.log(
+                        `[Stage ${stage}] Dify node_finished - text output length: ${delta.length}, content preview: "${delta.substring(0, 100)}..."`,
+                      );
+                    } else if (parsedData.data?.outputs?.answer) {
+                      delta = parsedData.data.outputs.answer;
+                      this.logger.log(
+                        `[Stage ${stage}] Dify node_finished - answer output length: ${delta.length}, content preview: "${delta.substring(0, 100)}..."`,
+                      );
+                    } else {
+                      this.logger.debug(
+                        `[Stage ${stage}] Dify node_finished - no text/answer output found, data: ${JSON.stringify(parsedData.data?.outputs || {})}`,
+                      );
+                    }
+                  } else if (parsedData.event === 'workflow_finished') {
+                    // Workflow finished event - extract content and end stream
+                    if (parsedData.data?.outputs?.text) {
+                      delta = parsedData.data.outputs.text;
+                      this.logger.log(
+                        `[Stage ${stage}] Dify workflow_finished - text output length: ${delta.length}, content preview: "${delta.substring(0, 100)}..."`,
+                      );
+                    } else if (parsedData.data?.outputs?.answer) {
+                      delta = parsedData.data.outputs.answer;
+                      this.logger.log(
+                        `[Stage ${stage}] Dify workflow_finished - answer output length: ${delta.length}, content preview: "${delta.substring(0, 100)}..."`,
+                      );
+                    }
+                    // Add the final content and end the stream
+                    if (delta) {
+                      fullContent += delta;
+                      subject.next(
+                        this.createEvent('ai_response', {
+                          type: 'ai_response',
+                          stage,
+                          content: delta,
+                        }),
+                      );
+                    }
+                    this.logger.log(
+                      `[Stage ${stage}] Dify workflow finished. Total content length: ${fullContent.length}`,
+                    );
+                    resolve(fullContent);
+                    return;
+                  } else if (parsedData.event === 'message_end') {
+                    // End of message
+                    this.logger.log(
+                      `[Stage ${stage}] Dify message stream ended. Total content length: ${fullContent.length}`,
+                    );
+                    resolve(fullContent);
+                    return;
+                  }
+                } else {
+                  // Handle OpenAI format (RAG model)
+                  delta = parsedData.choices?.[0]?.delta?.content || '';
+                }
 
                 if (delta) {
                   // Don't stream thinking blocks
@@ -408,6 +492,9 @@ Please provide an accurate and detailed answer in the same language as the user'
 
                     if (!isJsonObject) {
                       fullContent += delta;
+                      this.logger.log(
+                        `[Stage ${stage}] Sending AI content to frontend: "${delta}" (length: ${delta.length})`,
+                      );
                       subject.next(
                         this.createEvent('ai_response', {
                           type: 'ai_response',
@@ -415,13 +502,17 @@ Please provide an accurate and detailed answer in the same language as the user'
                           content: delta,
                         }),
                       );
+                    } else {
+                      this.logger.warn(
+                        `[Stage ${stage}] Skipping JSON object delta: ${delta.substring(0, 100)}`,
+                      );
                     }
                   }
                 }
               } catch (e) {
-                this.logger.error(
-                  `[Stage ${stage}] Failed to parse AI stream data chunk: ${dataStr}`,
-                  e,
+                // Only log as warning for now, as Dify sends many metadata events
+                this.logger.warn(
+                  `[Stage ${stage}] Failed to parse AI stream data chunk: ${dataStr.substring(0, 200)}...`,
                 );
               }
             }

@@ -27,6 +27,7 @@ interface DeepResearchPanelProps {
 // API response types
 interface DeepResearchEvent {
   type: 'stage_start' | 'search_complete' | 'ai_response' | 'stage_complete' | 'complete' | 'error';
+  stage?: number; // Add stage field for ai_response events
   stageData?: {
     stage: number;
     stageName: string;
@@ -308,10 +309,17 @@ export const DeepResearchPanel: React.FC<DeepResearchPanelProps> = ({ isOpen, on
       case 'ai_response':
         if (event.content) {
           console.log(`🤖 AI response received:`, event.content.substring(0, 100) + '...');
-          // Update content for current stage
+          // Use stage from event data, not currentStage variable
+          const targetStage = event.stage ?? currentStage;
+          console.log(`🎯 Updating content for stage ${targetStage}`);
           setStages((prev) =>
             prev.map((stage, index) =>
-              index === currentStage ? { ...stage, content: event.content! } : stage,
+              index === targetStage
+                ? {
+                    ...stage,
+                    content: (stage.content || '') + event.content!,
+                  }
+                : stage,
             ),
           );
         }

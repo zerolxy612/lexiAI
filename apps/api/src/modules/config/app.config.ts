@@ -22,6 +22,18 @@ export default () => {
     process.env.HKGAI_API_KEY ? `${process.env.HKGAI_API_KEY.substring(0, 10)}...` : 'NOT SET',
   );
   console.log(
+    '  - HKGAI_GENERAL_API_KEY:',
+    process.env.HKGAI_GENERAL_API_KEY
+      ? `${process.env.HKGAI_GENERAL_API_KEY.substring(0, 10)}...`
+      : 'NOT SET',
+  );
+  console.log(
+    '  - HKGAI_RAG_API_KEY:',
+    process.env.HKGAI_RAG_API_KEY
+      ? `${process.env.HKGAI_RAG_API_KEY.substring(0, 10)}...`
+      : 'NOT SET',
+  );
+  console.log(
     '  - HKGAI_CASE_SEARCH_API_KEY:',
     process.env.HKGAI_CASE_SEARCH_API_KEY
       ? `${process.env.HKGAI_CASE_SEARCH_API_KEY.substring(0, 10)}...`
@@ -156,6 +168,9 @@ export default () => {
         ragBaseUrl: process.env.HKGAI_RAG_BASE_URL || 'https://ragpipeline.hkgai.asia',
         difyBaseUrl: process.env.HKGAI_DIFY_BASE_URL || 'https://dify.hkgai.net',
         globalApiKey: process.env.HKGAI_API_KEY || 'app-mYHumURK2S010ZonuvzeX1Ad',
+        generalKey: process.env.HKGAI_GENERAL_API_KEY || 'app-5PTDowg5Dn2MSEhG5n3FBWXs',
+        ragKey:
+          process.env.HKGAI_RAG_API_KEY || 'sk-UgDQCBR58Fg66sb480Ff7f4003A740D8B7DcD97f3566BbAc',
         searchEntryKey: process.env.HKGAI_SEARCHENTRY_API_KEY || 'app-mYHumURK2S010ZonuvzeX1Ad',
         missingInfoKey: process.env.HKGAI_MISSINGINFO_API_KEY || 'app-mYHumURK2S010ZonuvzeX1Ad',
         timelineKey: process.env.HKGAI_TIMELINE_API_KEY || 'app-mYHumURK2S010ZonuvzeX1Ad',
